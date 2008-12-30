@@ -60,12 +60,16 @@ static void extract_zip_file_into_buffer_with_password(buffer * buf,
 		unzClose(unzf);
 		return;
 	}
-	buffer_prepare_copy(buf, info.uncompressed_size);
+
+	buffer_prepare_copy(buf, info.uncompressed_size + 1);
+
 	if (buf->ptr == NULL) {
 		unzCloseCurrentFile(unzf);
 		unzClose(unzf);
 		return;
 	}
+
+	memset(buf->ptr, 0, info.uncompressed_size + 1);
 
 	ret = unzReadCurrentFile(unzf, buf->ptr, info.uncompressed_size);
 	buf->used = info.uncompressed_size;
@@ -150,12 +154,15 @@ static void extract_zip_file_into_buffer(buffer * buf, const char *archname,
 		return;
 	}
 
-	buffer_prepare_copy(buf, info.uncompressed_size);
+	buffer_prepare_copy(buf, info.uncompressed_size + 1);
+
 	if (buf->ptr == NULL) {
 		unzCloseCurrentFile(unzf);
 		unzClose(unzf);
 		return;
 	}
+
+	memset(buf->ptr, 0, info.uncompressed_size + 1);
 	int ret = unzReadCurrentFile(unzf, buf->ptr, info.uncompressed_size);
 
 	if (ret < 0) {
@@ -296,6 +303,15 @@ static void extract_rar_file_into_buffer(buffer * buf, const char *archname,
 			return;
 		}
 		if (stricmp(header.FileName, archpath) == 0) {
+
+			buffer_prepare_copy(buf, header.UnpSize + 1);
+
+			if (buf->ptr == NULL) {
+				RARCloseArchive(hrar);
+				return;
+			}
+
+			memset(buf->ptr, 0, header.UnpSize + 1);
 			code = RARProcessFile(hrar, RAR_TEST, NULL, NULL);
 			break;
 		}
@@ -329,12 +345,14 @@ static void extract_chm_file_into_buffer(buffer * buf, const char *archname,
 		return;
 	}
 
-	buffer_prepare_copy(buf, ui.length);
+	buffer_prepare_copy(buf, ui.length + 1);
 
 	if (buf->ptr == NULL) {
 		chm_close(chm);
 		return;
 	}
+
+	memset(buf->ptr, 0, ui.length + 1);
 
 	buf->used = chm_retrieve_object(chm, &ui, (byte *) buf->ptr, 0, ui.length);
 	chm_close(chm);
