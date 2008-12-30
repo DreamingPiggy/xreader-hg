@@ -650,7 +650,7 @@ static int musicdrv_has_stop(void)
 	int ret;
 
 	ret = musicdrv_get_status();
-	if (ret == ST_STOPPED || ret == ST_UNKNOWN) {
+	if (ret == ST_STOPPED || ret == ST_UNKNOWN || ret == ST_LOADED) {
 		return true;
 	}
 
@@ -723,25 +723,21 @@ int music_init(void)
 	pspTime tm;
 
 	sceRtcGetCurrentClockLocalTime(&tm);
-
 	srand(tm.microseconds);
-
 	music_sema = sceKernelCreateSema("Music Sema", 0, 1, 1, NULL);
-
 	mpc_init();
 	wav_init();
 	tta_init();
 	madmp3_init();
-
 	set_musicdrv("musepack");
-
+	memset(&g_list, 0, sizeof(g_list));
 	g_list.first_time = true;
 	g_shuffle.first_time = true;
 	stack_init(&played);
-
 	g_music_thread = sceKernelCreateThread("Music Thread",
 										   music_thread,
 										   0x12, 0x10000, 0, NULL);
+
 	if (g_music_thread < 0) {
 		return -EBUSY;
 	}
@@ -1121,9 +1117,14 @@ int music_suspend(void)
 {
 	int ret;
 
+	dbg_printf(d, "%s", __func__);
+
 	music_lock();
 	ret = musicdrv_suspend();
+
 	if (ret < 0) {
+		dbg_printf(d, "%s: Suspend failed!", __func__);
+		musicdrv_end();
 		music_unlock();
 		return ret;
 	}
@@ -1140,17 +1141,26 @@ int music_resume(void)
 	struct music_file *fl = music_get(g_list.curr_pos);
 	int ret;
 
+	dbg_printf(d, "%s", __func__);
+
 	if (fl == NULL) {
+		dbg_printf(d, "%s: Resume failed!", __func__);
 		music_unlock();
+
 		return -1;
 	}
+
 	ret = musicdrv_resume(fl->shortpath, fl->longpath);
+
 	if (ret < 0) {
+		dbg_printf(d, "%s %d: Resume failed!", __func__, __LINE__);
 		music_unlock();
+
 		return ret;
 	}
 
 	g_list.is_list_playing = prev_is_playing;
 	music_unlock();
+
 	return 0;
 }
