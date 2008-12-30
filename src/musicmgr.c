@@ -458,7 +458,7 @@ static int music_play(int i)
 {
 	int ret;
 
-	music_loadonly(i);
+	music_load(i);
 	scene_power_save(false);
 	ret = musicdrv_play();
 	scene_power_save(true);
@@ -706,7 +706,7 @@ static int music_thread(SceSize arg, void *argp)
 
 					if (!g_list.is_list_playing) {
 						music_unlock();
-						music_loadonly(g_list.curr_pos);
+						music_load(g_list.curr_pos);
 						music_stop();
 						continue;
 					}
@@ -1074,21 +1074,7 @@ int music_get_info(struct music_info *info)
 	return -EBUSY;
 }
 
-#if 0
-// for libid3tag
-extern int dup(int fd1)
-{
-	return (fcntl(fd1, F_DUPFD, 0));
-}
-
-extern int dup2(int fd1, int fd2)
-{
-	close(fd2);
-	return (fcntl(fd1, F_DUPFD, fd2));
-}
-#endif
-
-int music_loadonly(int i)
+int music_load(int i)
 {
 	struct music_file *file = music_get(i);
 	int ret;
