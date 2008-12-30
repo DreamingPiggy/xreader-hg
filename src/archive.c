@@ -69,7 +69,7 @@ static void extract_zip_file_into_buffer_with_password(buffer * buf,
 		return;
 	}
 
-	memset(buf->ptr, 0, info.uncompressed_size + 1);
+	buf->ptr[info.uncompressed_size] = '\0';
 
 	ret = unzReadCurrentFile(unzf, buf->ptr, info.uncompressed_size);
 	buf->used = info.uncompressed_size;
@@ -162,7 +162,7 @@ static void extract_zip_file_into_buffer(buffer * buf, const char *archname,
 		return;
 	}
 
-	memset(buf->ptr, 0, info.uncompressed_size + 1);
+	buf->ptr[info.uncompressed_size] = '\0';
 	int ret = unzReadCurrentFile(unzf, buf->ptr, info.uncompressed_size);
 
 	if (ret < 0) {
@@ -311,7 +311,7 @@ static void extract_rar_file_into_buffer(buffer * buf, const char *archname,
 				return;
 			}
 
-			memset(buf->ptr, 0, header.UnpSize + 1);
+			buf->ptr[header.UnpSize] = '\0';
 			code = RARProcessFile(hrar, RAR_TEST, NULL, NULL);
 			break;
 		}
@@ -352,7 +352,7 @@ static void extract_chm_file_into_buffer(buffer * buf, const char *archname,
 		return;
 	}
 
-	memset(buf->ptr, 0, ui.length + 1);
+	buf->ptr[ui.length] = '\0';
 
 	buf->used = chm_retrieve_object(chm, &ui, (byte *) buf->ptr, 0, ui.length);
 	chm_close(chm);
