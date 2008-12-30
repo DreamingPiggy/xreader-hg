@@ -189,20 +189,6 @@ static int rebuild_shuffle_data(void)
 		g_shuffle.index = 1;
 		g_shuffle.first_time = false;
 	}
-#if 0
-	char str[128] = { 0 };
-	unsigned i;
-
-	for (i = 0; i < g_shuffle.size; ++i) {
-		char t[128];
-
-		SPRINTF_S(t, "%d ", g_shuffle.table[i]);
-
-		STRCAT_S(str, t);
-	}
-
-	dbg_printf(d, "shuffle table: %s\n", str);
-#endif
 
 	return 0;
 }
@@ -212,21 +198,6 @@ static int shuffle_next(void)
 	if (g_list.cycle_mode == conf_cycle_random) {
 		if (g_list.is_list_playing)
 			stack_push(&played, g_list.curr_pos);
-
-#if 0
-		char str[128] = { 0 };
-		unsigned i;
-
-		for (i = 0; i < stack_size(&played); ++i) {
-			char t[128];
-
-			SPRINTF_S(t, "%d ", played.a[i]);
-
-			STRCAT_S(str, t);
-		}
-
-		dbg_printf(d, "played stack: %s\n", str);
-#endif
 
 		if (g_shuffle.index == g_shuffle.size ||
 			g_shuffle.size != music_maxindex()
@@ -782,20 +753,32 @@ int music_init(void)
 
 int music_free(void)
 {
+	int ret;
+	unsigned to = 500000;
+
 	music_lock();
-	int ret = music_stop();
+
+	do {
+		ret = music_stop();
+		sceKernelDelayThread(500000);
+	} while (ret != 0);
 
 	g_list.is_list_playing = 0;
-	if (ret < 0) {
-		music_unlock();
-		return ret;
-	}
 	g_thread_actived = 0;
 	music_unlock();
 	free_shuffle_data();
+
+	if (sceKernelWaitThreadEnd(g_music_thread, &to) != 0) {
+		sceKernelTerminateDeleteThread(g_music_thread);
+	} else {
+		sceKernelDeleteThread(g_music_thread);
+	}
+
 	ret = sceKernelDeleteSema(music_sema);
+
 	if (ret < 0)
 		return ret;
+
 	return 0;
 }
 

@@ -1065,10 +1065,11 @@ int read_mp3_info(struct MP3Info *info, mp3_reader_data * data)
 
 int free_mp3_info(struct MP3Info *info)
 {
-	if (info->frameoff)
+	if (info->frameoff) {
 		free(info->frameoff);
-
-	memset(info, 0, sizeof(*info));
+		info->frameoff = NULL;
+	}
+//  memset(info, 0, sizeof(*info));
 
 	return 0;
 }
