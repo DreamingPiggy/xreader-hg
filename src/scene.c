@@ -5976,6 +5976,34 @@ extern void scene_exit(void)
 	sceKernelExitGame();
 }
 
+#ifdef ENABLE_MUSIC
+extern void scene_power_playing_music(bool is_playing)
+{
+	if (is_playing) {
+		// 音乐正在播放？
+		// defaultCPUClock
+		struct music_info info = { 0 };
+		info.type = MD_GET_CPUFREQ;
+
+		if (musicdrv_get_info(&info) == 0) {
+			if (info.psp_freq[0] != 0) {
+				int cpu = max(info.psp_freq[0], freq_list[config.freqs[0]][0]);
+
+				xrSetCpuClock(cpu, 0);
+				return;
+			}
+		}
+
+		power_set_clock(freq_list[config.freqs[1]][0],
+				freq_list[config.freqs[1]][1]);
+	} else {
+		// 最高频率
+		power_set_clock(freq_list[config.freqs[0]][0],
+				freq_list[config.freqs[0]][1]);
+	}
+}
+#endif
+
 extern void scene_power_save(bool save)
 {
 	if (save) {

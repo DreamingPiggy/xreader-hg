@@ -22,6 +22,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include "config.h"
 #include "scene.h"
 #include "xmp3audiolib.h"
 #include "musicmgr.h"
@@ -385,6 +386,7 @@ static int tta_load(const char *spath, const char *lpath)
 static int tta_play(void)
 {
 	tta_lock();
+	scene_power_playing_music(true);
 	g_status = ST_PLAYING;
 	tta_unlock();
 
@@ -400,6 +402,7 @@ static int tta_pause(void)
 {
 	tta_lock();
 	g_status = ST_PAUSED;
+	scene_power_playing_music(false);
 	tta_unlock();
 
 	return 0;

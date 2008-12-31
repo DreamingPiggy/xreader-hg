@@ -22,6 +22,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include "config.h"
 #include "scene.h"
 #include "xmp3audiolib.h"
 #include "musicmgr.h"
@@ -586,6 +587,7 @@ static int wav_load(const char *spath, const char *lpath)
 static int wav_play(void)
 {
 	wav_lock();
+	scene_power_playing_music(true);
 	g_status = ST_PLAYING;
 	wav_unlock();
 
@@ -601,6 +603,7 @@ static int wav_pause(void)
 {
 	wav_lock();
 	g_status = ST_PAUSED;
+	scene_power_playing_music(false);
 	wav_unlock();
 
 	return 0;
