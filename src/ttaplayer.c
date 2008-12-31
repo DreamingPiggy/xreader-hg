@@ -142,8 +142,7 @@ static int tta_set_opt(const char *key, const char *values)
 
 	for (i = 0; i < argc; ++i) {
 		if (!strncasecmp
-				   (argv[i], "show_encoder_msg",
-					sizeof("show_encoder_msg") - 1)) {
+			(argv[i], "show_encoder_msg", sizeof("show_encoder_msg") - 1)) {
 			if (opt_is_on(argv[i])) {
 				show_encoder_msg = true;
 			} else {
@@ -590,8 +589,7 @@ static int tta_get_info(struct music_info *pinfo)
 	}
 	if (pinfo->type & MD_GET_ENCODEMSG) {
 		if (show_encoder_msg) {
-			SPRINTF_S(pinfo->encode_msg, "Ñ¹ËõÂÊ: %.2f",
-					g_info.COMPRESS);
+			SPRINTF_S(pinfo->encode_msg, "Ñ¹ËõÂÊ: %.2f", g_info.COMPRESS);
 		} else {
 			pinfo->encode_msg[0] = '\0';
 		}

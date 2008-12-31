@@ -173,8 +173,7 @@ static int wav_set_opt(const char *key, const char *values)
 
 	for (i = 0; i < argc; ++i) {
 		if (!strncasecmp
-				   (argv[i], "show_encoder_msg",
-					sizeof("show_encoder_msg") - 1)) {
+			(argv[i], "show_encoder_msg", sizeof("show_encoder_msg") - 1)) {
 			if (opt_is_on(argv[i])) {
 				show_encoder_msg = true;
 			} else {
