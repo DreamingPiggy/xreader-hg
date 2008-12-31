@@ -208,7 +208,7 @@ static int madmp3_seek_seconds_offset_brute(double offset)
 
 	dbg_printf(d, "%s: jumping to %d frame, offset %08x", __func__, pos,
 			   (int) mp3info.frameoff[pos]);
-	dbg_printf(d, "%s: frame range (0~%u)", __func__, mp3info.frames);
+	dbg_printf(d, "%s: frame range (0~%u)", __func__, (unsigned)mp3info.frames);
 
 	if (pos >= mp3info.frames) {
 		__end();
