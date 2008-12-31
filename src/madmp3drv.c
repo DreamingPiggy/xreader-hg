@@ -596,7 +596,7 @@ static int madmp3_load(const char *spath, const char *lpath)
 
 	dbg_printf(d, "%s: loading %s", __func__, spath);
 	g_status = ST_UNKNOWN;
-	data.fd = sceIoOpen(spath, PSP_O_RDONLY, 777);
+	data.fd = sceIoOpen(spath, PSP_O_RDONLY, 0777);
 
 	if (data.fd < 0) {
 		return data.fd;
