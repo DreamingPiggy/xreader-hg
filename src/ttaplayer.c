@@ -590,7 +590,8 @@ static int tta_get_info(struct music_info *pinfo)
 	}
 	if (pinfo->type & MD_GET_ENCODEMSG) {
 		if (show_encoder_msg) {
-			SPRINTF_S(pinfo->encode_msg, "%s: %.2f", _("Ñ¹ËõÂÊ"), g_info.COMPRESS);
+			SPRINTF_S(pinfo->encode_msg, "%s: %.2f", _("Ñ¹ËõÂÊ"),
+					  g_info.COMPRESS);
 		} else {
 			pinfo->encode_msg[0] = '\0';
 		}
