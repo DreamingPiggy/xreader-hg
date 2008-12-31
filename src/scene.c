@@ -5948,12 +5948,6 @@ extern void scene_exit(void)
 
 #ifdef ENABLE_MUSIC
 	music_list_stop();
-#ifdef ENABLE_ME
-	extern void *pMMgr;
-
-	MusicMgrRelease(pMMgr);
-	DirRelease();
-#endif
 	char mp3conf[PATH_MAX];
 
 	STRCPY_S(mp3conf, scene_appdir());
