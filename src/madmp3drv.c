@@ -418,9 +418,7 @@ static void madmp3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 				if (MAD_RECOVERABLE(stream.error)
 					|| stream.error == MAD_ERROR_BUFLEN) {
 					if (stream.error == MAD_ERROR_LOSTSYNC) {
-						// likely to be ID3 Tags, skip it
-						mad_stream_skip(&stream,
-										stream.bufend - stream.this_frame);
+						mad_stream_skip(&stream, 1);
 					}
 					g_buff_frame_size = 0;
 					g_buff_frame_start = 0;
