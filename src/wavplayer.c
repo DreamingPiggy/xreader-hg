@@ -30,6 +30,7 @@
 #include "common/utils.h"
 #include "apetaglib/APETag.h"
 #include "dbg.h"
+#include "ssv.h"
 
 typedef struct reader_data_t
 {
@@ -161,8 +162,29 @@ static inline int wav_unlock(void)
  *
  * @return 成功时返回0
  */
-static int wav_set_opt(const char *key, const char *value)
+static int wav_set_opt(const char *key, const char *values)
 {
+	int argc, i;
+	char **argv;
+
+	dbg_printf(d, "%s: options are %s", __func__, values);
+
+	build_args(values, &argc, &argv);
+
+	for (i = 0; i < argc; ++i) {
+		if (!strncasecmp
+				   (argv[i], "show_encoder_msg",
+					sizeof("show_encoder_msg") - 1)) {
+			if (opt_is_on(argv[i])) {
+				show_encoder_msg = true;
+			} else {
+				show_encoder_msg = false;
+			}
+		}
+	}
+
+	clean_args(argc, argv);
+
 	return 0;
 }
 

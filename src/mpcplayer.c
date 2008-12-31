@@ -51,8 +51,6 @@ static mpc_decoder decoder;
 static mpc_reader reader;
 static mpc_streaminfo info;
 
-static bool show_encoder_msg = false;
-
 /*
   Our implementations of the mpc_reader callback functions.
 */

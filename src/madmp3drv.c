@@ -126,11 +126,6 @@ static bool use_brute_method = false;
 static bool use_me = false;
 
 /**
- * 显示编码器信息
- */
-static bool show_encoder_msg = false;
-
-/**
  * Media Engine buffer缓存
  */
 unsigned long mp3_codec_buffer[65] __attribute__ ((aligned(64)));
