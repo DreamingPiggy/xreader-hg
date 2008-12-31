@@ -31,6 +31,7 @@
 #include "apetaglib/APETag.h"
 #include "tta/ttalib.h"
 #include "ssv.h"
+#include "simple_gettext.h"
 #include "dbg.h"
 
 static int __end(void);
@@ -426,9 +427,6 @@ static int __end(void)
 
 	g_play_time = 0.;
 
-	player_stop();
-	close_tta_file(&g_info);
-
 	return 0;
 }
 
@@ -449,6 +447,9 @@ static int tta_end(void)
 		free(g_buff);
 		g_buff = NULL;
 	}
+
+	player_stop();
+	close_tta_file(&g_info);
 
 	g_status = ST_STOPPED;
 
@@ -589,7 +590,7 @@ static int tta_get_info(struct music_info *pinfo)
 	}
 	if (pinfo->type & MD_GET_ENCODEMSG) {
 		if (show_encoder_msg) {
-			SPRINTF_S(pinfo->encode_msg, "Ñ¹ËõÂÊ: %.2f", g_info.COMPRESS);
+			SPRINTF_S(pinfo->encode_msg, "%s: %.2f", _("Ñ¹ËõÂÊ"), g_info.COMPRESS);
 		} else {
 			pinfo->encode_msg[0] = '\0';
 		}
