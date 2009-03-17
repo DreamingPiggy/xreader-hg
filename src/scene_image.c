@@ -68,8 +68,8 @@ int curtop = 0, curleft = 0, xpos = 0, ypos = 0;
 bool img_needrf = true, img_needrc = true, img_needrp = true;
 static bool showinfo = false, thumb = false;
 int imgh;
-bool slideshow = false;
-time_t now = 0, lasttime = 0;
+static bool slideshow = false;
+static time_t now = 0, lasttime = 0;
 extern void *framebuffer;
 extern win_menu_predraw_data g_predraw;
 
@@ -108,22 +108,33 @@ static int open_image(dword selidx)
 	if (imgdata == NULL && shareimg) {
 		imgshow = NULL;
 	}
+
 	return result;
+}
+
+static inline void reset_image_show_ptr(void)
+{
+	if (imgshow != imgdata && imgshow != NULL) {
+		free(imgshow);
+		imgshow = NULL;
+	}
+}
+
+static inline void reset_image_data_ptr(void)
+{
+	if (imgdata != NULL) {
+		if (imgshow == imgdata)
+			imgshow = NULL;
+
+		free(imgdata);
+		imgdata = NULL;
+	}
 }
 
 static void reset_image_ptr(void)
 {
-	if (imgshow != NULL && imgshow != imgdata) {
-		free(imgshow);
-		imgshow = NULL;
-	}
-
-	if (imgdata != NULL) {
-		if (imgshow == imgdata)
-			imgshow = NULL;
-		free(imgdata);
-		imgdata = NULL;
-	}
+	reset_image_show_ptr();
+	reset_image_data_ptr();
 }
 
 static void report_image_error(int status)
@@ -217,14 +228,15 @@ static dword scene_rotateimage(void)
 
 	if (config.fit > 0
 		&& (config.fit != conf_fit_custom || config.scale != 100)) {
-		if (imgshow != NULL && imgshow != imgdata)
-			free(imgshow);
-		imgshow = NULL;
+
+		reset_image_show_ptr();
+
 		if (config.fit == conf_fit_custom) {
 			width_rotated = width * config.scale / 100;
 			height_rotated = height * config.scale / 100;
 		} else if (config.fit == conf_fit_width) {
 			config.scale = PSP_SCREEN_WIDTH / width;
+
 			if (config.scale > 200)
 				config.scale = (config.scale / 50) * 50;
 			else {
@@ -232,10 +244,12 @@ static dword scene_rotateimage(void)
 				if (config.scale < 10)
 					config.scale = 10;
 			}
+
 			width_rotated = PSP_SCREEN_WIDTH;
 			height_rotated = height * PSP_SCREEN_WIDTH / width;
 		} else if (config.fit == conf_fit_dblwidth) {
 			config.scale = 960 / width;
+
 			if (config.scale > 200)
 				config.scale = (config.scale / 50) * 50;
 			else {
@@ -243,10 +257,12 @@ static dword scene_rotateimage(void)
 				if (config.scale < 10)
 					config.scale = 10;
 			}
+
 			width_rotated = 960;
 			height_rotated = height * 960 / width;
 		} else if (config.fit == conf_fit_dblheight) {
 			config.scale = imgh / height;
+
 			if (config.scale > 200)
 				config.scale = (config.scale / 50) * 50;
 			else {
@@ -254,10 +270,12 @@ static dword scene_rotateimage(void)
 				if (config.scale < 10)
 					config.scale = 10;
 			}
+
 			height_rotated = imgh * 2;
 			width_rotated = width * imgh * 2 / height;
 		} else {
 			config.scale = imgh / height;
+
 			if (config.scale > 200)
 				config.scale = (config.scale / 50) * 50;
 			else {
@@ -265,13 +283,15 @@ static dword scene_rotateimage(void)
 				if (config.scale < 10)
 					config.scale = 10;
 			}
+
 			height_rotated = imgh;
 			width_rotated = width * imgh / height;
 		}
-		// sceGuCopyImage need the length to be block aligned...
+
 		imgshow =
 			(pixel *) memalign(16,
 							   sizeof(pixel) * width_rotated * height_rotated);
+
 		if (imgshow != NULL) {
 			if (config.bicubic)
 				image_zoom_bicubic(imgdata, width, height,
@@ -361,6 +381,124 @@ static int exif_max_width(void)
 	return max_h;
 }
 
+static void scene_show_info(int selidx)
+{
+	char infostr[64];
+	int ilen;
+
+	if (config.fit == conf_fit_custom)
+		SPRINTF_S(infostr, _("%dx%d  %d%%  旋转角度 %d  %s"),
+				  (int) width_rotated, (int) height_rotated,
+				  (int) config.scale, (int) oldangle,
+				  config.bicubic ? _("三次立方") : _("两次线性"));
+	else
+		SPRINTF_S(infostr, _("%dx%d  %s  旋转角度 %d  %s"),
+				  (int) width_rotated, (int) height_rotated,
+				  conf_get_fitname(config.fit), (int) oldangle,
+				  config.bicubic ? _("三次立方") : _("两次线性"));
+
+	ilen = strlen(infostr);
+
+	if (config.imginfobar) {
+		if (config.load_exif && exif_array && exif_array->used > 0) {
+			int width = exif_max_width();
+
+			width =
+				width >
+				PSP_SCREEN_WIDTH - 10 ? PSP_SCREEN_WIDTH - 10 : width;
+			int height = PSP_SCREEN_HEIGHT / DISP_FONTSIZE - 1;
+			int line_num =
+				exif_array->used <= height ? exif_array->used : height;
+			int top =
+				(PSP_SCREEN_HEIGHT -
+				 (1 + height) * DISP_FONTSIZE) / 2 >
+				1 ? (PSP_SCREEN_HEIGHT -
+					 (1 + height) * DISP_FONTSIZE) / 2 : 1;
+			int left =
+				(PSP_SCREEN_WIDTH - width) / 4 - 10 <
+				1 ? 1 : (PSP_SCREEN_WIDTH - width) / 4 - 10;
+			int right =
+				(PSP_SCREEN_WIDTH + 3 * width) / 4 >=
+				PSP_SCREEN_WIDTH - 1 ? PSP_SCREEN_WIDTH -
+				2 : (PSP_SCREEN_WIDTH + 3 * width) / 4;
+			disp_fillrect(left, top, right,
+						  top + DISP_FONTSIZE * line_num, 0);
+			disp_rectangle(left - 1, top - 1, right + 1,
+						   top + DISP_FONTSIZE * line_num + 1, COLOR_WHITE);
+			int i;
+
+			for (i = 0; i < line_num; ++i) {
+				const char *teststr = exif_array->ptr[i]->ptr;
+
+				disp_putnstring((PSP_SCREEN_WIDTH -
+								 width) / 4,
+								top + i * DISP_FONTSIZE,
+								COLOR_WHITE,
+								(const byte *) teststr,
+								strlen(teststr), 0, 0, DISP_FONTSIZE, 0);
+			}
+		}
+
+		disp_fillrect(0, PSP_SCREEN_HEIGHT - DISP_FONTSIZE, 479, 271, 0);
+		disp_putnstring(0, PSP_SCREEN_HEIGHT - DISP_FONTSIZE,
+						COLOR_WHITE,
+						(const byte *) filelist[selidx].name,
+						960 / DISP_FONTSIZE - ilen - 1, 0, 0,
+						DISP_FONTSIZE, 0);
+		disp_putnstring(PSP_SCREEN_WIDTH -
+						DISP_FONTSIZE / 2 * ilen,
+						PSP_SCREEN_HEIGHT - DISP_FONTSIZE,
+						COLOR_WHITE, (const byte *) infostr,
+						ilen, 0, 0, DISP_FONTSIZE, 0);
+	} else {
+		disp_fillrect(11, 11, 10 + DISP_FONTSIZE / 2 * ilen,
+					  10 + DISP_FONTSIZE, 0);
+		disp_putnstring(11, 11, COLOR_WHITE,
+						(const byte *) infostr, ilen, 0, 0,
+						DISP_FONTSIZE, 0);
+	}
+}
+
+static void scene_show_exif(void)
+{
+	if (!config.imginfobar
+		|| !(config.load_exif && exif_array && exif_array->used > 0)) {
+		dword top =
+			(PSP_SCREEN_HEIGHT - thumb_height) / 2, bottom =
+			top + thumb_height;
+		dword thumbl = 0, thumbr = 0, thumbt = 0, thumbb = 0;
+
+		if (paintleft > 0) {
+			thumbl = 0;
+			thumbr = thumb_width - 1;
+		} else {
+			thumbl = curleft * thumb_width / width_rotated;
+			thumbr = (curleft + PSP_SCREEN_WIDTH - 1) * thumb_width / width_rotated;
+		}
+
+		if (painttop > 0) {
+			thumbt = 0;
+			thumbb = thumbb - 1;
+		} else {
+			thumbt = curtop * thumb_height / height_rotated;
+			thumbb = (curtop + imgh - 1) * thumb_height / height_rotated;
+		}
+
+		disp_putimage(32, top, thumb_width, thumb_height, 0, 0, thumbimg);
+		disp_line(34, bottom, 32 + thumb_width, bottom, 0);
+		disp_line(32 + thumb_width, top + 2, 32 + thumb_width,
+				  bottom - 1, 0);
+		disp_rectangle(33 + thumbl, top + thumbt + 1,
+					   33 + thumbr, top + thumbb + 1, 0);
+		short b =
+			75 - config.imgbrightness > 0 ? 75 - config.imgbrightness : 0;
+
+		disp_rectangle(32 + thumbl, top + thumbt, 32 + thumbr,
+					   top + thumbb, disp_grayscale(COLOR_WHITE,
+													0, 0, 0, b));
+	}
+}
+
 static int scene_printimage(int selidx)
 {
 	disp_waitv();
@@ -369,120 +507,15 @@ static int scene_printimage(int selidx)
 				  curleft, curtop, imgshow);
 
 	if (config.imginfobar || showinfo) {
-		char infostr[64];
-		int ilen;
-
-		if (config.fit == conf_fit_custom)
-			SPRINTF_S(infostr, _("%dx%d  %d%%  旋转角度 %d  %s"),
-					  (int) width_rotated, (int) height_rotated,
-					  (int) config.scale, (int) oldangle,
-					  config.bicubic ? _("三次立方") : _("两次线性"));
-		else
-			SPRINTF_S(infostr, _("%dx%d  %s  旋转角度 %d  %s"),
-					  (int) width_rotated, (int) height_rotated,
-					  conf_get_fitname(config.fit), (int) oldangle,
-					  config.bicubic ? _("三次立方") : _("两次线性"));
-
-		ilen = strlen(infostr);
-
-		if (config.imginfobar) {
-			if (config.load_exif && exif_array && exif_array->used > 0) {
-				int width = exif_max_width();
-
-				width =
-					width >
-					PSP_SCREEN_WIDTH - 10 ? PSP_SCREEN_WIDTH - 10 : width;
-				int height = PSP_SCREEN_HEIGHT / DISP_FONTSIZE - 1;
-				int line_num =
-					exif_array->used <= height ? exif_array->used : height;
-				int top =
-					(PSP_SCREEN_HEIGHT -
-					 (1 + height) * DISP_FONTSIZE) / 2 >
-					1 ? (PSP_SCREEN_HEIGHT -
-						 (1 + height) * DISP_FONTSIZE) / 2 : 1;
-				int left =
-					(PSP_SCREEN_WIDTH - width) / 4 - 10 <
-					1 ? 1 : (PSP_SCREEN_WIDTH - width) / 4 - 10;
-				int right =
-					(PSP_SCREEN_WIDTH + 3 * width) / 4 >=
-					PSP_SCREEN_WIDTH - 1 ? PSP_SCREEN_WIDTH -
-					2 : (PSP_SCREEN_WIDTH + 3 * width) / 4;
-				disp_fillrect(left, top, right,
-							  top + DISP_FONTSIZE * line_num, 0);
-				disp_rectangle(left - 1, top - 1, right + 1,
-							   top + DISP_FONTSIZE * line_num + 1, COLOR_WHITE);
-				int i;
-
-				for (i = 0; i < line_num; ++i) {
-					const char *teststr = exif_array->ptr[i]->ptr;
-
-					disp_putnstring((PSP_SCREEN_WIDTH -
-									 width) / 4,
-									top + i * DISP_FONTSIZE,
-									COLOR_WHITE,
-									(const byte *) teststr,
-									strlen(teststr), 0, 0, DISP_FONTSIZE, 0);
-				}
-			}
-
-			disp_fillrect(0, PSP_SCREEN_HEIGHT - DISP_FONTSIZE, 479, 271, 0);
-			disp_putnstring(0, PSP_SCREEN_HEIGHT - DISP_FONTSIZE,
-							COLOR_WHITE,
-							(const byte *) filelist[selidx].name,
-							960 / DISP_FONTSIZE - ilen - 1, 0, 0,
-							DISP_FONTSIZE, 0);
-			disp_putnstring(PSP_SCREEN_WIDTH -
-							DISP_FONTSIZE / 2 * ilen,
-							PSP_SCREEN_HEIGHT - DISP_FONTSIZE,
-							COLOR_WHITE, (const byte *) infostr,
-							ilen, 0, 0, DISP_FONTSIZE, 0);
-		} else {
-			disp_fillrect(11, 11, 10 + DISP_FONTSIZE / 2 * ilen,
-						  10 + DISP_FONTSIZE, 0);
-			disp_putnstring(11, 11, COLOR_WHITE,
-							(const byte *) infostr, ilen, 0, 0,
-							DISP_FONTSIZE, 0);
-		}
+		scene_show_info(selidx);
 	}
+
 	if ((config.thumb == conf_thumb_always || thumb)) {
-		if (!config.imginfobar
-			|| !(config.load_exif && exif_array && exif_array->used > 0)) {
-			dword top =
-				(PSP_SCREEN_HEIGHT - thumb_height) / 2, bottom =
-				top + thumb_height;
-			dword thumbl = 0, thumbr = 0, thumbt = 0, thumbb = 0;
-
-			if (paintleft > 0) {
-				thumbl = 0;
-				thumbr = thumb_width - 1;
-			} else {
-				thumbl = curleft * thumb_width / width_rotated;
-				thumbr = (curleft + 479) * thumb_width / width_rotated;
-			}
-
-			if (painttop > 0) {
-				thumbt = 0;
-				thumbb = thumbb - 1;
-			} else {
-				thumbt = curtop * thumb_height / height_rotated;
-				thumbb = (curtop + imgh - 1) * thumb_height / height_rotated;
-			}
-
-			disp_putimage(32, top, thumb_width, thumb_height, 0, 0, thumbimg);
-			disp_line(34, bottom, 32 + thumb_width, bottom, 0);
-			disp_line(32 + thumb_width, top + 2, 32 + thumb_width,
-					  bottom - 1, 0);
-			disp_rectangle(33 + thumbl, top + thumbt + 1,
-						   33 + thumbr, top + thumbb + 1, 0);
-			short b =
-				75 - config.imgbrightness > 0 ? 75 - config.imgbrightness : 0;
-
-			disp_rectangle(32 + thumbl, top + thumbt, 32 + thumbr,
-						   top + thumbb, disp_grayscale(COLOR_WHITE,
-														0, 0, 0, b));
-		}
+		scene_show_exif();
 	}
+
 	disp_flip();
+
 	return 0;
 }
 
@@ -529,6 +562,7 @@ static void image_right(void)
 
 static void image_move(dword key)
 {
+	// cancel z mode
 	in_move_z_mode = false;
 
 	if ((key & config.imgkey[14] && !(key & config.imgkey[15]))
@@ -562,9 +596,12 @@ static bool image_paging_movedown(void)
 {
 	if (curtop + imgh < height_rotated) {
 		curtop += MAX(imgh - (int) config.imgpagereserve, 0);
+
 		if (curtop + imgh > height_rotated)
 			curtop = height_rotated - imgh;
+
 		img_needrp = true;
+
 		return false;
 	}
 
@@ -575,9 +612,12 @@ static bool image_paging_moveup(void)
 {
 	if (curtop > 0) {
 		curtop -= MAX(imgh - (int) config.imgpagereserve, 0);
+
 		if (curtop < 0)
 			curtop = 0;
+
 		img_needrp = true;
+
 		return false;
 	}
 
@@ -588,9 +628,12 @@ static bool image_paging_moveright(void)
 {
 	if (curleft + PSP_SCREEN_WIDTH < width_rotated) {
 		curleft += PSP_SCREEN_WIDTH;
+
 		if (curleft + PSP_SCREEN_WIDTH > width_rotated)
 			curleft = width_rotated - PSP_SCREEN_WIDTH;
+
 		img_needrp = true;
+
 		return false;
 	}
 
@@ -601,9 +644,12 @@ static bool image_paging_moveleft(void)
 {
 	if (curleft > 0) {
 		curleft -= PSP_SCREEN_WIDTH;
+
 		if (curleft < 0)
 			curleft = 0;
+
 		img_needrp = true;
+
 		return false;
 	}
 
@@ -616,9 +662,12 @@ static bool image_paging_movedown_smooth(void)
 		curtop +=
 			config.image_scroll_chgn_speed ? (int) g_current_spd : (int) config.
 			imgpaging_spd;
+
 		if (curtop > height_rotated - imgh)
 			curtop = height_rotated - imgh;
+
 		img_needrp = true;
+
 		return false;
 	}
 
@@ -631,9 +680,12 @@ static bool image_paging_moveup_smooth(void)
 		curtop -=
 			config.image_scroll_chgn_speed ? (int) g_current_spd : (int) config.
 			imgpaging_spd;
+
 		if (curtop < 0)
 			curtop = 0;
+
 		img_needrp = true;
+
 		return false;
 	}
 
@@ -646,9 +698,12 @@ static bool image_paging_moveright_smooth(void)
 		curleft +=
 			config.image_scroll_chgn_speed ? (int) g_current_spd : (int) config.
 			imgpaging_spd;
+
 		if (curleft > width_rotated - PSP_SCREEN_WIDTH)
 			curleft = width_rotated - PSP_SCREEN_WIDTH;
+
 		img_needrp = true;
+
 		return false;
 	}
 
@@ -661,9 +716,12 @@ static bool image_paging_moveleft_smooth(void)
 		curleft -=
 			config.image_scroll_chgn_speed ? (int) g_current_spd : (int) config.
 			imgpaging_spd;
+
 		if (curleft < 0)
 			curleft = 0;
+
 		img_needrp = true;
+
 		return false;
 	}
 
@@ -697,12 +755,14 @@ static bool image_paging_updown(bool is_forward)
 			}
 			break;
 	}
+
 	if (is_forward)
 		curtop = (height_rotated > imgh
 				  && ypos == 2) ? height_rotated - imgh : 0;
 	else
 		curtop = (height_rotated > imgh
 				  && ypos < 2) ? height_rotated - imgh : 0;
+
 	switch (xpos) {
 		case 0:
 		case 1:
@@ -798,9 +858,6 @@ static bool image_paging_leftright(bool is_forward)
 
 static bool is_need_delay(void)
 {
-	if (config.imgpaging_interval == 0)
-		return false;
-
 	static u64 start, end;
 
 	if (g_imgpaging_count == 0)
@@ -813,26 +870,30 @@ static bool is_need_delay(void)
 		sceRtcGetCurrentTick(&start);
 	}
 
-	if (g_imgpaging_count < config.imgpaging_interval) {
-		if (config.image_scroll_chgn_speed && config.imgpaging_interval != 0) {
-			if (g_imgpaging_count <= config.imgpaging_interval / 2)
+	if (config.imgpaging_duration <= 1 || g_imgpaging_count < config.imgpaging_duration) {
+		if (config.image_scroll_chgn_speed && config.imgpaging_duration > 1) {
+			if (g_imgpaging_count <= config.imgpaging_duration / 2)
 				g_current_spd =
-					config.imgpaging_spd * 2 * g_imgpaging_count /
-					config.imgpaging_interval;
+					config.imgpaging_spd * 2 * g_imgpaging_count / config.imgpaging_duration;
 			else
 				g_current_spd =
 					config.imgpaging_spd -
 					config.imgpaging_spd * 2 * (g_imgpaging_count -
-												config.imgpaging_interval / 2) /
-					config.imgpaging_interval;
+												config.imgpaging_duration / 2) /
+					config.imgpaging_duration;
+			
+			g_current_spd = max(g_current_spd, 1);
 		} else
 			g_current_spd = config.imgpaging_spd;
+
 		return false;
 	} else {
-		if (g_imgpaging_count >= config.imgpaging_interval * 2) {
+		if (g_imgpaging_count >= config.imgpaging_duration + config.imgpaging_interval) {
 			g_imgpaging_count = 0;
 		}
-		sceKernelDelayThread(100000 / 2);
+
+		sceKernelDelayThread(100000);
+
 		return true;
 	}
 
@@ -878,18 +939,23 @@ static bool splashz(void)
 		} else {
 			goto finish;
 		}
+
 		if (curleft < 0) {
 			curleft = 0;
 		}
+
 		if (curleft + PSP_SCREEN_WIDTH > width_rotated) {
 			curleft = width_rotated - PSP_SCREEN_WIDTH;
 		}
+
 		if (curtop < 0) {
 			curtop = 0;
 		}
+
 		if (curtop > height_rotated - imgh) {
 			curtop = height_rotated - imgh;
 		}
+
 		img_needrp = true;
 	} else {
 	  finish:
@@ -906,12 +972,21 @@ static bool splashz(void)
 	return false;
 }
 
+#define MAGNETIC_X_BORDER (PSP_SCREEN_WIDTH / 4)
+#define MAGNETIC_Y_BORDER (PSP_SCREEN_HEIGHT / 4)
+
 static bool z_mode_up(void)
 {
 	desty = curtop + MAX(imgh - (int) config.imgpagereserve, 0);
 
 	if (desty + imgh > height_rotated)
 		desty = height_rotated - imgh;
+
+	if (config.magnetic_scrolling) {
+		if (desty > height_rotated - imgh - MAGNETIC_Y_BORDER)
+			desty = height_rotated - imgh;
+	}
+
 	if (curtop + imgh < height_rotated) {
 		return false;
 	}
@@ -925,6 +1000,12 @@ static bool z_mode_down(void)
 
 	if (desty < 0)
 		desty = 0;
+
+	if (config.magnetic_scrolling) {
+		if (desty < MAGNETIC_Y_BORDER)
+			desty = 0;
+	}
+
 	if (curtop > 0) {
 		return false;
 	}
@@ -939,6 +1020,12 @@ static bool z_mode_left(void)
 	if (destx < 0) {
 		destx = 0;
 	}
+
+	if (config.magnetic_scrolling) {
+		if (destx < MAGNETIC_X_BORDER)
+			destx = 0;
+	}
+
 	if (curleft > 0) {
 		return false;
 	}
@@ -950,9 +1037,15 @@ static bool z_mode_right(void)
 {
 	destx = curleft + MAX(imgh - (int) config.imgpagereserve, 0);
 
-	if (destx + PSP_SCREEN_WIDTH < width_rotated) {
+	if (destx + PSP_SCREEN_WIDTH > width_rotated) {
 		destx = width_rotated - PSP_SCREEN_WIDTH;
 	}
+
+	if (config.magnetic_scrolling) {
+		if (destx > width_rotated - PSP_SCREEN_WIDTH - MAGNETIC_X_BORDER)
+			destx = width_rotated - PSP_SCREEN_WIDTH;
+	}
+
 	if (curleft + PSP_SCREEN_WIDTH < width_rotated) {
 		return false;
 	}
@@ -967,19 +1060,21 @@ bool enter_z_mode(bool is_forward, bool leftright)
 	srcy = curtop;
 
 	if (leftright) {
-		if (is_forward)
+		if (is_forward) {
 			destx = (width_rotated > PSP_SCREEN_WIDTH
 					 && xpos == 2) ? width_rotated - PSP_SCREEN_WIDTH : 0;
-		else
+		} else {
 			destx = (width_rotated > PSP_SCREEN_WIDTH
 					 && xpos < 2) ? width_rotated - PSP_SCREEN_WIDTH : 0;
+		}
 	} else {
-		if (is_forward)
+		if (is_forward) {
 			desty = (height_rotated > imgh
 					 && ypos == 2) ? height_rotated - imgh : 0;
-		else
+		} else {
 			desty = (height_rotated > imgh
 					 && ypos < 2) ? height_rotated - imgh : 0;
+		}
 	}
 
 	if (leftright) {
@@ -1035,6 +1130,7 @@ bool enter_z_mode(bool is_forward, bool leftright)
 	curtop = 0;
 	destx = 0;
 	desty = 0;
+
 	return true;
 }
 
@@ -1072,8 +1168,8 @@ static bool image_paging_leftright_smooth(bool is_forward)
 			break;
 	}
 
-	g_imgpaging_count = config.imgpaging_interval;
-	sceKernelDelayThread(100000 * config.imgpaging_interval / 2);
+	g_imgpaging_count = config.imgpaging_duration;
+	sceKernelDelayThread(100000 * config.imgpaging_duration);
 
 	if (!in_move_z_mode) {
 		return enter_z_mode(is_forward, true);
@@ -1116,8 +1212,8 @@ static bool image_paging_updown_smooth(bool is_forward)
 			break;
 	}
 
-	g_imgpaging_count = config.imgpaging_interval;
-	sceKernelDelayThread(100000 * config.imgpaging_interval / 2);
+	g_imgpaging_count = config.imgpaging_duration;
+	sceKernelDelayThread(100000 * config.imgpaging_duration);
 
 	if (!in_move_z_mode) {
 		return enter_z_mode(is_forward, false);
@@ -1199,8 +1295,12 @@ static void prev_image(dword * selidx)
 	z_mode_cnt = 0;
 }
 
+static bool slideshow_move = false;
+
 static int image_handle_input(dword * selidx, dword key)
 {
+	slideshow_move = false;
+
 	if (key == 0)
 		goto next;
 
@@ -1210,39 +1310,39 @@ static int image_handle_input(dword * selidx, dword key)
 	if (key == (PSP_CTRL_SELECT | PSP_CTRL_START)) {
 		return exit_confirm();
 	} else if (key == PSP_CTRL_SELECT) {
-		img_needrp = true;
 		bool lastbicubic = config.bicubic;
+
+		img_needrp = true;
 
 		if (scene_options(selidx)) {
 			imgreading = false;
-			if (imgshow != NULL && imgshow != imgdata) {
-				free(imgshow);
-				imgshow = NULL;
-			}
-			if (imgdata != NULL) {
-				free(imgdata);
-				imgdata = NULL;
-			}
+			reset_image_ptr();
 			disp_duptocachealpha(50);
+
 			return *selidx;
 		}
+
 		if (lastbicubic != config.bicubic)
 			img_needrc = true;
+
 		if (config.imginfobar)
 			imgh = PSP_SCREEN_HEIGHT - DISP_FONTSIZE;
 		else
 			imgh = PSP_SCREEN_HEIGHT;
+
 	} else if (key == PSP_CTRL_START) {
 		scene_mp3bar();
 		img_needrp = true;
 	} else if (key == config.imgkey[1] || key == config.imgkey2[1]
 			   || key == CTRL_FORWARD) {
+		bool should_exit = false;
+
 		if (config.imgpaging == conf_imgpaging_updown ||
 			config.imgpaging == conf_imgpaging_leftright)
 			sceKernelDelayThread(200000);
+
 		if (!image_paging(true, config.imgpaging))
 			goto next;
-		bool should_exit = false;
 
 		next_image(selidx, &should_exit);
 
@@ -1254,8 +1354,10 @@ static int image_handle_input(dword * selidx, dword key)
 		if (config.imgpaging == conf_imgpaging_updown ||
 			config.imgpaging == conf_imgpaging_leftright)
 			sceKernelDelayThread(200000);
+
 		if (!image_paging(false, config.imgpaging))
 			goto next;
+
 		prev_image(selidx);
 	}
 #ifdef ENABLE_ANALOG
@@ -1266,25 +1368,33 @@ static int image_handle_input(dword * selidx, dword key)
 		x = x / 31 * (int) config.imgmvspd / 2;
 		y = y / 31 * (int) config.imgmvspd / 2;
 		curtop += y;
+
 		if (curtop + imgh > height_rotated)
 			curtop = (int) height_rotated - imgh;
+
 		if (curtop < 0)
 			curtop = 0;
+
 		curleft += x;
+
 		if (curleft + PSP_SCREEN_WIDTH > width_rotated)
 			curleft = (int) width_rotated - PSP_SCREEN_WIDTH;
+
 		if (curleft < 0)
 			curleft = 0;
+
 		thumb = (config.thumb == conf_thumb_scroll);
 		img_needrp = (thumb || orgtop != curtop || orgleft != curleft);
 	}
 #endif
 	else if (key == config.imgkey[2] || key == config.imgkey2[2]) {
 		ctrl_waitrelease();
+
 		if (config.fit == conf_fit_custom)
 			config.fit = conf_fit_none;
 		else
 			config.fit++;
+
 		img_needrc = img_needrp = true;
 	} else if (key == config.imgkey[10] || key == config.imgkey2[10]) {
 		config.bicubic = !config.bicubic;
@@ -1300,17 +1410,21 @@ static int image_handle_input(dword * selidx, dword key)
 					COLOR_WHITE, config.msgbcolor);
 		}
 	} else if (key == config.imgkey[7] || key == config.imgkey2[7]) {
+		SceCtrlData ctl;
+		int t = 0;
+
 		config.imginfobar = !config.imginfobar;
+
 		if (config.imginfobar)
 			imgh = PSP_SCREEN_HEIGHT - DISP_FONTSIZE;
 		else
 			imgh = PSP_SCREEN_HEIGHT;
+
 		if (height_rotated > imgh && curtop > height_rotated - imgh)
 			curtop = height_rotated - imgh;
+
 		img_needrc = (config.fit == conf_fit_height);
 		img_needrp = true;
-		SceCtrlData ctl;
-		int t = 0;
 
 		do {
 			sceCtrlReadBufferPositive(&ctl, 1);
@@ -1325,19 +1439,12 @@ static int image_handle_input(dword * selidx, dword key)
 					COLOR_WHITE, config.msgbcolor);
 		} else {
 			imgreading = false;
-			if (imgshow != NULL && imgshow != imgdata) {
-				free(imgshow);
-				imgshow = NULL;
-			}
-			if (imgdata != NULL) {
-				free(imgdata);
-				imgdata = NULL;
-			}
+			reset_image_ptr();
 			disp_duptocachealpha(50);
 			return *selidx;
 		}
 	} else if (key == config.imgkey[8] || key == config.imgkey2[8]) {
-		if (!showinfo) {
+		if (!slideshow && !showinfo) {
 			img_needrp = true;
 			showinfo = true;
 		}
@@ -1346,6 +1453,7 @@ static int image_handle_input(dword * selidx, dword key)
 			config.rotate = conf_rotate_270;
 		else
 			config.rotate--;
+
 		ctrl_waitreleasekey(key);
 		img_needrc = img_needrp = true;
 	} else if (key == config.imgkey[6] || key == config.imgkey2[6]) {
@@ -1353,6 +1461,7 @@ static int image_handle_input(dword * selidx, dword key)
 			config.rotate = conf_rotate_0;
 		else
 			config.rotate++;
+
 		ctrl_waitreleasekey(key);
 		img_needrc = img_needrp = true;
 	} else if (key == config.imgkey[3] || key == config.imgkey2[3]) {
@@ -1362,6 +1471,7 @@ static int image_handle_input(dword * selidx, dword key)
 			config.scale -= 10;
 		else
 			goto next;
+
 		config.fit = conf_fit_custom;
 		img_needrc = img_needrp = true;
 		ctrl_waitreleasekey(key);
@@ -1372,6 +1482,7 @@ static int image_handle_input(dword * selidx, dword key)
 			config.scale += 50;
 		else
 			goto next;
+
 		config.fit = conf_fit_custom;
 		img_needrc = img_needrp = true;
 		ctrl_waitreleasekey(key);
@@ -1385,6 +1496,7 @@ static int image_handle_input(dword * selidx, dword key)
 					  imgkey2[12] | config.imgkey2[13] | config.
 					  imgkey2[14] | config.imgkey2[15]
 					))) {
+		slideshow_move = true;
 		image_move(key);
 	} else
 		img_needrf = img_needrc = false;
@@ -1397,6 +1509,28 @@ static void scene_image_delay_action(void)
 {
 	if (config.dis_scrsave)
 		scePowerTick(0);
+}
+
+static int scene_slideshow_forward(dword *selidx)
+{
+	bool should_exit = false;
+
+	if (config.imgpaging == conf_imgpaging_updown ||
+			config.imgpaging == conf_imgpaging_leftright) {
+		sceKernelDelayThread(200000);
+	}
+
+	if (!image_paging(true, config.imgpaging)) {
+		return -1;
+	}
+
+	next_image(selidx, &should_exit);
+
+	if (should_exit) {
+		return *selidx;
+	}
+
+	return -1;
 }
 
 dword scene_readimage(dword selidx)
@@ -1437,6 +1571,7 @@ dword scene_readimage(dword selidx)
 				freq_leave(fid);
 				return selidx;
 			}
+
 			img_needrf = false;
 			sceRtcGetCurrentTick(&dbgnow);
 			dbg_printf(d, _("装载图像时间: %.2f秒"),
@@ -1467,15 +1602,17 @@ dword scene_readimage(dword selidx)
 		if (config.thumb == conf_thumb_scroll && thumb) {
 			thumb = false;
 			img_needrp = true;
-			key = ctrl_read_cont();
-		} else if (!slideshow || now - lasttime < config.slideinterval) {
-			key = ctrl_read_cont();
 		}
 
-		if (slideshow) {
+		key = ctrl_read_cont();
+
+		int ret = image_handle_input(&selidx, key);
+
+		if (ret == -1 && slideshow && !slideshow_move) {
 			if (key == PSP_CTRL_CIRCLE) {
-				key = 0;
-			} else if (key == PSP_CTRL_RTRIGGER) {
+				sceKernelDelayThread(1000000);
+				ctrl_waitrelease();
+			} else if (key != 0 && (key == config.imgkey[1] || key == config.imgkey2[1] || key == CTRL_FORWARD)) {
 				bool should_exit = false;
 
 				next_image(&selidx, &should_exit);
@@ -1483,7 +1620,7 @@ dword scene_readimage(dword selidx)
 				if (should_exit) {
 					return selidx;
 				}
-			} else if (key == PSP_CTRL_LTRIGGER) {
+			} else if (key != 0 && (key == config.imgkey[0] || key == config.imgkey2[0] || key == CTRL_BACK)) {
 				prev_image(&selidx);
 			} else {
 				scePowerTick(0);
@@ -1491,17 +1628,16 @@ dword scene_readimage(dword selidx)
 					config.imgpaging == conf_imgpaging_updown ||
 					config.imgpaging == conf_imgpaging_leftright) {
 					if (now - lasttime >= config.slideinterval) {
-						key = CTRL_FORWARD;
 						lasttime = now;
+						ret = scene_slideshow_forward(&selidx);
 					}
 				} else {
 					sceRtcGetCurrentTick(&slide_end);
 					if (pspDiffTime(&slide_end, &slide_start) >= 0.1) {
 						sceRtcGetCurrentTick(&slide_start);
-						key = ctrl_read_cont();
 					} else {
-						key = CTRL_FORWARD;
 						lasttime = now;
+						ret = scene_slideshow_forward(&selidx);
 					}
 				}
 			}
@@ -1511,8 +1647,6 @@ dword scene_readimage(dword selidx)
 			img_needrp = true;
 			showinfo = false;
 		}
-
-		int ret = image_handle_input(&selidx, key);
 
 		sceRtcGetCurrentTick(&timer_end);
 
