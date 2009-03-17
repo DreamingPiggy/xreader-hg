@@ -7,6 +7,7 @@
 #include "conf.h"
 #include "freq_lock.h"
 #include "rar_speed_test.h"
+#include "jpeg_speed_test.h"
 #include "hprm_test.h"
 #include "music_test.h"
 #include "commons.h"
@@ -69,9 +70,10 @@ int main_thr(unsigned int args, void *argp)
 	utils_del_file("ms0:/xTest.log");
 
 	while ( 1 ) {
+		jpeg_speed_test();
 //		rar_speed_test();
 //		hprm_test();
-		music_test();
+//		music_test();
 		sceKernelDelayThread(100000);
 	}
 	
