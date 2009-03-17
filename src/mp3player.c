@@ -1143,11 +1143,7 @@ static int mp3_get_info(struct music_info *info)
 		}
 	}
 	if (info->type & MD_GET_ENCODEMSG) {
-		if (show_encoder_msg) {
-			STRCPY_S(info->encode_msg, mp3info.tag.encoder);
-		} else {
-			info->encode_msg[0] = '\0';
-		}
+		info->encode_msg[0] = '\0';
 	}
 	if (info->type & MD_GET_INSKBPS) {
 		info->ins_kbps = get_inst_bitrate(&g_inst_br) / 1000;
