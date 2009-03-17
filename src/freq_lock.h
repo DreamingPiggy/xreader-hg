@@ -8,5 +8,6 @@ int freq_enter(int cpu, int bus);
 int freq_leave(int freq_id);
 int freq_enter_level(unsigned short level);
 int freq_leave_level(void);
+int dbg_freq();
 
 #endif

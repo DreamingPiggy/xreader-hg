@@ -105,16 +105,10 @@ int freq_add(int cpu, int bus)
 	return id;
 }
 
-static int update_freq(void)
+static int dump_freq(void)
 {
-	int i, max, maxsum;
-	int cpu, bus;
-
-	if (freqs == NULL)
-		return -1;
-
-#if 0
 	char t[128] = { 0 };
+	int i;
 
 	sprintf(t, "[ ");
 
@@ -125,7 +119,26 @@ static int update_freq(void)
 	STRCAT_S(t, "]");
 
 	dbg_printf(d, "%s: Dump freqs table: %s", __func__, t);
-#endif
+
+	return 0;
+}
+
+int dbg_freq()
+{
+	freq_lock();
+	dump_freq();
+	freq_unlock();
+
+	return 0;
+}
+
+static int update_freq(void)
+{
+	int i, max, maxsum;
+	int cpu, bus;
+
+	if (freqs == NULL)
+		return -1;
 
 	for(i=0, max = 0, maxsum = -1; i<freqs_cnt; ++i) {
 		if (maxsum < freqs[i].cpu + freqs[i].bus) {
