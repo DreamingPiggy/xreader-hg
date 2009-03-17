@@ -46,6 +46,8 @@
 #include "scene.h"
 #include "ctrl.h"
 #include "fs.h"
+#include "buffer.h"
+#include "musicinfo.h"
 
 struct music_list
 {
@@ -1046,14 +1048,20 @@ int music_load(int i)
 	char lyricname[PATH_MAX];
 	char lyricshortname[PATH_MAX];
 
-	strncpy_s(lyricname, NELEMS(lyricname), file->longpath, PATH_MAX);
-	int lsize = strlen(lyricname);
+	if (tag_lyric && tag_lyric->used != 0) {
+		lyric_open_raw(&lyric, tag_lyric->ptr, tag_lyric->used);
+		buffer_free(tag_lyric);
+		tag_lyric = NULL;
+	} else {
+		strncpy_s(lyricname, NELEMS(lyricname), file->longpath, PATH_MAX);
+		int lsize = strlen(lyricname);
 
-	lyricname[lsize - 3] = 'l';
-	lyricname[lsize - 2] = 'r';
-	lyricname[lsize - 1] = 'c';
-	if (fat_longnametoshortname(lyricshortname, lyricname, PATH_MAX))
-		lyric_open(&lyric, lyricshortname);
+		lyricname[lsize - 3] = 'l';
+		lyricname[lsize - 2] = 'r';
+		lyricname[lsize - 1] = 'c';
+		if (fat_longnametoshortname(lyricshortname, lyricname, PATH_MAX))
+			lyric_open(&lyric, lyricshortname);
+	}
 #endif
 
 	return ret;

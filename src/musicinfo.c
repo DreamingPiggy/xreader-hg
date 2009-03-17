@@ -8,6 +8,7 @@
 #include "conf.h"
 #include "charsets.h"
 #include "apetaglib/APETag.h"
+#include "buffer.h"
 #include "dbg.h"
 
 #define ID3v1_TAG_SIZE 128
@@ -32,6 +33,8 @@ typedef struct {
 	MusicTagInfo id3v2;
 	MusicTagInfo apetag;
 } MusicInfoInternalTag, *PMusicInfoInternalTag;
+
+buffer * tag_lyric = NULL;
 
 static void id3v1_get_string(char *str, int str_size,
 							 const uint8_t * buf, int buf_size)
@@ -310,8 +313,14 @@ static void id3v2_parse(MusicInfoInternalTag * tag_info, SceUID fd,
 				break;
 			case MKBETAG('T', 'X', 'X', 'X'):
 				{
-					char desc[80], *p = desc;
+					char desc[20], *p = desc;
 					char ch;
+
+					if (tag_lyric) {
+						buffer_free(tag_lyric);
+					}
+
+					tag_lyric = buffer_init();
 
 					sceIoLseek(fd, 1, PSP_SEEK_CUR);
 					desc[0] = '\0';
@@ -319,7 +328,9 @@ static void id3v2_parse(MusicInfoInternalTag * tag_info, SceUID fd,
 					// Acount for text encoding byte
 					tlen--;
 
-					while (sceIoRead(fd, &ch, 1) == 1 && ch != '\0') {
+					while (sceIoRead(fd, &ch, 1) == 1 && 
+							p - desc < sizeof(desc) &&
+						   	ch != '\0') {
 						*p++ = ch;
 						tlen--;
 					}
@@ -339,7 +350,7 @@ static void id3v2_parse(MusicInfoInternalTag * tag_info, SceUID fd,
 							return;
 						}
 
-//						buffer_copy_string_len(tag_info->id3v2.lyric, p, tlen);
+						buffer_copy_string_len(tag_lyric, p, tlen);
 						
 						free(p);
 					}
