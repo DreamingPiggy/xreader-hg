@@ -25,6 +25,7 @@
 #include <pspsdk.h>
 #include <pspkernel.h>
 #include <psprtc.h>
+#include <psppower.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include "musicdrv.h"
@@ -48,6 +49,7 @@
 #include "fs.h"
 #include "buffer.h"
 #include "musicinfo.h"
+#include "power.h"
 
 struct music_list
 {
@@ -647,6 +649,11 @@ static int music_thread(SceSize arg, void *argp)
 {
 	g_thread_actived = 1;
 	g_thread_exited = 0;
+	dword oldkey = 0;
+	u64 start, end;
+
+	sceRtcGetCurrentTick(&start);
+	sceRtcGetCurrentTick(&end);
 
 	while (g_thread_actived) {
 		music_lock();
@@ -682,18 +689,48 @@ static int music_thread(SceSize arg, void *argp)
 		if (g_music_hprm_enable) {
 			dword key = ctrl_hprm();
 
-			if (key > 0) {
-				switch (key) {
-					case PSP_HPRM_PLAYPAUSE:
-						music_list_playorpause();
-						break;
-					case PSP_HPRM_FORWARD:
-						music_next();
-						break;
-					case PSP_HPRM_BACK:
-						music_prev();
-						break;
+			switch (key) {
+				case PSP_HPRM_PLAYPAUSE:
+					oldkey = key;
+					sceRtcGetCurrentTick(&start);
+					break;
+				case PSP_HPRM_FORWARD:
+					oldkey = key;
+					sceRtcGetCurrentTick(&start);
+					break;
+				case PSP_HPRM_BACK:
+					oldkey = key;
+					sceRtcGetCurrentTick(&start);
+					break;
+			}
+
+			sceRtcGetCurrentTick(&end);
+
+			if (key == PSP_HPRM_FORWARD || key == PSP_HPRM_BACK || key == PSP_HPRM_PLAYPAUSE) {
+				if (pspDiffTime(&end, &start) >= 0.5) {
+					if (key == PSP_HPRM_FORWARD) {
+						musicdrv_fforward(5);
+					} else if (key == PSP_HPRM_BACK) {
+						musicdrv_fbackward(5);
+					}
+				} 
+
+				if (key == PSP_HPRM_PLAYPAUSE && pspDiffTime(&end, &start) >= 4.0) {
+					power_down();
+					scePowerRequestSuspend();
 				}
+			} else {
+				if ((oldkey == PSP_HPRM_FORWARD || oldkey == PSP_HPRM_BACK)) {
+					if (pspDiffTime(&end, &start) <= 0.5) {
+						if (oldkey == PSP_HPRM_FORWARD)
+							music_next();
+						else if (oldkey == PSP_HPRM_BACK)
+							music_prev();
+						else if (oldkey == PSP_HPRM_PLAYPAUSE)
+							music_list_playorpause();
+					}
+				}
+				oldkey = key;
 			}
 		}
 	}
