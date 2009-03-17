@@ -76,7 +76,7 @@ extern "C"
 		ST_PAUSED = 1,
 		ST_PLAYING = 2,
 		ST_STOPPED = 3,			/* In this status the alloctated resources were freed */
-		ST_FFOWARD = 4,
+		ST_FFORWARD = 4,
 		ST_FBACKWARD = 5,
 		ST_SUSPENDED = 6,
 		ST_UNKNOWN = 7

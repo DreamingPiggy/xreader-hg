@@ -183,7 +183,7 @@ static int mpc_audiocallback(void *buf, unsigned int reqn, void *pdata)
 	UNUSED(pdata);
 
 	if (g_status != ST_PLAYING) {
-		if (g_status == ST_FFOWARD) {
+		if (g_status == ST_FFORWARD) {
 			g_play_time += g_seek_seconds;
 			if (g_play_time >= g_info.duration) {
 				__end();
