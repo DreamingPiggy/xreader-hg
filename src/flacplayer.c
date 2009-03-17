@@ -48,6 +48,11 @@ static int __end(void);
 static short *g_buff = NULL;
 
 /**
+ * Flac音乐播放缓冲总大小, 以帧数计
+ */
+static unsigned g_buff_size;
+
+/**
  * Flac音乐播放缓冲大小，以帧数计
  */
 static unsigned g_buff_frame_size;
@@ -66,11 +71,6 @@ static int g_flac_bits_per_sample = 0;
  * 一次Flac解码操作已解码帧样本数
  */
 static int g_decoded_sample_size = 0;
-
-/**
- * Flac解码保存位置
- */
-static uint16_t *g_write_frame = NULL;
 
 /**
  * Flac编码器名字
@@ -172,7 +172,16 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
 	}
 
 	g_decoded_sample_size = frame->header.blocksize;
-	uint16_t *output = g_write_frame;
+
+	if (frame->header.blocksize > g_buff_size) {
+		g_buff_size = frame->header.blocksize;
+		g_buff = safe_realloc(g_buff, g_buff_size * frame->header.channels * sizeof(*g_buff));
+
+		if (g_buff == NULL)
+			return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
+	}
+
+	uint16_t *output = (uint16_t*) g_buff;
 
 	if (frame->header.channels == 2) {
 		for (i = 0; i < frame->header.blocksize; i++) {
@@ -278,7 +287,6 @@ static int flac_audiocallback(void *buf, unsigned int reqn, void *pdata)
 						   avail_frame, g_info.channels);
 			snd_buf_frame_size -= avail_frame;
 			audio_buf += avail_frame * 2;
-			g_write_frame = (uint16_t *) & g_buff[0];
 
 			if (!FLAC__stream_decoder_process_single(g_decoder)) {
 				__end();
@@ -371,7 +379,8 @@ static int flac_load(const char *spath, const char *lpath)
 		g_buff = NULL;
 	}
 
-	g_buff = calloc(NUM_AUDIO_SAMPLES, sizeof(*g_buff));
+	g_buff_size = NUM_AUDIO_SAMPLES / 2;
+	g_buff = calloc(g_buff_size * 2, sizeof(*g_buff));
 
 	if (g_buff == NULL) {
 		__end();
