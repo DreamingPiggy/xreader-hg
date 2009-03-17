@@ -8,6 +8,7 @@
 #include "freq_lock.h"
 #include "rar_speed_test.h"
 #include "hprm_test.h"
+#include "music_test.h"
 #include "commons.h"
 #include "common/utils.h"
 
@@ -69,7 +70,8 @@ int main_thr(unsigned int args, void *argp)
 
 	while ( 1 ) {
 //		rar_speed_test();
-		hprm_test();
+//		hprm_test();
+		music_test();
 		sceKernelDelayThread(100000);
 	}
 	
