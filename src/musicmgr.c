@@ -647,10 +647,13 @@ static int musicdrv_has_stop(void)
 
 static int music_thread(SceSize arg, void *argp)
 {
-	g_thread_actived = 1;
-	g_thread_exited = 0;
+	dword key = 0;
 	dword oldkey = 0;
 	u64 start, end;
+	double interval = 0;
+
+	g_thread_actived = 1;
+	g_thread_exited = 0;
 
 	sceRtcGetCurrentTick(&start);
 	sceRtcGetCurrentTick(&end);
@@ -683,31 +686,16 @@ static int music_thread(SceSize arg, void *argp)
 			sceKernelDelayThread(100000);
 		} else {
 			music_unlock();
-			sceKernelDelayThread(200000);
+			sceKernelDelayThread(500000);
 		}
 
 		if (g_music_hprm_enable) {
-			dword key = ctrl_hprm();
-
-			switch (key) {
-				case PSP_HPRM_PLAYPAUSE:
-					oldkey = key;
-					sceRtcGetCurrentTick(&start);
-					break;
-				case PSP_HPRM_FORWARD:
-					oldkey = key;
-					sceRtcGetCurrentTick(&start);
-					break;
-				case PSP_HPRM_BACK:
-					oldkey = key;
-					sceRtcGetCurrentTick(&start);
-					break;
-			}
-
+			key = ctrl_hprm_raw();
 			sceRtcGetCurrentTick(&end);
+			interval = pspDiffTime(&end, &start);
 
 			if (key == PSP_HPRM_FORWARD || key == PSP_HPRM_BACK || key == PSP_HPRM_PLAYPAUSE) {
-				if (pspDiffTime(&end, &start) >= 0.5) {
+				if (interval >= 0.5) {
 					if (key == PSP_HPRM_FORWARD) {
 						musicdrv_fforward(5);
 					} else if (key == PSP_HPRM_BACK) {
@@ -715,22 +703,32 @@ static int music_thread(SceSize arg, void *argp)
 					}
 				} 
 
-				if (key == PSP_HPRM_PLAYPAUSE && pspDiffTime(&end, &start) >= 4.0) {
+				if (key != oldkey) {
+					sceRtcGetCurrentTick(&start);
+				}
+
+				oldkey = key;
+				
+				if (key == PSP_HPRM_PLAYPAUSE && interval >= 4.0) {
 					power_down();
 					scePowerRequestSuspend();
 				}
 			} else {
-				if ((oldkey == PSP_HPRM_FORWARD || oldkey == PSP_HPRM_BACK)) {
-					if (pspDiffTime(&end, &start) <= 0.5) {
+				if ((oldkey == PSP_HPRM_FORWARD || oldkey == PSP_HPRM_BACK || oldkey == PSP_HPRM_PLAYPAUSE)) {
+					if (interval < 0.5) {
 						if (oldkey == PSP_HPRM_FORWARD)
 							music_next();
 						else if (oldkey == PSP_HPRM_BACK)
 							music_prev();
-						else if (oldkey == PSP_HPRM_PLAYPAUSE)
+					}
+
+					if (interval < 4.0) {
+						if (oldkey == PSP_HPRM_PLAYPAUSE)
 							music_list_playorpause();
 					}
 				}
 				oldkey = key;
+				sceRtcGetCurrentTick(&start);
 			}
 		}
 	}
