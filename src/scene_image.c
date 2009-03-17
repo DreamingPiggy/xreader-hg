@@ -1610,8 +1610,6 @@ dword scene_readimage(dword selidx)
 
 		if (ret == -1 && slideshow && !slideshow_move) {
 			if (key == PSP_CTRL_CIRCLE) {
-				sceKernelDelayThread(1000000);
-				ctrl_waitrelease();
 			} else if (key != 0 && (key == config.imgkey[1] || key == config.imgkey2[1] || key == CTRL_FORWARD)) {
 				bool should_exit = false;
 
