@@ -29,9 +29,11 @@ int jpeg_speed_test(void)
 	int fid;
 	u64 start, now;
 
+	dbg_printf(d, "Start jpeg benchmark");
+
 	sceRtcGetCurrentTick(&start);
 
-	fid = freq_enter_level(0);
+	fid = freq_enter_hotzone();
 
 	filecount = fs_rar_to_menu("ms0:/test.rar", &filelist, 0, 0, 0, 0);
 

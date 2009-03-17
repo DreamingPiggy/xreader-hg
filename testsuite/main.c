@@ -55,7 +55,7 @@ int main_thr(unsigned int args, void *argp)
 {
 	pspDebugScreenInit();
 
-	pspDebugScreenPrintf ("Welcome to xTest: the xReader testing framework.\n");
+	pspDebugScreenPrintf ("Welcome To xTest: xReader Testing Framework.\n");
 
 	conf_load(&config);
 	freq_init();

@@ -223,14 +223,9 @@ int freq_leave(int freq_id)
 	return 0;
 }
 
-int freq_enter_level(unsigned short level)
+int freq_enter_hotzone(void)
 {
 	int cpu, bus;
-
-	(void)level;
-
-	if (level > 3)
-		return -1;
 
 	if (music_curr_playing()) {
 		cpu = freq_list[config.freqs[2]][0];
