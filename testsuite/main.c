@@ -7,7 +7,9 @@
 #include "conf.h"
 #include "freq_lock.h"
 #include "rar_speed_test.h"
+#include "hprm_test.h"
 #include "commons.h"
+#include "common/utils.h"
 
 PSP_MODULE_INFO("xTest", 0x0200, 1, 6);
 PSP_MAIN_THREAD_PARAMS(45, 256, PSP_THREAD_ATTR_USER);
@@ -63,8 +65,11 @@ int main_thr(unsigned int args, void *argp)
 
 	dbg_printf(d, "Start xTest testing...");
 
+	utils_del_file("ms0:/xTest.log");
+
 	while ( 1 ) {
-		rar_speed_test();
+//		rar_speed_test();
+		hprm_test();
 		sceKernelDelayThread(100000);
 	}
 	
