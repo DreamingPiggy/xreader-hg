@@ -135,7 +135,7 @@ int dbg_freq()
 static int update_freq(void)
 {
 	int i, max, maxsum;
-	int cpu, bus;
+	int cpu = 0, bus = 0;
 
 	if (freqs == NULL)
 		return -1;
@@ -150,10 +150,10 @@ static int update_freq(void)
 	if (maxsum > 0) {
 		cpu = freqs[max].cpu;
 		bus = freqs[max].bus;
-	} else {
-		cpu = freq_list[config.freqs[0]][0];
-		bus = freq_list[config.freqs[0]][1];
 	}
+
+	cpu = max(cpu, freq_list[config.freqs[0]][0]);
+	bus = max(bus, freq_list[config.freqs[0]][1]);
 
 //	dbg_printf(d, "%s: should set cpu/bus to %d/%d", __func__, cpu, bus);
 
