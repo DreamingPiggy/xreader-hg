@@ -697,9 +697,9 @@ static int music_thread(SceSize arg, void *argp)
 			if (key == PSP_HPRM_FORWARD || key == PSP_HPRM_BACK || key == PSP_HPRM_PLAYPAUSE) {
 				if (interval >= 0.5) {
 					if (key == PSP_HPRM_FORWARD) {
-						musicdrv_fforward(5);
+						musicdrv_fforward(2);
 					} else if (key == PSP_HPRM_BACK) {
-						musicdrv_fbackward(5);
+						musicdrv_fbackward(2);
 					}
 				} 
 
