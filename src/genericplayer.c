@@ -22,7 +22,6 @@
 #include <psprtc.h>
 #include <string.h>
 #include <stdio.h>
-#include <mpcdec/mpcdec.h>
 #include <assert.h>
 #include "config.h"
 #include "ssv.h"
