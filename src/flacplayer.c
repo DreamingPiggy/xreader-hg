@@ -431,6 +431,8 @@ static int flac_load(const char *spath, const char *lpath)
 					STRCPY_S(g_info.tag.title, q);
 				}
 			}
+
+			g_info.tag.encode = conf_encode_utf8;
 		}
 
 		FLAC__metadata_object_delete(ptag);
