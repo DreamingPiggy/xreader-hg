@@ -308,6 +308,43 @@ static void id3v2_parse(MusicInfoInternalTag * tag_info, SceUID fd,
 				id3v2_read_ttag(fd, tlen, info->comment,
 								sizeof(info->comment), info);
 				break;
+			case MKBETAG('T', 'X', 'X', 'X'):
+				{
+					char desc[80], *p = desc;
+					char ch;
+
+					sceIoLseek(fd, 1, PSP_SEEK_CUR);
+					desc[0] = '\0';
+
+					// Acount for text encoding byte
+					tlen--;
+
+					while (sceIoRead(fd, &ch, 1) == 1 && ch != '\0') {
+						*p++ = ch;
+						tlen--;
+					}
+
+					tlen--;
+					*p = '\0';
+
+					if (!strcmp(desc, "Lyrics")) {
+						char *p = malloc(tlen);
+
+						if (p == NULL) {
+							return;
+						}
+
+						if (sceIoRead(fd, p, tlen) != tlen) {
+							free(p);
+							return;
+						}
+
+//						buffer_copy_string_len(tag_info->id3v2.lyric, p, tlen);
+						
+						free(p);
+					}
+				}
+				break;
 			case 0:
 				/* padding, skip to end */
 				sceIoLseek(fd, len, PSP_SEEK_CUR);
@@ -397,7 +434,6 @@ int generic_readtag(MusicInfo *music_info, const char* spath)
 	}
 
 	memset(&tag, 0, sizeof(tag));
-
 	tag.type = NONE;
 
 	fd = sceIoOpen(spath, PSP_O_RDONLY, 0777);
