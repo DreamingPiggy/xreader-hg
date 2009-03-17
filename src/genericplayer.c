@@ -258,8 +258,13 @@ int generic_resume(const char *spath, const char *lpath)
 {
 	generic_lock();
 	g_status = g_suspend_status;
+
+	if (g_status == ST_PLAYING)
+		generic_set_playback(true);
+
 	generic_unlock();
 	g_suspend_status = ST_LOADED;
+
 
 	return 0;
 }
