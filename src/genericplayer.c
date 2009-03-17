@@ -271,3 +271,42 @@ int generic_suspend(void)
 
 	return 0;
 }
+
+int generic_get_info(struct music_info *info)
+{
+	if (g_status == ST_UNKNOWN) {
+		return -1;
+	}
+	
+	if (info->type & MD_GET_TITLE) {
+		info->encode = g_info.tag.encode;
+		STRCPY_S(info->title, g_info.tag.title);
+	}
+	if (info->type & MD_GET_ALBUM) {
+		info->encode = g_info.tag.encode;
+		STRCPY_S(info->album, g_info.tag.album);
+	}
+	if (info->type & MD_GET_ARTIST) {
+		info->encode = g_info.tag.encode;
+		STRCPY_S(info->artist, g_info.tag.artist);
+	}
+	if (info->type & MD_GET_COMMENT) {
+		info->encode = g_info.tag.encode;
+		STRCPY_S(info->comment, g_info.tag.comment);
+	}
+	if (info->type & MD_GET_DURATION) {
+		info->duration = g_info.duration;
+	}
+	if (info->type & MD_GET_FREQ) {
+		info->freq = g_info.sample_freq;
+	}
+	if (info->type & MD_GET_CHANNELS) {
+		info->channels = g_info.channels;
+	}
+	if (info->type & MD_GET_AVGKBPS) {
+		info->avg_kbps = g_info.avg_bps / 1000;
+	}
+
+	return 0;
+}
+
