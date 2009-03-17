@@ -146,7 +146,7 @@ static int handle_seek(void)
 
 	if (1) {
 
-		if (g_status == ST_FFOWARD) {
+		if (g_status == ST_FFORWARD) {
 			sceRtcGetCurrentTick(&timer_end);
 
 			generic_lock();
@@ -232,7 +232,7 @@ static int handle_seek(void)
 
 		return 0;
 	} else {
-		if (g_status == ST_FFOWARD) {
+		if (g_status == ST_FFORWARD) {
 			generic_lock();
 			g_status = ST_PLAYING;
 			generic_unlock();

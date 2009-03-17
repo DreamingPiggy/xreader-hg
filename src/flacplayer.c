@@ -244,7 +244,7 @@ static int flac_audiocallback(void *buf, unsigned int reqn, void *pdata)
 	UNUSED(pdata);
 
 	if (g_status != ST_PLAYING) {
-		if (g_status == ST_FFOWARD) {
+		if (g_status == ST_FFORWARD) {
 			generic_lock();
 			g_status = ST_PLAYING;
 			generic_set_playback(true);

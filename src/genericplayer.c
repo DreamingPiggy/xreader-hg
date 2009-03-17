@@ -198,7 +198,7 @@ int generic_fforward(int sec)
 	generic_lock();
 	if (g_status == ST_PLAYING || g_status == ST_PAUSED
 		|| g_status == ST_FBACKWARD)
-		g_status = ST_FFOWARD;
+		g_status = ST_FFORWARD;
 
 	g_seek_seconds = sec;
 
@@ -221,7 +221,7 @@ int generic_fbackward(int sec)
 {
 	generic_lock();
 	if (g_status == ST_PLAYING || g_status == ST_PAUSED
-		|| g_status == ST_FFOWARD)
+		|| g_status == ST_FFORWARD)
 		g_status = ST_FBACKWARD;
 
 	g_seek_seconds = sec;
