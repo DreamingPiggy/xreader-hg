@@ -1393,7 +1393,7 @@ dword scene_readimage(dword selidx)
 		if (img_needrf) {
 			int fid;
 
-			fid = freq_enter_level(FREQ_MID);
+			fid = freq_enter_hotzone();
 			sceRtcGetCurrentTick(&dbglasttick);
 			dword ret = scene_reloadimage(selidx);
 
@@ -1410,7 +1410,7 @@ dword scene_readimage(dword selidx)
 		if (img_needrc) {
 			int fid;
 
-			fid = freq_enter_level(FREQ_MID);
+			fid = freq_enter_hotzone();
 			sceRtcGetCurrentTick(&dbglasttick);
 			scene_rotateimage();
 			img_needrc = false;

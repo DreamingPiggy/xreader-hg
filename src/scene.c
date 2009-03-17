@@ -187,7 +187,7 @@ bool scene_load_font(void)
 	STRCAT_S(fontzipfile, "fonts.zip");
 	SPRINTF_S(efontfile, "ASC%d", config.fontsize);
 	SPRINTF_S(cfontfile, "GBK%d", config.fontsize);
-	int fid = freq_enter_level(FREQ_MID);
+	int fid = freq_enter_hotzone();
 	if (!disp_load_zipped_font(fontzipfile, efontfile, cfontfile)) {
 		SPRINTF_S(efontfile, "%sfonts/ASC%d", scene_appdir(), config.fontsize);
 		SPRINTF_S(cfontfile, "%sfonts/GBK%d", scene_appdir(), config.fontsize);
@@ -229,7 +229,7 @@ bool scene_load_book_font(void)
 
 #ifdef ENABLE_TTF
 	if (config.usettf) {
-		int fid = freq_enter_level(FREQ_MID);
+		int fid = freq_enter_hotzone();
 		loaded =
 			disp_load_zipped_truetype_book_font(config.ettfarch,
 												config.cttfarch,
@@ -251,7 +251,7 @@ bool scene_load_book_font(void)
 		STRCAT_S(fontzipfile, "fonts.zip");
 		SPRINTF_S(efontfile, "ASC%d", config.bookfontsize);
 		SPRINTF_S(cfontfile, "GBK%d", config.bookfontsize);
-		int fid = freq_enter_level(FREQ_MID);
+		int fid = freq_enter_hotzone();
 		if (!disp_load_zipped_book_font(fontzipfile, efontfile, cfontfile)) {
 			SPRINTF_S(efontfile, "%sfonts/ASC%d", scene_appdir(),
 					  config.bookfontsize);

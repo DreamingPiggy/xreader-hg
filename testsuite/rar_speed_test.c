@@ -26,7 +26,7 @@ int rar_speed_test(void)
 
 	sceRtcGetCurrentTick(&start);
 
-	fid = freq_enter_level(0);
+	fid = freq_enter_hotzone();
 
 	filecount = fs_rar_to_menu("ms0:/test.rar", &filelist, 0, 0, 0, 0);
 
