@@ -33,7 +33,7 @@ noinst_PROGRAMS = xTest.elf
 
 xTest_elf_SOURCES = \
 rar_speed_test.c rar_speed_test.h hprm_test.h hprm_test.c \
-music_test.c \
+music_test.c jpeg_speed_test.c jpeg_speed_test.h \
 main.c \
 $(xrdir)/array.c $(xrdir)/array.h $(xrdir)/bg.c $(xrdir)/bg.h $(xrdir)/bookmark.c $(xrdir)/bookmark.h \
 $(xrdir)/buffer.c $(xrdir)/buffer.h $(xrdir)/charsets.c $(xrdir)/charsets.h $(xrdir)/conf.c $(xrdir)/conf.h $(xrdir)/copy.c \
