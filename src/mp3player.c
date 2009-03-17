@@ -905,12 +905,12 @@ static int me_init()
 
 void readMP3ApeTag(const char *spath)
 {
-	APETag *tag = loadAPETag(spath);
+	APETag *tag = apetag_load(spath);
 
 	if (tag != NULL) {
-		char *title = APETag_SimpleGet(tag, "Title");
-		char *artist = APETag_SimpleGet(tag, "Artist");
-		char *album = APETag_SimpleGet(tag, "Album");
+		char *title = apetag_get(tag, "Title");
+		char *artist = apetag_get(tag, "Artist");
+		char *album = apetag_get(tag, "Album");
 
 		if (title) {
 			STRCPY_S(g_info.tag.title, title);
@@ -922,7 +922,7 @@ void readMP3ApeTag(const char *spath)
 			free(artist);
 			artist = NULL;
 		} else {
-			artist = APETag_SimpleGet(tag, "Album artist");
+			artist = apetag_get(tag, "Album artist");
 			if (artist) {
 				STRCPY_S(g_info.tag.artist, artist);
 				free(artist);
@@ -935,7 +935,7 @@ void readMP3ApeTag(const char *spath)
 			album = NULL;
 		}
 
-		freeAPETag(tag);
+		apetag_free(tag);
 		g_info.tag.encode = conf_encode_utf8;
 	}
 }

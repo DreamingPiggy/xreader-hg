@@ -399,12 +399,12 @@ static int read_id3v2_tag(MusicInfoInternalTag *tag, const MusicInfo *music_info
 
 void read_ape_tag(MusicInfoInternalTag *tag_info, const char *spath)
 {
-	APETag *tag = loadAPETag(spath);
+	APETag *tag = apetag_load(spath);
 
 	if (tag != NULL) {
-		char *title = APETag_SimpleGet(tag, "Title");
-		char *artist = APETag_SimpleGet(tag, "Artist");
-		char *album = APETag_SimpleGet(tag, "Album");
+		char *title = apetag_get(tag, "Title");
+		char *artist = apetag_get(tag, "Artist");
+		char *album = apetag_get(tag, "Album");
 
 		if (title) {
 			STRCPY_S(tag_info->apetag.title, title);
@@ -416,7 +416,7 @@ void read_ape_tag(MusicInfoInternalTag *tag_info, const char *spath)
 			free(artist);
 			artist = NULL;
 		} else {
-			artist = APETag_SimpleGet(tag, "Album artist");
+			artist = apetag_get(tag, "Album artist");
 			if (artist) {
 				STRCPY_S(tag_info->apetag.artist, artist);
 				free(artist);
@@ -429,7 +429,7 @@ void read_ape_tag(MusicInfoInternalTag *tag_info, const char *spath)
 			album = NULL;
 		}
 
-		freeAPETag(tag);
+		apetag_free(tag);
 		tag_info->apetag.encode = conf_encode_utf8;
 		tag_info->type |= APETAG;
 	}
