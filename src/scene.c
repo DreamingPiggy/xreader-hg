@@ -5896,28 +5896,36 @@ extern void scene_init(void)
 #endif
 
 #ifndef _DEBUG
-	xrRtcGetCurrentTick(&dbglasttick);
-	if (xrKernelDevkitVersion() >= 0x03070100) {
-		char path[PATH_MAX];
-		int ret;
+	{
+		int fw;
 
-		SPRINTF_S(path, "%sxrPrx.prx", scene_appdir());
-		ret = initExceptionHandler(path);
+		fw = xrKernelDevkitVersion();
 
-		if (ret == 0) {
-			if (xrKernelDevkitVersion() < 0x03080000)
-				use_prx_power_save = true;
-			prx_loaded = true;
-		} else {
-			dbg_printf(d, "xrPrx.prx load failed, return value %08X",
-					   (unsigned int) ret);
+		if (fw >= 0x03070100 && fw != 0x05000310) {
+			char path[PATH_MAX];
+			int ret;
+
+			xrRtcGetCurrentTick(&dbglasttick);
+			SPRINTF_S(path, "%sxrPrx.prx", scene_appdir());
+			ret = initExceptionHandler(path);
+
+			if (ret == 0) {
+				if (xrKernelDevkitVersion() < 0x03080000)
+					use_prx_power_save = true;
+				prx_loaded = true;
+			} else {
+				dbg_printf(d, "xrPrx.prx load failed, return value %08X",
+						(unsigned int) ret);
+			}
+
+			ret = load_rdriver();
+			dbg_printf(d, "load_rdriver returns 0x%08x", ret);
+
+			xrRtcGetCurrentTick(&dbgnow);
+			dbg_printf(d, "initExceptionHandler(): %.2fs",
+					pspDiffTime(&dbgnow, &dbglasttick));
 		}
-		ret = load_rdriver();
-		dbg_printf(d, "load_rdriver returns 0x%08x", ret);
 	}
-	xrRtcGetCurrentTick(&dbgnow);
-	dbg_printf(d, "initExceptionHandler(): %.2fs",
-			   pspDiffTime(&dbgnow, &dbglasttick));
 #endif
 
 	xrRtcGetCurrentTick(&end);
