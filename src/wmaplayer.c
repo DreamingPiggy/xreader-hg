@@ -1093,6 +1093,8 @@ static int wma_load(const char *spath, const char *lpath)
 
 	get_wma_tag();
 
+	xAudioSetFrameSize(1152);
+
 	if (xAudioInit() < 0) {
 		__end();
 		return -1;

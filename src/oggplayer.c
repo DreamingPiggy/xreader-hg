@@ -397,6 +397,8 @@ static int ogg_load(const char *spath, const char *lpath)
 
 	get_ogg_tag(decoder);
 
+	xAudioSetFrameSize(1152);
+
 	if (xAudioInit() < 0) {
 		__end();
 		return -1;
