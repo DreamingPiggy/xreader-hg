@@ -2378,6 +2378,11 @@ t_win_menu_op scene_musicopt_menucb(dword key, p_win_menuitem item,
 					config.show_encoder_msg = !config.show_encoder_msg;
 #endif
 					break;
+				case 4:
+#if defined(ENABLE_MUSIC)
+					config.use_vaudio = !config.use_vaudio;
+#endif
+					break;
 			}
 			return win_menu_op_redraw;
 		case PSP_CTRL_RIGHT:
