@@ -63,6 +63,7 @@
 #include "xrhal.h"
 #include "image_queue.h"
 #include "pspvaudio.h"
+#include "xaudiolib.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -756,7 +757,7 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 				config.sfx_mode++;
 				config.sfx_mode = config.sfx_mode % 5;
 				dbg_printf(d, "setting sfx mode: %d", config.sfx_mode);
-				sceVaudioSetEffectType(config.sfx_mode, 0x8000);
+				xAudioSetEffectType(config.sfx_mode);
 			}
 
 			xrKernelDelayThread(200000);
@@ -773,7 +774,7 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 			{
 				config.alc_mode = !config.alc_mode;
 				dbg_printf(d, "setting alc mode: %d", config.alc_mode);
-				sceVaudioSetAlcMode(config.alc_mode);
+				xAudioSetAlcMode(config.alc_mode);
 			}
 
 			xrKernelDelayThread(200000);
