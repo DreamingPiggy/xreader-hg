@@ -246,6 +246,9 @@ int generic_init(void)
 	xr_lock_init(&generic_l);
 	g_seek_count = 0;
 
+	if (config.use_vaudio)
+		load_me_prx(VAUDIO);
+
 	return 0;
 }
 
