@@ -74,6 +74,8 @@
 #include "xrhal.h"
 #include "image_queue.h"
 #include "conf_cmdline.h"
+#include "pspvaudio.h"
+#include "xaudiolib.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -2341,6 +2343,29 @@ dword scene_fontsel(dword * selidx)
 	return 0;
 }
 
+const char *get_sfx_mode_str(int effect_type)
+{
+	switch (effect_type) {
+		case PSP_VAUDIO_FX_TYPE_THRU:
+			return _("normal");
+			break;
+		case PSP_VAUDIO_FX_TYPE_HEAVY:
+			return _("heavy");
+			break;
+		case PSP_VAUDIO_FX_TYPE_POPS:
+			return _("pops");
+			break;
+		case PSP_VAUDIO_FX_TYPE_JAZZ:
+			return _("jazz");
+			break;
+		case PSP_VAUDIO_FX_TYPE_UNIQUE:
+			return _("unique");
+			break;
+	};
+
+	return "";
+}
+
 t_win_menu_op scene_musicopt_menucb(dword key, p_win_menuitem item,
 									dword * count, dword max_height,
 									dword * topindex, dword * index)
@@ -2383,6 +2408,29 @@ t_win_menu_op scene_musicopt_menucb(dword key, p_win_menuitem item,
 					config.use_vaudio = !config.use_vaudio;
 #endif
 					break;
+				case 5:
+#if defined(ENABLE_MUSIC)
+					if (config.use_vaudio) {
+						if (config.sfx_mode != 0) {
+							config.sfx_mode--;
+						} else {
+							config.sfx_mode = 4;
+						}
+
+						dbg_printf(d, "setting sfx mode: %d", config.sfx_mode);
+						xAudioSetEffectType(config.sfx_mode);
+					}
+#endif
+					break;
+				case 6:
+#if defined(ENABLE_MUSIC)
+					if (config.use_vaudio) {
+						config.alc_mode = !config.alc_mode;
+						dbg_printf(d, "setting alc mode: %d", config.alc_mode);
+						xAudioSetAlcMode(config.alc_mode);
+					}
+#endif
+					break;
 			}
 			return win_menu_op_redraw;
 		case PSP_CTRL_RIGHT:
@@ -2415,6 +2463,25 @@ t_win_menu_op scene_musicopt_menucb(dword key, p_win_menuitem item,
 				case 4:
 #if defined(ENABLE_MUSIC)
 					config.use_vaudio = !config.use_vaudio;
+#endif
+					break;
+				case 5:
+#if defined(ENABLE_MUSIC)
+					if (config.use_vaudio) {
+						config.sfx_mode++;
+						config.sfx_mode = config.sfx_mode % 5;
+						dbg_printf(d, "setting sfx mode: %d", config.sfx_mode);
+						xAudioSetEffectType(config.sfx_mode);
+					}
+#endif
+					break;
+				case 6:
+#if defined(ENABLE_MUSIC)
+					if (config.use_vaudio) {
+						config.alc_mode = !config.alc_mode;
+						dbg_printf(d, "setting alc mode: %d", config.alc_mode);
+						xAudioSetAlcMode(config.alc_mode);
+					}
 #endif
 					break;
 			}
@@ -2477,12 +2544,25 @@ void scene_musicopt_predraw(p_win_menuitem item, dword index, dword topindex,
 				   (const byte *) (config.use_vaudio ? _("是") :
 								   _("否")));
 	lines++;
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
+																	DISP_FONTSIZE),
+				   COLOR_WHITE,
+				   (const byte *) (get_sfx_mode_str(config.sfx_mode)));
+	lines++;
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
+																	DISP_FONTSIZE),
+				   COLOR_WHITE,
+				   (const byte *) (config.alc_mode ? _("是") :
+								   _("否")));
+	lines++;
 }
 
 dword scene_musicopt(dword * selidx)
 {
 	win_menu_predraw_data prev;
-	t_win_menuitem item[5];
+	t_win_menuitem item[7];
 	dword i;
 	dword index;
 
@@ -2492,8 +2572,11 @@ dword scene_musicopt(dword * selidx)
 	STRCPY_S(item[2].name, _("歌词显示编码"));
 	STRCPY_S(item[3].name, _("显示编码器信息"));
 	STRCPY_S(item[4].name, _("使用均衡器"));
+	STRCPY_S(item[5].name, _("均衡器模式"));
+	STRCPY_S(item[6].name, _("声音补偿"));
 
 	g_predraw.max_item_len = win_get_max_length(item, NELEMS(item));
+	g_predraw.max_item_len += 2;
 
 	for (i = 0; i < NELEMS(item); i++) {
 		item[i].width = g_predraw.max_item_len;

@@ -1184,3 +1184,9 @@ msgstr "Cache"
 
 msgid "显示编码器信息"
 msgstr "Display encoder information"
+
+msgid "均衡器模式"
+msgstr "Equalizer Mode"
+
+msgid "声音补偿"
+msgstr "ALC MODE"
