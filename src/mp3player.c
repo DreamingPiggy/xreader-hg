@@ -80,7 +80,7 @@ static uint16_t *g_buff = NULL;
 /**
  * MP3音乐解码缓冲
  */
-static uint8_t g_input_buff[BUFF_SIZE + MAD_BUFFER_GUARD];
+static uint8_t g_input_buff[BUFF_SIZE + MAD_BUFFER_GUARD] __attribute__((aligned(64)));
 
 /**
  * MP3音乐播放缓冲大小，以帧数计
