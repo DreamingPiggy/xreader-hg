@@ -578,7 +578,7 @@ static int aa3_load(const char *spath, const char *lpath)
 		goto failed;
 	}
 
-	g_buff = xAudioAlloc(0, BUFF_SIZE);
+	g_buff = xAudioAlloc(64, BUFF_SIZE);
 
 	if (g_buff == NULL) {
 		goto failed;

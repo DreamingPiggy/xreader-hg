@@ -39,6 +39,7 @@ extern "C"
 	bool utils_is_file_exists(const char *filename);
 	void *safe_realloc(void *ptr, size_t size);
 	extern unsigned int get_free_mem(void);
+	void *calloc_64(size_t nmemb, size_t size);
 
 #define UNUSED(x) ((void)(x))
 

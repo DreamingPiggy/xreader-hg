@@ -300,7 +300,7 @@ static int wav_load(const char *spath, const char *lpath)
 		free(g_buff);
 		g_buff = NULL;
 	}
-	g_buff = calloc(WAVE_BUFFER_SIZE, sizeof(*g_buff));
+	g_buff = calloc_64(WAVE_BUFFER_SIZE, sizeof(*g_buff));
 	if (g_buff == NULL) {
 		__end();
 		return -1;

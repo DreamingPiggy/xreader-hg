@@ -22,6 +22,7 @@
 #include <string.h>
 #include <pspkernel.h>
 #include <stdarg.h>
+#include <malloc.h>
 #include "config.h"
 #include "utils.h"
 #include "strsafe.h"
@@ -225,6 +226,24 @@ extern unsigned int get_free_mem(void)
 	}
 
 	return block_free;
+#endif
+}
+
+void *calloc_64(size_t nmemb, size_t size)
+{
+#if 1
+	void *p;
+	
+	p = memalign(64, nmemb * size);
+
+	if (!p)
+		return p;
+
+	memset(p, 0, nmemb * size);
+
+	return p;
+#else
+	return calloc(nmemb * size);
 #endif
 }
 
