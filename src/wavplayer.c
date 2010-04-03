@@ -446,6 +446,8 @@ static int wav_load(const char *spath, const char *lpath)
 
 	generic_readtag(&g_info, spath);
 
+	xAudioSetFrameSize(1152);
+
 	if (xAudioInit() < 0) {
 		__end();
 		return -1;

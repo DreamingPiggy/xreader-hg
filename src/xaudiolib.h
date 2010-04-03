@@ -78,6 +78,7 @@ extern "C"
 	void xAudioClearSndBuf(void *buf, int frames);
 	void *xAudioAlloc(size_t align, size_t bytes);
 	void xAudioFree(void *p);
+	void xAudioSetFrameSize(int size);
 
 #ifdef __cplusplus
 }

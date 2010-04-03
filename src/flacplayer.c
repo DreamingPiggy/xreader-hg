@@ -647,6 +647,8 @@ static int flac_load(const char *spath, const char *lpath)
 		return -1;
 	}
 
+	xAudioSetFrameSize(2048);
+
 	if (xAudioInit() < 0) {
 		__end();
 		return -1;

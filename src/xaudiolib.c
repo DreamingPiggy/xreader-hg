@@ -48,6 +48,8 @@
 
 #define THREAD_STACK_SIZE (64 * 1024)
 
+static int g_sample_size = PSP_NUM_AUDIO_SAMPLES;
+
 int setFrequency(unsigned short samples, unsigned short freq, char car)
 {
 	return sceVaudioChReserve(samples, freq, car);
@@ -129,7 +131,7 @@ static int AudioChannelThread(int args, void *argp)
 
 		callback = AudioStatus[channel].callback;
 		if (callback) {
-			int ret = callback(bufptr, PSP_NUM_AUDIO_SAMPLES,
+			int ret = callback(bufptr, g_sample_size,
 							   AudioStatus[channel].pdata);
 
 			if (ret != 0) {
@@ -139,7 +141,7 @@ static int AudioChannelThread(int args, void *argp)
 			unsigned int *ptr = bufptr;
 			int i;
 
-			for (i = 0; i < PSP_NUM_AUDIO_SAMPLES; ++i)
+			for (i = 0; i < g_sample_size; ++i)
 				*(ptr++) = 0;
 		}
 		//xAudioOutBlocking(channel,AudioStatus[channel].volumeleft,AudioStatus[channel].volumeright,bufptr);
@@ -173,7 +175,7 @@ int xAudioSetFrequency(unsigned short freq)
 	}
 	xrKernelWaitSema(play_sema, 1, 0);
 	xAudioReleaseAudio();
-	if (setFrequency(PSP_NUM_AUDIO_SAMPLES, freq, 2) < 0)
+	if (setFrequency(g_sample_size, freq, 2) < 0)
 		ret = -1;
 	xrKernelSignalSema(play_sema, 1);
 	return ret;
@@ -291,6 +293,8 @@ void xAudioEnd()
 		xrKernelDeleteSema(play_sema);
 		play_sema = -1;
 	}
+
+	g_sample_size = PSP_NUM_AUDIO_SAMPLES;
 }
 
 /**
@@ -318,3 +322,10 @@ void xAudioFree(void *p)
 {
 	free(p);
 }
+
+void xAudioSetFrameSize(int size)
+{
+	if (size <= PSP_NUM_AUDIO_SAMPLES)
+		g_sample_size = size;
+}
+

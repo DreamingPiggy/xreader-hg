@@ -289,6 +289,8 @@ static int tta_load(const char *spath, const char *lpath)
 	g_info.channels = ttainfo.NCH;
 	g_info.filesize = ttainfo.FILESIZE;
 
+	xAudioSetFrameSize(2048);
+	
 	if (xAudioInit() < 0) {
 		__end();
 		return -1;

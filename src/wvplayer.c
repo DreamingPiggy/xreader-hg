@@ -637,6 +637,8 @@ static int wv_load(const char *spath, const char *lpath)
 		STRCAT_S(g_encode_name, " FAST");
 	}
 
+	xAudioSetFrameSize(2048);
+
 	if (xAudioInit() < 0) {
 		__end();
 		return -1;
