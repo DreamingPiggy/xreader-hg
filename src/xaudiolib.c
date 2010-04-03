@@ -252,6 +252,7 @@ int xAudioInit()
 	}
 
 	sceVaudioSetEffectType(config.sfx_mode, 0x8000);
+	sceVaudioSetAlcMode(config.alc_mode);
 
 	return 0;
 }

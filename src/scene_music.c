@@ -455,9 +455,10 @@ static void scene_draw_mp3bar_music_staff(void)
 					(const byte *) infostr,
 					(468 - DISP_FONTSIZE * 2) * 2 / DISP_FONTSIZE, 0, 0,
 					DISP_FONTSIZE, 0);
-	SPRINTF_S(infostr, "%s [%s]",
+	SPRINTF_S(infostr, "%s [%s] [%s]",
 			  _("○播放/暂停 ×循环 □停止 △曲名编码  L上一首  R下一首"),
-			  get_sfx_mode_str(config.sfx_mode));
+			  get_sfx_mode_str(config.sfx_mode), 
+			  (config.alc_mode ? "ALC" : "OFF"));
 	disp_putstring(6 + DISP_FONTSIZE, 264 - DISP_FONTSIZE * 3, COLOR_WHITE,
 				   (const byte *) infostr);
 	info.type = MD_GET_TITLE | MD_GET_ARTIST | MD_GET_ALBUM;
