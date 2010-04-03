@@ -45,7 +45,7 @@ extern "C"
 
 /** This is the number of frames you can update per callback, a frame being
  * 1 sample for mono, 2 samples for stereo etc. */
-#define PSP_NUM_AUDIO_SAMPLES 2048
+#define PSP_NUM_AUDIO_SAMPLES 1024
 #define PSP_VOLUME_MAX 0x8000
 
 	typedef int (*xAudioCallback_t) (void *buf, unsigned int reqn, void *pdata);
