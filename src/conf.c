@@ -225,8 +225,8 @@ static void conf_default(p_conf conf)
 	conf->autoplay = false;
 	conf->usettf = 0;
 	conf->freqs[0] = 1;
-	conf->freqs[1] = 5;
-	conf->freqs[2] = 8;
+	conf->freqs[1] = 6;
+	conf->freqs[2] = 9;
 	conf->imgbrightness = 100;
 	conf->dis_scrsave = false;
 	conf->autosleep = 0;
@@ -281,6 +281,7 @@ static void conf_default(p_conf conf)
 	conf->show_encoder_msg = false;
 	conf->sfx_mode = 0;
 	conf->alc_mode = 0;
+	conf->use_vaudio = false;
 	SPRINTF_S(conf->musicdrv_opts,
 			  "mp3_brute_mode=off mp3_use_me=on mp3_check_crc=off mp3_buffer_size=%d "
 			  "wma_buffer_size=%d aac_buffer_size=%d wav_buffer_size=%d wv_buffer_size=%d "
@@ -1173,6 +1174,10 @@ extern bool ini_conf_load(const char *inifilename, p_conf conf)
 	conf->sfx_mode = iniparser_getint(dict, "Music:sfx_mode", conf->sfx_mode);
 	conf->alc_mode = iniparser_getint(dict, "Music:alc_mode", conf->alc_mode);
 
+	conf->use_vaudio =
+		iniparser_getboolean(dict, "Music:use_vaudio",
+							 conf->use_vaudio);
+
 	if (conf->max_cache_img == 0) {
 		conf->use_image_queue = false;
 	}
@@ -1479,6 +1484,10 @@ extern bool ini_conf_save(p_conf conf)
 
 	iniparser_setstring(dict, "Music:alc_mode",
 						intToString(buf, sizeof(buf), conf->alc_mode));
+
+	iniparser_setstring(dict, "Music:use_vaudio",
+						booleanToString(buf, sizeof(buf),
+										conf->use_vaudio));
 
 	iniparser_dump_ini(dict, fp);
 
