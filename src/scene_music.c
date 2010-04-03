@@ -62,7 +62,6 @@
 #include "dbg.h"
 #include "xrhal.h"
 #include "image_queue.h"
-#include "pspvaudio.h"
 #include "xaudiolib.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
@@ -381,29 +380,6 @@ static void scene_draw_lyric(void)
 }
 
 #ifdef ENABLE_MUSIC
-
-const char *get_sfx_mode_str(int effect_type)
-{
-	switch (effect_type) {
-		case PSP_VAUDIO_FX_TYPE_THRU:
-			return _("normal");
-			break;
-		case PSP_VAUDIO_FX_TYPE_HEAVY:
-			return _("heavy");
-			break;
-		case PSP_VAUDIO_FX_TYPE_POPS:
-			return _("pops");
-			break;
-		case PSP_VAUDIO_FX_TYPE_JAZZ:
-			return _("jazz");
-			break;
-		case PSP_VAUDIO_FX_TYPE_UNIQUE:
-			return _("unique");
-			break;
-	};
-
-	return "";
-}
 
 static void scene_draw_mp3bar_music_staff(void)
 {
@@ -751,15 +727,6 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 			config.lyricencode++;
 			if ((dword) config.lyricencode > 4)
 				config.lyricencode = 0;
-
-			if(config.use_vaudio)
-			{
-				config.sfx_mode++;
-				config.sfx_mode = config.sfx_mode % 5;
-				dbg_printf(d, "setting sfx mode: %d", config.sfx_mode);
-				xAudioSetEffectType(config.sfx_mode);
-			}
-
 			xrKernelDelayThread(200000);
 #endif
 			break;
@@ -769,14 +736,6 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 			if ((dword) config.mp3encode > 4)
 				config.mp3encode = 0;
 //          music_set_encode(config.mp3encode);
-
-			if(config.use_vaudio)
-			{
-				config.alc_mode = !config.alc_mode;
-				dbg_printf(d, "setting alc mode: %d", config.alc_mode);
-				xAudioSetAlcMode(config.alc_mode);
-			}
-
 			xrKernelDelayThread(200000);
 #endif
 			break;

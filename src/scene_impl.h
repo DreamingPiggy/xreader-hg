@@ -56,6 +56,10 @@ extern int default_predraw(const win_menu_predraw_data * pData, const char *str,
 extern int prompt_press_any_key(void);
 extern int get_center_pos(int left, int right, const char *str);
 
+#ifdef ENABLE_MUSIC
+extern const char *get_sfx_mode_str(int effect_type);
+#endif
+
 dword scene_txtkey(dword * selidx);
 
 #ifdef ENABLE_IMAGE

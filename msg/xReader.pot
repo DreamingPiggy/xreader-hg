@@ -1116,3 +1116,10 @@ msgstr ""
 
 msgid "显示编码器信息"
 msgstr ""
+
+msgid "均衡器模式"
+msgstr ""
+
+msgid "声音补偿"
+msgstr ""
+
