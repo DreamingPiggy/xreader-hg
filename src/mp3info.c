@@ -582,7 +582,7 @@ static inline int parse_frame(uint8_t * buf, size_t bufpos, size_t bufsize,
 int skip_id3v2_tag(mp3_reader_data * data)
 {
 	int len;
-	uint8_t buf[ID3v2_HEADER_SIZE];
+	uint8_t buf[ID3v2_HEADER_SIZE] __attribute__((aligned(64)));
 
 	if (data->fd < 0)
 		return -1;

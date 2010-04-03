@@ -75,10 +75,12 @@ int _get_osk_input(char *buf, int size, unsigned short desc[128])
 
 
 	memset(&data, 0, sizeof(data));
-	data.language = 2;			// key glyphs: 0-1=hiragana, 2+=western
+
+	data.language = 0;
 	data.lines = 1;				// just one line
 	data.unk_24 = 1;			// set to 1
 	data.desc = desc;
+	data.inputtype = 0x1 | 0x4 | 0x8;
 	data.intext = intext;
 	data.outtextlength = 128;	// sizeof(outtext) / sizeof(unsigned short)
 	data.outtextlimit = 50;		// just allow 50 chars
@@ -86,9 +88,12 @@ int _get_osk_input(char *buf, int size, unsigned short desc[128])
 
 	memset(&osk, 0, sizeof(osk));
 	osk.base.size = sizeof(osk);
-	// dialog language: 0=Japanese, 1=English, 2=French, 3=Spanish, 4=German,
-	// 5=Italian, 6=Dutch, 7=Portuguese, 8=Russian, 9=Korean, 10-11=Chinese, 12+=default
-	osk.base.language = 12;
+
+	if (!strcmp(config.language, "zh_CN"))
+		osk.base.language = 11;
+	else
+		osk.base.language = 2;
+
 	osk.base.buttonSwap = 0;
 	osk.base.graphicsThread = 37;	// gfx thread pri
 	osk.base.accessThread = 49;	// unknown thread pri (?)

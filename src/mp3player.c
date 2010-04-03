@@ -954,8 +954,11 @@ static int mp3_load(const char *spath, const char *lpath)
 	}
 #endif
 
-	xAudioSetFrameSize(1152);
-	
+	if (config.use_vaudio)
+		xAudioSetFrameSize(2048);
+	else
+		xAudioSetFrameSize(4096);
+
 	ret = xAudioInit();
 
 	if (ret < 0) {

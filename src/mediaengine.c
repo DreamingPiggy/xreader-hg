@@ -36,47 +36,113 @@
 #include "mediaengine.h"
 #include "pspvaudio.h"
 #include "common/datatype.h"
+#include "scene.h"
+#include "strsafe.h"
+#include "dbg.h"
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
 
 #ifdef ENABLE_MUSIC
 
 static bool b_vaudio_prx_loaded   = false;
 static bool b_avcodec_prx_loaded  = false;
 static bool b_at3p_prx_loaded     = false;
+static bool b_cooleye_bridge_prx_loaded = false;
+static bool b_asfparser_prx_loaded = false;
 
 static SceUID g_modid = -1;
+static SceUID g_modid2 = -1;
 
 int load_me_prx(int mode)
 {
 	int ret;
+	unsigned long prev;
 
 	if (mode & VAUDIO) {
-		ret = kuKernelLoadModule("flash0:/kd/vaudio.prx", 0, NULL);
+		prev = *((unsigned long*)0x08fc1000);
+		ret = sceUtilityLoadModule(0x0305);
 
-		if (ret > 0) {
-			g_modid = ret;
-			ret = xrKernelStartModule(g_modid, 0, NULL, 0, NULL);
-
-			if (ret > 0)
-				b_vaudio_prx_loaded = true;
-			else {
-				sceKernelUnloadModule(g_modid);
-				g_modid = -1;
-			}
+		if (prev != *((unsigned long*)0x08fc1000)) {
+			fprintf(stderr, "vaudio: 0x08fc1000 changed\n");
 		}
+
+		*((unsigned long*)0x08fc1000) = prev; 
+		
+		if (ret == 0)
+			b_vaudio_prx_loaded = true;
 	}
 
 	if (mode & AVCODEC) {
+		prev = *((unsigned long*)0x08fc1000);
 		ret = xrUtilityLoadAvModule(PSP_AV_MODULE_AVCODEC);
+
+		if (prev != *((unsigned long*)0x08fc1000)) {
+			fprintf(stderr, "avcodec: 0x08fc1000 changed\n");
+		}
+
+		*((unsigned long*)0x08fc1000) = prev; 
 
 		if (ret == 0)
 			b_avcodec_prx_loaded = true;
 	}
 
 	if (mode & ATRAC3PLUS) {
-		ret = xrUtilityLoadAvModule(PSP_AV_MODULE_ATRAC3PLUS);
+		prev = *((unsigned long*)0x08fc1000);
+		ret = sceUtilityLoadModule(0x0302);
 
+		if (prev != *((unsigned long*)0x08fc1000)) {
+			fprintf(stderr, "atrac3p: 0x08fc1000 changed\n");
+		}
+
+		*((unsigned long*)0x08fc1000) = prev; 
+		
 		if (ret == 0)
 			b_at3p_prx_loaded = true;
+	}
+
+	if (mode & COOLEYEBRIDGE) {
+		char path[PATH_MAX];
+		int status;
+		unsigned long prev;
+
+		SPRINTF_S(path, "%scooleyesBridge.prx", scene_appdir());
+		g_modid = kuKernelLoadModule(path, 0, NULL);
+
+		if (g_modid >= 0) {
+			prev = *((unsigned long*)0x08fc1000);
+			ret = xrKernelStartModule(g_modid, 0, 0, &status, NULL);
+
+			if (prev != *((unsigned long*)0x08fc1000)) {
+				fprintf(stderr, "cooleye_bridge: 0x08fc1000 changed\n");
+			}
+
+			*((unsigned long*)0x08fc1000) = prev;
+
+			if (ret >= 0)
+				b_cooleye_bridge_prx_loaded = true;
+		}
+	}
+
+	if (mode & ASFPARSER) {
+		int status;
+		unsigned long prev;
+
+		g_modid2 = kuKernelLoadModule("flash0:/kd/libasfparser.prx", 0, NULL);
+
+		if (g_modid2 >= 0) {
+			prev = *((unsigned long*)0x08fc1000);
+			ret = xrKernelStartModule(g_modid2, 0, 0, &status, NULL);
+
+			if (prev != *((unsigned long*)0x08fc1000)) {
+				fprintf(stderr, "asfparser: 0x08fc1000 changed\n");
+			}
+
+			*((unsigned long*)0x08fc1000) = prev;
+
+			if (ret >= 0)
+				b_asfparser_prx_loaded = true;
+		}
 	}
 
 	return 0;
@@ -84,13 +150,27 @@ int load_me_prx(int mode)
 
 int unload_prx(void)
 {
-	if (b_vaudio_prx_loaded) {
+	if (b_asfparser_prx_loaded) {
+		int result;
+
+		sceKernelStopModule(g_modid2, 0, NULL, &result, NULL); 
+		sceKernelUnloadModule(g_modid2);
+		g_modid2 = -1;
+		b_asfparser_prx_loaded = false;
+	}
+
+	if (b_cooleye_bridge_prx_loaded) {
 		int result;
 
 		sceKernelStopModule(g_modid, 0, NULL, &result, NULL); 
 		sceKernelUnloadModule(g_modid);
 		g_modid = -1;
-		b_vaudio_prx_loaded = false;
+		b_cooleye_bridge_prx_loaded = false;
+	}
+
+	if (b_at3p_prx_loaded) {
+		sceUtilityUnloadModule(0x0302);
+		b_at3p_prx_loaded = false;
 	}
 
 	if (b_avcodec_prx_loaded) {
@@ -98,9 +178,9 @@ int unload_prx(void)
 		b_avcodec_prx_loaded = false;
 	}
 
-	if (b_at3p_prx_loaded) {
-		sceUtilityUnloadAvModule(PSP_AV_MODULE_ATRAC3PLUS);
-		b_at3p_prx_loaded = false;
+	if (b_vaudio_prx_loaded) {
+		sceUtilityUnloadModule(0x0305);
+		b_vaudio_prx_loaded = false;
 	}
 
 	return 0;

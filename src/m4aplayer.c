@@ -664,7 +664,10 @@ static int m4a_set_opt(const char *unused, const char *values)
 	int argc, i;
 	char **argv;
 
-	g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE;
+	if (config.use_vaudio)
+		g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE / 2;
+	else
+		g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE;
 
 	dbg_printf(d, "%s: options are %s", __func__, values);
 
@@ -677,8 +680,10 @@ static int m4a_set_opt(const char *unused, const char *values)
 
 			if ((p = strrchr(p, '=')) != NULL) {
 				p++;
-
 				g_io_buffer_size = atoi(p);
+
+				if (config.use_vaudio)
+					g_io_buffer_size = g_io_buffer_size / 2;
 
 				if (g_io_buffer_size < 8192) {
 					g_io_buffer_size = 8192;

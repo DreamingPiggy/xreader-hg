@@ -446,7 +446,10 @@ static int wav_load(const char *spath, const char *lpath)
 
 	generic_readtag(&g_info, spath);
 
-	xAudioSetFrameSize(1152);
+	if (config.use_vaudio)
+		xAudioSetFrameSize(2048);
+	else
+		xAudioSetFrameSize(4096);
 
 	if (xAudioInit() < 0) {
 		__end();
@@ -576,7 +579,7 @@ static int wav_get_info(struct music_info *pinfo)
 		pinfo->cur_time = g_play_time;
 	}
 	if (pinfo->type & MD_GET_CPUFREQ) {
-		pinfo->psp_freq[0] = 33;
+		pinfo->psp_freq[0] = 48;
 		pinfo->psp_freq[1] = 16;
 	}
 	if (pinfo->type & MD_GET_FREQ) {
@@ -632,6 +635,11 @@ static int wav_set_opt(const char *unused, const char *values)
 
 	build_args(values, &argc, &argv);
 
+	if (config.use_vaudio)
+		g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE / 2;
+	else
+		g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE;
+	
 	for (i = 0; i < argc; ++i) {
 		if (!strncasecmp
 			(argv[i], "wav_buffer_size", sizeof("wav_buffer_size") - 1)) {
@@ -641,6 +649,9 @@ static int wav_set_opt(const char *unused, const char *values)
 				p++;
 
 				g_io_buffer_size = atoi(p);
+
+				if (config.use_vaudio)
+					g_io_buffer_size = g_io_buffer_size / 2;
 
 				if (g_io_buffer_size < 8192) {
 					g_io_buffer_size = 8192;

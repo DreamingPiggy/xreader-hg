@@ -526,6 +526,11 @@ static int at3_load(const char *spath, const char *lpath)
 		buffered_reader_seek(data.r, cur);
 	}
 
+	if (config.use_vaudio)
+		xAudioSetFrameSize(2048);
+	else
+		xAudioSetFrameSize(4096);
+
 	ret = xAudioInit();
 
 	if (ret < 0) {

@@ -289,7 +289,10 @@ static int tta_load(const char *spath, const char *lpath)
 	g_info.channels = ttainfo.NCH;
 	g_info.filesize = ttainfo.FILESIZE;
 
-	xAudioSetFrameSize(2048);
+	if (config.use_vaudio)
+		xAudioSetFrameSize(2048);
+	else
+		xAudioSetFrameSize(4096);
 	
 	if (xAudioInit() < 0) {
 		__end();
@@ -432,7 +435,10 @@ static int tta_get_info(struct music_info *pinfo)
 #ifdef _DEBUG
 		pinfo->psp_freq[0] = 222;
 #else
-		pinfo->psp_freq[0] = 111;
+		if (config.use_vaudio)
+			pinfo->psp_freq[0] = 166;
+		else
+			pinfo->psp_freq[0] = 133;
 #endif
 		pinfo->psp_freq[1] = pinfo->psp_freq[0] / 2;
 	}
@@ -487,8 +493,11 @@ static int tta_set_opt(const char *unused, const char *values)
 	int argc, i;
 	char **argv;
 
-	g_io_buffer_size = WVPACK_BUFFERED_READER_BUFFER_SIZE;
-
+	if (config.use_vaudio)
+		g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE / 2;
+	else
+		g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE;
+	
 	dbg_printf(d, "%s: options are %s", __func__, values);
 
 	build_args(values, &argc, &argv);
@@ -500,8 +509,10 @@ static int tta_set_opt(const char *unused, const char *values)
 
 			if ((p = strrchr(p, '=')) != NULL) {
 				p++;
-
 				g_io_buffer_size = atoi(p);
+
+				if (config.use_vaudio)
+					g_io_buffer_size = g_io_buffer_size / 2;
 
 				if (g_io_buffer_size < 8192) {
 					g_io_buffer_size = 8192;

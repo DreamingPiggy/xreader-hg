@@ -23,9 +23,11 @@
 
 
 enum CodecType {
-	VAUDIO  =     0x01,
-	AVCODEC =     0x01 << 1,
-	ATRAC3PLUS =  0x01 << 2
+	VAUDIO  =       0x01,
+	AVCODEC =       0x01 << 1,
+	ATRAC3PLUS =    0x01 << 2,
+	COOLEYEBRIDGE = 0x01 << 3,
+	ASFPARSER =     0x01 << 4
 };
 
 int load_me_prx(int mode);

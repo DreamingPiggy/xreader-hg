@@ -381,7 +381,10 @@ static int ape_load(const char *spath, const char *lpath)
 		return -1;
 	}
 
-	xAudioSetFrameSize(2048);
+	if (config.use_vaudio)
+		xAudioSetFrameSize(2048);
+	else
+		xAudioSetFrameSize(4096);
 
 	if (xAudioInit() < 0) {
 		__end();
@@ -527,7 +530,11 @@ static int ape_get_info(struct music_info *pinfo)
 		pinfo->cur_time = g_play_time;
 	}
 	if (pinfo->type & MD_GET_CPUFREQ) {
-		pinfo->psp_freq[0] = 233;
+		if (config.use_vaudio)
+			pinfo->psp_freq[0] = 266;
+		else
+			pinfo->psp_freq[0] = 233;
+
 		pinfo->psp_freq[1] = 116;
 	}
 	if (pinfo->type & MD_GET_INSKBPS) {
@@ -566,6 +573,10 @@ static int ape_probe(const char *spath)
 
 	if (p) {
 		if (stricmp(p, "ape") == 0) {
+			return 1;
+		}
+
+		if (stricmp(p, "mac") == 0) {
 			return 1;
 		}
 	}
