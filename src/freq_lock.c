@@ -173,11 +173,6 @@ static int update_freq(void)
 	}
 
 	cpu = max(cpu, freq_list[config.freqs[0]][0]);
-
-	// When use vaudio increase cpu freq
-	if (config.use_vaudio)
-		cpu += 33;
-
 	cpu = min(333, cpu);
 	bus = max(bus, freq_list[config.freqs[0]][1]);
 	bus = min(166, bus);
@@ -256,18 +251,8 @@ int freq_enter_hotzone(void)
 {
 	int cpu, bus;
 
-#ifdef ENABLE_MUSIC
-	if (music_curr_playing()) {
-		cpu = freq_list[config.freqs[2]][0];
-		bus = freq_list[config.freqs[2]][1];
-	} else {
-		cpu = freq_list[config.freqs[1]][0];
-		bus = freq_list[config.freqs[1]][1];
-	}
-#else
 	cpu = freq_list[config.freqs[1]][0];
 	bus = freq_list[config.freqs[1]][1];
-#endif
 
 	return freq_enter(cpu, bus);
 }
