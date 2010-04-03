@@ -48,11 +48,12 @@
 
 #define THREAD_STACK_SIZE (64 * 1024)
 
-static int g_sample_size = PSP_NUM_AUDIO_SAMPLES;
+static int g_sample_size = PSP_DEFAULT_NUM_AUDIO_SAMPLES;
+static bool g_use_vaudio = false;
 
 int setFrequency(unsigned short samples, unsigned short freq, char car)
 {
-	if (config.use_vaudio)
+	if (g_use_vaudio)
 		return sceVaudioChReserve(samples, freq, car);
 	else
 		return xrAudioSRCChReserve(samples, freq, car);
@@ -60,7 +61,7 @@ int setFrequency(unsigned short samples, unsigned short freq, char car)
 
 int xAudioReleaseAudio(void)
 {
-	if (config.use_vaudio) {
+	if (g_use_vaudio) {
 		int ret;
 
 		while ((ret = sceVaudioChRelease()) == 0x80260002)
@@ -75,7 +76,7 @@ int xAudioReleaseAudio(void)
 
 int audioOutpuBlocking(int volume, void *buffer)
 {
-	if (config.use_vaudio) {
+	if (g_use_vaudio) {
 		return sceVaudioOutputBlocking(volume, buffer);
 	} else {
 		return xrAudioSRCOutputBlocking(volume, buffer);
@@ -83,7 +84,7 @@ int audioOutpuBlocking(int volume, void *buffer)
 }
 
 static int audio_ready = 0;
-static short audio_sndbuf[PSP_NUM_AUDIO_CHANNELS][2][PSP_NUM_AUDIO_SAMPLES][2];
+static short audio_sndbuf[PSP_NUM_AUDIO_CHANNELS][2][PSP_MAX_NUM_AUDIO_SAMPLES][2];
 static psp_audio_channelinfo AudioStatus[PSP_NUM_AUDIO_CHANNELS];
 static volatile int audio_terminate = 0;
 
@@ -208,6 +209,8 @@ int xAudioInit()
 	audio_ready = 0;
 	memset(audio_sndbuf, 0, sizeof(audio_sndbuf));
 
+	xAudioSetUseVaudio(config.use_vaudio);
+
 	if (play_sema < 0) {
 		play_sema = xrKernelCreateSema("play_sema", 6, 1, 1, 0);
 	}
@@ -238,8 +241,6 @@ int xAudioInit()
 	strcpy(str, "audiot0");
 	for (i = 0; i < PSP_NUM_AUDIO_CHANNELS; i++) {
 		str[6] = '0' + i;
-		//AudioStatus[i].threadhandle = xrKernelCreateThread(str,(void*)&AudioChannelThread,0x12,0x10000,0,NULL);
-		//xrAudioSetChannelDataLen(i, PSP_NUM_AUDIO_SAMPLES);
 		AudioStatus[i].threadhandle =
 			xrKernelCreateThread(str, (void *) &AudioChannelThread, 0x12,
 								 THREAD_STACK_SIZE, PSP_THREAD_ATTR_USER, NULL);
@@ -269,7 +270,7 @@ int xAudioInit()
 		return -1;
 	}
 
-	if (config.use_vaudio) {
+	if (g_use_vaudio) {
 		sceVaudioSetEffectType(config.sfx_mode, 0x8000);
 		sceVaudioSetAlcMode(config.alc_mode);
 	}
@@ -312,7 +313,7 @@ void xAudioEnd()
 		play_sema = -1;
 	}
 
-	g_sample_size = PSP_NUM_AUDIO_SAMPLES;
+	g_sample_size = PSP_DEFAULT_NUM_AUDIO_SAMPLES;
 }
 
 /**
@@ -343,7 +344,24 @@ void xAudioFree(void *p)
 
 void xAudioSetFrameSize(int size)
 {
-	if (size <= PSP_NUM_AUDIO_SAMPLES)
+	if (size <= PSP_MAX_NUM_AUDIO_SAMPLES)
 		g_sample_size = size;
+}
+
+void xAudioSetUseVaudio(unsigned char use_vaudio)
+{
+	g_use_vaudio = use_vaudio;
+}
+
+void xAudioSetEffectType(int type)
+{
+	if (g_use_vaudio)
+		sceVaudioSetEffectType(type, 0x8000);
+}
+
+void xAudioSetAlcMode(unsigned char mode)
+{
+	if (g_use_vaudio)
+		sceVaudioSetAlcMode(mode);
 }
 
