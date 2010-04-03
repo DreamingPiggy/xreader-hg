@@ -745,18 +745,15 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 			config.lyricencode++;
 			if ((dword) config.lyricencode > 4)
 				config.lyricencode = 0;
-
-			xrKernelDelayThread(200000);
-#endif
-			break;
-		case PSP_CTRL_TRIANGLE:
 			{
 				config.sfx_mode++;
 				config.sfx_mode = config.sfx_mode % 5;
 				dbg_printf(d, "setting sfx mode: %d", config.sfx_mode);
 				sceVaudioSetEffectType(config.sfx_mode, 0x8000);
-				xrKernelDelayThread(200000);
 			}
+
+			xrKernelDelayThread(200000);
+#endif
 			break;
 		case (PSP_CTRL_RIGHT | PSP_CTRL_TRIANGLE):
 #ifdef ENABLE_MUSIC
@@ -764,6 +761,12 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 			if ((dword) config.mp3encode > 4)
 				config.mp3encode = 0;
 //          music_set_encode(config.mp3encode);
+			{
+				config.alc_mode = !config.alc_mode;
+				dbg_printf(d, "setting alc mode: %d", config.alc_mode);
+				sceVaudioSetAlcMode(config.alc_mode);
+				xrKernelDelayThread(200000);
+			}
 			xrKernelDelayThread(200000);
 #endif
 			break;
