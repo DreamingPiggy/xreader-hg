@@ -173,6 +173,11 @@ static int update_freq(void)
 	}
 
 	cpu = max(cpu, freq_list[config.freqs[0]][0]);
+
+	// When use vaudio increase cpu freq
+	if (config.use_vaudio)
+		cpu += 33;
+
 	cpu = min(333, cpu);
 	bus = max(bus, freq_list[config.freqs[0]][1]);
 	bus = min(166, bus);

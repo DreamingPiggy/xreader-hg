@@ -455,10 +455,15 @@ static void scene_draw_mp3bar_music_staff(void)
 					(const byte *) infostr,
 					(468 - DISP_FONTSIZE * 2) * 2 / DISP_FONTSIZE, 0, 0,
 					DISP_FONTSIZE, 0);
-	SPRINTF_S(infostr, "%s [%s] [%s]",
-			  _("○播放/暂停 ×循环 □停止 △曲名编码  L上一首  R下一首"),
-			  get_sfx_mode_str(config.sfx_mode), 
-			  (config.alc_mode ? "ALC" : "OFF"));
+	if(config.use_vaudio) {
+		SPRINTF_S(infostr, "%s [%s] [%s]",
+				_("○播放/暂停 ×循环 □停止 △曲名编码  L上一首  R下一首"),
+				get_sfx_mode_str(config.sfx_mode), 
+				(config.alc_mode ? "ALC" : "OFF"));
+	} else {
+		STRCPY_S(infostr, ("○播放/暂停 ×循环 □停止 △曲名编码  L上一首  R下一首"));
+	}
+
 	disp_putstring(6 + DISP_FONTSIZE, 264 - DISP_FONTSIZE * 3, COLOR_WHITE,
 				   (const byte *) infostr);
 	info.type = MD_GET_TITLE | MD_GET_ARTIST | MD_GET_ALBUM;
@@ -745,6 +750,8 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 			config.lyricencode++;
 			if ((dword) config.lyricencode > 4)
 				config.lyricencode = 0;
+
+			if(config.use_vaudio)
 			{
 				config.sfx_mode++;
 				config.sfx_mode = config.sfx_mode % 5;
@@ -761,12 +768,14 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 			if ((dword) config.mp3encode > 4)
 				config.mp3encode = 0;
 //          music_set_encode(config.mp3encode);
+
+			if(config.use_vaudio)
 			{
 				config.alc_mode = !config.alc_mode;
 				dbg_printf(d, "setting alc mode: %d", config.alc_mode);
 				sceVaudioSetAlcMode(config.alc_mode);
-				xrKernelDelayThread(200000);
 			}
+
 			xrKernelDelayThread(200000);
 #endif
 			break;
