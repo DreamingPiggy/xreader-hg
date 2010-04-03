@@ -3233,7 +3233,7 @@ dword scene_locload(dword * selidx)
 	*selidx = (dword) item[1].data;
 
 	memcpy(&g_predraw, &prev, sizeof(win_menu_predraw_data));
-	return (bool) item[0].data;
+	return (bool)(int) item[0].data;
 }
 
 void scene_setting_mgr_predraw(p_win_menuitem item, dword index, dword topindex,
@@ -5309,7 +5309,7 @@ void scene_filelist(void)
 {
 	dword idx = 0;
 #ifdef DMALLOC
-	static int device_mark = -1;
+//	static int device_mark = -1;
 #endif
 
 	where = scene_in_dir;
@@ -5537,6 +5537,7 @@ void scene_filelist(void)
 		if (config.dis_scrsave)
 			xrPowerTick(0);
 
+#if 0
 #ifdef DMALLOC
 		if (device_mark != -1) {
 			dmalloc_log_changed((unsigned) device_mark, 1, 0, 1);
@@ -5545,6 +5546,7 @@ void scene_filelist(void)
 		}
 #elif defined (_DEBUG)
 //      malloc_stats();
+#endif
 #endif
 	}
 	if (p_umdchapter) {
@@ -5608,16 +5610,16 @@ extern void scene_init(void)
 	int _fsize;
 
 #ifdef DMALLOC
-	unsigned mark;
+//	unsigned mark;
 	void *p;
 
-//    dmalloc_debug_setup("log-stats,log-non-free,check-fence,check-heap,check-funcs,check-blank,print-messages,inter=100");
-	dmalloc_debug_setup
-		("log-stats,log-non-free,check-fence,check-funcs,check-blank,print-messages");
-	mark = dmalloc_mark();
-	p = malloc(4096);
-	dmalloc_log_changed(mark, 1, 0, 1);
-	dmalloc_log_stats();
+	dmalloc_debug_setup("log-stats,check-fence,check-heap,check-funcs,check-blank,print-messages,inter=100");
+//	dmalloc_debug_setup
+//		("log-stats,log-non-free,check-fence,check-funcs,check-blank,print-messages");
+//	mark = dmalloc_mark();
+//	p = malloc(4096);
+//	dmalloc_log_changed(mark, 1, 0, 1);
+//	dmalloc_log_stats();
 //  dmalloc_log_unfreed();
 
 	if (p == NULL) {

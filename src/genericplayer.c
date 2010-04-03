@@ -41,9 +41,6 @@
 #include "xrhal.h"
 #include "thread_lock.h"
 #include "mediaengine.h"
-#ifdef DMALLOC
-#include "dmalloc.h"
-#endif
 
 /**
  * 上次按快进退键类型

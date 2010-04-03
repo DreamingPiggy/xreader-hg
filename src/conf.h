@@ -21,6 +21,11 @@
 #ifndef _CONF_H_
 #define _CONF_H_
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #include "common/datatype.h"
 
 typedef enum
@@ -236,7 +241,7 @@ typedef struct
 	int sfx_mode;
 	int alc_mode;
 	bool use_vaudio;
-} t_conf, *p_conf;
+} __attribute__((packed)) t_conf, *p_conf;
 
 /* txt key:
 	0 - bookmark;
@@ -281,5 +286,9 @@ extern const char *conf_get_thumbname(t_conf_thumb thumb);
 extern const char *conf_get_infobarname(t_conf_infobar infobar);
 
 extern t_conf config;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

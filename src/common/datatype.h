@@ -35,7 +35,7 @@ typedef unsigned long dword;
 
 #ifndef bool
 #ifndef __cplusplus
-typedef int bool;
+typedef unsigned char bool;
 #endif
 #endif
 

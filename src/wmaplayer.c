@@ -103,7 +103,6 @@ static u16 wma_block_align = 1485;
 static u16 wma_bits_per_sample = 16;
 static u16 wma_flag = 0x1F;
 static u8 *codecdata;
-static int g_asfparser_mod_id = -1;
 
 static int64_t asf_read_cb(void *userdata, void *buf, SceSize size)
 {
@@ -367,8 +366,6 @@ static int __init(void)
 	memset(wma_mix_buffer, 0, sizeof(wma_mix_buffer));
 	memset(&data, 0, sizeof(data));
 	data.fd = -1;
-
-	g_asfparser_mod_id = -1;
 
 	return 0;
 }
@@ -785,78 +782,6 @@ static void get_wma_tag(void)
 	free_ex_tag(&ex_tag);
 }
 
-static int load_modules()
-{
-	int modid;
-	int ret;
-
-	if (config.use_vaudio)
-		ret = load_me_prx(VAUDIO | AVCODEC);
-	else
-		ret = load_me_prx(AVCODEC);
-
-	if (ret < 0)
-		return ret;
-	
-	{
-		char path[PATH_MAX];
-		int modid, status;
-
-		SPRINTF_S(path, "%scooleyesBridge.prx", scene_appdir());
-
-		modid = kuKernelLoadModule(path, 0, NULL);
-
-		if (modid >= 0) {
-			modid = xrKernelStartModule(modid, 0, 0, &status, NULL);
-		} else if ((u32) modid != 0x80020139) {
-			dbg_printf(d, "err=0x%08X : kuKernelLoadModule(%s)", modid, path);
-		}
-	}
-
-	modid = pspSdkLoadStartModule("flash0:/kd/libasfparser.prx",
-									  PSP_MEMORY_PARTITION_USER);
-
-	if (modid < 0 && (u32) modid != 0x80020139) {
-		dbg_printf(d, "pspSdkLoadStartModule(libasfparser) = 0x%08x", modid);
-		return -1;
-	}
-
-	if (modid >= 0) {
-		g_asfparser_mod_id = modid;
-	}
-
-	return 0;
-}
-
-static int unload_modules()
-{
-	int status;
-	int ret;
-
-	if (g_asfparser_mod_id < 0) {
-		return 0;
-	}
-
-	ret = xrKernelStopModule(g_asfparser_mod_id, 0, NULL, &status, NULL);
-
-	if (ret < 0) {
-		dbg_printf(d, "xrKernelStopModule@0x%08x, modid %d", ret,
-				   g_asfparser_mod_id);
-		return ret;
-	}
-
-	ret = xrKernelUnloadModule(g_asfparser_mod_id);
-
-	if (ret < 0) {
-		dbg_printf(d, "xrKernelUnloadModule@0x%08x, modid %d", ret,
-				   g_asfparser_mod_id);
-		return ret;
-	}
-
-	g_asfparser_mod_id = -1;
-	return 0;
-}
-
 /** 
  * Dump from Subroutine music_parser_2B003AD8(music_parser_module) in 5.00 firmware
  * Warning: different firmwares may have different values
@@ -988,7 +913,7 @@ static int wma_load(const char *spath, const char *lpath)
 	__init();
 
 	g_buff_size = WMA_MAX_BUF_SIZE;
-	g_buff = calloc(1, g_buff_size * sizeof(g_buff[0]));
+	g_buff = calloc_64(1, g_buff_size * sizeof(g_buff[0]));
 
 	if (g_buff == NULL) {
 		__end();
@@ -1018,7 +943,12 @@ static int wma_load(const char *spath, const char *lpath)
 		xrIoLseek(data.fd, 0, PSP_SEEK_SET);
 	}
 
-	if (load_modules() < 0) {
+	if (config.use_vaudio)
+		ret = load_me_prx(VAUDIO | AVCODEC | COOLEYEBRIDGE | ASFPARSER);
+	else
+		ret = load_me_prx(AVCODEC);
+
+	if (ret < 0) {
 		__end();
 		return -1;
 	}
@@ -1098,7 +1028,10 @@ static int wma_load(const char *spath, const char *lpath)
 
 	get_wma_tag();
 
-	xAudioSetFrameSize(1152);
+	if (config.use_vaudio)
+		xAudioSetFrameSize(2048);
+	else
+		xAudioSetFrameSize(4096);
 
 	if (xAudioInit() < 0) {
 		__end();
@@ -1173,7 +1106,6 @@ static int wma_end(void)
 	g_buff_size = 0;
 	free_bitrate(&g_inst_br);
 	cooleyesMeBootStart(xrKernelDevkitVersion(), 4);
-	unload_modules();
 	generic_end();
 
 	return 0;

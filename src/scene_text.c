@@ -1629,7 +1629,7 @@ bool scene_bookmark(PBookViewData pView)
 				  menubcolor, true, scene_bookmark_predraw, NULL,
 				  scene_bookmark_menucb)) != INVALID);
 
-	return (bool) item[1].data;
+	return (bool)(int) item[1].data;
 }
 
 int book_handle_input(PBookViewData pView, dword * selidx, dword key)
