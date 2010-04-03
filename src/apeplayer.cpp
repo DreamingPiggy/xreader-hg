@@ -266,6 +266,7 @@ static int ape_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			return -1;
 		}
 
+		g_buff_frame_size = g_buff_frame_start = 0;
 		xAudioClearSndBuf(buf, snd_buf_frame_size);
 		xrKernelDelayThread(100000);
 		return 0;

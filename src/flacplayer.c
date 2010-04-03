@@ -436,6 +436,7 @@ static int flac_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			return -1;
 		}
 
+		g_buff_frame_size = g_buff_frame_start = 0;
 		xAudioClearSndBuf(buf, snd_buf_frame_size);
 		xrKernelDelayThread(100000);
 		return 0;
@@ -646,8 +647,6 @@ static int flac_load(const char *spath, const char *lpath)
 		__end();
 		return -1;
 	}
-
-	xAudioSetFrameSize(2048);
 
 	if (xAudioInit() < 0) {
 		__end();
