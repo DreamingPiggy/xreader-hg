@@ -199,11 +199,6 @@ static int32_t buffered_reader_reset_buffer(buffered_reader_t * reader,
 		}
 
 		xrIoLseek(reader->handle, reader->position_0, PSP_SEEK_SET);
-		//          xrIoReadAsync(reader->handle, reader->first_buffer, reader->position_1 - reader->position_0);
-		//          xrIoWaitAsync(reader->handle, &result);
-		//          xrIoLseek(reader->handle, reader->position_1, PSP_SEEK_SET);
-		//          xrIoReadAsync(reader->handle, reader->second_buffer, reader->position_2 - reader->position_1);
-		//          xrIoWaitAsync(reader->handle, &result);
 		xrIoRead(reader->handle, reader->first_buffer,
 				 reader->position_1 - reader->position_0);
 		xrIoLseek(reader->handle, reader->position_1, PSP_SEEK_SET);
@@ -218,15 +213,144 @@ static int32_t buffered_reader_reset_buffer(buffered_reader_t * reader,
 	return 0;
 }
 
-int32_t buffered_reader_seek(buffered_reader_t * reader, const int32_t position)
+int32_t buffered_reader_seek(buffered_reader_t* reader, const int32_t position)
 {
-	if (position >= reader->position_0 && position < reader->position_2) {
+	int32_t seek = 0;
+
+	if (position >= reader->position_0 && position < reader->position_2 ) {
 		reader->current_position = position;
 		return position;
 	} else {
-		buffered_reader_reset_buffer(reader, position);
-	}
+		long long result;
+		xrIoWaitAsync(reader->handle, &result);
+		if ( position >= reader->position_2 && position < reader->position_3 ) {
+			uint8_t* temp = reader->first_buffer;
+			reader->first_buffer = reader->second_buffer;
+			reader->second_buffer = reader->third_buffer;
+			reader->third_buffer = temp;
+			reader->position_0 = reader->position_1;
+			reader->position_1 = reader->position_2;
+			reader->position_2 = reader->position_3;
+			reader->current_position = position;
+			reader->position_3 = reader->position_2 + reader->buffer_size;
+			if ( reader->position_3 >= reader->length )
+				reader->position_3 = reader->length;
+			xrIoLseek32(reader->handle, reader->position_2, PSP_SEEK_SET);
+			xrIoReadAsync(reader->handle, reader->third_buffer, reader->position_3 - reader->position_2);
+			return position;
+		}
+		else {
+			if ( position < reader->position_0 )
+				seek = -1;
+			else
+				seek = 1;
 
+			{
+				int32_t old_position_0 = reader->position_0;
+				int32_t old_position_1 = reader->position_1;
+				int32_t old_position_2 = reader->position_2;
+				
+				reader->position_0 = position & 0xFFFFFFC0;
+				reader->position_1 = reader->position_0 + reader->buffer_size;
+				if ( reader->position_1 >= reader->length )
+					reader->position_1 = reader->length;
+				reader->position_2 = reader->position_1 + reader->buffer_size;
+				if ( reader->position_2 >= reader->length )
+					reader->position_2 = reader->length;
+				reader->position_3 = reader->position_2 + reader->buffer_size;
+				if ( reader->position_3 >= reader->length )
+					reader->position_3 = reader->length;
+					
+				reader->current_position = position;
+				
+				if ( seek > 0 || (reader->position_3 <= old_position_0) ) {
+					xrIoLseek32(reader->handle, reader->position_0, PSP_SEEK_SET);
+					xrIoRead(reader->handle, reader->first_buffer, reader->position_1 - reader->position_0);
+					xrIoLseek32(reader->handle, reader->position_1, PSP_SEEK_SET);
+					xrIoRead(reader->handle, reader->second_buffer, reader->position_2 - reader->position_1);
+					xrIoLseek32(reader->handle, reader->position_2, PSP_SEEK_SET);
+					xrIoReadAsync(reader->handle, reader->third_buffer, reader->position_3 - reader->position_2);
+				}
+				else {
+					int32_t copy;
+					uint8_t* dest;
+					uint8_t* src;
+					if ( old_position_0 >= reader->position_2 ) {
+						copy = reader->position_3-old_position_0;
+						dest = reader->third_buffer+(old_position_0-reader->position_2);
+						src = reader->first_buffer;
+						memcpy(dest, src, copy);
+						
+						xrIoLseek32(reader->handle, reader->position_0, PSP_SEEK_SET);
+						xrIoRead(reader->handle, reader->first_buffer, reader->position_1 - reader->position_0);
+						xrIoLseek32(reader->handle, reader->position_1, PSP_SEEK_SET);
+						xrIoRead(reader->handle, reader->second_buffer, reader->position_2 - reader->position_1);
+						xrIoLseek32(reader->handle, reader->position_2, PSP_SEEK_SET);
+						xrIoReadAsync(reader->handle, reader->third_buffer, old_position_0 - reader->position_2);
+					}
+					else if ( old_position_0 >= reader->position_1 ) {
+						
+						copy = reader->position_3-old_position_1;
+						dest = reader->third_buffer+(old_position_1-reader->position_2);
+						src = reader->second_buffer;
+						memcpy(dest, src, copy);
+						
+						copy = old_position_1-reader->position_2;
+						dest = reader->third_buffer;
+						src = reader->first_buffer+(reader->position_2-old_position_0);
+						memcpy(dest, src, copy);
+						
+						copy = reader->position_2-old_position_0;
+						dest = reader->second_buffer+(old_position_0-reader->position_1);
+						src = reader->first_buffer;
+						memcpy(dest, src, copy);
+						
+						xrIoLseek32(reader->handle, reader->position_0, PSP_SEEK_SET);
+						xrIoRead(reader->handle, reader->first_buffer, reader->position_1 - reader->position_0);
+						xrIoLseek32(reader->handle, reader->position_1, PSP_SEEK_SET);
+						xrIoRead(reader->handle, reader->second_buffer, old_position_0 - reader->position_1);
+						xrIoLseek32(reader->handle, reader->position_2, PSP_SEEK_SET);
+						xrIoReadAsync(reader->handle, reader->third_buffer, 0);
+					}
+					else {
+						copy = reader->position_3-old_position_2;
+						dest = reader->third_buffer+(old_position_2-reader->position_2);
+						src = reader->third_buffer;
+						memmove(dest, src, copy);
+						
+						copy = old_position_2-reader->position_2;
+						dest = reader->third_buffer;
+						src = reader->second_buffer+(reader->position_2-old_position_1);
+						memcpy(dest, src, copy);
+						
+						copy = reader->position_2-old_position_1;
+						dest = reader->second_buffer+(old_position_1-reader->position_1);
+						src = reader->second_buffer;
+						memmove(dest, src, copy);
+						
+						copy = old_position_1-reader->position_1;
+						dest = reader->second_buffer;
+						src = reader->first_buffer+(reader->position_1-old_position_0);
+						memcpy(dest, src, copy);
+						
+						copy = reader->position_1-old_position_0;
+						dest = reader->first_buffer+(old_position_0-reader->position_0);
+						src = reader->first_buffer;
+						memmove(dest, src, copy);
+						
+						
+						xrIoLseek32(reader->handle, reader->position_0, PSP_SEEK_SET);
+						xrIoRead(reader->handle, reader->first_buffer, old_position_0 - reader->position_0);
+						xrIoLseek32(reader->handle, reader->position_1, PSP_SEEK_SET);
+						xrIoRead(reader->handle, reader->second_buffer, 0);
+						xrIoLseek32(reader->handle, reader->position_2, PSP_SEEK_SET);
+						xrIoReadAsync(reader->handle, reader->third_buffer, 0);
+					}
+				}
+				return position;
+			}
+		}
+	}
 	return 0;
 }
 

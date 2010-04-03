@@ -579,7 +579,7 @@ static int wav_get_info(struct music_info *pinfo)
 		pinfo->cur_time = g_play_time;
 	}
 	if (pinfo->type & MD_GET_CPUFREQ) {
-		pinfo->psp_freq[0] = 48;
+		pinfo->psp_freq[0] = 33;
 		pinfo->psp_freq[1] = 16;
 	}
 	if (pinfo->type & MD_GET_FREQ) {
