@@ -2406,6 +2406,11 @@ t_win_menu_op scene_musicopt_menucb(dword key, p_win_menuitem item,
 					config.show_encoder_msg = !config.show_encoder_msg;
 #endif
 					break;
+				case 4:
+#if defined(ENABLE_MUSIC)
+					config.use_vaudio = !config.use_vaudio;
+#endif
+					break;
 			}
 			return win_menu_op_redraw;
 		case PSP_CTRL_CIRCLE:
@@ -2459,12 +2464,19 @@ void scene_musicopt_predraw(p_win_menuitem item, dword index, dword topindex,
 				   (const byte *) (config.show_encoder_msg ? _("是") :
 								   _("否")));
 	lines++;
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
+																	DISP_FONTSIZE),
+				   COLOR_WHITE,
+				   (const byte *) (config.use_vaudio ? _("是") :
+								   _("否")));
+	lines++;
 }
 
 dword scene_musicopt(dword * selidx)
 {
 	win_menu_predraw_data prev;
-	t_win_menuitem item[4];
+	t_win_menuitem item[5];
 	dword i;
 	dword index;
 
@@ -2473,6 +2485,8 @@ dword scene_musicopt(dword * selidx)
 	STRCPY_S(item[1].name, _("歌词显示行数"));
 	STRCPY_S(item[2].name, _("歌词显示编码"));
 	STRCPY_S(item[3].name, _("显示编码器信息"));
+	STRCPY_S(item[4].name, _("使用均衡器"));
+
 	g_predraw.max_item_len = win_get_max_length(item, NELEMS(item));
 
 	for (i = 0; i < NELEMS(item); i++) {

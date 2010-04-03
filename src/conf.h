@@ -235,6 +235,7 @@ typedef struct
 	bool show_encoder_msg;
 	int sfx_mode;
 	int alc_mode;
+	bool use_vaudio;
 } t_conf, *p_conf;
 
 /* txt key:

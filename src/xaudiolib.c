@@ -52,18 +52,34 @@ static int g_sample_size = PSP_NUM_AUDIO_SAMPLES;
 
 int setFrequency(unsigned short samples, unsigned short freq, char car)
 {
-	return sceVaudioChReserve(samples, freq, car);
+	if (config.use_vaudio)
+		return sceVaudioChReserve(samples, freq, car);
+	else
+		return xrAudioSRCChReserve(samples, freq, car);
 }
 
 int xAudioReleaseAudio(void)
 {
-//  while (xrAudioOutput2GetRestSample() > 0);
-	return sceVaudioChRelease();
+	if (config.use_vaudio) {
+		int ret;
+
+		while ((ret = sceVaudioChRelease()) == 0x80260002)
+			;
+
+		return ret;
+	} else {
+		while (xrAudioOutput2GetRestSample() > 0);
+		return xrAudioSRCChRelease();
+	}
 }
 
 int audioOutpuBlocking(int volume, void *buffer)
 {
-	return sceVaudioOutputBlocking(volume, buffer);
+	if (config.use_vaudio) {
+		return sceVaudioOutputBlocking(volume, buffer);
+	} else {
+		return xrAudioSRCOutputBlocking(volume, buffer);
+	}
 }
 
 static int audio_ready = 0;
@@ -253,8 +269,10 @@ int xAudioInit()
 		return -1;
 	}
 
-	sceVaudioSetEffectType(config.sfx_mode, 0x8000);
-	sceVaudioSetAlcMode(config.alc_mode);
+	if (config.use_vaudio) {
+		sceVaudioSetEffectType(config.sfx_mode, 0x8000);
+		sceVaudioSetAlcMode(config.alc_mode);
+	}
 
 	return 0;
 }
