@@ -47,20 +47,36 @@ static SceUID g_modid = -1;
 
 int load_me_prx(int mode)
 {
+	int ret;
+
 	if (mode & VAUDIO) {
-		g_modid = kuKernelLoadModule("flash0:/kd/vaudio.prx", 0, NULL);
-		xrKernelStartModule(g_modid, 0, NULL, 0, NULL);
-		b_vaudio_prx_loaded = true;
+		ret = kuKernelLoadModule("flash0:/kd/vaudio.prx", 0, NULL);
+
+		if (ret > 0) {
+			g_modid = ret;
+			ret = xrKernelStartModule(g_modid, 0, NULL, 0, NULL);
+
+			if (ret > 0)
+				b_vaudio_prx_loaded = true;
+			else {
+				sceKernelUnloadModule(g_modid);
+				g_modid = -1;
+			}
+		}
 	}
 
 	if (mode & AVCODEC) {
-		xrUtilityLoadAvModule(PSP_AV_MODULE_AVCODEC);
-		b_avcodec_prx_loaded = true;
+		ret = xrUtilityLoadAvModule(PSP_AV_MODULE_AVCODEC);
+
+		if (ret == 0)
+			b_avcodec_prx_loaded = true;
 	}
 
 	if (mode & ATRAC3PLUS) {
-		xrUtilityLoadAvModule(PSP_AV_MODULE_ATRAC3PLUS);
-		b_at3p_prx_loaded = true;
+		ret = xrUtilityLoadAvModule(PSP_AV_MODULE_ATRAC3PLUS);
+
+		if (ret == 0)
+			b_at3p_prx_loaded = true;
 	}
 
 	return 0;
