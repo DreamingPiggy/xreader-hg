@@ -354,7 +354,10 @@ static int mpc_load(const char *spath, const char *lpath)
 
 	generic_readtag(&g_info, spath);
 
-//	xAudioSetFrameSize(2048);
+	if (config.use_vaudio)
+		xAudioSetFrameSize(2048);
+	else
+		xAudioSetFrameSize(4096);
 
 	if (xAudioInit() < 0) {
 		__end();
