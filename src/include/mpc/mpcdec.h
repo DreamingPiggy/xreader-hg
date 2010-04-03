@@ -48,7 +48,7 @@ extern "C" {
 
 enum {
     MPC_FRAME_LENGTH          = (36 * 32),              ///< Samples per mpc frame
-    MPC_DECODER_BUFFER_LENGTH = (MPC_FRAME_LENGTH * 4), ///< Required buffer size for decoder
+    MPC_DECODER_BUFFER_LENGTH = (MPC_FRAME_LENGTH * 2), ///< Required buffer size for decoder
     MPC_DECODER_SYNTH_DELAY   = 481
 };
 
