@@ -65,7 +65,7 @@ if MUSIC
 xReader_elf_SOURCES += \
 musicdrv.c musicdrv.h musicmgr.c musicmgr.h xaudiolib.c xaudiolib.h \
 genericplayer.c genericplayer.h buffered_reader.c buffered_reader.h mp3info.h mp3info.c mp3info_buffered.c lyric.c lyric.h clock.c \
-musicinfo.c musicinfo.h mediaengine.c medaiengine.h
+musicinfo.c musicinfo.h mediaengine.c medaiengine.h scevaudio.S
 
 if MP3
 xReader_elf_SOURCES += \

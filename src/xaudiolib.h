@@ -45,11 +45,10 @@ extern "C"
 
 /** This is the number of frames you can update per callback, a frame being
  * 1 sample for mono, 2 samples for stereo etc. */
-#define PSP_NUM_AUDIO_SAMPLES 1024*4
+#define PSP_NUM_AUDIO_SAMPLES 2048
 #define PSP_VOLUME_MAX 0x8000
 
-	typedef int (*xAudioCallback_t) (void *buf, unsigned int reqn,
-										void *pdata);
+	typedef int (*xAudioCallback_t) (void *buf, unsigned int reqn, void *pdata);
 
 	typedef struct
 	{
@@ -69,12 +68,11 @@ extern "C"
 	void xAudioEnd();
 
 	void xAudioSetVolume(int channel, int left, int right);
-	void xAudioChannelThreadCallback(int channel, void *buf,
-										unsigned int reqn);
+	void xAudioChannelThreadCallback(int channel, void *buf, unsigned int reqn);
 	void xAudioSetChannelCallback(int channel, xAudioCallback_t callback,
-									 void *pdata);
+								  void *pdata);
 	int xAudioOutBlocking(unsigned int channel, unsigned int vol1,
-							 unsigned int vol2, void *buf);
+						  unsigned int vol2, void *buf);
 	int xAudioSetFrequency(unsigned short freq);
 
 	void xAudioClearSndBuf(void *buf, int frames);

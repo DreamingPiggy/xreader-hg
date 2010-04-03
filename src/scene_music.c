@@ -62,6 +62,7 @@
 #include "dbg.h"
 #include "xrhal.h"
 #include "image_queue.h"
+#include "pspvaudio.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -171,8 +172,7 @@ void scene_mp3_list_predraw(p_win_menuitem item, dword index, dword topindex,
 
 	default_predraw(&g_predraw, _(" ○删除 □下移 △上移 ×退出 START播放"),
 					max_height, &left, &right, &upper, &bottom, 4);
-	pos =
-		get_center_pos(0, 480, _("要添加乐曲请到文件列表选取音乐文件按○"));
+	pos = get_center_pos(0, 480, _("要添加乐曲请到文件列表选取音乐文件按○"));
 	posend =
 		pos + 1 +
 		strlen(_("要添加乐曲请到文件列表选取音乐文件按○")) * DISP_FONTSIZE / 2;
@@ -380,6 +380,30 @@ static void scene_draw_lyric(void)
 }
 
 #ifdef ENABLE_MUSIC
+
+const char *get_sfx_mode_str(int effect_type)
+{
+	switch (effect_type) {
+		case PSP_VAUDIO_FX_TYPE_THRU:
+			return _("normal");
+			break;
+		case PSP_VAUDIO_FX_TYPE_HEAVY:
+			return _("heavy");
+			break;
+		case PSP_VAUDIO_FX_TYPE_POPS:
+			return _("pops");
+			break;
+		case PSP_VAUDIO_FX_TYPE_JAZZ:
+			return _("jazz");
+			break;
+		case PSP_VAUDIO_FX_TYPE_UNIQUE:
+			return _("unique");
+			break;
+	};
+
+	return "";
+}
+
 static void scene_draw_mp3bar_music_staff(void)
 {
 	int bitrate, sample, len, tlen;
@@ -431,10 +455,11 @@ static void scene_draw_mp3bar_music_staff(void)
 					(const byte *) infostr,
 					(468 - DISP_FONTSIZE * 2) * 2 / DISP_FONTSIZE, 0, 0,
 					DISP_FONTSIZE, 0);
-
+	SPRINTF_S(infostr, "%s [%s]",
+			  _("○播放/暂停 ×循环 □停止 △曲名编码  L上一首  R下一首"),
+			  get_sfx_mode_str(config.sfx_mode));
 	disp_putstring(6 + DISP_FONTSIZE, 264 - DISP_FONTSIZE * 3, COLOR_WHITE,
-				   (const byte *)
-				   _("○播放/暂停 ×循环 □停止 △曲名编码  L上一首  R下一首"));
+				   (const byte *) infostr);
 	info.type = MD_GET_TITLE | MD_GET_ARTIST | MD_GET_ALBUM;
 	if (musicdrv_get_info(&info) == 0) {
 		char tag[512];
@@ -722,6 +747,15 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 
 			xrKernelDelayThread(200000);
 #endif
+			break;
+		case PSP_CTRL_TRIANGLE:
+			{
+				config.sfx_mode++;
+				config.sfx_mode = config.sfx_mode % 5;
+				dbg_printf(d, "setting sfx mode: %d", config.sfx_mode);
+				sceVaudioSetEffectType(config.sfx_mode, 0x8000);
+				xrKernelDelayThread(200000);
+			}
 			break;
 		case (PSP_CTRL_RIGHT | PSP_CTRL_TRIANGLE):
 #ifdef ENABLE_MUSIC
