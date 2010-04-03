@@ -476,7 +476,10 @@ static int m4a_load(const char *spath, const char *lpath)
 
 	m4a_get_tag();
 
-	ret = load_me_prx();
+	if (config.use_vaudio)
+		ret = load_me_prx(VAUDIO | AVCODEC);
+	else
+		ret = load_me_prx(AVCODEC);
 
 	if (ret < 0) {
 		dbg_printf(d, "%s: load_me_prx failed", __func__);

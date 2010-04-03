@@ -39,31 +39,53 @@
 
 #ifdef ENABLE_MUSIC
 
-static bool me_prx_loaded = false;
+static bool b_vaudio_prx_loaded   = false;
+static bool b_avcodec_prx_loaded  = false;
+static bool b_at3p_prx_loaded     = false;
 
-int load_me_prx(void)
+static SceUID g_modid = -1;
+
+int load_me_prx(int mode)
 {
-	int result;
+	if (mode & VAUDIO) {
+		g_modid = kuKernelLoadModule("flash0:/kd/vaudio.prx", 0, NULL);
+		xrKernelStartModule(g_modid, 0, NULL, 0, NULL);
+		b_vaudio_prx_loaded = true;
+	}
 
-	if (me_prx_loaded)
-		return 0;
+	if (mode & AVCODEC) {
+		xrUtilityLoadAvModule(PSP_AV_MODULE_AVCODEC);
+		b_avcodec_prx_loaded = true;
+	}
 
-	xrKernelStartModule(kuKernelLoadModule
-						("flash0:/kd/vaudio.prx", 0, NULL), 0, NULL, 0, NULL);
+	if (mode & ATRAC3PLUS) {
+		xrUtilityLoadAvModule(PSP_AV_MODULE_ATRAC3PLUS);
+		b_at3p_prx_loaded = true;
+	}
 
-	result = xrUtilityLoadAvModule(PSP_AV_MODULE_AVCODEC);
+	return 0;
+}
 
-	if (result < 0)
-		return -1;
+int unload_prx(void)
+{
+	if (b_vaudio_prx_loaded) {
+		int result;
 
-#if 0
-	result = xrUtilityLoadAvModule(PSP_AV_MODULE_ATRAC3PLUS);
+		sceKernelStopModule(g_modid, 0, NULL, &result, NULL); 
+		sceKernelUnloadModule(g_modid);
+		g_modid = -1;
+		b_vaudio_prx_loaded = false;
+	}
 
-	if (result < 0)
-		return -2;
-#endif
+	if (b_avcodec_prx_loaded) {
+		sceUtilityUnloadAvModule(PSP_AV_MODULE_AVCODEC);
+		b_avcodec_prx_loaded = false;
+	}
 
-	me_prx_loaded = true;
+	if (b_at3p_prx_loaded) {
+		sceUtilityUnloadAvModule(PSP_AV_MODULE_ATRAC3PLUS);
+		b_at3p_prx_loaded = false;
+	}
 
 	return 0;
 }

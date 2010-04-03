@@ -788,11 +788,16 @@ static void get_wma_tag(void)
 static int load_modules()
 {
 	int modid;
+	int ret;
 
-	if (load_me_prx() < 0) {
-		return -1;
-	}
+	if (config.use_vaudio)
+		ret = load_me_prx(VAUDIO | AVCODEC);
+	else
+		ret = load_me_prx(AVCODEC);
 
+	if (ret < 0)
+		return ret;
+	
 	{
 		char path[PATH_MAX];
 		int modid, status;

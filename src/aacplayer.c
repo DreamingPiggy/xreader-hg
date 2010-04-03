@@ -397,7 +397,10 @@ static int aac_load(const char *spath, const char *lpath)
 		xrIoLseek(data.fd, 0, PSP_SEEK_SET);
 	}
 
-	ret = load_me_prx();
+	if (config.use_vaudio)
+		ret = load_me_prx(VAUDIO | AVCODEC);
+	else
+		ret = load_me_prx(AVCODEC);
 
 	if (ret < 0) {
 		dbg_printf(d, "%s: load_me_prx failed", __func__);

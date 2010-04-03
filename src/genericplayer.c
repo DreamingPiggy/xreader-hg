@@ -40,6 +40,7 @@
 #include "genericplayer.h"
 #include "xrhal.h"
 #include "thread_lock.h"
+#include "mediaengine.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -235,6 +236,7 @@ int generic_end(void)
 {
 	xr_lock_destroy(&generic_l);
 	generic_set_playback(false);
+	unload_prx();
 
 	return 0;
 }
