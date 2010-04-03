@@ -40,6 +40,8 @@
 
 #include "xaudiolib.h"
 #include "xrhal.h"
+#include "pspvaudio.h"
+#include "conf.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -48,18 +50,18 @@
 
 int setFrequency(unsigned short samples, unsigned short freq, char car)
 {
-	return xrAudioSRCChReserve(samples, freq, car);
+	return sceVaudioChReserve(samples, freq, car);
 }
 
 int xAudioReleaseAudio(void)
 {
-	while (xrAudioOutput2GetRestSample() > 0);
-	return xrAudioSRCChRelease();
+//  while (xrAudioOutput2GetRestSample() > 0);
+	return sceVaudioChRelease();
 }
 
 int audioOutpuBlocking(int volume, void *buffer)
 {
-	return xrAudioSRCOutputBlocking(volume, buffer);
+	return sceVaudioOutputBlocking(volume, buffer);
 }
 
 static int audio_ready = 0;
@@ -86,7 +88,7 @@ void xAudioChannelThreadCallback(int channel, void *buf, unsigned int reqn)
 }
 
 void xAudioSetChannelCallback(int channel, xAudioCallback_t callback,
-								 void *pdata)
+							  void *pdata)
 {
 	volatile psp_audio_channelinfo *pci;
 
@@ -100,7 +102,7 @@ void xAudioSetChannelCallback(int channel, xAudioCallback_t callback,
 }
 
 int xAudioOutBlocking(unsigned int channel, unsigned int vol1,
-						 unsigned int vol2, void *buf)
+					  unsigned int vol2, void *buf)
 {
 	if (!audio_ready)
 		return -1;
@@ -248,6 +250,9 @@ int xAudioInit()
 		audio_ready = 0;
 		return -1;
 	}
+
+	sceVaudioSetEffectType(config.sfx_mode, 0x8000);
+
 	return 0;
 }
 

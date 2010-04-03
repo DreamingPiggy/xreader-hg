@@ -30,9 +30,11 @@
 #include <pspkernel.h>
 #include <pspaudio.h>
 #include <pspaudiocodec.h>
+#include <kubridge.h>
 #include "config.h"
 #include "xrhal.h"
 #include "mediaengine.h"
+#include "pspvaudio.h"
 #include "common/datatype.h"
 
 #ifdef ENABLE_MUSIC
@@ -46,19 +48,17 @@ int load_me_prx(void)
 	if (me_prx_loaded)
 		return 0;
 
-#if (PSP_FW_VERSION >= 300)
+	xrKernelStartModule(kuKernelLoadModule
+						("flash0:/kd/vaudio.prx", 0, NULL), 0, NULL, 0, NULL);
+
 	result = xrUtilityLoadAvModule(PSP_AV_MODULE_AVCODEC);
-#else
-	result =
-		pspSdkLoadStartModule("flash0:/kd/avcodec.prx",
-							  PSP_MEMORY_PARTITION_KERNEL);
-#endif
 
 	if (result < 0)
 		return -1;
 
-#if (PSP_FW_VERSION >= 300)
+#if 0
 	result = xrUtilityLoadAvModule(PSP_AV_MODULE_ATRAC3PLUS);
+
 	if (result < 0)
 		return -2;
 #endif

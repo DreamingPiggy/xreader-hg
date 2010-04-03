@@ -279,6 +279,7 @@ static void conf_default(p_conf conf)
 	conf->linenum_style = false;
 	conf->infobar_align = conf_align_left;
 	conf->show_encoder_msg = false;
+	conf->sfx_mode = 0;
 	SPRINTF_S(conf->musicdrv_opts,
 			  "mp3_brute_mode=off mp3_use_me=on mp3_check_crc=off mp3_buffer_size=%d "
 			  "wma_buffer_size=%d aac_buffer_size=%d wav_buffer_size=%d wv_buffer_size=%d "
@@ -1164,9 +1165,11 @@ extern bool ini_conf_load(const char *inifilename, p_conf conf)
 	conf->max_cache_img =
 		iniparser_getunsigned(dict, "Image:max_cache_img", conf->max_cache_img);
 
-	conf->show_encoder_msg = 
+	conf->show_encoder_msg =
 		iniparser_getboolean(dict, "Music:show_encoder_msg",
 							 conf->show_encoder_msg);
+
+	conf->sfx_mode = iniparser_getint(dict, "Music:sfx_mode", conf->sfx_mode);
 
 	if (conf->max_cache_img == 0) {
 		conf->use_image_queue = false;
@@ -1468,7 +1471,10 @@ extern bool ini_conf_save(p_conf conf)
 	iniparser_setstring(dict, "Music:show_encoder_msg",
 						booleanToString(buf, sizeof(buf),
 										conf->show_encoder_msg));
-	
+
+	iniparser_setstring(dict, "Music:sfx_mode",
+						intToString(buf, sizeof(buf), conf->sfx_mode));
+
 	iniparser_dump_ini(dict, fp);
 
 	fclose(fp);
