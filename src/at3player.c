@@ -421,7 +421,10 @@ static int at3_load(const char *spath, const char *lpath)
 		goto failed;
 	}
 
-	ret = load_me_prx();
+	if (config.use_vaudio)
+		ret = load_me_prx(VAUDIO | ATRAC3PLUS);
+	else
+		ret = load_me_prx(AVCODEC);
 
 	if (ret < 0) {
 		dbg_printf(d, "%s: load_me_prx failed", __func__);

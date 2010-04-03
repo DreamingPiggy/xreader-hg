@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MEDIAENGINE_H
+#define MEDIAENGINE_H
 
 /*
  * This file is part of xReader.
@@ -20,4 +21,14 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-int load_me_prx(void);
+
+enum CodecType {
+	VAUDIO  =     0x01,
+	AVCODEC =     0x01 << 1,
+	ATRAC3PLUS =  0x01 << 2
+};
+
+int load_me_prx(int mode);
+int unload_prx(void);
+
+#endif

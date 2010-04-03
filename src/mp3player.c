@@ -771,7 +771,10 @@ static int me_init()
 {
 	int ret;
 
-	ret = load_me_prx();
+	if (config.use_vaudio)
+		ret = load_me_prx(VAUDIO | AVCODEC);
+	else
+		ret = load_me_prx(AVCODEC);
 
 	if (ret < 0)
 		return ret;
