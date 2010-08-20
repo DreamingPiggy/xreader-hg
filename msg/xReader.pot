@@ -1117,6 +1117,9 @@ msgstr ""
 msgid "显示编码器信息"
 msgstr ""
 
+msgid "使用均衡器"
+msgstr ""
+
 msgid "均衡器模式"
 msgstr ""
 
