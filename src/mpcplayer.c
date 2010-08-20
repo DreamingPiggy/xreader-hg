@@ -200,8 +200,7 @@ static int mpc_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			g_buff_frame_start = 0;
 
 			incr =
-				(double) (MPC_DECODER_BUFFER_LENGTH / 2 / g_info.channels) /
-				g_info.sample_freq;
+				(double) (MPC_DECODER_BUFFER_LENGTH / 2) / g_info.sample_freq;
 			g_play_time += incr;
 			add_bitrate(&g_inst_br,
 						frame.bits * g_info.sample_freq / MPC_FRAME_LENGTH,
