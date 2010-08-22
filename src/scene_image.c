@@ -516,8 +516,7 @@ static void scene_show_info(int selidx)
 			width =
 				width > PSP_SCREEN_WIDTH - 10 ? PSP_SCREEN_WIDTH - 10 : width;
 			height = PSP_SCREEN_HEIGHT / DISP_FONTSIZE - 1;
-			line_num =
-				exif_array->used <= height ? exif_array->used : height;
+			line_num = exif_array->used <= height ? exif_array->used : height;
 			top =
 				(PSP_SCREEN_HEIGHT -
 				 (1 + height) * DISP_FONTSIZE) / 2 >
@@ -1838,7 +1837,7 @@ static t_win_menu_op scene_imgkey_menucb(dword key, p_win_menuitem item,
 	dword key1, key2;
 	SceCtrlData ctl;
 	int i;
-	
+
 	switch (key) {
 		case (PSP_CTRL_SELECT | PSP_CTRL_START):
 			return exit_confirm();
