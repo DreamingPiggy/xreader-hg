@@ -201,7 +201,7 @@ static int cache_wait_avail()
 	while (ccacher.caches_size == 0) {
 		key = ctrl_read();
 
-		if (key == PSP_CTRL_CROSS) {
+		if (key != 0 && (key == config.imgkey[9] || key == config.imgkey2[9])) {
 			return -1;
 		}
 
@@ -220,7 +220,7 @@ static int cache_wait_loaded()
 //      dbg_printf(d, "CLIENT: Wait image %u %s load finish", (unsigned) selidx, filename);
 		key = ctrl_read();
 
-		if (key == PSP_CTRL_CROSS) {
+		if (key != 0 && (key == config.imgkey[9] || key == config.imgkey2[9])) {
 			return -1;
 		}
 
