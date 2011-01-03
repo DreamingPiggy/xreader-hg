@@ -76,7 +76,13 @@ size_t strncat_s(char *strDest,
 	}
 #endif
 
-	rest = numberOfElements - strnlen(strDest, numberOfElements) - 1;
+	rest = numberOfElements - strnlen(strDest, numberOfElements);
+
+	if (rest == 0) {
+		return 0;
+	}
+
+	rest--;
 	strncat(strDest, strSource, rest < count ? rest : count);
 
 	return strnlen(strDest, numberOfElements);
