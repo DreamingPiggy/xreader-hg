@@ -1,7 +1,7 @@
 ACLOCAL_AMFLAGS = -I aclocal
 ACLOCAL_FILES = aclocal/version.m4 aclocal/pspdev.m4 aclocal/ac_doxygen.m4
 
-SUBDIRS = xrPrx xr_rdriver src
+SUBDIRS = xrPrx xr_rdriver cooleyesBridge src 
 
 include aminclude.am
 
@@ -24,6 +24,3 @@ EXTRA_DIST =			\
 
 dist-hook:
 	rm -rf `find $(distdir)/* -name .svn -o -name CVS -o -name .git`
-
-clean-local:
-	$(RM) Revision.h

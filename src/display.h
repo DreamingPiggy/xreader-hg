@@ -1,8 +1,29 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #ifndef _DISPLAY_H_
 #define _DISPLAY_H_
 
 #include <pspgu.h>
 #include <pspdisplay.h>
+#include "xrhal.h"
 #include "common/datatype.h"
 
 typedef dword pixel;
@@ -32,7 +53,7 @@ extern byte disp_ewidth[0x80];
 extern pixel *vram_draw;
 
 // sceDisplayWaitVblankStart function alias name, define is faster than function call (even at most time this is inline linked)
-#define disp_waitv() sceDisplayWaitVblankStart()
+#define disp_waitv() xrDisplayWaitVblankStart()
 
 #define disp_get_vaddr(x, y) (vram_draw + (x) + ((y) << 9))
 
@@ -111,34 +132,15 @@ extern bool disp_load_zipped_book_font(const char *zipfile, const char *efont,
 									   const char *cfont);
 
 /**
- * 装载TTF字体作为文本字体
- *
- * @param ettffile
- * @param cttffile
- * @param size
- *
- * @return
- */
-extern bool disp_load_truetype_book_font(const char *ettffile,
-										 const char *cttffile, int size);
-
-/**
- * 从ZIP档案中读取文件作为文本TTF字体
+ * 重新装载ttf字体
  *
  * @note 如果同上次装载的文件相同就不重复装载，只改变字体大小
  *
- * @param ezipfile
- * @param czipfile
- * @param ettffile
- * @param cttffile
- * @param size
+ * @param size 字体大小
  *
  * @return
  */
-extern bool disp_load_zipped_truetype_book_font(const char *ezipfile,
-												const char *czipfile,
-												const char *ettffile,
-												const char *cttffile, int size);
+extern bool disp_ttf_reload(int size);
 
 /**
  * 检查中英文字体文件是否都存在
@@ -252,10 +254,11 @@ extern void disp_line(dword x1, dword y1, dword x2, dword y2, pixel color);
 extern bool check_range(int x, int y);
 extern void disp_fix_osk(void *buffer);
 pixel *disp_swizzle_image(pixel * buf, int width, int height);
-extern void disp_ttf_reload(void);
 
 #ifdef ENABLE_TTF
 extern void disp_ttf_close(void);
 #endif
+
+extern bool using_ttf;
 
 #endif

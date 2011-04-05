@@ -1,5 +1,30 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #ifndef _CONF_H_
 #define _CONF_H_
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 #include "common/datatype.h"
 
@@ -102,6 +127,7 @@ typedef struct
 {
 	char path[PATH_MAX];
 	dword forecolor;
+	dword giftranscolor;
 	dword bgcolor;
 	bool have_bg;
 	dword titlecolor;
@@ -153,6 +179,7 @@ typedef struct
 	t_conf_imgpaging imgpaging;
 	dword imgpaging_spd;
 	dword imgpaging_interval;
+	dword imgpaging_duration;
 	dword flkey[20];
 	int fontsize;
 	bool reordertxt;
@@ -183,12 +210,6 @@ typedef struct
 	bool load_exif;
 	int launchtype;
 	bool infobar_use_ttf_mode;
-	bool cfont_antialias;
-	bool cfont_cleartype;
-	bool cfont_embolden;
-	bool efont_antialias;
-	bool efont_cleartype;
-	bool efont_embolden;
 	bool img_no_repeat;
 	bool hide_flash;
 	dword tabstop;
@@ -205,14 +226,22 @@ typedef struct
 	bool ttf_haste_up;
 	bool linenum_style;
 	/**
-	 * Áä∂ÊÄÅÊ†èÂØπÈΩê
+	 * ◊¥Ã¨¿∏∂‘∆Î
 	 *
-	 * 0 - Â∑¶
-	 * 1 - Âè≥
-	 * 2 - ‰∏≠
+	 * 0 - ◊Û
+	 * 1 - ”“
+	 * 2 - ÷–
 	 */
 	t_conf_align infobar_align;
-} t_conf, *p_conf;
+	char musicdrv_opts[PATH_MAX];
+	bool magnetic_scrolling;
+	bool use_image_queue;
+	unsigned max_cache_img;
+	bool show_encoder_msg;
+	int sfx_mode;
+	int alc_mode;
+	bool use_vaudio;
+} __attribute__((packed)) t_conf, *p_conf;
 
 /* txt key:
 	0 - bookmark;
@@ -257,5 +286,9 @@ extern const char *conf_get_thumbname(t_conf_thumb thumb);
 extern const char *conf_get_infobarname(t_conf_infobar infobar);
 
 extern t_conf config;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

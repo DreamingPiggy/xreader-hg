@@ -174,7 +174,7 @@ msgstr "Image brightness"
 
 #: scene.c:881 scene.c:1540
 msgid "  启用类比键"
-msgstr "Enable analog key"
+msgstr "Enable analogy key"
 
 #: scene.c:882
 msgid "查看EXIF信息"
@@ -1169,3 +1169,27 @@ msgstr "Didn't specify Chinese or English TTF font"
 
 msgid "信息栏字体大小"
 msgstr "Infobar font size"
+
+msgid "编码"
+msgstr "Encode"
+
+msgid "压缩率"
+msgstr "Compress ratio"
+
+msgid "翻页滚动时长"
+msgstr "Page scrolling duration"
+
+msgid "缓存"
+msgstr "Cache"
+
+msgid "显示编码器信息"
+msgstr "Display encoder information"
+
+msgid "使用均衡器"
+msgstr "Equalizer"
+
+msgid "均衡器模式"
+msgstr "Equalizer Mode"
+
+msgid "声音补偿"
+msgstr "ALC MODE"

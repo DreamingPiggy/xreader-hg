@@ -1,3 +1,23 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #include <psptypes.h>
 #include <malloc.h>
 #include <stdio.h>
@@ -16,6 +36,9 @@
 #include "bg.h"
 #include "osk.h"
 #include "archive.h"
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
 
 static void extract_zip_file_into_buffer_with_password(buffer * buf,
 													   const char *archname,
@@ -24,6 +47,7 @@ static void extract_zip_file_into_buffer_with_password(buffer * buf,
 {
 	unzFile unzf = unzOpen(archname);
 	int ret;
+	unz_file_info info;
 
 	if (unzf == NULL)
 		return;
@@ -33,19 +57,21 @@ static void extract_zip_file_into_buffer_with_password(buffer * buf,
 		return;
 	}
 
-	unz_file_info info;
-
 	if (unzGetCurrentFileInfo(unzf, &info, NULL, 0, NULL, 0, NULL, 0) != UNZ_OK) {
 		unzCloseCurrentFile(unzf);
 		unzClose(unzf);
 		return;
 	}
-	buffer_prepare_copy(buf, info.uncompressed_size);
+
+	buffer_prepare_copy(buf, info.uncompressed_size + 1);
+
 	if (buf->ptr == NULL) {
 		unzCloseCurrentFile(unzf);
 		unzClose(unzf);
 		return;
 	}
+
+	buf->ptr[info.uncompressed_size] = '\0';
 
 	ret = unzReadCurrentFile(unzf, buf->ptr, info.uncompressed_size);
 	buf->used = info.uncompressed_size;
@@ -67,6 +93,9 @@ static void extract_zip_file_into_buffer(buffer * buf, const char *archname,
 										 const char *archpath)
 {
 	unzFile unzf = unzOpen(archname);
+	unz_file_info info;
+	char pass[128];
+	int ret;
 
 	if (unzf == NULL)
 		return;
@@ -75,8 +104,6 @@ static void extract_zip_file_into_buffer(buffer * buf, const char *archname,
 		unzClose(unzf);
 		return;
 	}
-
-	unz_file_info info;
 
 	if (unzGetCurrentFileInfo(unzf, &info, NULL, 0, NULL, 0, NULL, 0) != UNZ_OK) {
 		unzCloseCurrentFile(unzf);
@@ -108,9 +135,8 @@ static void extract_zip_file_into_buffer(buffer * buf, const char *archname,
 				}
 			}
 		}
-		// if all passwords failed, ask user input password
-		char pass[128];
 
+		// if all passwords failed, ask user input password
 		if (get_osk_input_password(pass, 128) == 1 && strcmp(pass, "") != 0) {
 			dbg_printf(d, "%s: input %s", __func__, pass);
 			extract_zip_file_into_buffer_with_password(buf, archname,
@@ -130,13 +156,16 @@ static void extract_zip_file_into_buffer(buffer * buf, const char *archname,
 		return;
 	}
 
-	buffer_prepare_copy(buf, info.uncompressed_size);
+	buffer_prepare_copy(buf, info.uncompressed_size + 1);
+
 	if (buf->ptr == NULL) {
 		unzCloseCurrentFile(unzf);
 		unzClose(unzf);
 		return;
 	}
-	int ret = unzReadCurrentFile(unzf, buf->ptr, info.uncompressed_size);
+
+	buf->ptr[info.uncompressed_size] = '\0';
+	ret = unzReadCurrentFile(unzf, buf->ptr, info.uncompressed_size);
 
 	if (ret < 0) {
 		free(buf->ptr);
@@ -170,12 +199,13 @@ static void extract_rar_file_into_buffer_with_password(buffer * buf,
 {
 	struct RAROpenArchiveData arcdata;
 	int code = 0;
+	HANDLE hrar;
 
 	arcdata.ArcName = (char *) archname;
 	arcdata.OpenMode = RAR_OM_EXTRACT;
 	arcdata.CmtBuf = NULL;
 	arcdata.CmtBufSize = 0;
-	HANDLE hrar = RAROpenArchive(&arcdata);
+	hrar = RAROpenArchive(&arcdata);
 
 	if (hrar == NULL)
 		return;
@@ -204,6 +234,9 @@ static void extract_rar_file_into_buffer_with_password(buffer * buf,
 static bool test_rar_file_password(buffer * buf,
 								   const char *archname, const char *archpath)
 {
+	char pass[128];
+	bool result = false;
+
 	dbg_printf(d, "%s: bad data, wrong password?", __func__);
 	// retry with loaded passwords
 	if (get_password_count()) {
@@ -225,10 +258,8 @@ static bool test_rar_file_password(buffer * buf,
 			}
 		}
 	}
-	// if all passwords failed, ask user input password
-	char pass[128];
-	bool result = false;
 
+	// if all passwords failed, ask user input password
 	if (get_osk_input_password(pass, 128) == 1 && strcmp(pass, "") != 0) {
 		dbg_printf(d, "%s: input %s", __func__, pass);
 		extract_rar_file_into_buffer_with_password(buf, archname,
@@ -255,12 +286,13 @@ static void extract_rar_file_into_buffer(buffer * buf, const char *archname,
 	struct RAROpenArchiveData arcdata;
 	int code = 0;
 	int ret;
+	HANDLE hrar;
 
 	arcdata.ArcName = (char *) archname;
 	arcdata.OpenMode = RAR_OM_EXTRACT;
 	arcdata.CmtBuf = NULL;
 	arcdata.CmtBufSize = 0;
-	HANDLE hrar = RAROpenArchive(&arcdata);
+	hrar = RAROpenArchive(&arcdata);
 
 	if (hrar == NULL)
 		return;
@@ -276,6 +308,15 @@ static void extract_rar_file_into_buffer(buffer * buf, const char *archname,
 			return;
 		}
 		if (stricmp(header.FileName, archpath) == 0) {
+
+			buffer_prepare_copy(buf, header.UnpSize + 1);
+
+			if (buf->ptr == NULL) {
+				RARCloseArchive(hrar);
+				return;
+			}
+
+			buf->ptr[header.UnpSize] = '\0';
 			code = RARProcessFile(hrar, RAR_TEST, NULL, NULL);
 			break;
 		}
@@ -309,12 +350,14 @@ static void extract_chm_file_into_buffer(buffer * buf, const char *archname,
 		return;
 	}
 
-	buffer_prepare_copy(buf, ui.length);
+	buffer_prepare_copy(buf, ui.length + 1);
 
 	if (buf->ptr == NULL) {
 		chm_close(chm);
 		return;
 	}
+
+	buf->ptr[ui.length] = '\0';
 
 	buf->used = chm_retrieve_object(chm, &ui, (byte *) buf->ptr, 0, ui.length);
 	chm_close(chm);
@@ -335,6 +378,8 @@ extern void extract_archive_file_into_buffer(buffer ** buf,
 											 const char *archpath,
 											 t_fs_filetype filetype)
 {
+	buffer *b;
+
 	if (buf == NULL)
 		return;
 
@@ -342,8 +387,6 @@ extern void extract_archive_file_into_buffer(buffer ** buf,
 		*buf = NULL;
 		return;
 	}
-
-	buffer *b;
 
 	b = buffer_init();
 
@@ -393,12 +436,13 @@ static void extract_rar_file_into_image_with_password(t_image_rar * image,
 {
 	struct RAROpenArchiveData arcdata;
 	int code = 0;
+	HANDLE hrar;
 
 	arcdata.ArcName = (char *) archname;
 	arcdata.OpenMode = RAR_OM_EXTRACT;
 	arcdata.CmtBuf = NULL;
 	arcdata.CmtBufSize = 0;
-	HANDLE hrar = RAROpenArchive(&arcdata);
+	hrar = RAROpenArchive(&arcdata);
 
 	if (hrar == NULL)
 		return;
@@ -437,6 +481,9 @@ static void extract_rar_file_into_image_with_password(t_image_rar * image,
 static bool test_rar_image_password(t_image_rar * image,
 									const char *archname, const char *archpath)
 {
+	char pass[128];
+	bool result = false;
+
 	dbg_printf(d, "%s: bad data, wrong password?", __func__);
 	// retry with loaded passwords
 	if (get_password_count()) {
@@ -458,10 +505,8 @@ static bool test_rar_image_password(t_image_rar * image,
 			}
 		}
 	}
-	// if all passwords failed, ask user input password
-	char pass[128];
-	bool result = false;
 
+	// if all passwords failed, ask user input password
 	if (get_osk_input_password(pass, 128) == 1 && strcmp(pass, "") != 0) {
 		dbg_printf(d, "%s: input %s", __func__, pass);
 		extract_rar_file_into_image_with_password(image, archname,
@@ -495,14 +540,14 @@ extern void extract_rar_file_into_image(t_image_rar * image,
 {
 	struct RAROpenArchiveData arcdata;
 	int code = 0, ret;
+	HANDLE hrar;
 
 	memset(image, 0, sizeof(*image));
-
 	arcdata.ArcName = (char *) archname;
 	arcdata.OpenMode = RAR_OM_EXTRACT;
 	arcdata.CmtBuf = NULL;
 	arcdata.CmtBufSize = 0;
-	HANDLE hrar = RAROpenArchive(&arcdata);
+	hrar = RAROpenArchive(&arcdata);
 
 	if (hrar == NULL)
 		return;
@@ -548,15 +593,14 @@ extern void extract_rar_file_into_image(t_image_rar * image,
 extern HANDLE reopen_rar_with_passwords(struct RAROpenArchiveData *arcdata)
 {
 	struct RARHeaderData header;
-
 	HANDLE hrar = 0;
+	int ret = -1, n, i;
+	buffer *b = NULL;
+	char pass[128];
 
 	hrar = RAROpenArchive(arcdata);
 	if (hrar == 0)
 		return hrar;
-
-	int ret = -1, n, i;
-	buffer *b = NULL;
 
 	for (n = get_password_count(), i = 0; i < n; ++i) {
 		b = get_password(i);
@@ -580,9 +624,8 @@ extern HANDLE reopen_rar_with_passwords(struct RAROpenArchiveData *arcdata)
 		RARSetPassword(hrar, b->ptr);
 		return hrar;
 	}
-	// if all passwords failed, ask user input password
-	char pass[128];
 
+	// if all passwords failed, ask user input password
 	if (get_osk_input_password(pass, 128) == 1 && strcmp(pass, "") != 0) {
 		dbg_printf(d, "%s: input %s", __func__, pass);
 		RARSetPassword(hrar, pass);

@@ -2,8 +2,10 @@ CC = @PSP_CC@
 CCAS = $(CC)
 AR = @PSP_AR@
 RANLIB = @PSP_RANLIB@
+CFLAGS = 
 
 EXEEXT =
+OBJEXT = o
 
 AM_CFLAGS = -I $(top_srcdir)/src/include
 

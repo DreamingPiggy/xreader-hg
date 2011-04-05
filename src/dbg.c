@@ -1,3 +1,23 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
@@ -14,6 +34,10 @@
 #include "common/utils.h"
 #include "buffer.h"
 #include "dbg.h"
+#include "xrhal.h"
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
 
 #ifdef _MSC_VER
 #define vsnprintf _vsnprintf
@@ -199,7 +223,7 @@ int dbg_open_psp_logfile(DBG * d, const char *logfile)
 	extern void dbg_write_psp_logfile(void *arg, const char *str);
 	extern void dbg_close_psp_logfile(void *arg);
 	SceUID fd =
-		sceIoOpen(logfile, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
+		xrIoOpen(logfile, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
 	if (fd < 0) {
 		return -1;
 	}
@@ -219,7 +243,7 @@ void dbg_write_psp_logfile(void *arg, const char *str)
 		newstr[l] = '\n';
 		newstr[l + 1] = '\0';
 	}
-	sceIoWrite(fd, newstr, l + 1);
+	xrIoWrite(fd, newstr, l + 1);
 	free(newstr);
 }
 
@@ -227,7 +251,7 @@ void dbg_close_psp_logfile(void *arg)
 {
 	SceUID fd = (SceUID) arg;
 
-	sceIoClose(fd);
+	xrIoClose(fd);
 }
 #endif
 
@@ -330,22 +354,23 @@ int dbg_printf(DBG * d, const char *fmt, ...)
 	va_list ap;
 	int l, size;
 	size_t i;
+	pspTime tm;
+	char timestr[80];
+	int timelen;
 
 	if (!d)
 		return -1;
 	if (!d->on)
 		return 0;
+
 	va_start(ap, fmt);
-	pspTime tm;
 
-	sceRtcGetCurrentClockLocalTime(&tm);
-
-	char timestr[80];
+	xrRtcGetCurrentClockLocalTime(&tm);
 
 	SPRINTF_S(timestr, "%u-%u-%u %02u:%02u:%02u", tm.year, tm.month, tm.day,
 			  tm.hour, tm.minutes, tm.seconds);
 
-	int timelen = strlen(timestr);
+	timelen = strlen(timestr);
 
 	size = DBG_BUFSIZE;
 	buf = malloc(size + timelen + 2);
@@ -547,9 +572,12 @@ void dbg_switch(DBG * d, short on)
 
 double pspDiffTime(u64 * t1, u64 * t2)
 {
+	double d;
+
 	if (!t1 || !t2)
 		return 0.0;
-	double d = (*t1 - *t2) * 1.0 / sceRtcGetTickResolution();
+
+	d = (*t1 - *t2) * 1.0 / xrRtcGetTickResolution();
 
 	return d;
 }

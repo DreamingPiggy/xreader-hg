@@ -1,3 +1,23 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #include "config.h"
 
 #include <stdio.h>
@@ -15,6 +35,10 @@
 #include "fs.h"
 #include "archive.h"
 #include "dbg.h"
+#include "xrhal.h"
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
 
 static bool auto_inc_wordspace_on_small_font = false;
 static pixel *vram_disp = NULL;
@@ -23,21 +47,22 @@ static bool vram_page = 0;
 static byte *cfont_buffer = NULL, *book_cfont_buffer = NULL, *efont_buffer =
 	NULL, *book_efont_buffer = NULL;
 int DISP_FONTSIZE = 16, DISP_BOOK_FONTSIZE = 16, HRR = 6, WRR = 15;
-int use_ttf = 0;
 static int DISP_EFONTSIZE, DISP_CFONTSIZE, DISP_CROWSIZE, DISP_EROWSIZE,
 	fbits_last = 0, febits_last =
 	0, DISP_BOOK_EFONTSIZE, DISP_BOOK_CFONTSIZE, DISP_BOOK_EROWSIZE,
 	DISP_BOOK_CROWSIZE, fbits_book_last = 0, febits_book_last = 0;;
 byte disp_ewidth[0x80];
 
+bool using_ttf = false;
+
 #ifdef ENABLE_TTF
-static bool g_ttf_share_two_font = false;
+static bool g_ttf_share_buffer = false;
 #endif
 
 #ifdef ENABLE_TTF
 //static byte *cache = NULL;
 //static void *ttfh = NULL;
-p_ttf ettf = NULL, cttf = NULL;
+p_ttf ettf = NULL, cttf = NULL, cttfinfo = NULL, ettfinfo = NULL;
 #endif
 
 typedef struct _VertexColor
@@ -73,39 +98,41 @@ static inline void setVertexUV(Vertex * vertex, u16 x, u16 y, u16 z, u32 color,
 
 extern void disp_init(void)
 {
-	sceDisplaySetMode(0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT);
+	xrDisplaySetMode(0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT);
 	vram_page = 0;
 	vram_disp = (pixel *) 0x04000000;
-	vram_draw = (pixel *) (0x44000000 + 512 * PSP_SCREEN_HEIGHT * PIXEL_BYTES);
-	sceDisplaySetFrameBuf(vram_disp, 512, PSP_DISPLAY_PIXEL_FORMAT_8888,
-						  PSP_DISPLAY_SETBUF_NEXTFRAME);
+	vram_draw = (pixel *) (0x44000000 + PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES);
+	xrDisplaySetFrameBuf(vram_disp, PSP_SCREEN_SCANLINE, PSP_DISPLAY_PIXEL_FORMAT_8888,
+						 PSP_DISPLAY_SETBUF_NEXTFRAME);
 }
 
 unsigned int __attribute__ ((aligned(16))) list[262144];
 
 extern void init_gu(void)
 {
-	sceGuInit();
+	void *vram = NULL;
 
-	sceGuStart(GU_DIRECT, list);
-	sceGuDrawBuffer(GU_PSM_8888,
-					(void *) 0 + 512 * PSP_SCREEN_HEIGHT * PIXEL_BYTES, 512);
-	sceGuDispBuffer(PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, (void *) 0, 512);
-	sceGuDepthBuffer((void *) 0 + (u32) 4 * 512 * PSP_SCREEN_HEIGHT +
-					 (u32) 2 * 512 * PSP_SCREEN_HEIGHT, 512);
-	sceGuOffset(2048 - (PSP_SCREEN_WIDTH / 2), 2048 - (PSP_SCREEN_HEIGHT / 2));
-	sceGuViewport(2048, 2048, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT);
-	sceGuDepthRange(65535, 0);
-	sceGuScissor(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT);
-	sceGuEnable(GU_SCISSOR_TEST);
-	sceGuFrontFace(GU_CW);
-	sceGuClear(GU_COLOR_BUFFER_BIT | GU_DEPTH_BUFFER_BIT);
-	sceGuEnable(GU_TEXTURE_2D);
-	sceGuFinish();
-	sceGuSync(0, 0);
+	xrGuInit();
 
-	sceDisplayWaitVblankStart();
-	sceGuDisplay(1);
+	xrGuStart(GU_DIRECT, list);
+	xrGuDispBuffer(PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, vram, PSP_SCREEN_SCANLINE);
+	vram += PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES;
+	xrGuDrawBuffer(GU_PSM_8888, vram, PSP_SCREEN_SCANLINE);
+	vram += PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES * 2;
+	xrGuDepthBuffer(vram, PSP_SCREEN_SCANLINE);
+	xrGuOffset(2048 - (PSP_SCREEN_WIDTH / 2), 2048 - (PSP_SCREEN_HEIGHT / 2));
+	xrGuViewport(2048, 2048, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT);
+	xrGuDepthRange(65535, 0);
+	xrGuScissor(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT);
+	xrGuEnable(GU_SCISSOR_TEST);
+	xrGuFrontFace(GU_CW);
+	xrGuClear(GU_COLOR_BUFFER_BIT | GU_DEPTH_BUFFER_BIT);
+	xrGuEnable(GU_TEXTURE_2D);
+	xrGuFinish();
+	xrGuSync(0, 0);
+
+	xrDisplayWaitVblankStart();
+	xrGuDisplay(1);
 }
 
 extern void disp_putpixel(int x, int y, pixel color)
@@ -119,7 +146,9 @@ extern void disp_putpixel(int x, int y, pixel color)
 
 extern void disp_set_fontsize(int fontsize)
 {
-	if (!use_ttf)
+	extern int MAX_ITEM_NAME_LEN;
+
+	if (!using_ttf)
 		memset(disp_ewidth, 0, 0x80);
 	DISP_FONTSIZE = fontsize;
 	if (fontsize <= 16) {
@@ -142,8 +171,6 @@ extern void disp_set_fontsize(int fontsize)
 	DISP_EFONTSIZE = DISP_FONTSIZE * DISP_EROWSIZE;
 	HRR = 100 / DISP_FONTSIZE;
 	WRR = config.filelistwidth / DISP_FONTSIZE;
-
-	extern int MAX_ITEM_NAME_LEN;
 
 	MAX_ITEM_NAME_LEN = WRR * 4 - 1;
 }
@@ -171,12 +198,12 @@ extern void disp_set_book_fontsize(int fontsize)
 	DISP_BOOK_EFONTSIZE = DISP_BOOK_FONTSIZE * DISP_BOOK_EROWSIZE;
 
 	// if set font size to very small one, set config.wordspace to 1
-	if (use_ttf == false && fontsize <= 10 && config.wordspace == 0) {
+	if (using_ttf == false && fontsize <= 10 && config.wordspace == 0) {
 		config.wordspace = 1;
 		auto_inc_wordspace_on_small_font = true;
 	}
 	// if previous have auto increased wordspace on small font, restore config.wordspace to 0
-	if (use_ttf == false && fontsize >= 12
+	if (using_ttf == false && fontsize >= 12
 		&& auto_inc_wordspace_on_small_font && config.wordspace == 1) {
 		config.wordspace = 0;
 		auto_inc_wordspace_on_small_font = false;
@@ -211,38 +238,79 @@ extern bool disp_has_zipped_font(const char *zipfile, const char *efont,
 
 extern bool disp_has_font(const char *efont, const char *cfont)
 {
-	int fd = sceIoOpen(efont, PSP_O_RDONLY, 0777);
+	int fd = xrIoOpen(efont, PSP_O_RDONLY, 0777);
 
 	if (fd < 0)
 		return false;
-	sceIoClose(fd);
+	xrIoClose(fd);
 
-	fd = sceIoOpen(cfont, PSP_O_RDONLY, 0777);
+	fd = xrIoOpen(cfont, PSP_O_RDONLY, 0777);
 	if (fd < 0)
 		return false;
-	sceIoClose(fd);
+	xrIoClose(fd);
 	return true;
 }
+
+#ifdef ENABLE_TTF
+static void ttf_clear_cache(p_ttf ttf)
+{
+	size_t i;
+
+	for (i = 0; i < SBIT_HASH_SIZE; ++i) {
+		memset(&ttf->sbitHashRoot[i], 0, sizeof(SBit_HashItem));
+	}
+}
+
+static void clean_ttf_cache(p_ttf ttf)
+{
+	size_t i;
+
+	for (i = 0; i < SBIT_HASH_SIZE; ++i) {
+		if (ttf->sbitHashRoot[i].bitmap.buffer) {
+			free(ttf->sbitHashRoot[i].bitmap.buffer);
+			ttf->sbitHashRoot[i].bitmap.buffer = NULL;
+		}
+	}
+}
+#endif
 
 #ifdef ENABLE_TTF
 extern void disp_ttf_close(void)
 {
 	if (ettf != NULL) {
-		if (!g_ttf_share_two_font)
-			ttf_close(ettf);
+		if (g_ttf_share_buffer) {
+			ettf->fileBuffer = NULL;
+			g_ttf_share_buffer = false;
+		}
+
+		ttf_close(ettf);
 		ettf = NULL;
-		g_ttf_share_two_font = false;
 	}
+
 	if (cttf != NULL) {
 		ttf_close(cttf);
 		cttf = NULL;
 	}
+
+	if (cttfinfo != NULL) {
+		clean_ttf_cache(cttfinfo);
+		free(cttfinfo);
+		cttfinfo = NULL;
+	}
+
+	if (ettfinfo != NULL) {
+		clean_ttf_cache(ettfinfo);
+		free(ettfinfo);
+		ettfinfo = NULL;
+	}
+
+	using_ttf = false;
 }
 #endif
 
 extern void disp_assign_book_font(void)
 {
-	use_ttf = 0;
+	using_ttf = false;
 	if (book_efont_buffer != NULL && efont_buffer != book_efont_buffer) {
 		free(book_efont_buffer);
 		book_efont_buffer = NULL;
@@ -261,10 +329,12 @@ extern void disp_assign_book_font(void)
 extern bool disp_load_zipped_font(const char *zipfile, const char *efont,
 								  const char *cfont)
 {
-	disp_free_font();
-	unzFile unzf = unzOpen(zipfile);
-	unz_file_info info;
+	unzFile unzf;
 	dword size;
+	unz_file_info info;
+
+	disp_free_font();
+	unzf = unzOpen(zipfile);
 
 	if (unzf == NULL)
 		return false;
@@ -317,71 +387,9 @@ extern bool disp_load_zipped_font(const char *zipfile, const char *efont,
 }
 
 #ifdef ENABLE_TTF
-static bool load_ttf_config(void)
-{
-	ttf_set_anti_alias(cttf, config.cfont_antialias);
-	ttf_set_anti_alias(ettf, config.efont_antialias);
-	ttf_set_cleartype(cttf, config.cfont_cleartype);
-	ttf_set_cleartype(ettf, config.efont_cleartype);
-	ttf_set_embolden(cttf, config.cfont_embolden);
-	ttf_set_embolden(ettf, config.efont_embolden);
-
-	return true;
-}
-#endif
-
-extern bool disp_load_truetype_book_font(const char *ettffile,
-										 const char *cttffile, int size)
-{
-#ifdef ENABLE_TTF
-	use_ttf = 0;
-	memset(disp_ewidth, size / 2, 0x80);
-	if (book_efont_buffer != NULL && efont_buffer != book_efont_buffer) {
-		free(book_efont_buffer);
-		book_efont_buffer = NULL;
-	}
-	if (book_cfont_buffer != NULL && cfont_buffer != book_cfont_buffer) {
-		free(book_cfont_buffer);
-		book_cfont_buffer = NULL;
-	}
-	if (cttf == NULL) {
-		if ((cttf =
-			 ttf_open(cttffile, size, config.ttf_load_to_memory)) == NULL) {
-			return false;
-		}
-		if (g_ttf_share_two_font)
-			ettf = cttf;
-	} else {
-		ttf_set_pixel_size(cttf, size);
-	}
-	if (ettf == NULL) {
-		if (!strcmp(ettffile, cttffile) || (ettf =
-											ttf_open(ettffile, size,
-													 config.
-													 ttf_load_to_memory)) ==
-			NULL) {
-			ettf = cttf;
-			g_ttf_share_two_font = true;
-		} else {
-			g_ttf_share_two_font = false;
-		}
-	} else {
-		ttf_set_pixel_size(ettf, size);
-	}
-
-	load_ttf_config();
-
-	ttf_load_ewidth(ettf, disp_ewidth, 0x80);
-	use_ttf = 1;
-	return true;
-#else
-	return false;
-#endif
-}
-
-#ifdef ENABLE_TTF
 static p_ttf load_archieve_truetype_book_font(const char *zipfile,
-											  const char *zippath, int size)
+											  const char *zippath, int size,
+											  bool cjkmode)
 {
 	p_ttf ttf = NULL;
 
@@ -395,98 +403,201 @@ static p_ttf load_archieve_truetype_book_font(const char *zipfile,
 			return false;
 		}
 
-		if ((ttf = ttf_open_buffer(b->ptr, b->used, size, zippath)) == NULL) {
+		if ((ttf =
+			 ttf_open_buffer(b->ptr, b->used, size, zippath,
+							 cjkmode)) == NULL) {
 			buffer_free_weak(b);
-			return false;
+			return NULL;
 		}
 		buffer_free_weak(b);
 	} else {
 		ttf_set_pixel_size(ttf, size);
 	}
 
-	use_ttf = 1;
+	using_ttf = true;
+
+	if (ttf) {
+		ttf->cjkmode = cjkmode;
+	}
+
 	return ttf;
 }
 #endif
 
-extern bool disp_load_zipped_truetype_book_font(const char *ezipfile,
-												const char *czipfile,
-												const char *ettffile,
-												const char *cttffile, int size)
+extern bool disp_ttf_reload(int size)
 {
 #ifdef ENABLE_TTF
 	static char prev_ettfpath[PATH_MAX] = "", prev_ettfarch[PATH_MAX] = "";
 	static char prev_cttfpath[PATH_MAX] = "", prev_cttfarch[PATH_MAX] = "";
 
-	use_ttf = 0;
+	dbg_printf(d, "%s", __func__);
+
+	using_ttf = false;
 	memset(disp_ewidth, size / 2, 0x80);
+
 	if (book_efont_buffer != NULL && efont_buffer != book_efont_buffer) {
 		free(book_efont_buffer);
 		book_efont_buffer = NULL;
 	}
+
 	if (book_cfont_buffer != NULL && cfont_buffer != book_cfont_buffer) {
 		free(book_cfont_buffer);
 		book_cfont_buffer = NULL;
 	}
+
 	if (cttf != NULL && strcmp(prev_cttfarch, config.cttfarch) == 0
 		&& strcmp(prev_cttfpath, config.cttfpath) == 0) {
 		ttf_set_pixel_size(cttf, size);
 	} else {
 		if (cttf != NULL) {
+			if (g_ttf_share_buffer) {
+				cttf->fileBuffer = NULL;
+				g_ttf_share_buffer = false;
+			}
+
 			ttf_close(cttf);
 			cttf = NULL;
 		}
+
 		if (config.cttfarch[0] != '\0') {
 			cttf =
 				load_archieve_truetype_book_font(config.cttfarch,
 												 config.cttfpath,
-												 config.bookfontsize);
+												 config.bookfontsize, true);
 		} else {
 			cttf =
 				ttf_open(config.cttfpath, config.bookfontsize,
-						 config.ttf_load_to_memory);
+						 config.ttf_load_to_memory, true);
 		}
-		STRCPY_S(prev_cttfarch, config.cttfarch);
-		STRCPY_S(prev_cttfpath, config.cttfpath);
-		if (g_ttf_share_two_font)
-			ettf = cttf;
 	}
+
 	if (ettf != NULL && strcmp(prev_ettfarch, config.ettfarch) == 0
 		&& strcmp(prev_ettfpath, config.ettfpath) == 0) {
 		ttf_set_pixel_size(ettf, size);
 	} else {
-		if (!g_ttf_share_two_font)
+		if (ettf != NULL) {
+			if (g_ttf_share_buffer) {
+				ettf->fileBuffer = NULL;
+				g_ttf_share_buffer = false;
+			}
+
 			ttf_close(ettf);
-		ettf = NULL;
-		g_ttf_share_two_font = false;
+			ettf = NULL;
+		}
+
 		if (!strcmp(config.ettfarch, config.cttfarch)
 			&& !strcmp(config.ettfpath, config.cttfpath)) {
-			ettf = cttf;
-			g_ttf_share_two_font = true;
+			if (cttf != NULL && cttf->fileBuffer != NULL) {
+				ettf =
+					ttf_open_buffer(cttf->fileBuffer, cttf->fileSize, size,
+									cttf->fontName, false);
+
+				if (ettf) {
+					g_ttf_share_buffer = true;
+				}
+			} else {
+				ettf =
+					ttf_open(config.ettfpath, config.bookfontsize,
+							 config.ttf_load_to_memory, false);
+			}
 		} else if (config.ettfarch[0] != '\0') {
 			ettf =
 				load_archieve_truetype_book_font(config.ettfarch,
 												 config.ettfpath,
-												 config.bookfontsize);
+												 config.bookfontsize, false);
 		} else {
 			ettf =
 				ttf_open(config.ettfpath, config.bookfontsize,
-						 config.ttf_load_to_memory);
+						 config.ttf_load_to_memory, false);
 		}
-		STRCPY_S(prev_ettfarch, config.ettfarch);
-		STRCPY_S(prev_ettfpath, config.ettfpath);
 	}
-	if (ettf == NULL) {
-		ettf = cttf;
-		g_ttf_share_two_font = true;
-	}
-	if (cttf == NULL)
+
+	if (cttf == NULL && ettf == NULL)
 		return false;
 
-	load_ttf_config();
+	if (cttf == NULL) {
+		STRCPY_S(config.cttfarch, config.ettfarch);
+		STRCPY_S(config.cttfpath, config.ettfpath);
+
+		if (ettf != NULL && ettf->fileBuffer != NULL) {
+			cttf =
+				ttf_open_buffer(ettf->fileBuffer, ettf->fileSize, size,
+								ettf->fontName, true);
+
+			if (cttf) {
+				g_ttf_share_buffer = true;
+			}
+		} else {
+			cttf =
+				ttf_open(config.cttfpath, config.bookfontsize,
+						 config.ttf_load_to_memory, true);
+		}
+	}
+
+	if (ettf == NULL) {
+		STRCPY_S(config.ettfarch, config.cttfarch);
+		STRCPY_S(config.ettfpath, config.cttfpath);
+
+		if (cttf != NULL && cttf->fileBuffer != NULL) {
+			ettf =
+				ttf_open_buffer(cttf->fileBuffer, cttf->fileSize, size,
+								cttf->fontName, false);
+
+			if (ettf) {
+				g_ttf_share_buffer = true;
+			}
+		} else {
+			ettf =
+				ttf_open(config.ettfpath, config.bookfontsize,
+						 config.ttf_load_to_memory, false);
+		}
+	}
+
+	if (cttf == NULL || ettf == NULL)
+		return false;
+
+	if (cttfinfo != NULL) {
+		clean_ttf_cache(cttfinfo);
+		free(cttfinfo);
+		cttfinfo = NULL;
+	}
+
+	cttfinfo = malloc(sizeof(*cttfinfo));
+
+	if (cttfinfo != NULL) {
+		memcpy(cttfinfo, cttf, sizeof(*cttfinfo));
+		cttfinfo->config.embolden = 0;
+		cttfinfo->pixelSize = cttfinfo->config.pixelsize =
+			config.infobar_fontsize;
+	}
+
+	ttf_clear_cache(cttfinfo);
+
+	if (ettfinfo != NULL) {
+		clean_ttf_cache(ettfinfo);
+		free(ettfinfo);
+		ettfinfo = NULL;
+	}
+
+	ettfinfo = malloc(sizeof(*ettfinfo));
+
+	if (ettfinfo != NULL) {
+		memcpy(ettfinfo, ettf, sizeof(*ettfinfo));
+		ettfinfo->config.embolden = 0;
+		ettfinfo->pixelSize = ettfinfo->config.pixelsize =
+			config.infobar_fontsize;
+	}
+
+	ttf_clear_cache(ettfinfo);
 
 	ttf_load_ewidth(ettf, disp_ewidth, 0x80);
-	use_ttf = 1;
+
+	STRCPY_S(prev_cttfarch, config.cttfarch);
+	STRCPY_S(prev_cttfpath, config.cttfpath);
+	STRCPY_S(prev_ettfarch, config.ettfarch);
+	STRCPY_S(prev_ettfpath, config.ettfpath);
+
+	using_ttf = true;
 	return true;
 #else
 	return false;
@@ -495,36 +606,45 @@ extern bool disp_load_zipped_truetype_book_font(const char *ezipfile,
 
 extern bool disp_load_font(const char *efont, const char *cfont)
 {
-	disp_free_font();
 	int size;
-	int fd = sceIoOpen(efont, PSP_O_RDONLY, 0777);
+	int fd;
+
+	disp_free_font();
+   	fd = xrIoOpen(efont, PSP_O_RDONLY, 0777);
 
 	if (fd < 0)
 		return false;
-	size = sceIoLseek32(fd, 0, PSP_SEEK_END);
+
+	size = xrIoLseek32(fd, 0, PSP_SEEK_END);
+
 	if ((efont_buffer = calloc(1, size)) == NULL) {
-		sceIoClose(fd);
+		xrIoClose(fd);
 		return false;
 	}
-	sceIoLseek32(fd, 0, PSP_SEEK_SET);
-	sceIoRead(fd, efont_buffer, size);
-	sceIoClose(fd);
+
+	xrIoLseek32(fd, 0, PSP_SEEK_SET);
+	xrIoRead(fd, efont_buffer, size);
+	xrIoClose(fd);
 	book_efont_buffer = efont_buffer;
 
-	fd = sceIoOpen(cfont, PSP_O_RDONLY, 0777);
+	fd = xrIoOpen(cfont, PSP_O_RDONLY, 0777);
+
 	if (fd < 0) {
 		disp_free_font();
 		return false;
 	}
-	size = sceIoLseek32(fd, 0, PSP_SEEK_END);
+
+	size = xrIoLseek32(fd, 0, PSP_SEEK_END);
+
 	if ((cfont_buffer = calloc(1, size)) == NULL) {
 		disp_free_font();
-		sceIoClose(fd);
+		xrIoClose(fd);
 		return false;
 	}
-	sceIoLseek32(fd, 0, PSP_SEEK_SET);
-	sceIoRead(fd, cfont_buffer, size);
-	sceIoClose(fd);
+
+	xrIoLseek32(fd, 0, PSP_SEEK_SET);
+	xrIoRead(fd, cfont_buffer, size);
+	xrIoClose(fd);
 	book_cfont_buffer = cfont_buffer;
 
 	return true;
@@ -533,7 +653,11 @@ extern bool disp_load_font(const char *efont, const char *cfont)
 extern bool disp_load_zipped_book_font(const char *zipfile, const char *efont,
 									   const char *cfont)
 {
-	use_ttf = 0;
+	unzFile unzf;
+	unz_file_info info;
+	dword size;
+
+	using_ttf = false;
 #ifdef ENABLE_TTF
 	disp_ttf_close();
 #endif
@@ -541,9 +665,8 @@ extern bool disp_load_zipped_book_font(const char *zipfile, const char *efont,
 		free(book_efont_buffer);
 		book_efont_buffer = NULL;
 	}
-	unzFile unzf = unzOpen(zipfile);
-	unz_file_info info;
-	dword size;
+
+	unzf = unzOpen(zipfile);
 
 	if (unzf == NULL)
 		return false;
@@ -598,7 +721,10 @@ extern bool disp_load_zipped_book_font(const char *zipfile, const char *efont,
 
 extern bool disp_load_book_font(const char *efont, const char *cfont)
 {
-	use_ttf = 0;
+	int size;
+	int fd;
+	
+	using_ttf = false;
 #ifdef ENABLE_TTF
 	disp_ttf_close();
 #endif
@@ -606,38 +732,46 @@ extern bool disp_load_book_font(const char *efont, const char *cfont)
 		free(book_efont_buffer);
 		book_efont_buffer = NULL;
 	}
-	int size;
-	int fd = sceIoOpen(efont, PSP_O_RDONLY, 0777);
+
+	fd = xrIoOpen(efont, PSP_O_RDONLY, 0777);
 
 	if (fd < 0)
 		return false;
-	size = sceIoLseek32(fd, 0, PSP_SEEK_END);
+
+	size = xrIoLseek32(fd, 0, PSP_SEEK_END);
+
 	if ((book_efont_buffer = calloc(1, size)) == NULL) {
-		sceIoClose(fd);
+		xrIoClose(fd);
 		return false;
 	}
-	sceIoLseek32(fd, 0, PSP_SEEK_SET);
-	sceIoRead(fd, book_efont_buffer, size);
-	sceIoClose(fd);
+
+	xrIoLseek32(fd, 0, PSP_SEEK_SET);
+	xrIoRead(fd, book_efont_buffer, size);
+	xrIoClose(fd);
 
 	if (book_cfont_buffer != NULL && cfont_buffer != book_cfont_buffer) {
 		free(book_cfont_buffer);
 		book_cfont_buffer = NULL;
 	}
-	fd = sceIoOpen(cfont, PSP_O_RDONLY, 0777);
+
+	fd = xrIoOpen(cfont, PSP_O_RDONLY, 0777);
+
 	if (fd < 0) {
 		disp_free_font();
 		return false;
 	}
-	size = sceIoLseek32(fd, 0, PSP_SEEK_END);
+
+	size = xrIoLseek32(fd, 0, PSP_SEEK_END);
+
 	if ((book_cfont_buffer = calloc(1, size)) == NULL) {
 		disp_free_font();
-		sceIoClose(fd);
+		xrIoClose(fd);
 		return false;
 	}
-	sceIoLseek32(fd, 0, PSP_SEEK_SET);
-	sceIoRead(fd, book_cfont_buffer, size);
-	sceIoClose(fd);
+
+	xrIoLseek32(fd, 0, PSP_SEEK_SET);
+	xrIoRead(fd, book_cfont_buffer, size);
+	xrIoClose(fd);
 
 	return true;
 }
@@ -660,7 +794,6 @@ extern void disp_free_font(void)
 		free(cfont_buffer);
 		cfont_buffer = NULL;
 	}
-	use_ttf = 0;
 #ifdef ENABLE_TTF
 	memset(disp_ewidth, 0, 0x80);
 	disp_ttf_close();
@@ -677,9 +810,9 @@ extern void disp_flip(void)
 	vram_draw =
 		(pixel *) 0x44000000 + (vram_page ? 0 : (512 * PSP_SCREEN_HEIGHT));
 	disp_waitv();
-	sceDisplaySetFrameBuf(vram_disp, 512, PSP_DISPLAY_PIXEL_FORMAT_8888,
-						  PSP_DISPLAY_SETBUF_IMMEDIATE);
-	framebuffer = sceGuSwapBuffers();
+	xrDisplaySetFrameBuf(vram_disp, 512, PSP_DISPLAY_PIXEL_FORMAT_8888,
+						 PSP_DISPLAY_SETBUF_IMMEDIATE);
+	framebuffer = xrGuSwapBuffers();
 }
 
 extern void disp_getimage_draw(dword x, dword y, dword w, dword h, pixel * buf)
@@ -724,16 +857,18 @@ extern void disp_newputimage(int x, int y, int w, int h, int bufw, int startx,
 							 int starty, int ow, int oh, pixel * buf,
 							 bool swizzled)
 {
-	sceGuStart(GU_DIRECT, list);
-	sceGuTexFilter(GU_LINEAR, GU_LINEAR);
-	sceGuShadeModel(GU_SMOOTH);
-	sceGuAmbientColor(0xFFFFFFFF);
-	Vertex *vertices = (Vertex *) sceGuGetMemory(2 * sizeof(Vertex));
+	Vertex *vertices;
 
-	sceGuTexMode(GU_PSM_8888, 0, 0, swizzled ? 1 : 0);
-	sceGuTexImage(0, 512, 512, bufw, buf);
-	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);
-	sceGuTexFilter(GU_LINEAR, GU_LINEAR);
+	xrGuStart(GU_DIRECT, list);
+	xrGuTexFilter(GU_LINEAR, GU_LINEAR);
+	xrGuShadeModel(GU_SMOOTH);
+	xrGuAmbientColor(0xFFFFFFFF);
+	vertices = (Vertex *) xrGuGetMemory(2 * sizeof(Vertex));
+
+	xrGuTexMode(GU_PSM_8888, 0, 0, swizzled ? 1 : 0);
+	xrGuTexImage(0, 512, 512, bufw, buf);
+	xrGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);
+	xrGuTexFilter(GU_LINEAR, GU_LINEAR);
 	vertices[0].u = startx;
 	vertices[0].v = starty;
 	vertices[0].x = x;
@@ -746,11 +881,11 @@ extern void disp_newputimage(int x, int y, int w, int h, int bufw, int startx,
 	vertices[1].y = y + h;
 	vertices[1].z = 0;
 	vertices[1].color = 0;
-	sceGuDrawArray(GU_SPRITES,
-				   GU_TEXTURE_16BIT | GU_COLOR_8888 | GU_VERTEX_16BIT |
-				   GU_TRANSFORM_2D, 2, 0, vertices);
-	sceGuFinish();
-	sceGuSync(0, 0);
+	xrGuDrawArray(GU_SPRITES,
+				  GU_TEXTURE_16BIT | GU_COLOR_8888 | GU_VERTEX_16BIT |
+				  GU_TRANSFORM_2D, 2, 0, vertices);
+	xrGuFinish();
+	xrGuSync(0, 0);
 }
 
 /**
@@ -767,6 +902,9 @@ extern void disp_newputimage(int x, int y, int w, int h, int bufw, int startx,
 extern void disp_putimage(dword x, dword y, dword w, dword h, dword startx,
 						  dword starty, pixel * buf)
 {
+	pixel *lines, *linesend;
+	dword rw;
+
 	if (x < 0) {
 		w += x;
 		startx -= x;
@@ -786,10 +924,10 @@ extern void disp_putimage(dword x, dword y, dword w, dword h, dword startx,
 		return;
 	}
 
-	pixel *lines = disp_get_vaddr(x, y), *linesend =
-		lines + (min(PSP_SCREEN_HEIGHT - y, h - starty) << 9);
+	lines = disp_get_vaddr(x, y);
+   	linesend = lines + (min(PSP_SCREEN_HEIGHT - y, h - starty) << 9);
 	buf = buf + starty * w + startx;
-	dword rw = min(512 - x, w - startx) * PIXEL_BYTES;
+	rw = min(512 - x, w - startx) * PIXEL_BYTES;
 
 	for (; lines < linesend; lines += 512) {
 		memcpy(lines, buf, rw);
@@ -839,8 +977,8 @@ extern void disp_fix_osk(void *buffer)
 		vram_draw =
 			(pixel *) 0x44000000 + (vram_page ? 0 : (512 * PSP_SCREEN_HEIGHT));
 	}
-	sceDisplaySetFrameBuf(vram_disp, 512, PSP_DISPLAY_PIXEL_FORMAT_8888,
-						  PSP_DISPLAY_SETBUF_IMMEDIATE);
+	xrDisplaySetFrameBuf(vram_disp, 512, PSP_DISPLAY_PIXEL_FORMAT_8888,
+						 PSP_DISPLAY_SETBUF_IMMEDIATE);
 }
 
 extern void disp_rectduptocache(dword x1, dword y1, dword x2, dword y2)
@@ -938,23 +1076,39 @@ typedef struct
 
 static inline int putnstring_hanzi(disp_draw_string_inf * inf)
 {
+	pixel *vaddr;
+	const byte *ccur, *cend;
+	int delta;
+
 	if (inf == NULL)
 		return 0;
+
 	if (!check_range(inf->x, inf->y))
 		return 0;
-	pixel *vaddr = disp_get_vaddr(inf->x, inf->y);
-	const byte *ccur, *cend;
 
-	if (inf->is_system)
+	vaddr = disp_get_vaddr(inf->x, inf->y);
+
+	if (inf->is_system) {
+		if (cfont_buffer == NULL) {
+			dbg_printf(d, "%s: cfont_buffer is NULL", __func__);
+			return 0;
+		}
+
 		ccur =
 			cfont_buffer + (((dword) (*inf->str - 0x81)) * 0xBF +
 							((dword) (*(inf->str + 1) - 0x40))) *
 			DISP_CFONTSIZE + inf->top * DISP_CROWSIZE;
-	else
+	} else {
+		if (book_cfont_buffer == NULL) {
+			dbg_printf(d, "%s: book_cfont_buffer is NULL", __func__);
+			return 0;
+		}
+
 		ccur =
 			book_cfont_buffer + (((dword) (*inf->str - 0x81)) * 0xBF +
 								 ((dword) (*(inf->str + 1) - 0x40))) *
 			DISP_BOOK_CFONTSIZE + inf->top * DISP_BOOK_CROWSIZE;
+	}
 
 	if (inf->is_system)
 		cend = ccur + inf->height * DISP_CROWSIZE;
@@ -964,6 +1118,7 @@ static inline int putnstring_hanzi(disp_draw_string_inf * inf)
 		int b;
 		pixel *vpoint = vaddr;
 		int bitsleft;
+		int t;
 
 		if (inf->is_system)
 			bitsleft = DISP_FONTSIZE - 8;
@@ -979,7 +1134,8 @@ static inline int putnstring_hanzi(disp_draw_string_inf * inf)
 			++ccur;
 			bitsleft -= 8;
 		}
-		int t = inf->is_system ? fbits_last : fbits_book_last;
+
+		t = inf->is_system ? fbits_last : fbits_book_last;
 
 		for (b = 0x80; b > t; b >>= 1) {
 			if (((*ccur) & b) != 0)
@@ -1000,22 +1156,22 @@ static inline int putnstring_hanzi(disp_draw_string_inf * inf)
 	inf->str += 2;
 	inf->count -= 2;
 
-	int d =
+	delta = 
 		inf->is_system ? DISP_FONTSIZE +
 		inf->wordspace * 2 : DISP_BOOK_FONTSIZE + inf->wordspace * 2;
 
 	switch (inf->direction) {
 		case HORZ:
-			inf->x += d;
+			inf->x += delta;
 			break;
 		case REVERSAL:
-			inf->x -= d;
+			inf->x -= delta;
 			break;
 		case LVERT:
-			inf->y -= d;
+			inf->y -= delta;
 			break;
 		case RVERT:
-			inf->y += d;
+			inf->y += delta;
 			break;
 	}
 
@@ -1024,19 +1180,34 @@ static inline int putnstring_hanzi(disp_draw_string_inf * inf)
 
 static inline int putnstring_ascii(disp_draw_string_inf * inf)
 {
+	pixel *vaddr;
+	const byte *ccur, *cend;
+	int t, delta;
+
 	if (!check_range(inf->x, inf->y))
 		return 0;
-	pixel *vaddr = disp_get_vaddr(inf->x, inf->y);
-	const byte *ccur, *cend;
 
-	if (inf->is_system)
+	vaddr = disp_get_vaddr(inf->x, inf->y);
+
+	if (inf->is_system) {
+		if (efont_buffer == NULL) {
+			dbg_printf(d, "%s: efont_buffer is NULL", __func__);
+			return 0;
+		}
+
 		ccur =
 			efont_buffer + ((dword) * inf->str) * DISP_EFONTSIZE +
 			inf->top * DISP_EROWSIZE;
-	else
+	} else {
+		if (book_efont_buffer == NULL) {
+			dbg_printf(d, "%s: book_efont_buffer is NULL", __func__);
+			return 0;
+		}
+
 		ccur =
 			book_efont_buffer + ((dword) * inf->str) * DISP_BOOK_EFONTSIZE +
 			inf->top * DISP_BOOK_EROWSIZE;
+	}
 
 	if (inf->is_system)
 		cend = ccur + inf->height * DISP_EROWSIZE;
@@ -1061,7 +1232,8 @@ static inline int putnstring_ascii(disp_draw_string_inf * inf)
 			++ccur;
 			bitsleft -= 8;
 		}
-		int t = inf->is_system ? febits_last : febits_book_last;
+
+		t = inf->is_system ? febits_last : febits_book_last;
 
 		for (b = 0x80; b > t; b >>= 1) {
 			if (((*ccur) & b) != 0)
@@ -1070,6 +1242,7 @@ static inline int putnstring_ascii(disp_draw_string_inf * inf)
 		}
 		next_row(inf->direction, &vaddr);
 	}
+
 	switch (inf->direction) {
 		case LVERT:
 			vaddr++;
@@ -1082,22 +1255,22 @@ static inline int putnstring_ascii(disp_draw_string_inf * inf)
 	inf->str++;
 	inf->count--;
 
-	int d =
+	delta =
 		inf->is_system ? DISP_FONTSIZE / 2 +
 		inf->wordspace : DISP_BOOK_FONTSIZE / 2 + inf->wordspace;
 
 	switch (inf->direction) {
 		case HORZ:
-			inf->x += d;
+			inf->x += delta;
 			break;
 		case REVERSAL:
-			inf->x -= d;
+			inf->x -= delta;
 			break;
 		case LVERT:
-			inf->y -= d;
+			inf->y -= delta;
 			break;
 		case RVERT:
-			inf->y += d;
+			inf->y += delta;
 			break;
 	}
 
@@ -1152,6 +1325,8 @@ extern void disp_putnstring(int x, int y, pixel color, const byte * str,
 							int count, dword wordspace, int top, int height,
 							int bot)
 {
+	disp_draw_string_inf inf;
+
 	if (bot) {
 		if (y >= bot)
 			return;
@@ -1168,8 +1343,6 @@ extern void disp_putnstring(int x, int y, pixel color, const byte * str,
 		dbg_printf(d, "%s: axis out of screen %d %d", __func__, x, y);
 		return;
 	}
-
-	disp_draw_string_inf inf;
 
 	while (*str != 0 && count > 0) {
 		if (*str > 0x80) {
@@ -1196,12 +1369,13 @@ extern void disp_putnstring(int x, int y, pixel color, const byte * str,
 			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
 									  &wordspace, &top, &height, NULL);
 		} else {
+			int j;
+
 			if (x > PSP_SCREEN_WIDTH - DISP_RSPAN - DISP_FONTSIZE / 2) {
 				break;
 			}
 			if (!check_range(x, y))
 				return;
-			int j;
 
 			for (j = 0; j < (*str == 0x09 ? config.tabstop : 1); ++j)
 				x += DISP_FONTSIZE / 2 + wordspace;
@@ -1216,6 +1390,8 @@ extern void disp_putnstringreversal_sys(int x, int y, pixel color,
 										dword wordspace, int top, int height,
 										int bot)
 {
+	disp_draw_string_inf inf;
+
 	if (bot) {
 		if (y >= bot)
 			return;
@@ -1237,8 +1413,6 @@ extern void disp_putnstringreversal_sys(int x, int y, pixel color,
 
 	if (x < 0 || y < 0)
 		return;
-
-	disp_draw_string_inf inf;
 
 	while (*str != 0 && count > 0) {
 		if (*str > 0x80) {
@@ -1284,7 +1458,7 @@ extern void disp_putnstringreversal(int x, int y, pixel color, const byte * str,
 	const byte *ccur, *cend;
 
 #ifdef ENABLE_TTF
-	if (use_ttf) {
+	if (using_ttf) {
 		disp_putnstring_reversal_truetype(cttf, ettf, x, y, color, str,
 										  count, wordspace, top, height, bot);
 		return;
@@ -1315,15 +1489,25 @@ extern void disp_putnstringreversal(int x, int y, pixel color, const byte * str,
 
 	while (*str != 0 && count > 0) {
 		if (*str > 0x80) {
+			dword pos;
+
 			if (x < 0) {
 				break;
 			}
+
 			if (!check_range(x, y))
 				return;
+
 			vaddr = disp_get_vaddr(x, y);
-			dword pos =
+			pos =
 				(((dword) (*str - 0x81)) * 0xBF +
 				 ((dword) (*(str + 1) - 0x40)));
+
+			if (book_cfont_buffer == NULL) {
+				dbg_printf(d, "%s: book_cfont_buffer is NULL", __func__);
+				return;
+			}
+
 			ccur =
 				book_cfont_buffer + pos * DISP_BOOK_CFONTSIZE +
 				top * DISP_BOOK_CROWSIZE;
@@ -1361,6 +1545,11 @@ extern void disp_putnstringreversal(int x, int y, pixel color, const byte * str,
 			vaddr = disp_get_vaddr(x, y);
 
 			{
+				if (book_efont_buffer == NULL) {
+					dbg_printf(d, "%s: book_efont_buffer is NULL", __func__);
+					return;
+				}
+
 				ccur =
 					book_efont_buffer +
 					((dword) * str) * DISP_BOOK_EFONTSIZE +
@@ -1392,13 +1581,13 @@ extern void disp_putnstringreversal(int x, int y, pixel color, const byte * str,
 			str++;
 			count--;
 		} else {
+			int j;
+
 			if (x < 0) {
 				break;
 			}
 			if (!check_range(x, y))
 				return;
-			int j;
-
 			for (j = 0; j < (*str == 0x09 ? config.tabstop : 1); ++j)
 				x -= DISP_BOOK_FONTSIZE / 2 + wordspace;
 			str++;
@@ -1433,15 +1622,23 @@ extern void disp_putnstringhorz_sys(int x, int y, pixel color, const byte * str,
 
 	while (*str != 0 && count > 0) {
 		if (*str > 0x80) {
+			dword pos;
+
 			if (x > PSP_SCREEN_WIDTH - DISP_RSPAN - DISP_FONTSIZE) {
 				break;
 			}
 			if (!check_range(x, y))
 				return;
 			vaddr = disp_get_vaddr(x, y);
-			dword pos =
+			pos =
 				(((dword) (*str - 0x81)) * 0xBF +
 				 ((dword) (*(str + 1) - 0x40)));
+
+			if (cfont_buffer == NULL) {
+				dbg_printf(d, "%s: cfont_buffer is NULL", __func__);
+				return;
+			}
+
 			ccur = cfont_buffer + pos * DISP_CFONTSIZE + top * DISP_CROWSIZE;
 
 			for (cend = ccur + height * DISP_CROWSIZE; ccur < cend; ccur++) {
@@ -1477,6 +1674,11 @@ extern void disp_putnstringhorz_sys(int x, int y, pixel color, const byte * str,
 			vaddr = disp_get_vaddr(x, y);
 
 			{
+				if (efont_buffer == NULL) {
+					dbg_printf(d, "%s: efont_buffer is NULL", __func__);
+					return;
+				}
+
 				ccur =
 					efont_buffer +
 					((dword) * str) * DISP_EFONTSIZE + top * DISP_EROWSIZE;
@@ -1522,8 +1724,10 @@ extern void disp_putnstringhorz(int x, int y, pixel color, const byte * str,
 								int count, dword wordspace, int top, int height,
 								int bot)
 {
+	disp_draw_string_inf inf;
+
 #ifdef ENABLE_TTF
-	if (use_ttf) {
+	if (using_ttf) {
 		disp_putnstring_horz_truetype(cttf, ettf, x, y, color, str,
 									  count, wordspace, top, height, bot);
 		return;
@@ -1546,8 +1750,6 @@ extern void disp_putnstringhorz(int x, int y, pixel color, const byte * str,
 		dbg_printf(d, "%s: axis out of screen %d %d", __func__, x, y);
 		return;
 	}
-
-	disp_draw_string_inf inf;
 
 	while (*str != 0 && count > 0) {
 		if (*str > 0x80) {
@@ -1573,12 +1775,13 @@ extern void disp_putnstringhorz(int x, int y, pixel color, const byte * str,
 			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
 									  &wordspace, &top, &height, NULL);
 		} else {
+			int j;
+
 			if (x > PSP_SCREEN_WIDTH - DISP_RSPAN - DISP_BOOK_FONTSIZE / 2) {
 				break;
 			}
 			if (!check_range(x, y))
 				return;
-			int j;
 
 			for (j = 0; j < (*str == 0x09 ? config.tabstop : 1); ++j)
 				x += DISP_BOOK_FONTSIZE / 2 + wordspace;
@@ -1593,6 +1796,8 @@ extern void disp_putnstringlvert_sys(int x, int y, pixel color,
 									 dword wordspace, int top, int height,
 									 int bot)
 {
+	disp_draw_string_inf inf;
+
 	if (bot) {
 		if (x >= bot)
 			return;
@@ -1609,8 +1814,6 @@ extern void disp_putnstringlvert_sys(int x, int y, pixel color,
 		dbg_printf(d, "%s: axis out of screen %d %d", __func__, x, y);
 		return;
 	}
-
-	disp_draw_string_inf inf;
 
 	while (*str != 0 && count > 0) {
 		if (*str > 0x80) {
@@ -1652,8 +1855,10 @@ extern void disp_putnstringlvert(int x, int y, pixel color, const byte * str,
 								 int count, dword wordspace, int top,
 								 int height, int bot)
 {
+	disp_draw_string_inf inf;
+
 #ifdef ENABLE_TTF
-	if (use_ttf) {
+	if (using_ttf) {
 		disp_putnstring_lvert_truetype(cttf, ettf, x, y, color, str,
 									   count, wordspace, top, height, bot);
 		return;
@@ -1676,8 +1881,6 @@ extern void disp_putnstringlvert(int x, int y, pixel color, const byte * str,
 		dbg_printf(d, "%s: axis out of screen %d %d", __func__, x, y);
 		return;
 	}
-
-	disp_draw_string_inf inf;
 
 	while (*str != 0 && count > 0) {
 		if (*str > 0x80) {
@@ -1703,12 +1906,13 @@ extern void disp_putnstringlvert(int x, int y, pixel color, const byte * str,
 			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
 									  &wordspace, &top, &height, NULL);
 		} else {
+			int j;
+
 			if (y < DISP_BOOK_FONTSIZE / 2 - 1) {
 				break;
 			}
 			if (!check_range(x, y))
 				return;
-			int j;
 
 			for (j = 0; j < (*str == 0x09 ? config.tabstop : 1); ++j)
 				y -= DISP_BOOK_FONTSIZE / 2 + wordspace;
@@ -1723,6 +1927,8 @@ extern void disp_putnstringrvert_sys(int x, int y, pixel color,
 									 dword wordspace, int top, int height,
 									 int bot)
 {
+	disp_draw_string_inf inf;
+
 	if (str == NULL) {
 		dbg_printf(d, "%s: %d/%d output null string", __func__, x, y);
 		return;
@@ -1737,8 +1943,6 @@ extern void disp_putnstringrvert_sys(int x, int y, pixel color,
 		return;
 	if (x + 1 - height < bot)
 		height = x + 1 - bot;
-
-	disp_draw_string_inf inf;
 
 	while (*str != 0 && count > 0) {
 		if (*str > 0x80) {
@@ -1780,8 +1984,10 @@ extern void disp_putnstringrvert(int x, int y, pixel color, const byte * str,
 								 int count, dword wordspace, int top,
 								 int height, int bot)
 {
+	disp_draw_string_inf inf;
+
 #ifdef ENABLE_TTF
-	if (use_ttf) {
+	if (using_ttf) {
 		disp_putnstring_rvert_truetype(cttf, ettf, x, y, color, str,
 									   count, wordspace, top, height, bot);
 		return;
@@ -1802,8 +2008,6 @@ extern void disp_putnstringrvert(int x, int y, pixel color, const byte * str,
 		return;
 	if (x + 1 - height < bot)
 		height = x + 1 - bot;
-
-	disp_draw_string_inf inf;
 
 	while (*str != 0 && count > 0) {
 		if (*str > 0x80) {
@@ -1829,12 +2033,13 @@ extern void disp_putnstringrvert(int x, int y, pixel color, const byte * str,
 			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
 									  &wordspace, &top, &height, NULL);
 		} else {
+			int j;
+
 			if (y > PSP_SCREEN_HEIGHT - DISP_RSPAN - DISP_BOOK_FONTSIZE / 2) {
 				break;
 			}
 			if (!check_range(x, y))
 				return;
-			int j;
 
 			for (j = 0; j < (*str == 0x09 ? config.tabstop : 1); ++j)
 				y += DISP_BOOK_FONTSIZE / 2 + wordspace;
@@ -1846,89 +2051,90 @@ extern void disp_putnstringrvert(int x, int y, pixel color, const byte * str,
 
 extern void disp_fillvram(pixel color)
 {
-	sceGuStart(GU_DIRECT, list);
-	sceGuClearColor(color);
-	sceGuClear(GU_COLOR_BUFFER_BIT);
-	sceGuFinish();
-	sceGuSync(0, 0);
+	xrGuStart(GU_DIRECT, list);
+	xrGuClearColor(color);
+	xrGuClear(GU_COLOR_BUFFER_BIT);
+	xrGuFinish();
+	xrGuSync(0, 0);
 }
 
 extern void disp_fillrect(dword x1, dword y1, dword x2, dword y2, pixel color)
 {
-	sceGuStart(GU_DIRECT, list);
-	VertexColor *vertices = sceGuGetMemory(2 * sizeof(*vertices));
+	VertexColor *vertices;
 
+	xrGuStart(GU_DIRECT, list);
+	vertices = xrGuGetMemory(2 * sizeof(*vertices));
 	setVertex(&vertices[0], x1, y1, 0, color);
 	setVertex(&vertices[1], x2 + 1, y2 + 1, 0, color);
 
-	sceGuDisable(GU_TEXTURE_2D);
-	sceGuDrawArray(GU_SPRITES,
-				   GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, 0,
-				   vertices);
-	sceGuEnable(GU_TEXTURE_2D);
+	xrGuDisable(GU_TEXTURE_2D);
+	xrGuDrawArray(GU_SPRITES,
+				  GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, 0,
+				  vertices);
+	xrGuEnable(GU_TEXTURE_2D);
 
-	sceGuFinish();
-	sceGuSync(0, 0);
+	xrGuFinish();
+	xrGuSync(0, 0);
 }
 
 extern void disp_rectangle(dword x1, dword y1, dword x2, dword y2, pixel color)
 {
-	sceGuStart(GU_DIRECT, list);
-	VertexColor *vertices = sceGuGetMemory(5 * sizeof(*vertices));
+	VertexColor *vertices;
 
+	xrGuStart(GU_DIRECT, list);
+	vertices = xrGuGetMemory(5 * sizeof(*vertices));
 	setVertex(&vertices[0], x1, y1, 0, color);
 	setVertex(&vertices[1], x2, y1, 0, color);
 	setVertex(&vertices[2], x2, y2, 0, color);
 	setVertex(&vertices[3], x1, y2, 0, color);
 	setVertex(&vertices[4], x1, y1, 0, color);
 
-	sceGuDisable(GU_TEXTURE_2D);
-	sceGuDrawArray(GU_LINE_STRIP,
-				   GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 5, 0,
-				   vertices);
-	sceGuEnable(GU_TEXTURE_2D);
+	xrGuDisable(GU_TEXTURE_2D);
+	xrGuDrawArray(GU_LINE_STRIP,
+				  GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 5, 0,
+				  vertices);
+	xrGuEnable(GU_TEXTURE_2D);
 
-	sceGuFinish();
-	sceGuSync(0, 0);
+	xrGuFinish();
+	xrGuSync(0, 0);
 }
 
 extern void disp_line(dword x1, dword y1, dword x2, dword y2, pixel color)
 {
-	sceGuStart(GU_DIRECT, list);
-	VertexColor *vertices = sceGuGetMemory(2 * sizeof(*vertices));
+	VertexColor *vertices;
 
+	xrGuStart(GU_DIRECT, list);
+	vertices = xrGuGetMemory(2 * sizeof(*vertices));
 	setVertex(&vertices[0], x1, y1, 0, color);
 	setVertex(&vertices[1], x2, y2, 0, color);
 
-	sceGuDisable(GU_TEXTURE_2D);
-	sceGuDrawArray(GU_LINES,
-				   GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, 0,
-				   vertices);
-	sceGuEnable(GU_TEXTURE_2D);
+	xrGuDisable(GU_TEXTURE_2D);
+	xrGuDrawArray(GU_LINES,
+				  GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, 0,
+				  vertices);
+	xrGuEnable(GU_TEXTURE_2D);
 
-	sceGuFinish();
-	sceGuSync(0, 0);
+	xrGuFinish();
+	xrGuSync(0, 0);
 }
 
 pixel *disp_swizzle_image(pixel * buf, int width, int height)
 {
 	int pitch = (PIXEL_BYTES * width + 15) & ~0xF;
-
 	pixel *out;
+	unsigned blockx, blocky;
+	unsigned j;
+	unsigned width_blocks = pitch / 16;
+	unsigned height_blocks = (height + 7) / 8;
+	unsigned src_pitch = (pitch - 16) / 4;
+	unsigned src_row = pitch * 8;
+	const byte *ysrc = (const byte *) buf;
+	u32 *dst;
 
 	if ((out = (pixel *) memalign(16, pitch * ((height + 7) & ~0x7))) == NULL)
 		return out;
-	unsigned blockx, blocky;
-	unsigned j;
 
-	unsigned width_blocks = pitch / 16;
-	unsigned height_blocks = (height + 7) / 8;
-
-	unsigned src_pitch = (pitch - 16) / 4;
-	unsigned src_row = pitch * 8;
-
-	const byte *ysrc = (const byte *) buf;
-	u32 *dst = (u32 *) out;
+	dst = (u32 *) out;
 
 	for (blocky = 0; blocky < height_blocks; ++blocky) {
 		const byte *xsrc = ysrc;
@@ -1950,43 +2156,3 @@ pixel *disp_swizzle_image(pixel * buf, int width, int height)
 
 	return out;
 }
-
-#ifdef ENABLE_TTF
-extern void disp_ttf_reload(void)
-{
-	if (config.cttfarch[0] != '\0') {
-		cttf =
-			load_archieve_truetype_book_font(config.cttfarch,
-											 config.cttfpath,
-											 config.bookfontsize);
-	} else {
-		cttf =
-			ttf_open(config.cttfpath, config.bookfontsize,
-					 config.ttf_load_to_memory);
-	}
-	if (cttf == NULL)
-		return;
-	if (!strcmp(config.ettfarch, config.cttfarch)
-		&& !strcmp(config.ettfpath, config.cttfpath)) {
-		ettf = cttf;
-		g_ttf_share_two_font = true;
-	} else if (config.ettfarch[0] != '\0') {
-		ettf =
-			load_archieve_truetype_book_font(config.ettfarch,
-											 config.ettfpath,
-											 config.bookfontsize);
-	} else {
-		ettf =
-			ttf_open(config.ettfpath, config.bookfontsize,
-					 config.ttf_load_to_memory);
-	}
-	if (ettf == NULL) {
-		ettf = cttf;
-		g_ttf_share_two_font = true;
-	}
-
-	load_ttf_config();
-
-	ttf_load_ewidth(ettf, disp_ewidth, 0x80);
-}
-#endif

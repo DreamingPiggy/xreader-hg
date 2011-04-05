@@ -1,9 +1,32 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #include "config.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include "common/utils.h"
 #include "charsets.h"
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
 
 /* definitions */
 
@@ -841,6 +864,7 @@ static const word big5_2uni_pagea1[6121] = {
 	0x2469, 0x2474, 0x2475, 0x2476, 0x2477, 0x2478, 0x2479, 0x247a,
 	0x247b, 0x247c, 0x247d,
 };
+
 static const word big5_2uni_pagec9[7652] = {
 	/* 0xc9 */
 	0x4e42, 0x4e5c, 0x51f5, 0x531a, 0x5382, 0x4e07, 0x4e0c, 0x4e47,
@@ -1956,6 +1980,7 @@ static const word hkscs_2uni_page88[627] = {
 	0x6a23, 0x80ab, 0x6d3c, 0x6e5f, 0x6f04, 0x3d2f, 0x6fdc, 0x1ff7,
 	0x80b2, 0x66dd, 0x33f7, 0x6562,
 };
+
 static const word hkscs_2uni_page8d[3140] = {
 	/* 0x8d */
 	0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd,
@@ -2378,6 +2403,7 @@ static const word hkscs_2uni_page8d[3140] = {
 	0x2e81, 0xc52d, 0xddcf, 0xa8b7, 0x826e, 0x7e30, 0xb98e, 0x17e2,
 	0x2cdf, 0x7e34, 0x6f90, 0x6ee6, 0x7e37,
 };
+
 static const word hkscs_2uni_pagec6[471] = {
 	/* 0xc6 */
 	0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd,
@@ -2443,6 +2469,7 @@ static const word hkscs_2uni_pagec6[471] = {
 	0x81bd, 0x81bd, 0x81bd, 0x0183, 0x0150, 0x015b, 0x0154, 0x0175,
 	0x00d3, 0x0078, 0x00cb, 0x018a, 0x016a,
 };
+
 static const word hkscs_2uni_pagef9[942] = {
 	/* 0xf9 */
 	0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd,
@@ -8391,6 +8418,7 @@ static const Summary16 gbkext_inv_uni2indx_page02[14] = {
 	{0, 0x0000}, {0, 0x0000}, {0, 0x0000}, {0, 0x0000},
 	{0, 0x0c00}, {2, 0x0200},
 };
+
 static const Summary16 gbkext_inv_uni2indx_page20[44] = {
 	/* 0x2000 */
 	{3, 0x0000}, {3, 0x0029}, {6, 0x0020}, {7, 0x0020},
@@ -8407,6 +8435,7 @@ static const Summary16 gbkext_inv_uni2indx_page20[44] = {
 	{18, 0x0000}, {18, 0x0004}, {19, 0x00c0}, {21, 0x0000},
 	{21, 0x0000}, {21, 0x0020}, {22, 0x0000}, {22, 0x8000},
 };
+
 static const Summary16 gbkext_inv_uni2indx_page25[17] = {
 	/* 0x2500 */
 	{23, 0x0000}, {23, 0x0000}, {23, 0x0000}, {23, 0x0000},
@@ -8416,6 +8445,7 @@ static const Summary16 gbkext_inv_uni2indx_page25[17] = {
 	/* 0x2600 */
 	{83, 0x0200},
 };
+
 static const Summary16 gbkext_inv_uni2indx_page30[16] = {
 	/* 0x3000 */
 	{84, 0x00c0}, {86, 0x6004}, {89, 0x03fe}, {98, 0x0000},
@@ -8423,6 +8453,7 @@ static const Summary16 gbkext_inv_uni2indx_page30[16] = {
 	{98, 0x0000}, {98, 0x7800}, {102, 0x0000}, {102, 0x0000},
 	{102, 0x0000}, {102, 0x0000}, {102, 0x0000}, {102, 0x7000},
 };
+
 static const Summary16 gbkext_inv_uni2indx_page32[30] = {
 	/* 0x3200 */
 	{105, 0x0000}, {105, 0x0000}, {105, 0x0000}, {105, 0x0002},
@@ -8435,6 +8466,7 @@ static const Summary16 gbkext_inv_uni2indx_page32[30] = {
 	{107, 0xc000}, {109, 0x7000}, {112, 0x0002}, {113, 0x0000},
 	{113, 0x4010}, {115, 0x0026},
 };
+
 static const Summary16 gbkext_inv_uni2indx_page4e[1307] = {
 	/* 0x4e00 */
 	{118, 0x8074}, {123, 0x8084}, {126, 0xc24b}, {133, 0x10aa},
@@ -8846,6 +8878,7 @@ static const Summary16 gbkext_inv_uni2indx_page4e[1307] = {
 	{14175, 0xffef}, {14190, 0xfffc}, {14204, 0xffff}, {14220, 0x7fff},
 	{14235, 0xe006}, {14240, 0x71ff}, {14252, 0x003e},
 };
+
 static const Summary16 gbkext_inv_uni2indx_pagef9[19] = {
 	/* 0xf900 */
 	{14257, 0x0000}, {14257, 0x0000}, {14257, 0x1000}, {14258, 0x0000},
@@ -8855,6 +8888,7 @@ static const Summary16 gbkext_inv_uni2indx_pagef9[19] = {
 	/* 0xfa00 */
 	{14262, 0xf000}, {14266, 0x811a}, {14271, 0x039b},
 };
+
 static const Summary16 gbkext_inv_uni2indx_pagefe[31] = {
 	/* 0xfe00 */
 	{14278, 0x0000}, {14278, 0x0000}, {14278, 0x0000}, {14278, 0x0001},
@@ -8875,6 +8909,7 @@ static const word cp936ext_2uni_pagea6[181 - 159] = {
 	0xfe42, 0xfe43, 0xfe44, 0xfffd, 0xfffd, 0xfe3b, 0xfe3c, 0xfe37,
 	0xfe38, 0xfe31, 0xfffd, 0xfe33, 0xfe34,
 };
+
 static const word cp936ext_2uni_pagea8[128 - 122] = {
 	/* 0xa8 */
 	0x0251, 0xfffd, 0x0144, 0x0148, 0xfffd, 0x0261,
@@ -8884,11 +8919,13 @@ static const word cp936ext_page01[16] = {
 	0x0000, 0x0000, 0x0000, 0x0000, 0xa8bd, 0x0000, 0x0000, 0x0000,	/*0x40-0x47 */
 	0xa8be, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,	/*0x48-0x4f */
 };
+
 static const word cp936ext_page02[24] = {
 	0x0000, 0xa8bb, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,	/*0x50-0x57 */
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,	/*0x58-0x5f */
 	0x0000, 0xa8c0, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,	/*0x60-0x67 */
 };
+
 static const word cp936ext_pagefe[24] = {
 	0x0000, 0xa6f2, 0x0000, 0xa6f4, 0xa6f5, 0xa6e0, 0xa6e1, 0xa6f0,	/*0x30-0x37 */
 	0xa6f1, 0xa6e2, 0xa6e3, 0xa6ee, 0xa6ef, 0xa6e6, 0xa6e7, 0xa6e4,	/*0x38-0x3f */
@@ -9012,6 +9049,7 @@ static const word gb2312_2uni_page21[831] = {
 	0x253d, 0x253e, 0x253f, 0x2540, 0x2541, 0x2542, 0x2543, 0x2544,
 	0x2545, 0x2546, 0x2547, 0x2548, 0x2549, 0x254a, 0x254b,
 };
+
 static const word gb2312_2uni_page30[6768] = {
 	/* 0x30 */
 	0x554a, 0x963f, 0x57c3, 0x6328, 0x54ce, 0x5509, 0x54c0, 0x7691,
@@ -10910,6 +10948,7 @@ static const Summary16 gb2312_uni2indx_page00[70] = {
 	{83, 0x0002}, {84, 0xffff}, {100, 0xffff}, {116, 0xffff},
 	{132, 0xffff}, {148, 0x0002},
 };
+
 static const Summary16 gb2312_uni2indx_page20[101] = {
 	/* 0x2000 */
 	{149, 0x0000}, {149, 0x3360}, {155, 0x0040}, {156, 0x080d},
@@ -10945,6 +10984,7 @@ static const Summary16 gb2312_uni2indx_page20[101] = {
 	{343, 0x0060}, {345, 0x0000}, {345, 0x0000}, {345, 0x0000},
 	{345, 0x0005},
 };
+
 static const Summary16 gb2312_uni2indx_page30[35] = {
 	/* 0x3000 */
 	{347, 0xff2f}, {360, 0x00fb}, {367, 0x0000}, {367, 0x0000},
@@ -10959,6 +10999,7 @@ static const Summary16 gb2312_uni2indx_page30[35] = {
 	/* 0x3200 */
 	{574, 0x0000}, {574, 0x0000}, {574, 0x03ff},
 };
+
 static const Summary16 gb2312_uni2indx_page4e[1263] = {
 	/* 0x4e00 */
 	{584, 0x7f8b}, {595, 0x7f7b}, {608, 0x3db4}, {617, 0xef55},
@@ -11356,6 +11397,7 @@ static const Summary16 gb2312_uni2indx_page4e[1263] = {
 	{7142, 0x69e6}, {7151, 0xdc37}, {7161, 0x6bff}, {7174, 0x3dff},
 	{7187, 0xfcf8}, {7198, 0xf3f9}, {7210, 0x0004},
 };
+
 static const Summary16 gb2312_uni2indx_page9e[27] = {
 	/* 0x9e00 */
 	{7211, 0x0000}, {7211, 0x8000}, {7212, 0xbf6f}, {7225, 0xe7ee},
@@ -11367,6 +11409,7 @@ static const Summary16 gb2312_uni2indx_page9e[27] = {
 	{7327, 0x0010}, {7328, 0x0003}, {7330, 0x0000}, {7330, 0x8000},
 	{7331, 0x1ff9}, {7342, 0x8e00}, {7346, 0x0001},
 };
+
 static const Summary16 gb2312_uni2indx_pageff[15] = {
 	/* 0xff00 */
 	{7347, 0xfffe}, {7362, 0xffff}, {7378, 0xffff}, {7394, 0xffff},
@@ -12203,7 +12246,7 @@ extern dword charsets_ucs_conv(const byte * ucs, size_t inputlen, byte * cjk,
 		int l = gbk_wctomb(cjk + j, *(word *) (ucs + i), 2);
 
 		j += l;
-		outputlen -= j;
+		outputlen -= l;
 		i += 2;
 		inputlen -= 2;
 	}
@@ -12222,18 +12265,18 @@ extern dword charsets_utf8_conv(const byte * ucs, size_t inputlen, byte * cjk,
 
 	while (i < l && inputlen && outputlen) {
 		ucs4_t u = 0x1FFF;
-		int p = utf8_mbtowc(&u, ucs + i, l - i);
+		int p = utf8_mbtowc(&u, ucs + i, l - i), l2;
 
 		if (p < 0)
 			break;
 		if (u > 0xFFFF)
 			u = 0x1FFF;
-		int l = gbk_wctomb(cjk + j, u, 2);
+		l2 = gbk_wctomb(cjk + j, u, 2);
 
-		j += l;
+		j += l2;
 		i += p;
 		inputlen -= p;
-		outputlen -= l;
+		outputlen -= l2;
 	}
 	cjk[j] = 0;
 	return j;
@@ -12251,18 +12294,21 @@ extern dword charsets_utf16_conv(const byte * ucs, size_t inputlen, byte * cjk,
 
 	while (i < l && inputlen && outputlen) {
 		ucs4_t u = 0x1FFF;
-		int p = utf16_mbtowc(&u, ucs + i, l - i);
+		int p, l2;
+
+		l2 = gbk_wctomb(cjk + j, u, 2);
+		p = utf16_mbtowc(&u, ucs + i, l2 - i);
 
 		if (p < 0)
 			break;
+
 		if (u > 0xFFFF)
 			u = 0x1FFF;
-		int l = gbk_wctomb(cjk + j, u, 2);
 
-		j += l;
+		j += l2;
 		i += p;
 		inputlen -= p;
-		outputlen -= l;
+		outputlen -= l2;
 	}
 	cjk[j] = 0;
 	return j;
@@ -12279,18 +12325,21 @@ extern dword charsets_utf16be_conv(const byte * ucs, size_t inputlen,
 
 	while (i < l && inputlen && outputlen) {
 		ucs4_t u = 0x1FFF;
-		int p = utf16be_mbtowc(&u, ucs + i, l - i);
+		int p, l2;
+
+		l2 = gbk_wctomb(cjk + j, u, 2);
+		p = utf16be_mbtowc(&u, ucs + i, l2 - i);
 
 		if (p < 0)
 			break;
+
 		if (u > 0xFFFF)
 			u = 0x1FFF;
-		int l = gbk_wctomb(cjk + j, u, 2);
 
-		j += l;
+		j += l2;
 		i += p;
 		inputlen -= p;
-		outputlen -= l;
+		outputlen -= l2;
 	}
 	cjk[j] = 0;
 	return j;
@@ -12339,9 +12388,10 @@ extern void charsets_sjis_conv(const byte * jis, byte ** cjk, dword * newsize)
 {
 	int ilen = *newsize, jlen = ilen;
 	int i = 0, j = 0, p = 0;
+	byte *cjks;
 
 	istate = 0;
-	byte *cjks = malloc(ilen + 1);
+	cjks = malloc(ilen + 1);
 
 	if (cjks == NULL) {
 		*cjk = NULL;

@@ -1,3 +1,23 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #include "config.h"
 
 #include <unistd.h>
@@ -15,9 +35,10 @@
 #include "dbg.h"
 #include "kubridge.h"
 #include "passwdmgr.h"
-
-extern bool scene_load_font();
-extern bool scene_load_book_font();
+#include "buffered_reader.h"
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
 
 static char conf_filename[PATH_MAX];
 
@@ -111,6 +132,7 @@ static void conf_default(p_conf conf)
 	conf->bgwhere = scene_in_zip;
 	conf->confver = XREADER_VERSION_NUM;
 	conf->forecolor = 0xFFFFFFFF;
+	conf->giftranscolor = 0xFFFFFFFF;
 	conf->bgcolor = 0;
 	conf->have_bg = true;
 	conf->rowspace = 2;
@@ -185,6 +207,7 @@ static void conf_default(p_conf conf)
 	conf->imgpaging = conf_imgpaging_direct;
 	conf->imgpaging_spd = 8;
 	conf->imgpaging_interval = 10;
+	conf->imgpaging_duration = 10;
 	conf->fontsize = 12;
 	conf->bookfontsize = 12;
 	conf->reordertxt = false;
@@ -202,8 +225,8 @@ static void conf_default(p_conf conf)
 	conf->autoplay = false;
 	conf->usettf = 0;
 	conf->freqs[0] = 1;
-	conf->freqs[1] = 5;
-	conf->freqs[2] = 8;
+	conf->freqs[1] = 6;
+	conf->freqs[2] = 9;
 	conf->imgbrightness = 100;
 	conf->dis_scrsave = false;
 	conf->autosleep = 0;
@@ -234,22 +257,16 @@ static void conf_default(p_conf conf)
 	STRCAT_S(conf->ettfpath, "fonts/asc.ttf");
 
 	conf->infobar_use_ttf_mode = true;
-	conf->cfont_antialias = false;
-	conf->cfont_cleartype = true;
-	conf->cfont_embolden = false;
-	conf->efont_antialias = false;
-	conf->efont_cleartype = true;
-	conf->efont_embolden = false;
 	conf->img_no_repeat = false;
 	conf->hide_flash = true;
 	conf->tabstop = 4;
 	conf->apetagorder = true;
 	STRCPY_S(conf->language, "zh_CN");
 	conf->filelistwidth = 160;
-	if (kuKernelGetModel() == PSP_MODEL_SLIM_AND_LITE) {
-		conf->ttf_load_to_memory = true;
-	} else {
+	if (kuKernelGetModel() == PSP_MODEL_STANDARD) {
 		conf->ttf_load_to_memory = false;
+	} else {
+		conf->ttf_load_to_memory = true;
 	}
 	conf->save_password = true;
 	conf->scrollbar_width = 5;
@@ -261,6 +278,23 @@ static void conf_default(p_conf conf)
 	conf->ttf_haste_up = true;
 	conf->linenum_style = false;
 	conf->infobar_align = conf_align_left;
+	conf->show_encoder_msg = false;
+	conf->sfx_mode = 0;
+	conf->alc_mode = 0;
+	conf->use_vaudio = false;
+	SPRINTF_S(conf->musicdrv_opts,
+			  "mp3_brute_mode=off mp3_use_me=on mp3_check_crc=off mp3_buffer_size=%d "
+			  "wma_buffer_size=%d aac_buffer_size=%d wav_buffer_size=%d wv_buffer_size=%d "
+			  "aa3_buffer_size=%d at3_buffer_size=%d m4a_buffer_size=%d "
+			  "flac_buffer_size=%d",
+			  BUFFERED_READER_BUFFER_SIZE, BUFFERED_READER_BUFFER_SIZE,
+			  BUFFERED_READER_BUFFER_SIZE, BUFFERED_READER_BUFFER_SIZE,
+			  BUFFERED_READER_BUFFER_SIZE, BUFFERED_READER_BUFFER_SIZE,
+			  BUFFERED_READER_BUFFER_SIZE, BUFFERED_READER_BUFFER_SIZE,
+			  BUFFERED_READER_BUFFER_SIZE);
+	conf->magnetic_scrolling = true;
+	conf->use_image_queue = true;
+	conf->max_cache_img = 10;
 }
 
 static char *hexToString(char *str, int size, unsigned int hex)
@@ -845,12 +879,16 @@ static void check_empty_imgkey(t_conf * conf)
 
 extern bool ini_conf_load(const char *inifilename, p_conf conf)
 {
+	dictionary *dict;
+	char buf[80];
+	int i;
+	extern void get_language(void);
+
 	if (conf == NULL || inifilename == NULL) {
 		return false;
 	}
 
-	dictionary *dict = iniparser_load(inifilename);
-	char buf[80];
+	dict = iniparser_load(inifilename);
 
 	if (dict == NULL)
 		return false;
@@ -860,6 +898,8 @@ extern bool ini_conf_load(const char *inifilename, p_conf conf)
 	STRCPY_S(conf->path, iniparser_getstring(dict, "Global:path", conf->path));
 	conf->forecolor =
 		iniparser_getunsigned(dict, "UI:forecolor", conf->forecolor);
+	conf->giftranscolor =
+		iniparser_getunsigned(dict, "Image:giftranscolor", conf->giftranscolor);
 	conf->bgcolor = iniparser_getunsigned(dict, "UI:bgcolor", conf->bgcolor);
 	conf->have_bg = iniparser_getboolean(dict, "UI:have_bg", conf->have_bg);
 	conf->titlecolor =
@@ -910,7 +950,6 @@ extern bool ini_conf_load(const char *inifilename, p_conf conf)
 		stringToRotate(iniparser_getstring
 					   (dict, "Image:rotate",
 						rotateToString(buf, sizeof(buf), conf->rotate)));
-	int i;
 
 	for (i = 0; i < 20; ++i) {
 		char key[20];
@@ -983,6 +1022,9 @@ extern bool ini_conf_load(const char *inifilename, p_conf conf)
 	conf->imgpaging_interval =
 		iniparser_getint(dict, "Image:imgpaging_interval",
 						 conf->imgpaging_interval);
+	conf->imgpaging_duration =
+		iniparser_getint(dict, "Image:imgpaging_duration",
+						 conf->imgpaging_duration);
 	for (i = 0; i < 20; ++i) {
 		char key[20];
 
@@ -1055,24 +1097,6 @@ extern bool ini_conf_load(const char *inifilename, p_conf conf)
 	conf->infobar_use_ttf_mode =
 		iniparser_getboolean(dict, "Text:infobar_use_ttf_mode",
 							 conf->infobar_use_ttf_mode);
-	conf->cfont_antialias =
-		iniparser_getboolean(dict, "Text:cfont_antialias",
-							 conf->cfont_antialias);
-	conf->cfont_cleartype =
-		iniparser_getboolean(dict, "Text:cfont_cleartype",
-							 conf->cfont_cleartype);
-	conf->cfont_embolden =
-		iniparser_getboolean(dict, "Text:cfont_embolden", conf->cfont_embolden);
-
-	conf->efont_antialias =
-		iniparser_getboolean(dict, "Text:efont_antialias",
-							 conf->efont_antialias);
-	conf->efont_cleartype =
-		iniparser_getboolean(dict, "Text:efont_cleartype",
-							 conf->efont_cleartype);
-	conf->efont_embolden =
-		iniparser_getboolean(dict, "Text:efont_embolden", conf->efont_embolden);
-
 	conf->img_no_repeat =
 		iniparser_getboolean(dict, "Image:no_repeat", conf->img_no_repeat);
 
@@ -1085,8 +1109,6 @@ extern bool ini_conf_load(const char *inifilename, p_conf conf)
 
 	STRCPY_S(conf->language,
 			 iniparser_getstring(dict, "UI:language", conf->language));
-
-	extern void get_language(void);
 
 	get_language();
 
@@ -1130,6 +1152,36 @@ extern bool ini_conf_load(const char *inifilename, p_conf conf)
 	conf->infobar_align =
 		stringToAlign(iniparser_getstring(dict, "Text:infobar_align", ""));
 
+	STRCPY_S(conf->musicdrv_opts,
+			 iniparser_getstring(dict, "Music:musicdrv_opts",
+								 conf->musicdrv_opts));
+
+	conf->magnetic_scrolling =
+		iniparser_getboolean(dict, "Image:magnetic_scrolling",
+							 conf->magnetic_scrolling);
+
+	conf->use_image_queue =
+		iniparser_getboolean(dict, "Image:use_image_queue",
+							 conf->use_image_queue);
+
+	conf->max_cache_img =
+		iniparser_getunsigned(dict, "Image:max_cache_img", conf->max_cache_img);
+
+	conf->show_encoder_msg =
+		iniparser_getboolean(dict, "Music:show_encoder_msg",
+							 conf->show_encoder_msg);
+
+	conf->sfx_mode = iniparser_getint(dict, "Music:sfx_mode", conf->sfx_mode);
+	conf->alc_mode = iniparser_getint(dict, "Music:alc_mode", conf->alc_mode);
+
+	conf->use_vaudio =
+		iniparser_getboolean(dict, "Music:use_vaudio",
+							 conf->use_vaudio);
+
+	if (conf->max_cache_img == 0) {
+		conf->use_image_queue = false;
+	}
+
 	dictionary_del(dict);
 
 	return true;
@@ -1137,17 +1189,22 @@ extern bool ini_conf_load(const char *inifilename, p_conf conf)
 
 extern bool ini_conf_save(p_conf conf)
 {
+	dictionary *dict;
+	FILE *fp;
+	char buf[PATH_MAX];
+	int i;
+
 	if (conf == NULL) {
 		return false;
 	}
-	conf->confver = XREADER_VERSION_NUM;
 
-	dictionary *dict = dictionary_new(0);
+	conf->confver = XREADER_VERSION_NUM;
+	dict = dictionary_new(0);
 
 	if (dict == NULL)
 		return false;
 
-	FILE *fp = fopen(conf_filename, "w");
+	fp = fopen(conf_filename, "w");
 
 	if (fp == NULL) {
 		return false;
@@ -1164,11 +1221,11 @@ extern bool ini_conf_save(p_conf conf)
 	if (iniparser_setstring(dict, "Music", NULL) != 0)
 		goto error;
 
-	char buf[PATH_MAX];
-
 	iniparser_setstring(dict, "Global:path", conf->path);
 	iniparser_setstring(dict, "UI:forecolor",
 						hexToString(buf, sizeof(buf), conf->forecolor));
+	iniparser_setstring(dict, "Image:giftranscolor",
+						hexToString(buf, sizeof(buf), conf->giftranscolor));
 	iniparser_setstring(dict, "UI:bgcolor",
 						hexToString(buf, sizeof(buf), conf->bgcolor));
 	iniparser_setstring(dict, "UI:have_bg",
@@ -1211,7 +1268,6 @@ extern bool ini_conf_save(p_conf conf)
 						dwordToString(buf, sizeof(buf), conf->scale));
 	iniparser_setstring(dict, "Image:rotate",
 						rotateToString(buf, sizeof(buf), conf->rotate));
-	int i;
 
 	for (i = 0; i < 20; ++i) {
 		char key[20];
@@ -1274,6 +1330,9 @@ extern bool ini_conf_save(p_conf conf)
 	iniparser_setstring(dict, "Image:imgpaging_interval",
 						dwordToString(buf, sizeof(buf),
 									  conf->imgpaging_interval));
+	iniparser_setstring(dict, "Image:imgpaging_duration",
+						dwordToString(buf, sizeof(buf),
+									  conf->imgpaging_duration));
 	for (i = 0; i < 20; ++i) {
 		char key[20];
 
@@ -1352,26 +1411,6 @@ extern bool ini_conf_save(p_conf conf)
 	iniparser_setstring(dict, "Text:infobar_fontsize",
 						dwordToString(buf, sizeof(buf),
 									  conf->infobar_fontsize));
-	iniparser_setstring(dict, "Text:cfont_antialias",
-						booleanToString(buf, sizeof(buf),
-										conf->cfont_antialias));
-	iniparser_setstring(dict, "Text:cfont_cleartype",
-						booleanToString(buf, sizeof(buf),
-										conf->cfont_cleartype));
-	iniparser_setstring(dict, "Text:cfont_embolden",
-						booleanToString(buf, sizeof(buf),
-										conf->cfont_embolden));
-
-	iniparser_setstring(dict, "Text:efont_antialias",
-						booleanToString(buf, sizeof(buf),
-										conf->efont_antialias));
-	iniparser_setstring(dict, "Text:efont_cleartype",
-						booleanToString(buf, sizeof(buf),
-										conf->efont_cleartype));
-	iniparser_setstring(dict, "Text:efont_embolden",
-						booleanToString(buf, sizeof(buf),
-										conf->efont_embolden));
-
 	iniparser_setstring(dict, "Image:no_repeat",
 						booleanToString(buf, sizeof(buf), conf->img_no_repeat));
 
@@ -1422,6 +1461,33 @@ extern bool ini_conf_save(p_conf conf)
 
 	iniparser_setstring(dict, "Text:infobar_align",
 						alignToString(buf, sizeof(buf), conf->infobar_align));
+
+	iniparser_setstring(dict, "Music:musicdrv_opts", conf->musicdrv_opts);
+
+	iniparser_setstring(dict, "Image:magnetic_scrolling",
+						booleanToString(buf, sizeof(buf),
+										conf->magnetic_scrolling));
+
+	iniparser_setstring(dict, "Image:use_image_queue",
+						booleanToString(buf, sizeof(buf),
+										conf->use_image_queue));
+
+	iniparser_setstring(dict, "Image:max_cache_img",
+						dwordToString(buf, sizeof(buf), conf->max_cache_img));
+
+	iniparser_setstring(dict, "Music:show_encoder_msg",
+						booleanToString(buf, sizeof(buf),
+										conf->show_encoder_msg));
+
+	iniparser_setstring(dict, "Music:sfx_mode",
+						intToString(buf, sizeof(buf), conf->sfx_mode));
+
+	iniparser_setstring(dict, "Music:alc_mode",
+						intToString(buf, sizeof(buf), conf->alc_mode));
+
+	iniparser_setstring(dict, "Music:use_vaudio",
+						booleanToString(buf, sizeof(buf),
+										conf->use_vaudio));
 
 	iniparser_dump_ini(dict, fp);
 
