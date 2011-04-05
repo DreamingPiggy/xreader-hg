@@ -1,3 +1,23 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #include "config.h"
 
 #include <stdio.h>
@@ -20,8 +40,12 @@
 #include "scene.h"
 #include "archive.h"
 #include "conf.h"
-
-extern int use_ttf;
+#include "unumd.h"
+#include "depdb.h"
+#include "xrhal.h"
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
 
 /**
  * 计算电子书内容所对应GI值
@@ -253,14 +277,16 @@ static int text_get_string_width_english(const char *pos, const char *posend,
 
 			if (is_untruncateable_chars(*pos)) {
 				if (word_start == NULL) {
+					dword cnt;
+					int ret;
+
 					// search for next English word
 					word_end = word_start = pos;
 					while (word_end <= posend
 						   && is_untruncateable_chars(*word_end)) {
 						word_end++;
 					}
-					dword cnt;
-					int ret =
+					ret =
 						text_get_string_width(word_start, word_end, maxpixel,
 											  wordspace, &cnt);
 
@@ -301,14 +327,17 @@ extern bool text_format(p_text txt, dword max_pixels, dword wordspace,
 		}
 	curs = 0;
 	while (txt->row_count < 1024 * 1024 && pos < posend) {
+		char *startp;
+
 		if ((txt->row_count % 1024) == 0) {
 			curs = txt->row_count >> 10;
 			if ((txt->rows[curs] =
 				 calloc(1024, sizeof(*txt->rows[curs]))) == NULL)
 				return false;
 		}
+
 		txt->rows[curs][txt->row_count & 0x3FF].start = pos;
-		char *startp = pos;
+		startp = pos;
 
 #ifdef ENABLE_TTF
 		if (ttf_mode) {
@@ -399,16 +428,15 @@ static size_t getTxtAvgLength(char *txtBuf, size_t txtLen)
 static size_t text_paragraph_join_without_memory(char **txtbuf, size_t txtlen)
 {
 	char *src = *txtbuf;
+	size_t avgLength;
+	int nlinesz = 0, nol = 0;
+	int cnt = txtlen;
 
 	if (txtlen == 0 || txtbuf == NULL || *txtbuf == NULL)
 		return 0;
 
 	// 计算平均行长
-	size_t avgLength = getTxtAvgLength(*txtbuf, txtlen);
-
-	int nlinesz = 0, nol = 0;
-
-	int cnt = txtlen;
+	avgLength = getTxtAvgLength(*txtbuf, txtlen);
 
 	while (cnt-- > 0) {
 		if (*src == '\n') {
@@ -583,21 +611,20 @@ static p_text text_open(const char *filename, t_fs_filetype ft,
 
 	if (txt == NULL)
 		return NULL;
-	if ((fd = sceIoOpen(filename, PSP_O_RDONLY, 0777)) < 0) {
+	if ((fd = xrIoOpen(filename, PSP_O_RDONLY, 0777)) < 0) {
 		text_close(txt);
 		return NULL;
 	}
 	STRCPY_S(txt->filename, filename);
-	txt->size = sceIoLseek32(fd, 0, PSP_SEEK_END);
+	txt->size = xrIoLseek32(fd, 0, PSP_SEEK_END);
 	if ((txt->buf = calloc(1, txt->size + 1)) == NULL) {
-		sceIoClose(fd);
+		xrIoClose(fd);
 		text_close(txt);
 		return NULL;
 	}
-	sceIoLseek32(fd, 0, PSP_SEEK_SET);
-	sceIoRead(fd, txt->buf, txt->size);
-	sceIoClose(fd);
-	txt->buf[txt->size] = 0;
+	xrIoLseek32(fd, 0, PSP_SEEK_SET);
+	xrIoRead(fd, txt->buf, txt->size);
+	xrIoClose(fd);
 	text_decode(txt, encode);
 	if (ft == fs_filetype_html)
 		txt->size = html_to_text(txt->buf, txt->size, true);
@@ -605,7 +632,218 @@ static p_text text_open(const char *filename, t_fs_filetype ft,
 		txt->size = text_reorder(txt->buf, txt->size);
 		txt->size = text_paragraph_join_alloc_memory(&txt->buf, txt->size);
 	}
-	if (!text_format(txt, max_pixels, wordspace, use_ttf)) {
+	if (!text_format(txt, max_pixels, wordspace, using_ttf)) {
+		text_close(txt);
+		return NULL;
+	}
+
+	if (txt->rows[0] == NULL) {
+		text_close(txt);
+		return NULL;
+	}
+
+	calc_gi(txt);
+	return txt;
+}
+
+static int fix_symbian_crlf(unsigned char *pos, unsigned char *posend)
+{
+	while (pos < posend) {
+		if (pos < posend - 1 && *pos == 0xa1 && *(pos + 1) == 0xf6) {
+			*pos = '\r';
+			*(pos + 1) = '\n';
+			pos += 2;
+		} else {
+			pos++;
+		}
+	}
+
+	return 0;
+}
+
+extern p_text chapter_open_in_umd(const char *umdfile, const char *chaptername,
+								  u_int index, dword rowpixels, dword wordspace,
+								  t_conf_encode encode, bool reorder)
+{
+	extern p_umd_chapter p_umdchapter;
+	buffer *pbuf = buffer_init();
+	p_text txt;
+
+	if (pbuf == NULL) {
+		return NULL;
+	}
+	if (index < 1 || !p_umdchapter
+		|| 0 > read_umd_chapter_content(chaptername, index - 1, p_umdchapter,
+										&pbuf)) {
+		buffer_free(pbuf);
+		return NULL;
+	}
+
+	txt = calloc(1, sizeof(*txt));
+
+	if (txt == NULL) {
+		buffer_free(pbuf);
+		return NULL;
+	}
+
+	STRCPY_S(txt->filename, umdfile);
+	if ((txt->buf = (char *) calloc(1, pbuf->used + 1)) == NULL) {
+		buffer_free(pbuf);
+		text_close(txt);
+		return NULL;
+	}
+
+	txt->size = pbuf->used;
+	memcpy(txt->buf, pbuf->ptr, txt->size);
+	text_decode(txt, conf_encode_ucs);
+	fix_symbian_crlf((unsigned char *) txt->buf,
+					 (unsigned char *) txt->buf + txt->size);
+	buffer_free(pbuf);
+	dbg_printf(d, "%s: after conv file length: %ld", __func__, txt->size);
+	/* if (ft == fs_filetype_html)
+	   txt->size = html_to_text(txt->buf, txt->size, true); */
+	if (reorder) {
+		txt->size = text_reorder(txt->buf, txt->size);
+		txt->size = text_paragraph_join_alloc_memory(&txt->buf, txt->size);
+	}
+	if (!text_format(txt, rowpixels, wordspace, using_ttf)) {
+		text_close(txt);
+		return NULL;
+	}
+
+	calc_gi(txt);
+	return txt;
+}
+
+extern p_text text_open_in_umd(const char *umdfile, const char *chaptername,
+							   t_fs_filetype ft, dword rowpixels,
+							   dword wordspace, t_conf_encode encode,
+							   bool reorder)
+{
+	int fd;
+	SceIoStat state;
+	size_t filesize;
+	buffer *pRaw, *pbuf;
+	p_text txt;
+	char *p;
+
+	if (xrIoGetstat(umdfile, &state) < 0) {
+		return NULL;
+	}
+	if ((fd = xrIoOpen(umdfile, PSP_O_RDONLY, 0777)) < 0) {
+		return NULL;
+	}
+	filesize = state.st_size;
+	pRaw = buffer_init();
+	if (pRaw == NULL) {
+		return NULL;
+	}
+	buffer_prepare_copy(pRaw, filesize);
+	xrIoRead(fd, pRaw->ptr, filesize);
+	xrIoClose(fd);
+	p = pRaw->ptr;
+	if (*(int *) p != 0xde9a9b89) {
+		dbg_printf(d,
+				   "%s: not start with 0xde9a9b89, that umd must be corrupted.",
+				   __func__);
+		buffer_free(pRaw);
+		return NULL;
+	}
+	p += sizeof(int);
+	while (*p != '#') {
+		p++;
+	}
+	pbuf = buffer_init();
+	if (pbuf == NULL) {
+		buffer_free(pRaw);
+		return NULL;
+	}
+	umd_readdata(&p, &pbuf);
+	dbg_printf(d, "%s: parse file length: %d", __func__, pbuf->size);
+	buffer_free(pRaw);
+	txt = calloc(1, sizeof(*txt));
+	if (txt == NULL) {
+		buffer_free(pbuf);
+		return NULL;
+	}
+	STRCPY_S(txt->filename, umdfile);
+	if ((txt->buf = (char *) calloc(1, pbuf->used + 1)) == NULL) {
+		buffer_free(pbuf);
+		text_close(txt);
+		return NULL;
+	}
+	txt->size = pbuf->used;
+	memcpy(txt->buf, pbuf->ptr, txt->size);
+	text_decode(txt, conf_encode_ucs);
+	buffer_free(pbuf);
+	dbg_printf(d, "%s: after conv file length %ld", __func__, txt->size);
+	fix_symbian_crlf((unsigned char *) txt->buf,
+					 (unsigned char *) txt->buf + txt->size);
+	if (ft == fs_filetype_html)
+		txt->size = html_to_text(txt->buf, txt->size, true);
+	if (reorder) {
+		txt->size = text_reorder(txt->buf, txt->size);
+		txt->size = text_paragraph_join_alloc_memory(&txt->buf, txt->size);
+	}
+	if (!text_format(txt, rowpixels, wordspace, using_ttf)) {
+		text_close(txt);
+		return NULL;
+	}
+
+	calc_gi(txt);
+	return txt;
+}
+
+extern p_text text_open_in_pdb(const char *pdbfile, const char *chaptername,
+							   t_fs_filetype ft, dword rowpixels,
+							   dword wordspace, t_conf_encode encode,
+							   bool reorder)
+{
+	SceIoStat state;
+	size_t filesize;
+	buffer *pbuf;
+	p_text txt;
+
+	if (xrIoGetstat(pdbfile, &state) < 0) {
+		return NULL;
+	}
+
+	filesize = state.st_size;
+	pbuf = calloc(1, sizeof(*pbuf));
+
+	if (pbuf == NULL)
+		return NULL;
+	buffer_prepare_copy(pbuf, filesize);
+	if (0 > read_pdb_data(pdbfile, &pbuf)) {
+		buffer_free(pbuf);
+		return NULL;
+	}
+
+	dbg_printf(d, "%s parse file length:%d!", __func__, pbuf->size);
+	txt = calloc(1, sizeof(*txt));
+
+	if (txt == NULL) {
+		buffer_free(pbuf);
+		return NULL;
+
+	}
+	STRCPY_S(txt->filename, pdbfile);
+	if ((txt->buf = (char *) calloc(1, pbuf->used + 1)) == NULL) {
+		buffer_free(pbuf);
+		text_close(txt);
+		return NULL;
+	}
+
+	txt->size = pbuf->used;
+	memcpy(txt->buf, pbuf->ptr, txt->size);
+	buffer_free(pbuf);
+	txt->ucs = 0;
+
+	if (reorder) {
+		txt->size = text_reorder(txt->buf, txt->size);
+		txt->size = text_paragraph_join_alloc_memory(&txt->buf, txt->size);
+	}
+	if (!text_format(txt, rowpixels, wordspace, using_ttf)) {
 		text_close(txt);
 		return NULL;
 	}
@@ -626,41 +864,41 @@ static p_text text_open_binary(const char *filename, bool vert)
 {
 	int fd;
 	p_text txt = calloc(1, sizeof(*txt));
+	byte *tmpbuf;
+	dword bpr = (vert ? 43 : 66);
+	dword curs = 0;
+	byte *cbuf;
+	dword i;
 
 	if (txt == NULL)
 		return NULL;
-	if ((fd = sceIoOpen(filename, PSP_O_RDONLY, 0777)) < 0) {
+	if ((fd = xrIoOpen(filename, PSP_O_RDONLY, 0777)) < 0) {
 		text_close(txt);
 		return NULL;
 	}
 	STRCPY_S(txt->filename, filename);
-	txt->size = sceIoLseek32(fd, 0, PSP_SEEK_END);
+	txt->size = xrIoLseek32(fd, 0, PSP_SEEK_END);
 	if (txt->size > 256 * 1024) {
-		if (kuKernelGetModel() != PSP_MODEL_SLIM_AND_LITE) {
-			txt->size = 256 * 1024;
-		} else {
+		if (kuKernelGetModel() != PSP_MODEL_STANDARD) {
 			if (txt->size > 4 * 1024 * 1024)
 				txt->size = 4 * 1024 * 1024;
+		} else {
+			txt->size = 256 * 1024;
 		}
 	}
-	byte *tmpbuf;
-	dword bpr = (vert ? 43 : 66);
 
 	if ((txt->buf = calloc(1, (txt->size + 15) / 16 * bpr)) == NULL
 		|| (tmpbuf = calloc(1, txt->size)) == NULL) {
-		sceIoClose(fd);
+		xrIoClose(fd);
 		text_close(txt);
 		return NULL;
 	}
-	sceIoLseek32(fd, 0, PSP_SEEK_SET);
-	sceIoRead(fd, tmpbuf, txt->size);
-	sceIoClose(fd);
-
-	dword curs = 0;
+	xrIoLseek32(fd, 0, PSP_SEEK_SET);
+	xrIoRead(fd, tmpbuf, txt->size);
+	xrIoClose(fd);
 
 	txt->row_count = (txt->size + 15) / 16;
-	byte *cbuf = tmpbuf;
-	dword i;
+	cbuf = tmpbuf;
 
 	for (i = 0; i < txt->row_count; i++) {
 		if ((i % 1024) == 0) {
@@ -675,7 +913,7 @@ static p_text text_open_binary(const char *filename, bool vert)
 		txt->rows[curs][i & 0x3FF].start = &txt->buf[bpr * i];
 		txt->rows[curs][i & 0x3FF].count = bpr;
 		if (vert) {
-			sprintf(&txt->buf[bpr * i],
+			snprintf(&txt->buf[bpr * i], bpr,
 					"%08X: %02X%02X%02X%02X%02X%02X%02X%02X %02X%02X%02X%02X%02X%02X%02X%02X",
 					(unsigned int) i * 0x10, cbuf[0], cbuf[1],
 					cbuf[2], cbuf[3], cbuf[4], cbuf[5], cbuf[6],
@@ -685,21 +923,21 @@ static p_text text_open_binary(const char *filename, bool vert)
 				dword padding = (i + 1) * 16 - txt->size;
 
 				if (padding < 9)
-					memset(&txt->
-						   buf[bpr * i + bpr - padding * 2], 0x20, padding * 2);
+					memset(&txt->buf[bpr * i + bpr - padding * 2], 0x20,
+						   padding * 2);
 				else
-					memset(&txt->
-						   buf[bpr * i + bpr - 1 -
-							   padding * 2], 0x20, padding * 2 + 1);
+					memset(&txt->buf[bpr * i + bpr - 1 -
+									 padding * 2], 0x20, padding * 2 + 1);
 			}
 		} else {
-			sprintf(&txt->buf[bpr * i],
+			dword j;
+
+			snprintf(&txt->buf[bpr * i], bpr,
 					"%08X: %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X ",
 					(unsigned int) i * 0x10, cbuf[0], cbuf[1],
 					cbuf[2], cbuf[3], cbuf[4], cbuf[5], cbuf[6],
 					cbuf[7], cbuf[8], cbuf[9], cbuf[10], cbuf[11],
 					cbuf[12], cbuf[13], cbuf[14], cbuf[15]);
-			dword j;
 
 			for (j = 0; j < 16; j++)
 				txt->buf[bpr * i + 40 + 10 + j] =
@@ -709,13 +947,12 @@ static p_text text_open_binary(const char *filename, bool vert)
 
 				memset(&txt->buf[bpr * i + bpr - padding], 0x20, padding);
 				if ((padding & 1) > 0)
-					memset(&txt->
-						   buf[bpr * i + 40 + 10 -
-							   padding / 2 * 5 - 3], 0x20, padding / 2 * 5 + 3);
+					memset(&txt->buf[bpr * i + 40 + 10 -
+									 padding / 2 * 5 - 3], 0x20,
+						   padding / 2 * 5 + 3);
 				else
-					memset(&txt->
-						   buf[bpr * i + 40 + 10 -
-							   padding / 2 * 5], 0x20, padding / 2 * 5);
+					memset(&txt->buf[bpr * i + 40 + 10 -
+									 padding / 2 * 5], 0x20, padding / 2 * 5);
 			}
 		}
 		cbuf += 16;
@@ -744,23 +981,27 @@ static p_text text_open_in_gz(const char *gzfile, const char *filename,
 							  bool reorder)
 {
 	p_text txt = calloc(1, sizeof(*txt));
+	gzFile unzf;
+	int len;
+	char tempbuf[BUFSIZ];
+	buffer *b;
 
 	if (txt == NULL)
 		return NULL;
-	gzFile unzf = gzopen(gzfile, "rb");
+
+	unzf = gzopen(gzfile, "rb");
 
 	if (unzf == NULL) {
 		text_close(txt);
 		return NULL;
 	}
-	STRCPY_S(txt->filename, filename);
-	int len;
 
-	buffer *b = buffer_init();
-	char tempbuf[BUFSIZ];
+	STRCPY_S(txt->filename, filename);
+	b = buffer_init();
 
 	while ((len = gzread(unzf, tempbuf, BUFSIZ)) > 0) {
 		if (buffer_append_memory(b, tempbuf, len) < 0) {
+			buffer_free(b);
 			text_close(txt);
 			gzclose(unzf);
 			return NULL;
@@ -786,7 +1027,7 @@ static p_text text_open_in_gz(const char *gzfile, const char *filename,
 		txt->size = text_paragraph_join_alloc_memory(&txt->buf, txt->size);
 	}
 
-	if (!text_format(txt, max_pixels, wordspace, use_ttf)) {
+	if (!text_format(txt, max_pixels, wordspace, using_ttf)) {
 		text_close(txt);
 		return NULL;
 	}
@@ -815,11 +1056,15 @@ static p_text text_open_binary_in_zip(const char *zipfile, const char *filename,
 									  bool reorder, bool vert)
 {
 	p_text txt = calloc(1, sizeof(*txt));
+	buffer *buf = NULL;
+	byte *tmpbuf;
+	dword bpr = (vert ? 43 : 66);
+	dword curs;
+	byte *cbuf;
+	dword i;
 
 	if (txt == NULL)
 		return NULL;
-
-	buffer *buf = NULL;
 
 	extract_archive_file_into_buffer(&buf, zipfile, filename, fs_filetype_zip);
 
@@ -832,27 +1077,26 @@ static p_text text_open_binary_in_zip(const char *zipfile, const char *filename,
 	txt->buf = buffer_free_weak(buf);
 
 	if (txt->size > 256 * 1024) {
-		if (kuKernelGetModel() != PSP_MODEL_SLIM_AND_LITE) {
-			txt->size = 256 * 1024;
-		} else {
+		if (kuKernelGetModel() != PSP_MODEL_STANDARD) {
 			if (txt->size > 4 * 1024 * 1024)
 				txt->size = 4 * 1024 * 1024;
+		} else {
+			txt->size = 256 * 1024;
 		}
 	}
 
-	byte *tmpbuf = (byte *) txt->buf;
-	dword bpr = (vert ? 43 : 66);
+	tmpbuf = (byte *) txt->buf;
 
 	if ((txt->buf = calloc(1, (txt->size + 15) / 16 * bpr)) == NULL) {
 		free(tmpbuf);
 		text_close(txt);
 		return NULL;
 	}
-	dword curs = 0;
+
+	curs = 0;
 
 	txt->row_count = (txt->size + 15) / 16;
-	byte *cbuf = tmpbuf;
-	dword i;
+	cbuf = tmpbuf;
 
 	for (i = 0; i < txt->row_count; i++) {
 		if ((i % 1024) == 0) {
@@ -867,7 +1111,7 @@ static p_text text_open_binary_in_zip(const char *zipfile, const char *filename,
 		txt->rows[curs][i & 0x3FF].start = &txt->buf[bpr * i];
 		txt->rows[curs][i & 0x3FF].count = bpr;
 		if (vert) {
-			sprintf(&txt->buf[bpr * i],
+			snprintf(&txt->buf[bpr * i], bpr,
 					"%08X: %02X%02X%02X%02X%02X%02X%02X%02X %02X%02X%02X%02X%02X%02X%02X%02X",
 					(unsigned int) i * 0x10, cbuf[0], cbuf[1],
 					cbuf[2], cbuf[3], cbuf[4], cbuf[5], cbuf[6],
@@ -877,21 +1121,21 @@ static p_text text_open_binary_in_zip(const char *zipfile, const char *filename,
 				dword padding = (i + 1) * 16 - txt->size;
 
 				if (padding < 9)
-					memset(&txt->
-						   buf[bpr * i + bpr - padding * 2], 0x20, padding * 2);
+					memset(&txt->buf[bpr * i + bpr - padding * 2], 0x20,
+						   padding * 2);
 				else
-					memset(&txt->
-						   buf[bpr * i + bpr - 1 -
-							   padding * 2], 0x20, padding * 2 + 1);
+					memset(&txt->buf[bpr * i + bpr - 1 -
+									 padding * 2], 0x20, padding * 2 + 1);
 			}
 		} else {
-			sprintf(&txt->buf[bpr * i],
+			dword j;
+
+			snprintf(&txt->buf[bpr * i], bpr,
 					"%08X: %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X ",
 					(unsigned int) i * 0x10, cbuf[0], cbuf[1],
 					cbuf[2], cbuf[3], cbuf[4], cbuf[5], cbuf[6],
 					cbuf[7], cbuf[8], cbuf[9], cbuf[10], cbuf[11],
 					cbuf[12], cbuf[13], cbuf[14], cbuf[15]);
-			dword j;
 
 			for (j = 0; j < 16; j++)
 				txt->buf[bpr * i + 40 + 10 + j] =
@@ -901,13 +1145,12 @@ static p_text text_open_binary_in_zip(const char *zipfile, const char *filename,
 
 				memset(&txt->buf[bpr * i + bpr - padding], 0x20, padding);
 				if ((padding & 1) > 0)
-					memset(&txt->
-						   buf[bpr * i + 40 + 10 -
-							   padding / 2 * 5 - 3], 0x20, padding / 2 * 5 + 3);
+					memset(&txt->buf[bpr * i + 40 + 10 -
+									 padding / 2 * 5 - 3], 0x20,
+						   padding / 2 * 5 + 3);
 				else
-					memset(&txt->
-						   buf[bpr * i + 40 + 10 -
-							   padding / 2 * 5], 0x20, padding / 2 * 5);
+					memset(&txt->buf[bpr * i + 40 + 10 -
+									 padding / 2 * 5], 0x20, padding / 2 * 5);
 			}
 		}
 		cbuf += 16;
@@ -922,11 +1165,13 @@ extern p_text text_open_in_raw(const char *filename, const unsigned char *data,
 							   dword wordspace, t_conf_encode encode,
 							   bool reorder)
 {
+	p_text txt;
+
 	if (data == NULL || size == 0) {
 		return NULL;
 	}
 
-	p_text txt = calloc(1, sizeof(*txt));
+	txt = calloc(1, sizeof(*txt));
 
 	if (txt == NULL)
 		return NULL;
@@ -948,7 +1193,7 @@ extern p_text text_open_in_raw(const char *filename, const unsigned char *data,
 		txt->size = text_reorder(txt->buf, txt->size);
 		txt->size = text_paragraph_join_alloc_memory(&txt->buf, txt->size);
 	}
-	if (!text_format(txt, max_pixels, wordspace, use_ttf)) {
+	if (!text_format(txt, max_pixels, wordspace, using_ttf)) {
 		text_close(txt);
 		return NULL;
 	}
@@ -976,11 +1221,10 @@ static p_text text_open_in_zip(const char *zipfile, const char *filename,
 							   bool reorder)
 {
 	p_text txt = calloc(1, sizeof(*txt));
+	buffer *buf = NULL;
 
 	if (txt == NULL)
 		return NULL;
-
-	buffer *buf = NULL;
 
 	extract_archive_file_into_buffer(&buf, zipfile, filename, fs_filetype_zip);
 
@@ -1000,7 +1244,7 @@ static p_text text_open_in_zip(const char *zipfile, const char *filename,
 		txt->size = text_reorder(txt->buf, txt->size);
 		txt->size = text_paragraph_join_alloc_memory(&txt->buf, txt->size);
 	}
-	if (!text_format(txt, max_pixels, wordspace, use_ttf)) {
+	if (!text_format(txt, max_pixels, wordspace, using_ttf)) {
 		text_close(txt);
 		return NULL;
 	}
@@ -1029,11 +1273,15 @@ static p_text text_open_binary_in_rar(const char *rarfile, const char *filename,
 									  bool reorder, bool vert)
 {
 	p_text txt = calloc(1, sizeof(*txt));
+	buffer *buf = NULL;
+	dword bpr = (vert ? 43 : 66);
+	byte *tmpbuf;
+	dword curs = 0;
+	dword i;
+	byte *cbuf;
 
 	if (txt == NULL)
 		return NULL;
-
-	buffer *buf = NULL;
 
 	extract_archive_file_into_buffer(&buf, rarfile, filename, fs_filetype_rar);
 
@@ -1046,26 +1294,24 @@ static p_text text_open_binary_in_rar(const char *rarfile, const char *filename,
 	txt->buf = buffer_free_weak(buf);
 
 	if (txt->size > 256 * 1024) {
-		if (kuKernelGetModel() != PSP_MODEL_SLIM_AND_LITE) {
-			txt->size = 256 * 1024;
-		} else {
+		if (kuKernelGetModel() != PSP_MODEL_STANDARD) {
 			if (txt->size > 4 * 1024 * 1024)
 				txt->size = 4 * 1024 * 1024;
+		} else {
+			txt->size = 256 * 1024;
 		}
 	}
-	byte *tmpbuf = (byte *) txt->buf;
-	dword bpr = (vert ? 43 : 66);
+
+	tmpbuf = (byte *) txt->buf;
 
 	if ((txt->buf = calloc(1, (txt->size + 15) / 16 * bpr)) == NULL) {
 		free(tmpbuf);
 		text_close(txt);
 		return NULL;
 	}
-	dword curs = 0;
 
 	txt->row_count = (txt->size + 15) / 16;
-	byte *cbuf = tmpbuf;
-	dword i;
+	cbuf = tmpbuf;
 
 	for (i = 0; i < txt->row_count; i++) {
 		if ((i % 1024) == 0) {
@@ -1080,7 +1326,7 @@ static p_text text_open_binary_in_rar(const char *rarfile, const char *filename,
 		txt->rows[curs][i & 0x3FF].start = &txt->buf[bpr * i];
 		txt->rows[curs][i & 0x3FF].count = bpr;
 		if (vert) {
-			sprintf(&txt->buf[bpr * i],
+			snprintf(&txt->buf[bpr * i], bpr,
 					"%08X: %02X%02X%02X%02X%02X%02X%02X%02X %02X%02X%02X%02X%02X%02X%02X%02X",
 					(unsigned int) i * 0x10, cbuf[0], cbuf[1],
 					cbuf[2], cbuf[3], cbuf[4], cbuf[5], cbuf[6],
@@ -1090,21 +1336,21 @@ static p_text text_open_binary_in_rar(const char *rarfile, const char *filename,
 				dword padding = (i + 1) * 16 - txt->size;
 
 				if (padding < 9)
-					memset(&txt->
-						   buf[bpr * i + bpr - padding * 2], 0x20, padding * 2);
+					memset(&txt->buf[bpr * i + bpr - padding * 2], 0x20,
+						   padding * 2);
 				else
-					memset(&txt->
-						   buf[bpr * i + bpr - 1 -
-							   padding * 2], 0x20, padding * 2 + 1);
+					memset(&txt->buf[bpr * i + bpr - 1 -
+									 padding * 2], 0x20, padding * 2 + 1);
 			}
 		} else {
-			sprintf(&txt->buf[bpr * i],
+			dword j;
+
+			snprintf(&txt->buf[bpr * i], bpr,
 					"%08X: %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X ",
 					(unsigned int) i * 0x10, cbuf[0], cbuf[1],
 					cbuf[2], cbuf[3], cbuf[4], cbuf[5], cbuf[6],
 					cbuf[7], cbuf[8], cbuf[9], cbuf[10], cbuf[11],
 					cbuf[12], cbuf[13], cbuf[14], cbuf[15]);
-			dword j;
 
 			for (j = 0; j < 16; j++)
 				txt->buf[bpr * i + 40 + 10 + j] =
@@ -1114,13 +1360,12 @@ static p_text text_open_binary_in_rar(const char *rarfile, const char *filename,
 
 				memset(&txt->buf[bpr * i + bpr - padding], 0x20, padding);
 				if ((padding & 1) > 0)
-					memset(&txt->
-						   buf[bpr * i + 40 + 10 -
-							   padding / 2 * 5 - 3], 0x20, padding / 2 * 5 + 3);
+					memset(&txt->buf[bpr * i + 40 + 10 -
+									 padding / 2 * 5 - 3], 0x20,
+						   padding / 2 * 5 + 3);
 				else
-					memset(&txt->
-						   buf[bpr * i + 40 + 10 -
-							   padding / 2 * 5], 0x20, padding / 2 * 5);
+					memset(&txt->buf[bpr * i + 40 + 10 -
+									 padding / 2 * 5], 0x20, padding / 2 * 5);
 			}
 		}
 		cbuf += 16;
@@ -1149,11 +1394,10 @@ static p_text text_open_in_rar(const char *rarfile, const char *filename,
 							   bool reorder)
 {
 	p_text txt = calloc(1, sizeof(*txt));
+	buffer *buf = NULL;
 
 	if (txt == NULL)
 		return NULL;
-
-	buffer *buf = NULL;
 
 	extract_archive_file_into_buffer(&buf, rarfile, filename, fs_filetype_rar);
 
@@ -1172,7 +1416,7 @@ static p_text text_open_in_rar(const char *rarfile, const char *filename,
 		txt->size = text_reorder(txt->buf, txt->size);
 		txt->size = text_paragraph_join_alloc_memory(&txt->buf, txt->size);
 	}
-	if (!text_format(txt, max_pixels, wordspace, use_ttf)) {
+	if (!text_format(txt, max_pixels, wordspace, using_ttf)) {
 		text_close(txt);
 		return NULL;
 	}
@@ -1199,11 +1443,10 @@ static p_text text_open_in_chm(const char *chmfile, const char *filename,
 							   bool reorder)
 {
 	p_text txt = calloc(1, sizeof(*txt));
+	buffer *buf = NULL;
 
 	if (txt == NULL)
 		return NULL;
-
-	buffer *buf = NULL;
 
 	extract_archive_file_into_buffer(&buf, chmfile, filename, fs_filetype_chm);
 
@@ -1222,7 +1465,7 @@ static p_text text_open_in_chm(const char *chmfile, const char *filename,
 		txt->size = text_reorder(txt->buf, txt->size);
 		txt->size = text_paragraph_join_alloc_memory(&txt->buf, txt->size);
 	}
-	if (!text_format(txt, max_pixels, wordspace, use_ttf)) {
+	if (!text_format(txt, max_pixels, wordspace, using_ttf)) {
 		text_close(txt);
 		return NULL;
 	}
@@ -1240,6 +1483,8 @@ extern void text_close(p_text fstext)
 		for (i = 0; i < 1024; ++i)
 			if (fstext->rows[i] != NULL)
 				free(fstext->rows[i]);
+
+		free(fstext);
 	}
 }
 
@@ -1251,32 +1496,46 @@ extern p_text text_open_archive(const char *filename,
 								t_conf_encode encode,
 								bool reorder, int where, int vertread)
 {
+	p_text pText = NULL;
+	const char *ext;
+
 	if (filename == NULL)
 		return NULL;
 
 	if (where != scene_in_dir && (archname == NULL || archname[0] == '\0'))
 		return NULL;
 
-	p_text pText = NULL;
-
-	const char *ext = utils_fileext(filename);
+	ext = utils_fileext(filename);
 
 	switch (where) {
 		case scene_in_dir:
-			if (ext && stricmp(ext, "gz") == 0)
+			if (ext && stricmp(ext, "gz") == 0) {
 				pText = text_open_in_gz(archname, archname,
 										filetype, max_pixels,
 										wordspace, encode, reorder);
-			else if (filetype != fs_filetype_unknown)
+			} else if (filetype == fs_filetype_umd) {
+				pText = text_open_in_umd(archname, filename,
+										 filetype, max_pixels,
+										 wordspace, encode, reorder);
+			} else if (filetype == fs_filetype_pdb) {
+				pText = text_open_in_pdb(archname, filename,
+										 filetype, max_pixels, wordspace,
+										 encode, reorder);
+			} else if (filetype != fs_filetype_unknown) {
 				pText = text_open(archname, filetype,
 								  max_pixels, wordspace, encode, reorder);
-			else {
+			} else {
 				pText =
 					text_open_binary(archname,
 									 (vertread == conf_vertread_lvert
 									  || vertread == conf_vertread_rvert)
 					);
 			}
+			break;
+		case scene_in_umd:
+			pText = text_open_in_umd(archname, filename,
+									 filetype, max_pixels,
+									 wordspace, encode, reorder);
 			break;
 		case scene_in_chm:
 			pText = text_open_in_chm(archname, filename,

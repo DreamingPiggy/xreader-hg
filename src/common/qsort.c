@@ -1,5 +1,26 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #include <string.h>
 #include "qsort.h"
+#include "freq_lock.h"
 #include "scene.h"
 
 __inline void swap_data(void *data1, void *data2, int datasize)
@@ -15,10 +36,11 @@ void _quicksort(void *data, int left, int right, int datasize,
 				qsort_compare compare)
 {
 	int i, last;
+	byte(*qdata)[datasize];
 
 	if (left >= right)
 		return;
-	byte(*qdata)[datasize];
+
 	qdata = (byte(*)[datasize]) data;
 	if (right - left > 1)
 		swap_data(&qdata[left], &qdata[(left + right) / 2], datasize);
@@ -34,7 +56,9 @@ void _quicksort(void *data, int left, int right, int datasize,
 extern void quicksort(void *data, int left, int right, int datasize,
 					  qsort_compare compare)
 {
-	scene_power_save(false);
+	int fid;
+
+	fid = freq_enter_hotzone();
 	_quicksort(data, left, right, datasize, compare);
-	scene_power_save(true);
+	freq_leave(fid);
 }

@@ -1,3 +1,23 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #include "config.h"
 
 #include <pspkernel.h>
@@ -10,77 +30,84 @@
 #include "dbg.h"
 #include "archive.h"
 #include "buffer.h"
+#include "xrhal.h"
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
 
 extern bool copy_file(const char *src, const char *dest, t_copy_cb cb,
 					  t_copy_overwritecb ocb, void *data)
 {
 	byte *buf = malloc(1024 * 1024);
+	int fd1, fd2;
+	int readbytes;
 
 	if (buf == NULL)
 		return false;
-	int fd2;
 
 	if (ocb != NULL) {
-		fd2 = sceIoOpen(dest, PSP_O_RDONLY, 0777);
+		fd2 = xrIoOpen(dest, PSP_O_RDONLY, 0777);
 		if (fd2 >= 0) {
 			if (!ocb(dest, data)) {
-				sceIoClose(fd2);
+				xrIoClose(fd2);
 				return false;
 			}
-			sceIoClose(fd2);
+			xrIoClose(fd2);
 		}
 	}
-	int fd1 = sceIoOpen(src, PSP_O_RDONLY, 0777);
+
+	fd1 = xrIoOpen(src, PSP_O_RDONLY, 0777);
 
 	if (fd1 < 0) {
 		if (cb != NULL)
 			cb(src, dest, false, data);
 		return false;
 	}
-	fd2 = sceIoOpen(dest, PSP_O_CREAT | PSP_O_RDWR, 0777);
+	fd2 = xrIoOpen(dest, PSP_O_CREAT | PSP_O_RDWR, 0777);
 	if (fd2 < 0) {
 		if (cb != NULL)
 			cb(src, dest, false, data);
-		sceIoClose(fd1);
+		xrIoClose(fd1);
 		return false;
 	}
-	int readbytes;
 
-	while ((readbytes = sceIoRead(fd1, buf, 1024 * 1024)) > 0)
-		if (sceIoWrite(fd2, buf, readbytes) != readbytes) {
+	while ((readbytes = xrIoRead(fd1, buf, 1024 * 1024)) > 0)
+		if (xrIoWrite(fd2, buf, readbytes) != readbytes) {
 			if (cb != NULL)
 				cb(src, dest, false, data);
-			sceIoClose(fd1);
-			sceIoClose(fd2);
+			xrIoClose(fd1);
+			xrIoClose(fd2);
 			return true;
 		}
 	free(buf);
 	if (cb != NULL)
 		cb(src, dest, true, data);
-	sceIoClose(fd1);
-	sceIoClose(fd2);
+	xrIoClose(fd1);
+	xrIoClose(fd2);
 	return true;
 }
 
 extern dword copy_dir(const char *src, const char *dest, t_copy_cb cb,
 					  t_copy_overwritecb ocb, void *data)
 {
-	int dl = sceIoDopen(src);
+	int dl = xrIoDopen(src);
+	dword result = 0;
+	SceIoDirent sid;
 
 	if (dl < 0) {
 		if (cb != NULL)
 			cb(src, dest, false, data);
 		return 0;
 	}
-	sceIoMkdir(dest, 0777);
-	dword result = 0;
-	SceIoDirent sid;
 
+	xrIoMkdir(dest, 0777);
 	memset(&sid, 0, sizeof(SceIoDirent));
-	while (sceIoDread(dl, &sid)) {
+
+	while (xrIoDread(dl, &sid)) {
+		char copysrc[260], copydest[260];
+
 		if (sid.d_name[0] == '.')
 			continue;
-		char copysrc[260], copydest[260];
 
 		SPRINTF_S(copysrc, "%s/%s", src, sid.d_name);
 		SPRINTF_S(copydest, "%s/%s", dest, sid.d_name);
@@ -92,7 +119,7 @@ extern dword copy_dir(const char *src, const char *dest, t_copy_cb cb,
 			++result;
 		memset(&sid, 0, sizeof(SceIoDirent));
 	}
-	sceIoDclose(dl);
+	xrIoDclose(dl);
 	return result;
 }
 
@@ -130,6 +157,14 @@ static t_fs_filetype get_archive_type(const char *path)
 		&& stricmp(path + strlen(path) - strlen(".chm"), ".chm") == 0)
 		return fs_filetype_chm;
 
+	if (strlen(path) >= strlen(".umd")
+		&& stricmp(path + strlen(path) - strlen(".umd"), ".umd") == 0)
+		return fs_filetype_umd;
+
+	if (strlen(path) >= strlen(".pdb")
+		&& stricmp(path + strlen(path) - strlen(".pdb"), ".pdb") == 0)
+		return fs_filetype_pdb;
+
 	return fs_filetype_unknown;
 }
 
@@ -137,10 +172,17 @@ extern bool extract_archive_file(const char *archname, const char *archpath,
 								 const char *dest, t_copy_cb cb,
 								 t_copy_overwritecb ocb, void *data)
 {
+	t_fs_filetype ft;
+	SceUID fd;
+	bool result = false;
+	buffer *archdata = NULL;
+	int buffer_cache;
+	char *ptr;
+
 	if (archname == NULL || archpath == NULL || dest == NULL)
 		return false;
 
-	t_fs_filetype ft = get_archive_type(archname);
+	ft = get_archive_type(archname);
 
 	if (ft == fs_filetype_unknown)
 		return false;
@@ -148,42 +190,36 @@ extern bool extract_archive_file(const char *archname, const char *archpath,
 	if (ocb != NULL) {
 		SceUID fd;
 
-		fd = sceIoOpen(dest, PSP_O_RDONLY, 0777);
+		fd = xrIoOpen(dest, PSP_O_RDONLY, 0777);
 		if (fd >= 0) {
 			if (!ocb(dest, data)) {
-				sceIoClose(fd);
+				xrIoClose(fd);
 				return false;
 			}
-			sceIoClose(fd);
+			xrIoClose(fd);
 		}
 	}
 
 	dbg_printf(d, "extract_archive_file: %s %s %s, ft = %d", archname,
 			   archpath, dest, ft);
 
-	SceUID fd;
-
-	fd = sceIoOpen(dest, PSP_O_CREAT | PSP_O_RDWR, 0777);
+	fd = xrIoOpen(dest, PSP_O_CREAT | PSP_O_RDWR, 0777);
 
 	if (fd < 0)
 		return false;
-
-	bool result = false;
-
-	buffer *archdata = NULL;
 
 	extract_archive_file_into_buffer(&archdata, archname, archpath, ft);
 
 	if (archdata == NULL || archdata->ptr == NULL)
 		goto exit;
 
-	int buffer_cache =
+	buffer_cache =
 		archdata->used >= 1024 * 1024 ? 1024 * 1024 : archdata->used;
 
-	char *ptr = archdata->ptr;
+	ptr = archdata->ptr;
 
 	while (buffer_cache > 0) {
-		int bytes = sceIoWrite(fd, ptr, buffer_cache);
+		int bytes = xrIoWrite(fd, ptr, buffer_cache);
 
 		if (bytes < 0) {
 			goto exit;
@@ -197,7 +233,7 @@ extern bool extract_archive_file(const char *archname, const char *archpath,
 	result = true;
 
   exit:
-	sceIoClose(fd);
+	xrIoClose(fd);
 	if (archdata != NULL) {
 		buffer_free(archdata);
 	}

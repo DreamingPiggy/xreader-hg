@@ -1,3 +1,23 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #include "config.h"
 
 #include <pspdebug.h>
@@ -17,6 +37,10 @@
 #include "conf.h"
 #include "text.h"
 #include "power.h"
+#include "xrhal.h"
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
 
 static volatile int secticks = 0;
 
@@ -68,7 +92,7 @@ extern t_win_menu_op win_menu_defcb(dword key, p_win_menuitem item,
 static void win_menu_delay_action(void)
 {
 	if (config.dis_scrsave)
-		scePowerTick(0);
+		xrPowerTick(0);
 }
 
 extern dword win_menu(dword x, dword y, dword max_width, dword max_height,
@@ -78,14 +102,15 @@ extern dword win_menu(dword x, dword y, dword max_width, dword max_height,
 					  t_win_menu_callback cb)
 {
 	dword i, index = initindex, topindex, botindex, lastsel = index;
+	bool needrp = true;
+	bool firstdup = true;
+	pixel *saveimage = NULL;
+	u64 timer_start, timer_end;
 
 	secticks = 0;
-	bool needrp = true;
 
 	if (cb == NULL)
 		cb = win_menu_defcb;
-	bool firstdup = true;
-	pixel *saveimage = NULL;
 
 	if (redraw) {
 		saveimage =
@@ -96,16 +121,16 @@ extern dword win_menu(dword x, dword y, dword max_width, dword max_height,
 			disp_getimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, saveimage);
 		disp_duptocachealpha(50);
 	}
+
 	topindex = (index >= max_height) ? (index - max_height + 1) : 0;
 	botindex =
 		(topindex + max_height >
 		 count) ? (count - 1) : (topindex + max_height - 1);
 
-	u64 timer_start, timer_end;
-
-	sceRtcGetCurrentTick(&timer_start);
+	xrRtcGetCurrentTick(&timer_start);
 	while (1) {
 		t_win_menu_op op;
+		dword key;
 
 		disp_waitv();
 		if (predraw != NULL)
@@ -124,10 +149,8 @@ extern dword win_menu(dword x, dword y, dword max_width, dword max_height,
 											topindex) *
 								   (DISP_FONTSIZE + 1 +
 									linespace),
-								   item[i].
-								   selected ? item[i].
-								   selicolor : item[i].
-								   icolor, (const byte *) item[i].name);
+								   item[i].selected ? item[i].selicolor :
+								   item[i].icolor, (const byte *) item[i].name);
 			if (max_height < count) {
 				dword sbh =
 					2 + DISP_FONTSIZE + (max_height - 1) * (1 +
@@ -201,25 +224,26 @@ extern dword win_menu(dword x, dword y, dword max_width, dword max_height,
 		if (postdraw != NULL)
 			postdraw(item, index, topindex, max_height);
 		disp_flip();
+
 		if (firstdup) {
 			disp_duptocache();
 			firstdup = false;
 		}
+
 		lastsel = index;
-		dword key;
 
 		while ((key = ctrl_read()) == 0) {
-			sceRtcGetCurrentTick(&timer_end);
+			xrRtcGetCurrentTick(&timer_end);
 			if (pspDiffTime(&timer_end, &timer_start) >= 1.0) {
-				sceRtcGetCurrentTick(&timer_start);
+				xrRtcGetCurrentTick(&timer_start);
 				secticks++;
 			}
 			if (config.autosleep != 0 && secticks > 60 * config.autosleep) {
 				power_down();
-				scePowerRequestSuspend();
+				xrPowerRequestSuspend();
 				secticks = 0;
 			}
-			sceKernelDelayThread(50000);
+			xrKernelDelayThread(20000);
 			win_menu_delay_action();
 		}
 		if (key != 0) {
@@ -229,17 +253,17 @@ extern dword win_menu(dword x, dword y, dword max_width, dword max_height,
 				cb(key, item, &count, max_height, &topindex,
 				   &index)) == win_menu_op_continue) {
 			while ((key = ctrl_read()) == 0) {
-				sceRtcGetCurrentTick(&timer_end);
+				xrRtcGetCurrentTick(&timer_end);
 				if (pspDiffTime(&timer_end, &timer_start) >= 1.0) {
-					sceRtcGetCurrentTick(&timer_start);
+					xrRtcGetCurrentTick(&timer_start);
 					secticks++;
 				}
 				if (config.autosleep != 0 && secticks > 60 * config.autosleep) {
 					power_down();
-					scePowerRequestSuspend();
+					xrPowerRequestSuspend();
 					secticks = 0;
 				}
-				sceKernelDelayThread(50000);
+				xrKernelDelayThread(20000);
 				win_menu_delay_action();
 			}
 		}
@@ -291,6 +315,8 @@ extern bool win_msgbox(const char *prompt, const char *yesstr,
 	pixel *saveimage = (pixel *) memalign(16,
 										  PSP_SCREEN_WIDTH *
 										  PSP_SCREEN_HEIGHT * sizeof(pixel));
+	bool result;
+
 	if (saveimage)
 		disp_getimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, saveimage);
 	disp_duptocachealpha(50);
@@ -304,7 +330,7 @@ extern bool win_msgbox(const char *prompt, const char *yesstr,
 	disp_flip();
 	disp_duptocache();
 	disp_rectduptocachealpha(219 - width, 99, 260 + width, 173, 50);
-	bool result =
+	result =
 		(ctrl_waitmask(PSP_CTRL_CIRCLE | PSP_CTRL_CROSS) == PSP_CTRL_CIRCLE);
 	if (saveimage) {
 		disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0,
@@ -347,11 +373,34 @@ extern void win_msg(const char *prompt, pixel fontcolor, pixel bordercolor,
 extern p_win_menuitem win_realloc_items(p_win_menuitem item, int orgsize,
 										int newsize)
 {
-	item = safe_realloc(item, sizeof(*item) * newsize);
-	if (item == NULL)
-		return NULL;
-
 	int i;
+	p_win_menuitem p;
+
+	if (orgsize > newsize) {
+		for (i = newsize; i < orgsize; ++i) {
+			buffer_free(item[i].compname);
+			buffer_free(item[i].shortname);
+		}
+
+		item = safe_realloc(item, sizeof(*item) * newsize);
+
+		return item;
+	}
+	// Cannot use safe_realloc here
+	p = realloc(item, sizeof(*item) * newsize);
+
+	if (p == NULL) {
+		for (i = 0; i < orgsize; ++i) {
+			buffer_free(item[i].compname);
+			buffer_free(item[i].shortname);
+		}
+
+		free(item);
+
+		return p;
+	}
+
+	item = p;
 
 	for (i = orgsize; i < newsize; ++i) {
 		item[i].compname = buffer_init();
@@ -363,15 +412,16 @@ extern p_win_menuitem win_realloc_items(p_win_menuitem item, int orgsize,
 
 extern void win_item_destroy(p_win_menuitem * item, dword * size)
 {
+	int i;
+	p_win_menuitem p = *item;
+
 	if (item == NULL || *item == NULL || size == 0) {
 		return;
 	}
 
-	int i;
-
 	for (i = 0; i < *size; ++i) {
-		buffer_free((*item)[i].compname);
-		buffer_free((*item)[i].shortname);
+		buffer_free(p[i].compname);
+		buffer_free(p[i].shortname);
 	}
 
 	free(*item);
@@ -382,6 +432,8 @@ extern void win_item_destroy(p_win_menuitem * item, dword * size)
 extern p_win_menuitem win_copy_item(p_win_menuitem dst,
 									const p_win_menuitem src)
 {
+	size_t i;
+
 	if (dst == NULL || src == NULL)
 		return NULL;
 
@@ -395,7 +447,6 @@ extern p_win_menuitem win_copy_item(p_win_menuitem dst,
 	dst->selbcolor = src->selbcolor;
 	dst->selected = src->selected;
 	dst->data = src->data;
-	size_t i;
 
 	for (i = 0; i < 4; ++i) {
 		dst->data2[i] = src->data2[i];
@@ -407,10 +458,10 @@ extern p_win_menuitem win_copy_item(p_win_menuitem dst,
 
 extern int win_get_max_length(const p_win_menuitem pItem, int size)
 {
+	int i, max = 0;
+
 	if (pItem == NULL || size == 0)
 		return 0;
-
-	int i, max = 0;
 
 	for (i = 0; i < size; ++i) {
 		const char *str = pItem[i].name;
@@ -424,10 +475,10 @@ extern int win_get_max_length(const p_win_menuitem pItem, int size)
 
 extern int win_get_max_pixel_width(const p_win_menuitem pItem, int size)
 {
+	int i, max = 0;
+
 	if (pItem == NULL || size == 0)
 		return 0;
-
-	int i, max = 0;
 
 	for (i = 0; i < size; ++i) {
 		const char *str = pItem[i].name;

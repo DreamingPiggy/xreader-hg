@@ -1,11 +1,36 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <pspkernel.h>
 #include <stdarg.h>
+#include <malloc.h>
 #include "config.h"
 #include "utils.h"
 #include "strsafe.h"
 #include "dbg.h"
+#include "xrhal.h"
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
 
 extern dword utils_dword2string(dword dw, char *dest, dword width)
 {
@@ -33,9 +58,10 @@ extern bool utils_string2dword(const char *src, dword * dw)
 
 extern bool utils_string2double(const char *src, double *db)
 {
-	*db = 0.0;
 	bool doted = false;
 	double p = 0.1;
+
+	*db = 0.0;
 
 	while ((*src >= '0' && *src <= '9') || *src == '.') {
 		if (*src == '.') {
@@ -74,14 +100,14 @@ extern bool utils_del_file(const char *file)
 	SceIoStat stat;
 
 	memset(&stat, 0, sizeof(SceIoStat));
-	result = sceIoGetstat(file, &stat);
+	result = xrIoGetstat(file, &stat);
 	if (result < 0)
 		return false;
 	stat.st_attr &= ~0x0F;
-	result = sceIoChstat(file, &stat, 3);
+	result = xrIoChstat(file, &stat, 3);
 	if (result < 0)
 		return false;
-	result = sceIoRemove(file);
+	result = xrIoRemove(file);
 	if (result < 0)
 		return false;
 
@@ -91,17 +117,18 @@ extern bool utils_del_file(const char *file)
 extern dword utils_del_dir(const char *dir)
 {
 	dword count = 0;
-	int dl = sceIoDopen(dir);
+	int dl = xrIoDopen(dir);
+	SceIoDirent sid;
 
 	if (dl < 0)
 		return count;
-	SceIoDirent sid;
 
 	memset(&sid, 0, sizeof(SceIoDirent));
-	while (sceIoDread(dl, &sid)) {
+	while (xrIoDread(dl, &sid)) {
+		char compPath[260];
+
 		if (sid.d_name[0] == '.')
 			continue;
-		char compPath[260];
 
 		SPRINTF_S(compPath, "%s/%s", dir, sid.d_name);
 		if (FIO_S_ISDIR(sid.d_stat.st_mode)) {
@@ -115,29 +142,33 @@ extern dword utils_del_dir(const char *dir)
 		}
 		memset(&sid, 0, sizeof(SceIoDirent));
 	}
-	sceIoDclose(dl);
-	sceIoRmdir(dir);
+	xrIoDclose(dl);
+	xrIoRmdir(dir);
 
 	return count;
 }
 
 bool utils_is_file_exists(const char *filename)
 {
+	SceUID uid;
+
 	if (!filename)
 		return false;
 
-	SceUID uid;
-
-	uid = sceIoOpen(filename, PSP_O_RDONLY, 0777);
+	uid = xrIoOpen(filename, PSP_O_RDONLY, 0777);
 	if (uid < 0)
 		return false;
-	sceIoClose(uid);
+	xrIoClose(uid);
 	return true;
 }
 
 void *safe_realloc(void *ptr, size_t size)
 {
 	void *p = realloc(ptr, size);
+
+	if (size == 0) {
+		return NULL;
+	}
 
 	if (p == NULL) {
 		if (ptr)
@@ -147,3 +178,72 @@ void *safe_realloc(void *ptr, size_t size)
 
 	return p;
 }
+
+// 获取PSP剩余内存，单位为Bytes
+// 作者:诗诺比
+extern unsigned int get_free_mem(void)
+{
+#ifdef DMALLOC
+	unsigned long all = 0;
+	unsigned long allocated = 0;
+
+	dmalloc_get_stats(NULL, NULL, NULL, &all, &allocated, NULL, NULL, NULL,
+					  NULL);
+
+	// return all - allocated;
+	return 25 * 1024 * 1024 - allocated;
+#else
+	void *p[512];
+	unsigned int block_size = 0x04000000;	//最大内存:64MB,必需是2的N次方
+	unsigned int block_free = 0;
+	int i = 0;
+
+	while ((block_size >>= 1) >= 0x0400)	//最小精度:1KB
+	{
+		if (NULL != (p[i] = malloc(block_size))) {
+			block_free |= block_size;
+			++i;
+
+			if (i == sizeof(p) / sizeof(p[0])) {
+				goto abort;
+			}
+		}
+	}
+
+	while (NULL != (p[i] = malloc(0x8000)))	//最小精度:32KB
+	{
+		block_free += 0x8000;
+		++i;
+
+		if (i == sizeof(p) / sizeof(p[0])) {
+			goto abort;
+		}
+	}
+
+  abort:
+	while (i--) {
+		free(p[i]);
+	}
+
+	return block_free;
+#endif
+}
+
+void *calloc_64(size_t nmemb, size_t size)
+{
+#if 1
+	void *p;
+	
+	p = memalign(64, nmemb * size);
+
+	if (!p)
+		return p;
+
+	memset(p, 0, nmemb * size);
+
+	return p;
+#else
+	return calloc(nmemb * size);
+#endif
+}
+

@@ -1,3 +1,19 @@
+/*
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 /* vim:set ts=4 sw=4 cindent ignorecase enc=gbk: */
 
 #include <stdio.h>
@@ -33,6 +49,9 @@
 #define HEXDUMP_HEXSTUFF_PER_SHORT 5	/* 4 hex digits and a space */
 #define HEXDUMP_HEXSTUFF_PER_LINE \
     (HEXDUMP_HEXSTUFF_PER_SHORT * HEXDUMP_SHORTS_PER_LINE)
+
+int conv_gbk_to_current_locale(const char *gbkstr, size_t size, char **ptr,
+							   int *outputsize);
 
 static void dbg_set_handle(dbg_handle * p, void (*init) (void *),
 						   dbg_func writer, void (*cleanup) (void *), void *arg)
@@ -391,10 +410,20 @@ int dbg_printf(DBG * d, const char *fmt, ...)
 	}
 	strcat_s(buf, size + timelen + 2, "\n");
 	va_end(ap);
-	for (i = 0; i < d->otsize; ++i) {
-		if (d->ot[i].write)
-			(*d->ot[i].write) (d->ot[i].arg, buf);
+
+	int tsize;
+	char *t = NULL;
+
+	conv_gbk_to_current_locale(buf, strlen(buf), &t, &tsize);
+
+	if (t != NULL) {
+		for (i = 0; i < d->otsize; ++i) {
+			if (d->ot[i].write)
+				(*d->ot[i].write) (d->ot[i].arg, t);
+		}
 	}
+
+	free(t);
 	free(buf);
 	return l;
 }
@@ -423,10 +452,20 @@ int dbg_printf_raw(DBG * d, const char *fmt, ...)
 	}
 	strcat_s(buf, size, "\n");
 	va_end(ap);
-	for (i = 0; i < d->otsize; ++i) {
-		if (d->ot[i].write)
-			(*d->ot[i].write) (d->ot[i].arg, buf);
+
+	int tsize;
+	char *t = NULL;
+
+	conv_gbk_to_current_locale(buf, strlen(buf), &t, &tsize);
+
+	if (t != NULL) {
+		for (i = 0; i < d->otsize; ++i) {
+			if (d->ot[i].write)
+				(*d->ot[i].write) (d->ot[i].arg, t);
+		}
 	}
+
+	free(t);
 	free(buf);
 	return l;
 }

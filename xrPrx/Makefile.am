@@ -2,8 +2,10 @@ CC = @PSP_CC@
 CCAS = $(CC)
 AR = @PSP_AR@
 RANLIB = @PSP_RANLIB@
+CFLAGS = 
 
 EXEEXT =
+OBJEXT = o
 
 if OPTIMIZE
 AM_CFLAGS = -Os -G0 -Wall -fno-builtin-printf

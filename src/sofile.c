@@ -1,9 +1,30 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 #include "sofile.h"
+#include "config.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -70,13 +91,12 @@ static int convert_c_style_string(char *dest, int destsize, char *src)
 
 							if (endp != NULL) {
 								char number[80];
+								int digit;
 
 								strncpy(number,
 										&src[n + 2], endp - &src[n + 2]);
 								number[endp - &src[n + 2]] = '\0';
-								int digit = strtol(number, NULL,
-												   16);
-
+								digit = strtol(number, NULL, 16);
 								*p++ = digit;
 								n += endp - &src[n + 2] + 1;
 							}
@@ -86,13 +106,12 @@ static int convert_c_style_string(char *dest, int destsize, char *src)
 
 							if (endp != NULL) {
 								char number[80];
+								int digit;
 
 								strncpy(number,
 										&src[n + 1], endp - &src[n + 1]);
 								number[endp - &src[n + 1]] = '\0';
-								int digit = strtol(number, NULL,
-												   8);
-
+								digit = strtol(number, NULL, 8);
 								*p++ = digit;
 								n += endp - &src[n + 1];
 							}
@@ -119,15 +138,15 @@ static int convert_c_style_string(char *dest, int destsize, char *src)
 
 int read_sofile(const char *path, struct hash_control **hash, int *size)
 {
+	char line[BUFSIZ];
+	char *msgid = NULL, *msgstr = NULL;
+	FILE *fp;
+
 	if (path == NULL || size == NULL || hash == NULL)
 		return -1;
 
-	FILE *fp = fopen(path, "r");
-	char line[BUFSIZ];
-	char *msgid = NULL, *msgstr = NULL;
-
+	fp = fopen(path, "r");
 	*size = 0;
-
 	*hash = hash_new();
 
 	if (fp == NULL)
@@ -141,10 +160,12 @@ int read_sofile(const char *path, struct hash_control **hash, int *size)
 			int pos2 = strrchr(line, '\"') - line;
 
 			if (pos1 < pos2 - 2) {
+				char *t;
+
 				msgid = strndup(line + pos1 + 2, pos2 - pos1 - 2);
 				if (msgid == NULL)
 					continue;
-				char *t = strdup(msgid);
+				t = strdup(msgid);
 
 				if (t == NULL) {
 					free(msgid);
@@ -161,10 +182,12 @@ int read_sofile(const char *path, struct hash_control **hash, int *size)
 			int pos2 = strrchr(line, '\"') - line;
 
 			if (pos1 < pos2 - 2) {
+				char *t;
+
 				msgstr = strndup(line + pos1 + 2, pos2 - pos1 - 2);
 				if (msgid == NULL)
 					continue;
-				char *t = strdup(msgstr);
+				t = strdup(msgstr);
 
 				if (t == NULL) {
 					free(msgid);
@@ -194,10 +217,12 @@ int read_sofile(const char *path, struct hash_control **hash, int *size)
 
 char *lookup_transitem(struct hash_control *p, const char *msgid)
 {
+	char *t;
+
 	if (p == NULL || msgid == NULL)
 		return NULL;
 
-	char *t = hash_find(p, msgid);
+	t = hash_find(p, msgid);
 
 	return t;
 }

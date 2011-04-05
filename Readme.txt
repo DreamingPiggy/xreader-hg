@@ -17,12 +17,11 @@ xReaderÖ§³Ö×Ô¶¯·­Ò³ºÍ×Ô¶¯¹öÆÁ¹¦ÄÜ£¬Ö§³Ö¶ÁÈ¡Í¼ÏñEXIFÐÅÏ¢£¬Ö§³Ö½âÑ¹Ëõµµ°¸ÎÄ¼þ£¬Ö§³
 µÈµÈeReader²»Ö§³ÖµÄ¹¦ÄÜ¡£
 4. ¸üºÃµÄÓ²¼þÖ§³Ö:
 xReaderÖ§³Ö8GMS¿¨£¬Ö§³ÖPSP2000£¨ÒÔ¼°Æä64MBÄÚ´æ£©£¬Ö§³Ö×îÐÂM33°æ±¾¡£
+5. Ö§³Ö¶àÖÖÒôÀÖ¸ñÊ½
+xReaderÖ§³Ö²¥·ÅMP3£¨Ó²/Èí½âÂë£©¡¢Musepack(MPC)¡¢TTA¡¢FLAC¡¢APE¡¢WAV¸ñÊ½¼°Æä±êÇ©µÈÐÅÏ¢ÏÔÊ¾
 
 Î´À´Õ¹Íû£º
-½«Ö§³ÖMediaEngineÒôÀÖ²¥·Å£¬²¥·ÅMP3 WMAÊ±½«²»Õ¼ÓÃCPU×ÊÔ´¡£
-½«Ö§³Ö¸ü¶àÒôÆµ¸ñÊ½£¨OGG£¬MusePack£¬FLAC£¬APE£¬TTAµÈµÈ£©
 ½«Ö§³ÖGraphics Engine»æÍ¼
-½«Ö§³Ö¶àÏß³Ì×Ô¶¯Ô¤¶Á¹¦ÄÜ£¬ÏµÍ³¿ÕÏÐ×Ô¶¯»º´æÍ¼Ïñ»òÎÄ×Ö¡£
 ½«Ö§³ÖLRC¸è´Ê×Ô¶¯ËÑË÷ÏÂÔØ
 ½«ÖØ¹¹´úÂëÒÔ±ã´úÂë¸´ÓÃ
 
@@ -162,4 +161,58 @@ image:image_scroll_chgn_speed
 
 text:ttf_haste_up
 ¿ªÆô»æÖÆTTF×ÖÐÍÊ±Éý¸ßCPUÆµÂÊ¹¦ÄÜ£¬¿ÉÄÜ»áµ¼ÖÂ×ÖÌåÉÁË¸ÏÔÊ¾£¬Ä¬ÈÏÎª´ò¿ª
+
+text:linenum_style
+Èç¹ûÉèÖÃÎªÕæ£¬ÎÄ±¾½ø¶ÈÏÔÊ¾½«Ê¹ÓÃ´«Í³eReaderµÄÐÐÊý/×ÜÐÐÊý·½Ê½
+
+music:musicdrv_opts
+ÒôÀÖÏµÍ³²ÎÊý£¬Ä¿Ç°Ö§³Ö£º
+
+MP3:
+mp3_brute_mode=on/off
+ÊÇ·ñÊ¹ÓÃ±©Á¦·¨½âÂëMP3£¬Èç¹ûMP3²¥·ÅÓÐÎÊÌâ£¬ÊÔÊÔÕâ¸ö£¬Ä¬ÈÏÎª·ñ
+mp3_check_crc=on/off
+ÊÇ·ñ×ÜÊÇ¼ì²éMP3µÄCRC¼ìÑéÏûÏ¢£¬Ä¬ÈÏÎª·ñ
+mp3_use_me=on/off
+ÊÇ·ñÊ¹ÓÃMP3Ó²¼þ½âÂë(Media Engine£©¹¦ÄÜ£¬·ñÔòÊ¹ÓÃlibMAD½øÐÐÈí¼þ½âÂë¡£Ä¬ÈÏÎªÊÇ
+mp3_buffer_size=262144
+×°ÔØMP3Êý¾ÝµÄ»º³åÇø×Ö½Ú´óÐ¡£¬²»µÃÐ¡ÓÚ8192×Ö½Ú£¬Ä¬ÈÏÎª65536×Ö½Ú
+AAC:
+aac_buffer_size=262144
+×°ÔØAACÊý¾ÝµÄ»º³åÇø×Ö½Ú´óÐ¡£¬²»µÃÐ¡ÓÚ8192×Ö½Ú£¬Ä¬ÈÏÎª65536×Ö½Ú
+WAV:
+wav_buffer_size=262144
+×°ÔØWAVEÊý¾ÝµÄ»º³åÇø×Ö½Ú´óÐ¡£¬²»µÃÐ¡ÓÚ8192×Ö½Ú£¬Ä¬ÈÏÎª65536×Ö½Ú
+WMA:
+wma_buffer_size=262144
+×°ÔØWMAÊý¾ÝµÄ»º³åÇø×Ö½Ú´óÐ¡£¬²»µÃÐ¡ÓÚ8192×Ö½Ú£¬Ä¬ÈÏÎª65536×Ö½Ú
+WavPack:
+wv_buffer_size=262144
+×°ÔØWavPackÊý¾ÝµÄ»º³åÇø×Ö½Ú´óÐ¡£¬²»µÃÐ¡ÓÚ8192×Ö½Ú£¬Ä¬ÈÏÎª65536×Ö½Ú
+AT3:
+at3_buffer_size=262144
+×°ÔØAT3Êý¾ÝµÄ»º³åÇø×Ö½Ú´óÐ¡£¬²»µÃÐ¡ÓÚ8192×Ö½Ú£¬Ä¬ÈÏÎª65536×Ö½Ú
+AA3:
+aa3_buffer_size=262144
+×°ÔØAA3Êý¾ÝµÄ»º³åÇø×Ö½Ú´óÐ¡£¬²»µÃÐ¡ÓÚ8192×Ö½Ú£¬Ä¬ÈÏÎª65536×Ö½Ú
+M4A:
+m4a_buffer_size=262144
+×°ÔØM4AÊý¾ÝµÄ»º³åÇø×Ö½Ú´óÐ¡£¬²»µÃÐ¡ÓÚ8192×Ö½Ú£¬Ä¬ÈÏÎª65536×Ö½Ú
+OGG:
+ogg_buffer_size=262144
+×°ÔØOGGÊý¾ÝµÄ»º³åÇø×Ö½Ú´óÐ¡£¬²»µÃÐ¡ÓÚ8192×Ö½Ú£¬Ä¬ÈÏÎª65536×Ö½Ú
+
+½«ËüÃÇÐ´³ÉÒ»ÐÐ£¬Èç:
+musicdrv_opts=mp3_brute_mode=on mp3_use_me=on
+
+½«Ê¹ÓÃ±©Á¦·¨Ó²¼þ½âÂëMP3
+
+music:show_encoder_msg=y/n
+ÊÇ·ñÏÔÊ¾±àÂëÆ÷ÐÅÏ¢
+
+image:max_cache_img
+Í¼ÏñÔ¤¶Á×´Ì¬ÏÂ×î¶à»º³åµÄÍ¼Ïñ¸öÊý£¬Ä¬ÈÏÎª10£¬Èç¹ûÎª0½«¹Ø±ÕÔ¤¶Á¹¦ÄÜ
+
+image:use_image_queue
+ÊÇ·ñ¿ªÆôÍ¼ÏñÔ¤¶Á¹¦ÄÜ£¬Ä¬ÈÏÎªÊÇ
 

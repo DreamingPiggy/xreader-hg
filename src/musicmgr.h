@@ -1,11 +1,33 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #pragma once
 
 #include "lyric.h"
 
+struct _buffer;
+
 struct music_file
 {
-	char shortpath[PATH_MAX];
-	char longpath[PATH_MAX];
+	struct _buffer *shortpath;
+	struct _buffer *longpath;
 
 	struct music_file *next;
 };
@@ -35,7 +57,8 @@ int music_list_load(const char *path);
 p_lyric music_get_lyric(void);
 struct music_info;
 int music_get_info(struct music_info *info);
-int music_loadonly(int i);
+int music_load(int i);
 bool music_curr_playing();
 int music_get_current_pos(void);
 int music_set_hprm(bool enable);
+int music_list_clear(void);

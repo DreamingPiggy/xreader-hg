@@ -1,482 +1,680 @@
-//    xMP3
-//    Copyright (C) 2008 Hrimfaxi
-//    outmatch@gmail.com
-//
-//    This program is free software; you can redistribute it and/or modify
-//    it under the terms of the GNU General Public License as published by
-//    the Free Software Foundation; either version 2 of the License, or
-//    (at your option) any later version.
-//
-//    This program is distributed in the hope that it will be useful,
-//    but WITHOUT ANY WARRANTY; without even the implied warranty of
-//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//    GNU General Public License for more details.
-//
-//    You should have received a copy of the GNU General Public License
-//    along with this program; if not, write to the Free Software
-//    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
 
-//
-//    $Id: oggplayer.c 57 2008-02-16 08:53:13Z hrimfaxi $
-//
-
+#include <pspkernel.h>
 #include <string.h>
-
-#include "tremor/ivorbiscodec.h"
+#include <stdio.h>
+#include <assert.h>
+#include "config.h"
+#include "ssv.h"
+#include "scene.h"
+#include "xaudiolib.h"
+#include "musicmgr.h"
+#include "musicdrv.h"
+#include "strsafe.h"
+#include "common/utils.h"
+#include "genericplayer.h"
+#include "musicinfo.h"
 #include "tremor/ivorbisfile.h"
-#include "player.h"
-#include "oggplayer.h"
+#include "dbg.h"
+#include "xrhal.h"
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
 
-int OGG_audio_channel;
-char OGG_fileName[262];
-int OGG_file = 0;
-OggVorbis_File OGG_VorbisFile;
-int OGG_eos = 0;
-struct fileInfo OGG_info;
-int isPlaying = 0;
-unsigned int OGG_volume_boost = 0.0;
-double OGG_milliSeconds = 0.0;
-int OGG_playingSpeed = 0;		// 0 = normal
-int OGG_playingDelta = 0;
-int outputInProgress = 0;
-long OGG_suspendPosition = -1;
-long OGG_suspendIsPlaying = 0;
-int OGG_defaultCPUClock = 50;
+#ifdef ENABLE_OGG
 
-/// Audio callback
-static void oggDecodeThread(void *_buf2, unsigned int numSamples, void *pdata)
+#define OGG_BUFF_SIZE (6400 * 4)
+
+static int __end(void);
+
+/**
+ * OGG音乐播放缓冲
+ */
+static uint16_t *g_buff = NULL;
+
+/**
+ * OGG音乐播放缓冲总大小, 以帧数计
+ */
+static unsigned g_buff_size;
+
+/**
+ * OGG音乐播放缓冲大小，以帧数计
+ */
+static unsigned g_buff_frame_size;
+
+/**
+ * OGG音乐播放缓冲当前位置，以帧数计
+ */
+static int g_buff_frame_start;
+
+/**
+ * OGG解码器
+ */
+static OggVorbis_File *decoder = NULL;
+
+static char g_vendor_str[80];
+
+/**
+ * OGG文件句柄
+ */
+static buffered_reader_t *g_ogg_reader = NULL;
+
+static size_t ovcb_read(void *ptr, size_t size, size_t nmemb, void *datasource);
+static int ovcb_seek(void *datasource, int64_t offset, int whence);
+static int ovcb_close(void *datasource);
+static long ovcb_tell(void *datasource);
+
+static ov_callbacks vorbis_callbacks = {
+	ovcb_read,
+	ovcb_seek,
+	ovcb_close,
+	ovcb_tell
+};
+
+/**
+ * 复制数据到声音缓冲区
+ *
+ * @note 声音缓存区的格式为双声道，16位低字序
+ *
+ * @param buf 声音缓冲区指针
+ * @param srcbuf 解码数据缓冲区指针
+ * @param frames 复制帧数
+ * @param channels 声道数
+ */
+static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames,
+						   int channels)
 {
-	short *_buf = (short *) _buf2;
-	static short tempmixbuf[PSP_NUM_AUDIO_SAMPLES * 2 * 2]
-		__attribute__ ((aligned(64)));
-	static unsigned long tempmixleft = 0;
+	int n;
+	signed short *p = (signed short *) buf;
+
+	if (frames <= 0)
+		return;
+
+	if (channels == 2) {
+		memcpy(buf, srcbuf, frames * channels * sizeof(*srcbuf));
+	} else {
+		for (n = 0; n < frames * channels; n++) {
+			*p++ = srcbuf[n];
+			*p++ = srcbuf[n];
+		}
+	}
+
+}
+
+static void ogg_seek_seconds(OggVorbis_File * decoder, double npt)
+{
+	if (decoder)
+		ov_time_seek(decoder, npt * 1000);
+}
+
+/**
+ * 解码Ogg
+ */
+static int ogg_process_single(void)
+{
+	int samplesdecoded;
+	int bytes;
 	int current_section;
 
-	if (isPlaying) {
-		// Playing , so mix up a buffer
-		outputInProgress = 1;
-		while (tempmixleft < numSamples) {
-			//  Not enough in buffer, so we must mix more
-			unsigned long bytesRequired = (numSamples - tempmixleft) * 4;
+	bytes =
+		ov_read(decoder, (char *) g_buff, g_buff_size * sizeof(g_buff[0]),
+				&current_section);
 
-			// 2channels, 16bit = 4 bytes per sample
-			unsigned long ret =
-				ov_read(&OGG_VorbisFile, (char *) &tempmixbuf[tempmixleft * 2],
-						bytesRequired, &current_section);
+	switch (bytes) {
+		case 0:
+			/* EOF */
+			return -1;
+			break;
 
-			if (!ret) {
-				// EOF
-				isPlaying = 0;
-				OGG_eos = 1;
-				outputInProgress = 0;
-				return;
-			} else if (ret < 0) {
-				if (ret == OV_HOLE)
-					continue;
-				isPlaying = 0;
-				OGG_eos = 1;
-				outputInProgress = 0;
-				return;
-			}
-			// back down to sample num
-			tempmixleft += ret / 4;
-		}
-		OGG_info.instantBitrate = ov_bitrate_instant(&OGG_VorbisFile);
-		OGG_milliSeconds = ov_time_tell(&OGG_VorbisFile);
-
-		// Check for playing speed:
-		if (OGG_playingSpeed) {
-			if (ov_raw_seek
-				(&OGG_VorbisFile,
-				 ov_raw_tell(&OGG_VorbisFile) + OGG_playingDelta) != 0)
-				OGG_setPlayingSpeed(0);
-		}
-
-		if (tempmixleft >= numSamples) {
-			//  Buffer has enough, so copy across
-			int count, count2;
-			short *_buf2;
-
-			for (count = 0; count < numSamples; count++) {
-				count2 = count + count;
-				_buf2 = _buf + count2;
-				// Volume boost:
-				if (OGG_volume_boost) {
-					*(_buf2) =
-						volume_boost(&tempmixbuf[count2], &OGG_volume_boost);
-					*(_buf2 + 1) =
-						volume_boost(&tempmixbuf[count2 + 1],
-									 &OGG_volume_boost);
-				} else {
-					// Double up for stereo
-					*(_buf2) = tempmixbuf[count2];
-					*(_buf2 + 1) = tempmixbuf[count2 + 1];
-				}
-			}
-			//  Move the pointers
-			tempmixleft -= numSamples;
-			//  Now shuffle the buffer along
-			for (count = 0; count < tempmixleft; count++)
-				tempmixbuf[count] = tempmixbuf[numSamples + count];
-
-		}
-		outputInProgress = 0;
-	} else {
-		//  Not Playing , so clear buffer
-		int count;
-
-		for (count = 0; count < numSamples * 2; count++)
-			*(_buf + count) = 0;
+		case OV_HOLE:
+		case OV_EBADLINK:
+			/*
+			 * error in the stream.  Not a problem, just
+			 * reporting it in case we (the app) cares.
+			 * In this case, we don't.
+			 */
+			return 0;
+			break;
 	}
+
+	samplesdecoded = bytes / 2 / g_info.channels;
+
+	g_buff_frame_size = samplesdecoded;
+	g_buff_frame_start = 0;
+
+	return samplesdecoded;
 }
 
-/// Callback for vorbis
-size_t ogg_callback_read(void *ptr, size_t size, size_t nmemb, void *datasource)
+/**
+ * OGG音乐播放回调函数，
+ * 负责将解码数据填充声音缓存区
+ *
+ * @note 声音缓存区的格式为双声道，16位低字序
+ *
+ * @param buf 声音缓冲区指针
+ * @param reqn 缓冲区帧大小
+ * @param pdata 用户数据，无用
+ */
+static int ogg_audiocallback(void *buf, unsigned int reqn, void *pdata)
 {
-	return sceIoRead(*(int *) datasource, ptr, size * nmemb);
-}
+	int avail_frame;
+	int snd_buf_frame_size = (int) reqn;
+	int ret;
+	double incr;
+	signed short *audio_buf = buf;
 
-int ogg_callback_seek(void *datasource, ogg_int64_t offset, int whence)
-{
-	return sceIoLseek32(*(int *) datasource, (unsigned int) offset, whence);
-}
+	UNUSED(pdata);
 
-long ogg_callback_tell(void *datasource)
-{
-	return sceIoLseek32(*(int *) datasource, 0, SEEK_CUR);
-}
-
-int ogg_callback_close(void *datasource)
-{
-	return sceIoClose(*(int *) datasource);
-}
-
-void splitComment(char *comment, char *name, char *value)
-{
-	char *result = NULL;
-
-	result = strtok(comment, "=");
-	int count = 0;
-
-	while (result != NULL && count < 2) {
-		if (strlen(result) > 0) {
-			switch (count) {
-				case 0:
-					strncpy(name, result, 30);
-					name[30] = '\0';
-					break;
-				case 1:
-					strncpy(value, result, 256);
-					value[256] = '\0';
-					break;
+	if (g_status != ST_PLAYING) {
+		if (g_status == ST_FFORWARD) {
+			g_play_time += g_seek_seconds;
+			if (g_play_time >= g_info.duration) {
+				__end();
+				return -1;
 			}
-			count++;
+			generic_lock();
+			g_status = ST_PLAYING;
+			generic_set_playback(true);
+			generic_unlock();
+			free_bitrate(&g_inst_br);
+			ogg_seek_seconds(decoder, g_play_time);
+			g_buff_frame_size = g_buff_frame_start = 0;
+		} else if (g_status == ST_FBACKWARD) {
+			g_play_time -= g_seek_seconds;
+			if (g_play_time < 0.) {
+				g_play_time = 0.;
+			}
+			generic_lock();
+			g_status = ST_PLAYING;
+			generic_set_playback(true);
+			generic_unlock();
+			free_bitrate(&g_inst_br);
+			ogg_seek_seconds(decoder, g_play_time);
+			g_buff_frame_size = g_buff_frame_start = 0;
 		}
-		result = strtok(NULL, "=");
+		xAudioClearSndBuf(buf, snd_buf_frame_size);
+		xrKernelDelayThread(100000);
+		return 0;
 	}
+
+	while (snd_buf_frame_size > 0) {
+		avail_frame = g_buff_frame_size - g_buff_frame_start;
+
+		if (avail_frame >= snd_buf_frame_size) {
+			send_to_sndbuf(audio_buf,
+						   &g_buff[g_buff_frame_start * g_info.channels],
+						   snd_buf_frame_size, g_info.channels);
+			g_buff_frame_start += snd_buf_frame_size;
+			audio_buf += snd_buf_frame_size * 2;
+			snd_buf_frame_size = 0;
+		} else {
+			send_to_sndbuf(audio_buf,
+						   &g_buff[g_buff_frame_start * g_info.channels],
+						   avail_frame, g_info.channels);
+			snd_buf_frame_size -= avail_frame;
+			audio_buf += avail_frame * 2;
+
+			ret = ogg_process_single();
+
+			if (ret == -1) {
+				__end();
+				return -1;
+			}
+
+			incr = (double) ret / g_info.sample_freq;
+			g_play_time += incr;
+		}
+	}
+
+	return 0;
 }
 
-void getOGGTagInfo(OggVorbis_File * inVorbisFile, struct fileInfo *targetInfo)
+/**
+ * 初始化驱动变量资源等
+ *
+ * @return 成功时返回0
+ */
+static int __init(void)
+{
+	generic_init();
+
+	generic_lock();
+	g_status = ST_UNKNOWN;
+	generic_unlock();
+
+	g_buff_frame_size = g_buff_frame_start = 0;
+	g_seek_seconds = 0;
+
+	g_play_time = 0.;
+
+	memset(&g_info, 0, sizeof(g_info));
+	decoder = NULL;
+	g_ogg_reader = NULL;
+	g_buff = NULL;
+	g_buff_size = 0;
+	memset(g_vendor_str, 0, sizeof(g_vendor_str));
+
+	return 0;
+}
+
+static void get_ogg_tag(OggVorbis_File * decoder)
 {
 	int i;
-	char name[31];
-	char value[257];
 
-	vorbis_comment *comment = ov_comment(inVorbisFile, -1);
+	vorbis_comment *comment = ov_comment(decoder, -1);
+
+	if (comment == NULL) {
+		return;
+	}
+
+	if (comment->vendor) {
+		STRCPY_S(g_vendor_str, comment->vendor);
+	} else {
+		STRCPY_S(g_vendor_str, "");
+	}
 
 	for (i = 0; i < comment->comments; i++) {
-		splitComment(comment->user_comments[i], name, value);
-		if (!strcmp(name, "TITLE"))
-			strcpy(targetInfo->title, value);
-		else if (!strcmp(name, "ALBUM"))
-			strcpy(targetInfo->album, value);
-		else if (!strcmp(name, "ARTIST"))
-			strcpy(targetInfo->artist, value);
-		else if (!strcmp(name, "GENRE"))
-			strcpy(targetInfo->genre, value);
-		else if (!strcmp(name, "DATE"))
-			strcpy(targetInfo->year, value);
-		else if (!strcmp(name, "TRACKNUMBER"))
-			strcpy(targetInfo->trackNumber, value);
-	}
-}
+		dbg_printf(d, "%s: %s", __func__, comment->user_comments[i]);
 
-void OGGgetInfo()
-{
-	// Estraggo le informazioni:
-	OGG_info.fileType = OGG_TYPE;
-	OGG_info.defaultCPUClock = OGG_defaultCPUClock;
-	OGG_info.needsME = 0;
-
-	vorbis_info *vi = ov_info(&OGG_VorbisFile, -1);
-
-	OGG_info.kbit = vi->bitrate_nominal / 1000;
-	OGG_info.instantBitrate = vi->bitrate_nominal;
-	OGG_info.hz = vi->rate;
-	OGG_info.length = (long) ov_time_total(&OGG_VorbisFile, -1) / 1000;
-	if (vi->channels == 1)
-		strcpy(OGG_info.mode, "single channel");
-	else if (vi->channels == 2)
-		strcpy(OGG_info.mode, "normal LR stereo");
-	strcpy(OGG_info.emphasis, "no");
-
-	int h = 0;
-	int m = 0;
-	int s = 0;
-	long secs = OGG_info.length;
-
-	h = secs / 3600;
-	m = (secs - h * 3600) / 60;
-	s = secs - h * 3600 - m * 60;
-	snprintf(OGG_info.strLength, sizeof(OGG_info.strLength),
-			 "%2.2i:%2.2i:%2.2i", h, m, s);
-
-	getOGGTagInfo(&OGG_VorbisFile, &OGG_info);
-}
-
-void OGG_Init(int channel)
-{
-	initAudioLib();
-	MIN_PLAYING_SPEED = -10;
-	MAX_PLAYING_SPEED = 9;
-	OGG_audio_channel = channel;
-	xMP3AudioSetChannelCallback(OGG_audio_channel, oggDecodeThread, NULL);
-}
-
-int OGG_Load(char *filename)
-{
-	isPlaying = 0;
-	OGG_milliSeconds = 0;
-	OGG_eos = 0;
-	OGG_playingSpeed = 0;
-	OGG_playingDelta = 0;
-	strcpy(OGG_fileName, filename);
-	// Apro il file OGG:
-	initFileInfo(&OGG_info);
-	OGG_file = sceIoOpen(OGG_fileName, PSP_O_RDONLY, 0777);
-	if (OGG_file >= 0) {
-		OGG_info.fileSize = sceIoLseek(OGG_file, 0, PSP_SEEK_END);
-		sceIoLseek(OGG_file, 0, PSP_SEEK_SET);
-		ov_callbacks ogg_callbacks;
-
-		ogg_callbacks.read_func = ogg_callback_read;
-		ogg_callbacks.seek_func = ogg_callback_seek;
-		ogg_callbacks.close_func = ogg_callback_close;
-		ogg_callbacks.tell_func = ogg_callback_tell;
-		if (ov_open_callbacks
-			(&OGG_file, &OGG_VorbisFile, NULL, 0, ogg_callbacks) < 0) {
-			sceIoClose(OGG_file);
-			return ERROR_OPENING;
+		if (!strnicmp
+			(comment->user_comments[i], "TITLE=", sizeof("TITLE=") - 1)) {
+			STRCPY_S(g_info.tag.title,
+					 comment->user_comments[i] + sizeof("TITLE=") - 1);
+		} else if (!strnicmp
+				   (comment->user_comments[i], "ALBUM=",
+					sizeof("ALBUM=") - 1)) {
+			STRCPY_S(g_info.tag.album,
+					 comment->user_comments[i] + sizeof("ALBUM=") - 1);
+		} else
+			if (!strnicmp
+				(comment->user_comments[i], "ARTIST=", sizeof("ARTIST=") - 1)) {
+			STRCPY_S(g_info.tag.artist,
+					 comment->user_comments[i] + sizeof("ARTIST=") - 1);
+		} else
+			if (!strnicmp
+				(comment->user_comments[i], "COMMENT=",
+				 sizeof("COMMENT=") - 1)) {
+			STRCPY_S(g_info.tag.comment,
+					 comment->user_comments[i] + sizeof("COMMENT=") - 1);
 		}
-	} else {
-		return ERROR_OPENING;
 	}
 
-	OGGgetInfo();
-	// Controllo il sample rate:
-	if (xMP3AudioSetFrequency(OGG_info.hz) < 0) {
-		OGG_FreeTune();
-		return ERROR_INVALID_SAMPLE_RATE;
+	if (i > 0) {
+		g_info.tag.type = VORBIS;
+		g_info.tag.encode = conf_encode_utf8;
 	}
-	return OPENING_OK;
 }
 
-int OGG_Play()
+/**
+ * 装载OGG音乐文件 
+ *
+ * @param spath 短路径名
+ * @param lpath 长路径名
+ *
+ * @return 成功时返回0
+ */
+static int ogg_load(const char *spath, const char *lpath)
 {
-	isPlaying = 1;
-	return 0;
-}
+	vorbis_info *vi;
+	ogg_int64_t duration;
 
-void OGG_Pause()
-{
-	isPlaying = !isPlaying;
-}
+	__init();
 
-int OGG_Stop()
-{
-	isPlaying = 0;
-	// This is to be sure that oggDecodeThread isn't messing with &OGG_VorbisFile
-	while (outputInProgress == 1)
-		sceKernelDelayThread(100000);
-	return 0;
-}
+	g_buff_size = OGG_BUFF_SIZE / 2;
+	g_buff = calloc(1, g_buff_size * sizeof(g_buff[0]));
 
-void OGG_FreeTune()
-{
-	ov_clear(&OGG_VorbisFile);
-	if (OGG_file >= 0)
-		sceIoClose(OGG_file);
-}
-
-void OGG_GetTimeString(char *dest)
-{
-	char timeString[9];
-	long secs = (long) OGG_milliSeconds / 1000;
-	int h = secs / 3600;
-	int m = (secs - h * 3600) / 60;
-	int s = secs - h * 3600 - m * 60;
-
-	snprintf(timeString, sizeof(timeString), "%2.2i:%2.2i:%2.2i", h, m, s);
-	strcpy(dest, timeString);
-}
-
-int OGG_EndOfStream()
-{
-	return OGG_eos;
-}
-
-struct fileInfo OGG_GetInfo()
-{
-	return OGG_info;
-}
-
-struct fileInfo OGG_GetTagInfoOnly(char *filename)
-{
-	int tempFile = 0;
-	OggVorbis_File vf;
-	struct fileInfo tempInfo;
-
-	initFileInfo(&tempInfo);
-	// Apro il file OGG:
-	tempFile = sceIoOpen(filename, PSP_O_RDONLY, 0777);
-	if (tempFile >= 0) {
-		//sceIoLseek(tempFile, 0, PSP_SEEK_SET);
-		ov_callbacks ogg_callbacks;
-
-		ogg_callbacks.read_func = ogg_callback_read;
-		ogg_callbacks.seek_func = ogg_callback_seek;
-		ogg_callbacks.close_func = ogg_callback_close;
-		ogg_callbacks.tell_func = ogg_callback_tell;
-
-		if (ov_open_callbacks(&tempFile, &vf, NULL, 0, ogg_callbacks) < 0) {
-			sceIoClose(tempFile);
-			return tempInfo;
-		}
-		getOGGTagInfo(&vf, &tempInfo);
-		ov_clear(&vf);
-		if (tempFile >= 0)
-			sceIoClose(tempFile);
-	}
-	return tempInfo;
-}
-
-int OGG_GetPercentage()
-{
-	return (int) (OGG_milliSeconds / 1000.0 / (double) OGG_info.length * 100.0);
-}
-
-void OGG_End()
-{
-	OGG_Stop();
-	xMP3AudioSetChannelCallback(OGG_audio_channel, 0, 0);
-	OGG_FreeTune();
-	endAudioLib();
-}
-
-int OGG_setMute(int onOff)
-{
-	return setMute(OGG_audio_channel, onOff);
-}
-
-void OGG_fadeOut(float seconds)
-{
-	fadeOut(OGG_audio_channel, seconds);
-}
-
-void OGG_setVolumeBoost(int boost)
-{
-	OGG_volume_boost = boost;
-}
-
-int OGG_getVolumeBoost()
-{
-	return OGG_volume_boost;
-}
-
-int OGG_setPlayingSpeed(int playingSpeed)
-{
-	if (playingSpeed >= MIN_PLAYING_SPEED && playingSpeed <= MAX_PLAYING_SPEED) {
-		OGG_playingSpeed = playingSpeed;
-		if (playingSpeed == 0)
-			setVolume(OGG_audio_channel, 0x8000);
-		else
-			setVolume(OGG_audio_channel, FASTFORWARD_VOLUME);
-		OGG_playingDelta = PSP_NUM_AUDIO_SAMPLES * 4 * OGG_playingSpeed;
-		return 0;
-	} else {
+	if (g_buff == NULL) {
+		__end();
 		return -1;
 	}
-}
 
-int OGG_getPlayingSpeed()
-{
-	return OGG_playingSpeed;
-}
+	decoder = calloc(1, sizeof(*decoder));
 
-int OGG_GetStatus()
-{
-	return 0;
-}
-
-void OGG_setVolumeBoostType(char *boostType)
-{
-	// Only old method supported
-	MAX_VOLUME_BOOST = 4;
-	MIN_VOLUME_BOOST = 0;
-}
-
-/// Functions for filter (equalizer): 
-int OGG_setFilter(double tFilter[32], int copyFilter)
-{
-	return 0;
-}
-
-void OGG_enableFilter()
-{
-}
-
-void OGG_disableFilter()
-{
-}
-
-int OGG_isFilterSupported()
-{
-	return 0;
-}
-
-int OGG_isFilterEnabled()
-{
-	return 0;
-}
-
-int OGG_suspend()
-{
-	OGG_suspendPosition = ov_raw_tell(&OGG_VorbisFile);
-	OGG_suspendIsPlaying = isPlaying;
-	OGG_Stop();
-	OGG_FreeTune();
-	return 0;
-}
-
-int OGG_resume()
-{
-	if (OGG_suspendPosition >= 0) {
-		OGG_Load(OGG_fileName);
-		if (ov_raw_seek(&OGG_VorbisFile, OGG_suspendPosition)) {
-			if (OGG_suspendIsPlaying)
-				OGG_Play();
-		}
-		OGG_suspendPosition = -1;
+	if (decoder == NULL) {
+		__end();
+		return -1;
 	}
+
+	ov_clear(decoder);
+	g_ogg_reader = buffered_reader_open(spath, g_io_buffer_size, 1);
+
+	if (g_ogg_reader == NULL) {
+		__end();
+		return -1;
+	}
+
+	g_info.filesize = buffered_reader_length(g_ogg_reader);
+
+	if (ov_open_callbacks
+		((void *) g_ogg_reader, decoder, NULL, 0, vorbis_callbacks) < 0) {
+		vorbis_callbacks.close_func((void *) g_ogg_reader);
+		g_ogg_reader = NULL;
+		__end();
+		return -1;
+	}
+
+	vi = ov_info(decoder, -1);
+
+	if (vi->channels > 2 || vi->channels <= 0) {
+		__end();
+		return -1;
+	}
+
+	g_info.sample_freq = vi->rate;
+	g_info.channels = vi->channels;
+
+	duration = ov_time_total(decoder, -1);
+
+	if (duration == OV_EINVAL) {
+		g_info.duration = 0;
+	} else {
+		g_info.duration = (double) duration / 1000;
+	}
+
+	if (g_info.duration != 0) {
+		g_info.avg_bps = (double) g_info.filesize * 8 / g_info.duration;
+	} else {
+		g_info.avg_bps = 0;
+	}
+
+	get_ogg_tag(decoder);
+
+	xAudioSetFrameSize(1152);
+
+	if (xAudioInit() < 0) {
+		__end();
+		return -1;
+	}
+
+	if (xAudioSetFrequency(g_info.sample_freq) < 0) {
+		__end();
+		return -1;
+	}
+
+	xAudioSetChannelCallback(0, ogg_audiocallback, NULL);
+
+	generic_lock();
+	g_status = ST_LOADED;
+	generic_unlock();
+
 	return 0;
 }
 
-mad_timer_t OGG_getTimer()
+/**
+ * 停止OGG音乐文件的播放，销毁资源等
+ *
+ * @note 可以在播放线程中调用
+ *
+ * @return 成功时返回0
+ */
+static int __end(void)
 {
-	float sec = OGG_milliSeconds / 1000.0;
-	mad_timer_t t;
+	xAudioEndPre();
 
-	t.seconds = sec;
-	t.fraction = 0;
-	return t;
+	generic_lock();
+	g_status = ST_STOPPED;
+	generic_unlock();
+	g_play_time = 0.;
+
+	return 0;
 }
+
+/**
+ * 停止OGG音乐文件的播放，销毁所占有的线程、资源等
+ *
+ * @note 不可以在播放线程中调用，必须能够多次重复调用而不死机
+ *
+ * @return 成功时返回0
+ */
+static int ogg_end(void)
+{
+	__end();
+
+	xAudioEnd();
+
+	g_status = ST_STOPPED;
+
+	if (decoder != NULL) {
+		ov_clear(decoder);
+		free(decoder);
+		g_ogg_reader = NULL;
+		decoder = NULL;
+	}
+
+	if (g_buff != NULL) {
+		free(g_buff);
+		g_buff = NULL;
+	}
+
+	g_buff_size = 0;
+	free_bitrate(&g_inst_br);
+	generic_end();
+
+	return 0;
+}
+
+/**
+ * PSP准备休眠时Ogg的操作
+ *
+ * @return 成功时返回0
+ */
+static int ogg_suspend(void)
+{
+	generic_suspend();
+	ogg_end();
+
+	return 0;
+}
+
+/**
+ * PSP准备从休眠时恢复的Ogg的操作
+ *
+ * @param spath 当前播放音乐名，8.3路径形式
+ * @param lpath 当前播放音乐名，长文件名形式
+ *
+ * @return 成功时返回0
+ */
+static int ogg_resume(const char *spath, const char *lpath)
+{
+	int ret;
+
+	ret = ogg_load(spath, lpath);
+	if (ret != 0) {
+		dbg_printf(d, "%s: ogg_load failed %d", __func__, ret);
+		return -1;
+	}
+
+	g_play_time = g_suspend_playing_time;
+	free_bitrate(&g_inst_br);
+	ogg_seek_seconds(decoder, g_play_time);
+	g_suspend_playing_time = 0;
+
+	generic_resume(spath, lpath);
+
+	return 0;
+}
+
+/**
+ * 得到OGG音乐文件相关信息
+ *
+ * @param pinfo 信息结构体指针
+ *
+ * @return
+ */
+static int ogg_get_info(struct music_info *pinfo)
+{
+	if (pinfo->type & MD_GET_CURTIME) {
+		pinfo->cur_time = g_play_time;
+	}
+	if (pinfo->type & MD_GET_CPUFREQ) {
+		pinfo->psp_freq[0] = 66 + (120 - 66) * g_info.avg_bps / 1000 / 320;
+		pinfo->psp_freq[1] = pinfo->psp_freq[0] / 2;
+	}
+	if (pinfo->type & MD_GET_INSKBPS) {
+		if (decoder) {
+			static long old_bitrate = 0;
+			long bitrate;
+
+			bitrate = ov_bitrate_instant(decoder);
+
+			if (bitrate == 0) {
+				bitrate = old_bitrate;
+			} else if (bitrate == OV_FALSE || bitrate == OV_EINVAL) {
+				bitrate = g_info.avg_bps;
+			} else {
+				old_bitrate = bitrate;
+			}
+
+			pinfo->ins_kbps = bitrate / 1000;
+		} else {
+			pinfo->ins_kbps = g_info.avg_bps / 1000;
+		}
+	}
+	if (pinfo->type & MD_GET_DECODERNAME) {
+		STRCPY_S(pinfo->decoder_name, "ogg");
+	}
+	if (pinfo->type & MD_GET_ENCODEMSG) {
+		if (config.show_encoder_msg) {
+			STRCPY_S(pinfo->encode_msg, g_vendor_str);
+		} else {
+			pinfo->encode_msg[0] = '\0';
+		}
+	}
+
+	return generic_get_info(pinfo);
+}
+
+/**
+ * 检测是否为MPC文件，目前只检查文件后缀名
+ *
+ * @param spath 当前播放音乐名，8.3路径形式
+ *
+ * @return 是MPC文件返回1，否则返回0
+ */
+static int ogg_probe(const char *spath)
+{
+	const char *p;
+
+	p = utils_fileext(spath);
+
+	if (p) {
+		if (stricmp(p, "ogg") == 0) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+static int ogg_set_opt(const char *unused, const char *values)
+{
+	int argc, i;
+	char **argv;
+
+	dbg_printf(d, "%s: options are %s", __func__, values);
+
+	build_args(values, &argc, &argv);
+
+	for (i = 0; i < argc; ++i) {
+		if (!strncasecmp
+			(argv[i], "ogg_buffer_size", sizeof("ogg_buffer_size") - 1)) {
+			const char *p = argv[i];
+
+			if ((p = strrchr(p, '=')) != NULL) {
+				p++;
+
+				g_io_buffer_size = atoi(p);
+
+				if (g_io_buffer_size < 8192) {
+					g_io_buffer_size = 8192;
+				}
+			}
+		}
+	}
+
+	clean_args(argc, argv);
+
+	generic_set_opt(unused, values);
+
+	return 0;
+}
+
+static struct music_ops ogg_ops = {
+	.name = "ogg",
+	.set_opt = ogg_set_opt,
+	.load = ogg_load,
+	.play = NULL,
+	.pause = NULL,
+	.end = ogg_end,
+	.get_status = NULL,
+	.fforward = NULL,
+	.fbackward = NULL,
+	.suspend = ogg_suspend,
+	.resume = ogg_resume,
+	.get_info = ogg_get_info,
+	.probe = ogg_probe,
+	.next = NULL
+};
+
+int ogg_init(void)
+{
+	return register_musicdrv(&ogg_ops);
+}
+
+static size_t ovcb_read(void *ptr, size_t size, size_t nmemb, void *datasource)
+{
+	buffered_reader_t *p = (buffered_reader_t *) datasource;
+
+	return buffered_reader_read(p, ptr, size * nmemb);
+}
+
+static int ovcb_seek(void *datasource, int64_t offset, int whence)
+{
+	buffered_reader_t *p = (buffered_reader_t *) datasource;
+	int ret = -1;
+
+	if (whence == PSP_SEEK_SET) {
+		ret = buffered_reader_seek(p, offset);
+	} else if (whence == PSP_SEEK_CUR) {
+		ret = buffered_reader_seek(p, offset + buffered_reader_position(p));
+	} else if (whence == PSP_SEEK_END) {
+		ret = buffered_reader_seek(p, buffered_reader_length(p) - offset);
+	}
+
+	return ret;
+}
+
+static int ovcb_close(void *datasource)
+{
+	buffered_reader_t *p = (buffered_reader_t *) datasource;
+
+	buffered_reader_close(p);
+	return 0;
+}
+
+static long ovcb_tell(void *datasource)
+{
+	buffered_reader_t *p = (buffered_reader_t *) datasource;
+
+	return buffered_reader_position(p);
+}
+
+#endif

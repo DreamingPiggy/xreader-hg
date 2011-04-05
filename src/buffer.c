@@ -1,3 +1,23 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -6,6 +26,10 @@
 
 #include "common/utils.h"
 #include "buffer.h"
+#include "config.h"
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
 
 static const char hex_chars[] = "0123456789abcdef";
 
@@ -19,6 +43,10 @@ buffer *buffer_init(void)
 	buffer *b;
 
 	b = malloc(sizeof(*b));
+
+	if (b == NULL) {
+		return b;
+	}
 
 	b->ptr = NULL;
 	b->size = 0;
@@ -45,16 +73,20 @@ void buffer_free(buffer * b)
 	if (!b)
 		return;
 
-	free(b->ptr);
+	if (b->ptr != NULL) {
+		free(b->ptr);
+		b->ptr = NULL;
+	}
+
 	free(b);
 }
 
 char *buffer_free_weak(buffer * b)
 {
+	char *ptr = b->ptr;
+
 	if (!b)
 		return NULL;
-
-	char *ptr = b->ptr;
 
 	free(b);
 
@@ -126,16 +158,20 @@ int buffer_prepare_append(buffer * b, size_t size)
 		b->ptr = malloc(b->size);
 		b->used = 0;
 	} else if (b->used + size > b->size) {
+		char *ptr;
+
 		b->size += size;
 
 		/* always allocate a multiply of BUFFER_PIECE_SIZE */
 		b->size += BUFFER_PIECE_SIZE - (b->size % BUFFER_PIECE_SIZE);
 
-		char *ptr = safe_realloc(b->ptr, b->size);
+		ptr = safe_realloc(b->ptr, b->size);
 
-		if (ptr == NULL)
-			return -1;
 		b->ptr = ptr;
+
+		if (ptr == NULL) {
+			return -1;
+		}
 	}
 	return 0;
 }
@@ -285,6 +321,10 @@ buffer_array *buffer_array_init(void)
 
 	b = malloc(sizeof(*b));
 
+	if (b == NULL) {
+		return b;
+	}
+
 	b->ptr = NULL;
 	b->size = 0;
 	b->used = 0;
@@ -319,11 +359,16 @@ void buffer_array_free(buffer_array * b)
 	if (!b)
 		return;
 
-	for (i = 0; i < b->size; i++) {
-		if (b->ptr[i])
-			buffer_free(b->ptr[i]);
+	if (b->ptr) {
+		for (i = 0; i < b->size; i++) {
+			if (b->ptr[i])
+				buffer_free(b->ptr[i]);
+		}
+
+		free(b->ptr);
+		b->ptr = NULL;
 	}
-	free(b->ptr);
+
 	free(b);
 }
 
@@ -340,6 +385,11 @@ buffer *buffer_array_append_get_buffer(buffer_array * b)
 	} else if (b->size == b->used) {
 		b->size += 16;
 		b->ptr = safe_realloc(b->ptr, sizeof(*b->ptr) * b->size);
+
+		if (b->ptr == NULL) {
+			return NULL;
+		}
+
 		for (i = b->used; i < b->size; i++) {
 			b->ptr[i] = NULL;
 		}

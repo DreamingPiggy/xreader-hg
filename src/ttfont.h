@@ -1,3 +1,23 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #ifndef _TTFONT_H_
 #define _TTFONT_H_
 
@@ -6,6 +26,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include "./common/datatype.h"
+#include "fontconfig.h"
 
 /** Truetype字形缓冲大小 */
 #define SBIT_HASH_SIZE (1024)
@@ -43,10 +64,7 @@ typedef struct _ttf
 	FT_Library library;
 	FT_Face face;
 
-	char *fontName;
-	bool antiAlias;
-	bool cleartype;
-	bool embolden;
+	const char *fontName;
 	int pixelSize;
 
 	SBit_HashItem sbitHashRoot[SBIT_HASH_SIZE];
@@ -56,6 +74,9 @@ typedef struct _ttf
 	char fnpath[PATH_MAX];
 	int fileSize;
 	byte *fileBuffer;
+	bool cjkmode;
+
+	font_config config;
 } t_ttf, *p_ttf;
 
 /**
@@ -68,7 +89,8 @@ typedef struct _ttf
  * @return 描述TTF的指针
  * - NULL 失败
  */
-extern p_ttf ttf_open(const char *filename, int size, bool load2mem);
+extern p_ttf ttf_open(const char *filename, int size, bool load2mem,
+					  bool cjkmode);
 
 /**
  * 从指定数据中打开TTF字体
@@ -82,7 +104,14 @@ extern p_ttf ttf_open(const char *filename, int size, bool load2mem);
  * - NULL 失败
  */
 extern p_ttf ttf_open_buffer(void *ttfBuf, size_t ttfLength, int pixelSize,
-							 const char *ttfName);
+							 const char *ttfName, bool cjkmode);
+
+/**
+ * 关闭TTF字形缓存
+ *
+ * @param ttf ttf指针
+ */
+extern void ttf_close_cache(p_ttf ttf);
 
 /**
  * 释放TTF字体

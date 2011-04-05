@@ -1,35 +1,57 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #include <pspkernel.h>
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include "config.h"
 #include "scene.h"
-#include "xmp3audiolib.h"
+#include "xaudiolib.h"
 #include "musicmgr.h"
 #include "musicdrv.h"
 #include "strsafe.h"
 #include "common/utils.h"
-#include "apetaglib/APETag.h"
+#include "buffered_reader.h"
 #include "tta/ttalib.h"
+#include "ssv.h"
+#include "simple_gettext.h"
 #include "dbg.h"
+#include "mp3info.h"
+#include "musicinfo.h"
+#include "genericplayer.h"
+#include "xrhal.h"
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
+
+#ifdef ENABLE_TTA
 
 static int __end(void);
-
-/**
- * 当前驱动播放状态
- */
-static int g_status;
-
-/**
- * 休眠前播放状态
- */
-static int g_suspend_status;
 
 #define TTA_BUFFER_SIZE (PCM_BUFFER_LENGTH * MAX_NCH)
 
 /**
  * TTA音乐播放缓冲
  */
-static short *g_buff = NULL;
+static uint16_t *g_buff = NULL;
 
 /**
  * TTA音乐播放缓冲大小，以帧数计
@@ -42,89 +64,19 @@ static unsigned g_buff_frame_size;
 static int g_buff_frame_start;
 
 /**
- * 当前驱动播放状态写锁
- */
-static SceUID g_status_sema = -1;
-
-/**
- * TTA音乐文件长度，以秒数
- */
-static double g_duration;
-
-/**
- * 当前播放时间，以秒数计
- */
-static double g_play_time;
-
-/**
- * TTA音乐快进、退秒数
- */
-static int g_seek_seconds;
-
-/**
  * TTA音乐信息
  */
-static tta_info g_info;
+static tta_info ttainfo;
 
 /**
  * TTA音乐已播放帧数
  */
-static int g_tta_frames_decoded = 0;
-
-/**
- * TTA音乐总帧数
- */
-static int g_tta_frames = 0;
-
-/**
- * TTA音乐休眠时播放时间
- */
-static double g_suspend_playing_time;
+static int g_samples_decoded = 0;
 
 /**
  * TTA音乐数据开始位置
  */
 static uint32_t g_tta_data_offset = 0;
-
-/**
- * 加锁
- */
-static inline int tta_lock(void)
-{
-	return sceKernelWaitSemaCB(g_status_sema, 1, NULL);
-}
-
-/**
- * 解锁
- */
-static inline int tta_unlock(void)
-{
-	return sceKernelSignalSema(g_status_sema, 1);
-}
-
-/**
- * 设置TTA音乐播放选项
- *
- * @param key
- * @param value
- *
- * @return 成功时返回0
- */
-static int tta_set_opt(const char *key, const char *value)
-{
-	return 0;
-}
-
-/**
- * 清空声音缓冲区
- *
- * @param buf 声音缓冲区指针
- * @param frames 帧数大小
- */
-static void clear_snd_buf(void *buf, int frames)
-{
-	memset(buf, 0, frames * 2 * 2);
-}
 
 /**
  * 复制数据到声音缓冲区
@@ -136,22 +88,24 @@ static void clear_snd_buf(void *buf, int frames)
  * @param frames 复制帧数
  * @param channels 声道数
  */
-static void send_to_sndbuf(void *buf, short *srcbuf, int frames, int channels)
+static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames,
+						   int channels)
 {
-	unsigned n;
-	signed short *p = buf;
+	int n;
+	signed short *p = (signed short *) buf;
 
 	if (frames <= 0)
 		return;
 
-	for (n = 0; n < frames * channels; n++) {
-		if (channels == 2)
-			*p++ = srcbuf[n];
-		else if (channels == 1) {
+	if (channels == 2) {
+		memcpy(buf, srcbuf, frames * channels * sizeof(*srcbuf));
+	} else {
+		for (n = 0; n < frames * channels; n++) {
 			*p++ = srcbuf[n];
 			*p++ = srcbuf[n];
 		}
 	}
+
 }
 
 static int tta_seek_seconds(double seconds)
@@ -159,7 +113,7 @@ static int tta_seek_seconds(double seconds)
 	if (set_position(seconds * 1000 / SEEK_STEP) == 0) {
 		g_buff_frame_size = g_buff_frame_start = 0;
 		g_play_time = seconds;
-		g_tta_frames_decoded = (uint32_t) (seconds * g_info.SAMPLERATE);
+		g_samples_decoded = (uint32_t) (seconds * g_info.sample_freq);
 		return 0;
 	}
 
@@ -177,7 +131,7 @@ static int tta_seek_seconds(double seconds)
  * @param reqn 缓冲区帧大小
  * @param pdata 用户数据，无用
  */
-static void tta_audiocallback(void *buf, unsigned int reqn, void *pdata)
+static int tta_audiocallback(void *buf, unsigned int reqn, void *pdata)
 {
 	int avail_frame;
 	int snd_buf_frame_size = (int) reqn;
@@ -188,30 +142,31 @@ static void tta_audiocallback(void *buf, unsigned int reqn, void *pdata)
 	UNUSED(pdata);
 
 	if (g_status != ST_PLAYING) {
-		if (g_status == ST_FFOWARD) {
+		if (g_status == ST_FFORWARD) {
 			g_play_time += g_seek_seconds;
-			if (g_play_time >= g_duration) {
+			if (g_play_time >= g_info.duration) {
 				__end();
-				return;
+				return -1;
 			}
-			tta_lock();
+			generic_lock();
 			g_status = ST_PLAYING;
-			scene_power_save(true);
-			tta_unlock();
+			generic_set_playback(true);
+			generic_unlock();
 			tta_seek_seconds(g_play_time);
 		} else if (g_status == ST_FBACKWARD) {
 			g_play_time -= g_seek_seconds;
 			if (g_play_time < 0.) {
 				g_play_time = 0.;
 			}
-			tta_lock();
+			generic_lock();
 			g_status = ST_PLAYING;
-			scene_power_save(true);
-			tta_unlock();
+			generic_set_playback(true);
+			generic_unlock();
 			tta_seek_seconds(g_play_time);
 		}
-		clear_snd_buf(buf, snd_buf_frame_size);
-		return;
+		xAudioClearSndBuf(buf, snd_buf_frame_size);
+		xrKernelDelayThread(100000);
+		return 0;
 	}
 
 	while (snd_buf_frame_size > 0) {
@@ -219,37 +174,39 @@ static void tta_audiocallback(void *buf, unsigned int reqn, void *pdata)
 
 		if (avail_frame >= snd_buf_frame_size) {
 			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * g_info.NCH],
-						   snd_buf_frame_size, g_info.NCH);
+						   &g_buff[g_buff_frame_start * g_info.channels],
+						   snd_buf_frame_size, g_info.channels);
 			g_buff_frame_start += snd_buf_frame_size;
 			audio_buf += snd_buf_frame_size * 2;
 			snd_buf_frame_size = 0;
 		} else {
 			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * g_info.NCH],
-						   avail_frame, g_info.NCH);
+						   &g_buff[g_buff_frame_start * g_info.channels],
+						   avail_frame, g_info.channels);
 			snd_buf_frame_size -= avail_frame;
 			audio_buf += avail_frame * 2;
 
-			if (g_tta_frames_decoded >= g_tta_frames) {
+			if (g_samples_decoded >= g_info.samples) {
 				__end();
-				return;
+				return -1;
 			}
 			ret = get_samples((byte *) g_buff);
 			if (ret <= 0) {
 				__end();
-				return;
+				return -1;
 			}
 
 			g_buff_frame_size = ret;
 			g_buff_frame_start = 0;
 
-			incr = (double) (g_buff_frame_size) / g_info.SAMPLERATE;
+			incr = (double) (g_buff_frame_size) / g_info.sample_freq;
 			g_play_time += incr;
 
-			g_tta_frames_decoded += g_buff_frame_size;
+			g_samples_decoded += g_buff_frame_size;
 		}
 	}
+
+	return 0;
 }
 
 /**
@@ -259,18 +216,26 @@ static void tta_audiocallback(void *buf, unsigned int reqn, void *pdata)
  */
 static int __init(void)
 {
-	g_status_sema = sceKernelCreateSema("tta Sema", 0, 1, 1, NULL);
+	generic_init();
 
-	tta_lock();
+	generic_lock();
 	g_status = ST_UNKNOWN;
-	tta_unlock();
+	generic_unlock();
 
 	g_buff_frame_size = g_buff_frame_start = 0;
 	g_seek_seconds = 0;
 
-	g_duration = g_play_time = 0.;
+	g_play_time = 0.;
 
-	g_tta_frames_decoded = g_tta_frames = g_tta_data_offset = 0;
+	g_samples_decoded = g_tta_data_offset = 0;
+	memset(&g_info, 0, sizeof(g_info));
+
+	return 0;
+}
+
+static int tta_read_tag(const char *spath)
+{
+	generic_readtag(&g_info, spath);
 
 	return 0;
 }
@@ -287,6 +252,11 @@ static int tta_load(const char *spath, const char *lpath)
 {
 	__init();
 
+	if (tta_read_tag(spath) != 0) {
+		__end();
+		return -1;
+	}
+
 	if (g_buff != NULL) {
 		free(g_buff);
 		g_buff = NULL;
@@ -297,68 +267,48 @@ static int tta_load(const char *spath, const char *lpath)
 		return -1;
 	}
 
-	if (open_tta_file(spath, &g_info, 0) < 0) {
-		dbg_printf(d, "TTA Decoder Error - %s", get_error_str(g_info.STATE));
-		close_tta_file(&g_info);
+	if (open_tta_file(spath, &ttainfo, 0, g_io_buffer_size) < 0) {
+		dbg_printf(d, "TTA Decoder Error - %s", get_error_str(ttainfo.STATE));
+		close_tta_file(&ttainfo);
 		return -1;
 	}
 
-	if (player_init(&g_info) != 0) {
+	if (player_init(&ttainfo) != 0) {
 		__end();
 		return -1;
 	}
 
-	if (g_info.BPS == 0) {
+	if (ttainfo.BPS == 0) {
 		__end();
 		return -1;
 	}
 
-	g_tta_frames = g_info.DATALENGTH;
-	g_duration = g_info.LENGTH;
+	g_info.samples = ttainfo.DATALENGTH;
+	g_info.duration = (double) ttainfo.LENGTH;
+	g_info.sample_freq = ttainfo.SAMPLERATE;
+	g_info.channels = ttainfo.NCH;
+	g_info.filesize = ttainfo.FILESIZE;
 
-	if (xMP3AudioInit() < 0) {
+	if (config.use_vaudio)
+		xAudioSetFrameSize(2048);
+	else
+		xAudioSetFrameSize(4096);
+	
+	if (xAudioInit() < 0) {
 		__end();
 		return -1;
 	}
 
-	if (xMP3AudioSetFrequency(g_info.SAMPLERATE) < 0) {
+	if (xAudioSetFrequency(ttainfo.SAMPLERATE) < 0) {
 		__end();
 		return -1;
 	}
 
-	xMP3AudioSetChannelCallback(0, tta_audiocallback, NULL);
+	xAudioSetChannelCallback(0, tta_audiocallback, NULL);
 
-	tta_lock();
+	generic_lock();
 	g_status = ST_LOADED;
-	tta_unlock();
-
-	return 0;
-}
-
-/**
- * 开始TTA音乐文件的播放
- *
- * @return 成功时返回0
- */
-static int tta_play(void)
-{
-	tta_lock();
-	g_status = ST_PLAYING;
-	tta_unlock();
-
-	return 0;
-}
-
-/**
- * 暂停TTA音乐文件的播放
- *
- * @return 成功时返回0
- */
-static int tta_pause(void)
-{
-	tta_lock();
-	g_status = ST_PAUSED;
-	tta_unlock();
+	generic_unlock();
 
 	return 0;
 }
@@ -372,21 +322,13 @@ static int tta_pause(void)
  */
 static int __end(void)
 {
-	xMP3AudioEndPre();
+	xAudioEndPre();
 
-	tta_lock();
+	generic_lock();
 	g_status = ST_STOPPED;
-	tta_unlock();
-
-	if (g_status_sema >= 0) {
-		sceKernelDeleteSema(g_status_sema);
-		g_status_sema = -1;
-	}
+	generic_unlock();
 
 	g_play_time = 0.;
-
-	player_stop();
-	close_tta_file(&g_info);
 
 	return 0;
 }
@@ -402,62 +344,17 @@ static int tta_end(void)
 {
 	__end();
 
-	xMP3AudioEnd();
+	xAudioEnd();
 
 	if (g_buff != NULL) {
 		free(g_buff);
 		g_buff = NULL;
 	}
 
+	player_stop();
+	close_tta_file(&ttainfo);
 	g_status = ST_STOPPED;
-
-	return 0;
-}
-
-/**
- * 得到当前驱动的播放状态
- *
- * @return 状态
- */
-static int tta_get_status(void)
-{
-	return g_status;
-}
-
-/**
- * 快进TTA音乐文件
- *
- * @param sec 秒数
- *
- * @return 成功时返回0
- */
-static int tta_fforward(int sec)
-{
-	tta_lock();
-	if (g_status == ST_PLAYING || g_status == ST_PAUSED)
-		g_status = ST_FFOWARD;
-	tta_unlock();
-
-	g_seek_seconds = sec;
-
-	return 0;
-}
-
-/**
- * 快退TTA音乐文件
- *
- * @param sec 秒数
- *
- * @return 成功时返回0
- */
-static int tta_fbackward(int sec)
-{
-	tta_lock();
-	if (g_status == ST_PLAYING || g_status == ST_PAUSED)
-		g_status = ST_FBACKWARD;
-	tta_unlock();
-
-	g_seek_seconds = sec;
+	generic_end();
 
 	return 0;
 }
@@ -469,8 +366,7 @@ static int tta_fbackward(int sec)
  */
 static int tta_suspend(void)
 {
-	g_suspend_status = g_status;
-	g_suspend_playing_time = g_play_time;
+	generic_suspend();
 	tta_end();
 
 	return 0;
@@ -498,10 +394,7 @@ static int tta_resume(const char *spath, const char *lpath)
 	tta_seek_seconds(g_play_time);
 	g_suspend_playing_time = 0;
 
-	tta_lock();
-	g_status = g_suspend_status;
-	tta_unlock();
-	g_suspend_status = ST_LOADED;
+	generic_resume(spath, lpath);
 
 	return 0;
 }
@@ -515,41 +408,120 @@ static int tta_resume(const char *spath, const char *lpath)
  */
 static int tta_get_info(struct music_info *pinfo)
 {
+	generic_get_info(pinfo);
+
 	if (pinfo->type & MD_GET_TITLE) {
-		STRCPY_S(pinfo->title, (const char *) g_info.ID3.title);
+		if (g_info.tag.title[0] == '\0') {
+			pinfo->encode = conf_encode_gbk;
+			STRCPY_S(pinfo->title, (const char *) ttainfo.ID3.title);
+		}
 	}
 	if (pinfo->type & MD_GET_ARTIST) {
-		STRCPY_S(pinfo->artist, (const char *) g_info.ID3.artist);
+		if (g_info.tag.artist[0] == '\0') {
+			pinfo->encode = conf_encode_gbk;
+			STRCPY_S(pinfo->artist, (const char *) ttainfo.ID3.artist);
+		}
 	}
-	if (pinfo->type & MD_GET_COMMENT) {
-		STRCPY_S(pinfo->comment, "");
+	if (pinfo->type & MD_GET_ALBUM) {
+		if (g_info.tag.album[0] == '\0') {
+			pinfo->encode = conf_encode_gbk;
+			STRCPY_S(pinfo->album, (const char *) ttainfo.ID3.album);
+		}
 	}
 	if (pinfo->type & MD_GET_CURTIME) {
 		pinfo->cur_time = g_play_time;
 	}
-	if (pinfo->type & MD_GET_DURATION) {
-		pinfo->duration = g_duration;
-	}
 	if (pinfo->type & MD_GET_CPUFREQ) {
+#ifdef _DEBUG
 		pinfo->psp_freq[0] = 222;
-		pinfo->psp_freq[1] = 111;
+#else
+		if (config.use_vaudio)
+			pinfo->psp_freq[0] = 166;
+		else
+			pinfo->psp_freq[0] = 133;
+#endif
+		pinfo->psp_freq[1] = pinfo->psp_freq[0] / 2;
 	}
 	if (pinfo->type & MD_GET_FREQ) {
-		pinfo->freq = g_info.SAMPLERATE;
+		pinfo->freq = ttainfo.SAMPLERATE;
 	}
 	if (pinfo->type & MD_GET_CHANNELS) {
-		pinfo->channels = g_info.NCH;
+		pinfo->channels = ttainfo.NCH;
 	}
 	if (pinfo->type & MD_GET_AVGKBPS) {
-		pinfo->avg_kbps = g_info.BITRATE;
+		pinfo->avg_kbps = ttainfo.BITRATE;
 	}
 	if (pinfo->type & MD_GET_DECODERNAME) {
 		STRCPY_S(pinfo->decoder_name, "tta");
 	}
 	if (pinfo->type & MD_GET_ENCODEMSG) {
-		SPRINTF_S(pinfo->encode_msg, "Compression ratio: %.2f",
-				  g_info.COMPRESS);
+		if (config.show_encoder_msg && g_status != ST_UNKNOWN) {
+			SPRINTF_S(pinfo->encode_msg, "%s: %.2f", _("压缩率"),
+					  ttainfo.COMPRESS);
+		} else {
+			pinfo->encode_msg[0] = '\0';
+		}
 	}
+
+	return 0;
+}
+
+/**
+ * 检测是否为TTA文件，目前只检查文件后缀名
+ *
+ * @param spath 当前播放音乐名，8.3路径形式
+ *
+ * @return 是TTA文件返回1，否则返回0
+ */
+static int tta_probe(const char *spath)
+{
+	const char *p;
+
+	p = utils_fileext(spath);
+
+	if (p) {
+		if (stricmp(p, "tta") == 0) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+static int tta_set_opt(const char *unused, const char *values)
+{
+	int argc, i;
+	char **argv;
+
+	if (config.use_vaudio)
+		g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE / 2;
+	else
+		g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE;
+	
+	dbg_printf(d, "%s: options are %s", __func__, values);
+
+	build_args(values, &argc, &argv);
+
+	for (i = 0; i < argc; ++i) {
+		if (!strncasecmp
+			(argv[i], "tta_buffer_size", sizeof("tta_buffer_size") - 1)) {
+			const char *p = argv[i];
+
+			if ((p = strrchr(p, '=')) != NULL) {
+				p++;
+				g_io_buffer_size = atoi(p);
+
+				if (config.use_vaudio)
+					g_io_buffer_size = g_io_buffer_size / 2;
+
+				if (g_io_buffer_size < 8192) {
+					g_io_buffer_size = 8192;
+				}
+			}
+		}
+	}
+
+	clean_args(argc, argv);
 
 	return 0;
 }
@@ -558,15 +530,16 @@ static struct music_ops tta_ops = {
 	.name = "tta",
 	.set_opt = tta_set_opt,
 	.load = tta_load,
-	.play = tta_play,
-	.pause = tta_pause,
+	.play = NULL,
+	.pause = NULL,
 	.end = tta_end,
-	.get_status = tta_get_status,
-	.fforward = tta_fforward,
-	.fbackward = tta_fbackward,
+	.get_status = NULL,
+	.fforward = NULL,
+	.fbackward = NULL,
 	.suspend = tta_suspend,
 	.resume = tta_resume,
 	.get_info = tta_get_info,
+	.probe = tta_probe,
 	.next = NULL
 };
 
@@ -574,3 +547,5 @@ int tta_init(void)
 {
 	return register_musicdrv(&tta_ops);
 }
+
+#endif

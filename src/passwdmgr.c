@@ -1,3 +1,23 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #include <stdio.h>
 #include <string.h>
 #include <pspsdk.h>
@@ -9,6 +29,9 @@
 #include "scene.h"
 #include "strsafe.h"
 #include "dbg.h"
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
 
 static buffer **list = NULL;
 static int list_count = 0;
@@ -47,9 +70,11 @@ bool load_passwords(void)
 
 	list = malloc(sizeof(list[0]) * t);
 	while (fgets(buf, sizeof(buf), fp) != NULL) {
+		char *t;
+
 		if (buf[0] == '\0' || buf[0] == '\r' || buf[0] == '\n')
 			continue;
-		char *t = chopper(buf);
+		t = chopper(buf);
 
 		add_password(t);
 		free(t);
@@ -97,10 +122,10 @@ void free_passwords(void)
 
 static int find_password(const char *password)
 {
+	int i, n;
+
 	if (list == NULL || password == NULL)
 		return -1;
-
-	int i, n;
 
 	for (i = 0, n = get_password_count(); i < n; ++i) {
 		if (list[i]->ptr && strcmp(password, list[i]->ptr) == 0)
@@ -128,16 +153,20 @@ void add_password(const char *passwd)
 	}
 
 	if (list == NULL) {
+		char *t;
+
 		list = malloc(sizeof(list[0]));
-		char *t = chopper(passwd);
+		t = chopper(passwd);
 
 		list[0] = buffer_init_string(t);
 		free(t);
 		list_count = 1;
 	} else {
+		char *t;
+
 		list = safe_realloc(list, sizeof(list[0]) * (list_count + 1));
 		memmove(list + 1, list, sizeof(list[0]) * list_count);
-		char *t = chopper(passwd);
+		t = chopper(passwd);
 
 		list[0] = buffer_init_string(t);
 		free(t);

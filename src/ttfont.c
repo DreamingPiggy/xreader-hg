@@ -1,3 +1,23 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #include "config.h"
 
 #ifdef ENABLE_TTF
@@ -20,8 +40,15 @@
 #include "strsafe.h"
 #include "text.h"
 #include "power.h"
+#include "freq_lock.h"
+#include "xrhal.h"
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
+#include "fontconfig.h"
+#include "thread_lock.h"
 
-static SceUID ttf_sema = -1;
+static struct psp_mutex_t ttf_l;
 
 /**
  * 打开TTF字体文件
@@ -50,12 +77,6 @@ static p_ttf ttf_open_file(const char *ttfpath, int pixelSize,
 
 	memset(ttf, 0, sizeof(t_ttf));
 
-	if (strrchr(ttfName, '/') == NULL)
-		ttf->fontName = strdup(ttfName);
-	else {
-		ttf->fontName = strdup(strrchr(ttfName, '/') + 1);
-	}
-
 	if (FT_Init_FreeType(&ttf->library) != 0) {
 		free(ttf);
 		return NULL;
@@ -68,6 +89,10 @@ static p_ttf ttf_open_file(const char *ttfpath, int pixelSize,
 		free(ttf);
 		return NULL;
 	}
+
+	ttf->fontName = FT_Get_Postscript_Name(ttf->face);
+
+	dbg_printf(d, "%s: font name is %s", __func__, ttf->fontName);
 
 	for (i = 0; i < SBIT_HASH_SIZE; ++i) {
 		memset(&ttf->sbitHashRoot[i], 0, sizeof(SBit_HashItem));
@@ -99,25 +124,25 @@ static p_ttf ttf_open_file_to_memory(const char *filename, int size,
 	if (filename == NULL || size == 0)
 		return NULL;
 
-	fd = sceIoOpen(filename, PSP_O_RDONLY, 0777);
+	fd = xrIoOpen(filename, PSP_O_RDONLY, 0777);
 
 	if (fd < 0) {
 		return NULL;
 	}
 
-	fileSize = sceIoLseek32(fd, 0, PSP_SEEK_END);
-	sceIoLseek32(fd, 0, PSP_SEEK_SET);
+	fileSize = xrIoLseek32(fd, 0, PSP_SEEK_END);
+	xrIoLseek32(fd, 0, PSP_SEEK_SET);
 	buf = malloc(fileSize);
 
 	if (buf == NULL) {
-		sceIoClose(fd);
+		xrIoClose(fd);
 		return NULL;
 	}
 
-	sceIoRead(fd, buf, fileSize);
-	sceIoClose(fd);
+	xrIoRead(fd, buf, fileSize);
+	xrIoClose(fd);
 
-	ttf = ttf_open_buffer(buf, fileSize, size, ttfname);
+	ttf = ttf_open_buffer(buf, fileSize, size, ttfname, false);
 
 	if (ttf == NULL) {
 		free(buf);
@@ -126,7 +151,30 @@ static p_ttf ttf_open_file_to_memory(const char *filename, int size,
 	return ttf;
 }
 
-extern p_ttf ttf_open(const char *filename, int size, bool load2mem)
+static fontconfig_mgr *fc_mgr = NULL;
+
+static void update_fontconfig(p_ttf ttf, int pixelSize)
+{
+	bool cjkmode = false;
+
+	font_config *p = NULL;
+
+	if (fc_mgr == NULL) {
+		fc_mgr = fontconfigmgr_init();
+	}
+
+	p = fontconfigmgr_lookup(fc_mgr, ttf->fontName, pixelSize, ttf->cjkmode);
+
+	if (p != NULL) {
+		memcpy(&ttf->config, p, sizeof(*p));
+	} else {
+		// apply default config
+		new_font_config("unknown font", &ttf->config, cjkmode);
+	}
+}
+
+extern p_ttf ttf_open(const char *filename, int size, bool load2mem,
+					  bool cjkmode)
 {
 	p_ttf ttf;
 
@@ -138,11 +186,17 @@ extern p_ttf ttf_open(const char *filename, int size, bool load2mem)
 	else
 		ttf = ttf_open_file(filename, size, filename);
 
+	if (ttf != NULL) {
+		ttf->cjkmode = cjkmode;
+		update_fontconfig(ttf, size);
+		report_font_config(&ttf->config);
+	}
+
 	return ttf;
 }
 
 extern p_ttf ttf_open_buffer(void *ttfBuf, size_t ttfLength, int pixelSize,
-							 const char *ttfName)
+							 const char *ttfName, bool cjkmode)
 {
 	int i;
 	p_ttf ttf;
@@ -160,12 +214,6 @@ extern p_ttf ttf_open_buffer(void *ttfBuf, size_t ttfLength, int pixelSize,
 	ttf->fileBuffer = ttfBuf;
 	ttf->fileSize = ttfLength;
 
-	if (strrchr(ttfName, '/') == NULL)
-		ttf->fontName = strdup(ttfName);
-	else {
-		ttf->fontName = strdup(strrchr(ttfName, '/') + 1);
-	}
-
 	if (FT_Init_FreeType(&ttf->library) != 0) {
 		free(ttf);
 		return NULL;
@@ -179,43 +227,69 @@ extern p_ttf ttf_open_buffer(void *ttfBuf, size_t ttfLength, int pixelSize,
 		return NULL;
 	}
 
+	ttf->fontName = FT_Get_Postscript_Name(ttf->face);
+
+	dbg_printf(d, "%s: font name is %s", __func__, ttf->fontName);
+
 	for (i = 0; i < SBIT_HASH_SIZE; ++i) {
 		memset(&ttf->sbitHashRoot[i], 0, sizeof(SBit_HashItem));
 	}
+
 	ttf->cacheSize = 0;
 	ttf->cachePop = 0;
 
 	ttf_set_pixel_size(ttf, pixelSize);
 
+	ttf->cjkmode = cjkmode;
+	report_font_config(&ttf->config);
+
 	return ttf;
 }
 
-extern void ttf_close(p_ttf ttf)
+extern void ttf_close_cache(p_ttf ttf)
 {
-	int i;
+	size_t i;
 
-	if (ttf == NULL)
-		return;
-
-	if (ttf->fontName != NULL) {
-		free(ttf->fontName);
-		ttf->fontName = NULL;
-	}
-
-	if (ttf->fileBuffer != NULL) {
-		free(ttf->fileBuffer);
-		ttf->fileBuffer = NULL;
-	}
+	ttf_lock();
 
 	for (i = 0; i < SBIT_HASH_SIZE; ++i) {
 		if (ttf->sbitHashRoot[i].bitmap.buffer) {
 			free(ttf->sbitHashRoot[i].bitmap.buffer);
 			ttf->sbitHashRoot[i].bitmap.buffer = NULL;
 		}
+
+		memset(&ttf->sbitHashRoot[i], 0, sizeof(ttf->sbitHashRoot[i]));
 	}
 
-	FT_Done_Face(ttf->face);
-	FT_Done_FreeType(ttf->library);
+	ttf_unlock();
+}
+
+extern void ttf_close(p_ttf ttf)
+{
+	if (ttf == NULL)
+		return;
+
+	ttf->fontName = NULL;
+
+	if (ttf->fileBuffer != NULL) {
+		free(ttf->fileBuffer);
+		ttf->fileBuffer = NULL;
+	}
+
+	ttf_close_cache(ttf);
+
+	if (ttf->face != NULL) {
+		FT_Done_Face(ttf->face);
+	}
+
+	if (ttf->library != NULL) {
+		FT_Done_FreeType(ttf->library);
+	}
+
+	if (fc_mgr != NULL) {
+		fontconfigmgr_free(fc_mgr);
+		fc_mgr = NULL;
+	}
 
 	free(ttf);
 }
@@ -230,33 +304,9 @@ extern bool ttf_set_pixel_size(p_ttf ttf, int size)
 	}
 
 	ttf->pixelSize = size;
+	update_fontconfig(ttf, size);
+
 	return true;
-}
-
-extern void ttf_set_anti_alias(p_ttf ttf, bool aa)
-{
-	if (ttf == NULL)
-		return;
-
-	ttf->antiAlias = aa;
-}
-
-extern void ttf_set_cleartype(p_ttf ttf, bool cleartype)
-{
-	if (ttf == NULL)
-		return;
-
-	if (cleartype)
-		FT_Library_SetLcdFilter(ttf->library, FT_LCD_FILTER_DEFAULT);
-	ttf->cleartype = cleartype;
-}
-
-extern void ttf_set_embolden(p_ttf ttf, bool embolden)
-{
-	if (ttf == NULL)
-		return;
-
-	ttf->embolden = embolden;
 }
 
 /**
@@ -276,6 +326,8 @@ static void sbitCacheAdd(p_ttf ttf, unsigned long ucsCode, int glyphIndex,
 						 int yadvance)
 {
 	int addIndex = 0;
+	SBit_HashItem *item;
+	int pitch;
 
 	if (ttf->cacheSize < SBIT_HASH_SIZE) {
 		addIndex = ttf->cacheSize++;
@@ -285,7 +337,7 @@ static void sbitCacheAdd(p_ttf ttf, unsigned long ucsCode, int glyphIndex,
 			ttf->cachePop = 0;
 	}
 
-	SBit_HashItem *item = &ttf->sbitHashRoot[addIndex];
+	item = &ttf->sbitHashRoot[addIndex];
 
 	if (item->bitmap.buffer) {
 		free(item->bitmap.buffer);
@@ -295,9 +347,9 @@ static void sbitCacheAdd(p_ttf ttf, unsigned long ucsCode, int glyphIndex,
 	item->ucs_code = ucsCode;
 	item->glyph_index = glyphIndex;
 	item->size = ttf->pixelSize;
-	item->anti_alias = ttf->antiAlias;
-	item->cleartype = ttf->cleartype;
-	item->embolden = ttf->embolden;
+	item->anti_alias = ttf->config.antialias;
+	item->cleartype = ttf->config.cleartype;
+	item->embolden = ttf->config.embolden;
 	item->xadvance = xadvance;
 	item->yadvance = yadvance;
 	item->bitmap.width = bitmap->width;
@@ -308,11 +360,10 @@ static void sbitCacheAdd(p_ttf ttf, unsigned long ucsCode, int glyphIndex,
 	item->bitmap.format = bitmap->pixel_mode;
 	item->bitmap.max_grays = (bitmap->num_grays - 1);
 
-	int pitch = abs(bitmap->pitch);
+	pitch = abs(bitmap->pitch);
 
 	if (pitch * bitmap->rows > 0) {
-		item->bitmap.buffer =
-			(unsigned char *) memalign(64, pitch * bitmap->rows);
+		item->bitmap.buffer = malloc(pitch * bitmap->rows);
 		if (item->bitmap.buffer) {
 			memcpy(item->bitmap.buffer, bitmap->buffer, pitch * bitmap->rows);
 		}
@@ -328,18 +379,16 @@ static void sbitCacheAdd(p_ttf ttf, unsigned long ucsCode, int glyphIndex,
  *
  * @return
  */
-static SBit_HashItem *sbitCacheFind(p_ttf ttf, unsigned long ucsCode,
-									int format)
+static SBit_HashItem *sbitCacheFind(p_ttf ttf, unsigned long ucsCode)
 {
 	int i;
 
 	for (i = 0; i < ttf->cacheSize; i++) {
 		if ((ttf->sbitHashRoot[i].ucs_code == ucsCode) &&
 			(ttf->sbitHashRoot[i].size == ttf->pixelSize) &&
-			(ttf->sbitHashRoot[i].anti_alias == ttf->antiAlias) &&
-			(ttf->sbitHashRoot[i].cleartype == ttf->cleartype) &&
-			(ttf->sbitHashRoot[i].embolden == ttf->embolden) &&
-			(ttf->sbitHashRoot[i].bitmap.format == format)
+			(ttf->sbitHashRoot[i].anti_alias == ttf->config.antialias) &&
+			(ttf->sbitHashRoot[i].cleartype == ttf->config.cleartype) &&
+			(ttf->sbitHashRoot[i].embolden == ttf->config.embolden)
 			)
 			return (&ttf->sbitHashRoot[i]);
 	}
@@ -356,39 +405,14 @@ static SBit_HashItem *sbitCacheFind(p_ttf ttf, unsigned long ucsCode,
  */
 static FT_Render_Mode get_render_mode(p_ttf ttf, bool isVertical)
 {
-	if (ttf->cleartype && isVertical)
+	if (ttf->config.cleartype && isVertical)
 		return FT_RENDER_MODE_LCD_V;
-	if (ttf->cleartype && !isVertical)
+	if (ttf->config.cleartype && !isVertical)
 		return FT_RENDER_MODE_LCD;
-	if (ttf->antiAlias)
+	if (ttf->config.antialias)
 		return FT_RENDER_MODE_NORMAL;
 
 	return FT_RENDER_MODE_MONO;
-}
-
-/**
- * 得到当前字体输出格式
- *
- * @param mode
- * 
- * @return
- */
-static FT_Pixel_Mode get_pixel_mode(FT_Render_Mode mode)
-{
-	switch (mode) {
-		case FT_RENDER_MODE_LCD:
-			return FT_PIXEL_MODE_LCD;
-		case FT_RENDER_MODE_LCD_V:
-			return FT_PIXEL_MODE_LCD_V;
-		case FT_RENDER_MODE_NORMAL:
-			return FT_PIXEL_MODE_GRAY;
-		case FT_RENDER_MODE_MONO:
-			return FT_PIXEL_MODE_MONO;
-		default:
-			break;
-	}
-
-	return FT_PIXEL_MODE_NONE;
 }
 
 /**
@@ -474,11 +498,13 @@ static void _drawBitmap_horz(byte * buffer, int format, int width, int height,
 	} else if (format == FT_PIXEL_MODE_LCD) {
 		for (j = 0; j < height; j++)
 			for (i = 0; i < width / 3; i++) {
+				pixel origcolor;
+
 				if (i + x < 0 || i + x >= scr_width || j + y < 0
 					|| j + y >= scr_height)
 					continue;
 				// RGB or BGR ?
-				pixel origcolor = *disp_get_vaddr((i + x), (j + y));
+				origcolor = *disp_get_vaddr((i + x), (j + y));
 
 				ra = buffer[j * pitch + i * 3];
 				ga = buffer[j * pitch + i * 3 + 1];
@@ -501,11 +527,13 @@ static void _drawBitmap_horz(byte * buffer, int format, int width, int height,
 	} else if (format == FT_PIXEL_MODE_LCD_V) {
 		for (j = 0; j < height / 3; j++)
 			for (i = 0; i < width; i++) {
+				pixel origcolor;
+
 				if (i + x < 0 || i + x >= scr_width || j + y < 0
 					|| j + y >= scr_height)
 					continue;
 				// RGB or BGR ?
-				pixel origcolor = *disp_get_vaddr((i + x), (j + y));
+				origcolor = *disp_get_vaddr((i + x), (j + y));
 
 				ra = buffer[j * 3 * pitch + i];
 				ga = buffer[(j * 3 + 1) * pitch + i];
@@ -569,7 +597,69 @@ static void drawBitmap_horz(FT_Bitmap * bitmap, FT_Int x, FT_Int y,
 					 bitmap->rows, bitmap->pitch, x, y, width, height, color);
 }
 
+static FT_Int32 get_fontconfig_flag(p_ttf ttf, bool is_vertical)
+{
+	FT_Int32 flag = FT_LOAD_DEFAULT;
+
+	if (!ttf->config.hinting) {
+		flag |= FT_LOAD_NO_HINTING;
+	}
+
+	if (ttf->config.autohint) {
+		flag |= FT_LOAD_FORCE_AUTOHINT;
+	}
+
+	if (!ttf->config.globaladvance) {
+		flag |= FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH;
+	}
+
+	if (ttf->config.cleartype) {
+		FT_Library_SetLcdFilter(ttf->library, ttf->config.lcdfilter);
+	}
+
+	if (ttf->config.antialias) {
+		if (ttf->config.hintstyle > 0 && ttf->config.hintstyle < 3) {
+			flag |= FT_LOAD_TARGET_LIGHT;
+		} else {
+			if (is_vertical) {
+				flag |= FT_LOAD_TARGET_LCD_V;
+			} else {
+				flag |= FT_LOAD_TARGET_LCD;
+			}
+		}
+	} else {
+		flag |= FT_LOAD_TARGET_MONO;
+	}
+
+	return flag;
+}
+
 #define DISP_RSPAN 0
+
+static FT_Error ttf_load_glyph(p_ttf ttf, FT_UInt glyphIndex, bool is_vertical)
+{
+	FT_Int32 flag;
+	FT_Error error;
+
+	flag = get_fontconfig_flag(ttf, is_vertical);
+
+	error = FT_Load_Glyph(ttf->face, glyphIndex, flag);
+
+	if (error) {
+		/*
+		 * If anti-aliasing or transforming glyphs and
+		 * no outline version exists, fallback to the
+		 * bitmap and let things look bad instead of
+		 * missing the glyph
+		 */
+		if (flag & FT_LOAD_NO_BITMAP) {
+			error =
+				FT_Load_Glyph(ttf->face, glyphIndex, flag & ~FT_LOAD_NO_BITMAP);
+		}
+	}
+
+	return error;
+}
 
 /**
  * 从*str中取出一个字（汉字/英文字母）进行绘制，水平版本
@@ -599,13 +689,13 @@ static void ttf_disp_putnstring_horz(p_ttf ttf, int *x, int *y, pixel color,
 	FT_Error error;
 	FT_GlyphSlot slot;
 	FT_UInt glyphIndex;
-
 	FT_Bool useKerning;
+	word ucs;
+	SBit_HashItem *cache;
 
 	useKerning = FT_HAS_KERNING(ttf->face);
-	word ucs = charsets_gbk_to_ucs(*str);
-	SBit_HashItem *cache =
-		sbitCacheFind(ttf, ucs, get_pixel_mode(get_render_mode(ttf, false)));
+	ucs = charsets_gbk_to_ucs(*str);
+	cache = sbitCacheFind(ttf, ucs);
 
 	if (cache) {
 		if (useKerning && *previous && cache->glyph_index) {
@@ -625,13 +715,12 @@ static void ttf_disp_putnstring_horz(p_ttf ttf, int *x, int *y, pixel color,
 		*previous = cache->glyph_index;
 	} else {
 		glyphIndex = FT_Get_Char_Index(ttf->face, ucs);
-		// disable hinting when loading chinese characters
-		if (is_hanzi)
-			error = FT_Load_Glyph(ttf->face, glyphIndex, FT_LOAD_NO_HINTING);
-		else
-			error = FT_Load_Glyph(ttf->face, glyphIndex, FT_LOAD_DEFAULT);
-		if (error)
+		error = ttf_load_glyph(ttf, glyphIndex, false);
+
+		if (error) {
 			return;
+		}
+
 		if (ttf->face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
 			error =
 				FT_Render_Glyph(ttf->face->glyph, get_render_mode(ttf, false));
@@ -641,7 +730,7 @@ static void ttf_disp_putnstring_horz(p_ttf ttf, int *x, int *y, pixel color,
 		}
 		slot = ttf->face->glyph;
 
-		if (ttf->embolden)
+		if (ttf->config.embolden)
 			FT_GlyphSlot_Embolden(slot);
 
 		if (useKerning && *previous && glyphIndex) {
@@ -689,11 +778,13 @@ extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const byte * str,
 
 	while (*str != 0 && x < maxpixels && bytetable[*(byte *) str] != 1) {
 		if (*str > 0x80) {
+			word ucs;
+			SBit_HashItem *cache;
+
 			useKerning = FT_HAS_KERNING(cttf->face);
-			word ucs = charsets_gbk_to_ucs(str);
-			SBit_HashItem *cache = sbitCacheFind(cttf, ucs,
-												 get_pixel_mode(get_render_mode
-																(cttf, false)));
+			ucs = charsets_gbk_to_ucs(str);
+			cache = sbitCacheFind(cttf, ucs);
+
 			if (cache) {
 				if (useKerning && cprevious && cache->glyph_index) {
 					FT_Vector delta;
@@ -711,32 +802,24 @@ extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const byte * str,
 				cprevious = cache->glyph_index;
 			} else {
 				glyphIndex = FT_Get_Char_Index(cttf->face, ucs);
-				// disable hinting when loading chinese characters
-				error =
-					FT_Load_Glyph(cttf->face, glyphIndex, FT_LOAD_NO_HINTING);
+				error = ttf_load_glyph(cttf, glyphIndex, false);
+
 				if (error) {
 					return count;
 				}
+
 				if (cttf->face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
-					if (cttf->cleartype) {
-						error =
-							FT_Render_Glyph(cttf->face->
-											glyph, FT_RENDER_MODE_LCD);
-					} else if (cttf->antiAlias) {
-						error =
-							FT_Render_Glyph(cttf->face->
-											glyph, FT_RENDER_MODE_NORMAL);
-					} else
-						error =
-							FT_Render_Glyph(cttf->face->
-											glyph, FT_RENDER_MODE_MONO);
+					error =
+						FT_Render_Glyph(cttf->face->glyph,
+										get_render_mode(cttf, false));
+
 					if (error) {
 						return count;
 					}
 				}
 				slot = cttf->face->glyph;
 
-				if (cttf->embolden)
+				if (cttf->config.embolden)
 					FT_GlyphSlot_Embolden(slot);
 
 				if (useKerning && cprevious && glyphIndex) {
@@ -764,11 +847,12 @@ extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const byte * str,
 			(str) += 2;
 			(count) += 2;
 		} else if (*str > 0x1F) {
+			word ucs;
+			SBit_HashItem *cache;
+
 			useKerning = FT_HAS_KERNING(ettf->face);
-			word ucs = charsets_gbk_to_ucs(str);
-			SBit_HashItem *cache = sbitCacheFind(ettf, ucs,
-												 get_pixel_mode(get_render_mode
-																(ettf, false)));
+			ucs = charsets_gbk_to_ucs(str);
+			cache = sbitCacheFind(ettf, ucs);
 
 			if (cache) {
 				if (useKerning && eprevious && cache->glyph_index) {
@@ -787,31 +871,24 @@ extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const byte * str,
 				eprevious = cache->glyph_index;
 			} else {
 				glyphIndex = FT_Get_Char_Index(ettf->face, ucs);
-				// disable hinting when loading chinese characters
-				error = FT_Load_Glyph(ettf->face, glyphIndex, FT_LOAD_DEFAULT);
+				error = ttf_load_glyph(ettf, glyphIndex, false);
+
 				if (error) {
 					return count;
 				}
+
 				if (ettf->face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
-					if (ettf->cleartype) {
-						error =
-							FT_Render_Glyph(ettf->face->
-											glyph, FT_RENDER_MODE_LCD);
-					} else if (ettf->antiAlias) {
-						error =
-							FT_Render_Glyph(ettf->face->
-											glyph, FT_RENDER_MODE_NORMAL);
-					} else
-						error =
-							FT_Render_Glyph(ettf->face->
-											glyph, FT_RENDER_MODE_MONO);
+					error =
+						FT_Render_Glyph(ettf->face->glyph,
+										get_render_mode(ettf, false));
+
 					if (error) {
 						return count;
 					}
 				}
 				slot = ettf->face->glyph;
 
-				if (ettf->embolden)
+				if (ettf->config.embolden)
 					FT_GlyphSlot_Embolden(slot);
 
 				if (useKerning && eprevious && glyphIndex) {
@@ -867,6 +944,7 @@ static int ttf_get_char_width(p_ttf cttf, const byte * str)
 	FT_UInt glyphIndex;
 	FT_Bool useKerning;
 	int x = 0;
+	word ucs;
 
 	if (str == NULL)
 		return 0;
@@ -874,27 +952,25 @@ static int ttf_get_char_width(p_ttf cttf, const byte * str)
 		return DISP_BOOK_FONTSIZE;
 
 	useKerning = FT_HAS_KERNING(cttf->face);
-	word ucs = charsets_gbk_to_ucs(str);
+	ucs = charsets_gbk_to_ucs(str);
 
 	glyphIndex = FT_Get_Char_Index(cttf->face, ucs);
-	// disable hinting when loading chinese characters
-	error = FT_Load_Glyph(cttf->face, glyphIndex, FT_LOAD_NO_HINTING);
+	error = ttf_load_glyph(cttf, glyphIndex, false);
+
 	if (error)
 		return x;
+
 	if (cttf->face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
-		if (cttf->cleartype) {
-			error = FT_Render_Glyph(cttf->face->glyph, FT_RENDER_MODE_LCD);
-		} else if (cttf->antiAlias) {
-			error = FT_Render_Glyph(cttf->face->glyph, FT_RENDER_MODE_NORMAL);
-		} else
-			error = FT_Render_Glyph(cttf->face->glyph, FT_RENDER_MODE_MONO);
+		error =
+			FT_Render_Glyph(cttf->face->glyph, get_render_mode(cttf, false));
+
 		if (error) {
 			return x;
 		}
 	}
 	slot = cttf->face->glyph;
 
-	if (cttf->embolden)
+	if (cttf->config.embolden)
 		FT_GlyphSlot_Embolden(slot);
 
 	x += slot->advance.x >> 6;
@@ -1028,6 +1104,11 @@ extern void disp_putnstring_horz_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
 										  int count, dword wordspace, int top,
 										  int height, int bot)
 {
+	FT_UInt cprevious, eprevious;
+	dword cpu, bus;
+	int fid = -1;
+
+	
 	if (cttf == NULL || ettf == NULL)
 		return;
 
@@ -1036,18 +1117,16 @@ extern void disp_putnstring_horz_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
 			return;
 	}
 
-	FT_UInt cprevious, eprevious;
-
 	cprevious = eprevious = 0;
-
-	dword cpu, bus;
-
 	power_get_clock(&cpu, &bus);
-	if (cpu < 222 && config.ttf_haste_up)
-		power_set_clock(222, 111);
+
+	if (cpu < 222 && config.ttf_haste_up) {
+		fid = freq_enter(222, 111);
+	}
+
 	while (*str != 0 && count > 0) {
-		if (!check_range(x, y)) {
-			scene_power_save(true);
+		if (!check_range(x, y) && fid >= 0) {
+			freq_leave(fid);
 			return;
 		}
 		if (*str > 0x80) {
@@ -1059,14 +1138,11 @@ extern void disp_putnstring_horz_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
 									 &count, wordspace, top, height,
 									 bot, &eprevious, false);
 		} else {
+			int j;
+
 			if (x > PSP_SCREEN_WIDTH - DISP_RSPAN - DISP_BOOK_FONTSIZE / 2) {
 				break;
-#if 0
-				x = 0;
-				y += DISP_BOOK_FONTSIZE;
-#endif
 			}
-			int j;
 
 			for (j = 0; j < (*str == 0x09 ? config.tabstop : 1); ++j)
 				x += DISP_BOOK_FONTSIZE / 2 + wordspace;
@@ -1074,14 +1150,13 @@ extern void disp_putnstring_horz_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
 			count--;
 		}
 	}
-	scene_power_save(true);
+
+	if (fid >= 0)
+		freq_leave(fid);
 }
 
 extern void ttf_load_ewidth(p_ttf ttf, byte * ewidth, int size)
 {
-	if (ttf == NULL || ewidth == NULL || size == 0)
-		return;
-
 	FT_Error error;
 	FT_GlyphSlot slot;
 	FT_UInt glyphIndex;
@@ -1090,29 +1165,30 @@ extern void ttf_load_ewidth(p_ttf ttf, byte * ewidth, int size)
 	byte width;
 	word ucs;
 
+	if (ttf == NULL || ewidth == NULL || size == 0)
+		return;
+
 	for (ucs = 0; ucs < size; ++ucs) {
 		width = 0;
 		useKerning = FT_HAS_KERNING(ttf->face);
 		glyphIndex = FT_Get_Char_Index(ttf->face, ucs);
-		error = FT_Load_Glyph(ttf->face, glyphIndex, FT_LOAD_DEFAULT);
+		error = ttf_load_glyph(ttf, glyphIndex, false);
+
 		if (error) {
 			return;
 		}
+
 		if (ttf->face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
-			if (ttf->cleartype) {
-				error = FT_Render_Glyph(ttf->face->glyph, FT_RENDER_MODE_LCD);
-			} else if (ttf->antiAlias) {
-				error =
-					FT_Render_Glyph(ttf->face->glyph, FT_RENDER_MODE_NORMAL);
-			} else
-				error = FT_Render_Glyph(ttf->face->glyph, FT_RENDER_MODE_MONO);
+			error =
+				FT_Render_Glyph(ttf->face->glyph, get_render_mode(ttf, false));
+
 			if (error) {
 				return;
 			}
 		}
 		slot = ttf->face->glyph;
 
-		if (ttf->embolden)
+		if (ttf->config.embolden)
 			FT_GlyphSlot_Embolden(slot);
 
 		if (useKerning && eprevious && glyphIndex) {
@@ -1194,12 +1270,15 @@ static void _drawBitmap_reversal(byte * buffer, int format, int width,
 //      dbg_printf(d, "%s: %d, %d, %d", __func__, x, y, scr_height);
 		for (j = 0; j < height; j++)
 			for (i = 0; i < width / 3; i++) {
+				pixel origcolor;
+
 				if (x - i < 0 || x - i >= scr_width
 					|| y - j < PSP_SCREEN_HEIGHT - scr_height
 					|| y - j >= PSP_SCREEN_HEIGHT)
 					continue;
+
 				// RGB or BGR ?
-				pixel origcolor = *disp_get_vaddr((x - i), (y - j));
+				origcolor = *disp_get_vaddr((x - i), (y - j));
 
 				ra = buffer[j * pitch + i * 3];
 				ga = buffer[j * pitch + i * 3 + 1];
@@ -1222,12 +1301,15 @@ static void _drawBitmap_reversal(byte * buffer, int format, int width,
 	} else if (format == FT_PIXEL_MODE_LCD_V) {
 		for (j = 0; j < height / 3; j++)
 			for (i = 0; i < width; i++) {
+				pixel origcolor;
+
 				if (x - i < 0 || x - i >= scr_width
 					|| y - j < PSP_SCREEN_HEIGHT - scr_height
 					|| y - j >= PSP_SCREEN_HEIGHT)
 					continue;
+
 				// RGB or BGR ?
-				pixel origcolor = *disp_get_vaddr((x - i), (y - j));
+				origcolor = *disp_get_vaddr((x - i), (y - j));
 
 				ra = buffer[j * 3 * pitch + i];
 				ga = buffer[(j * 3 + 1) * pitch + i];
@@ -1321,13 +1403,13 @@ static void ttf_disp_putnstring_reversal(p_ttf ttf, int *x, int *y, pixel color,
 	FT_Error error;
 	FT_GlyphSlot slot;
 	FT_UInt glyphIndex;
-
 	FT_Bool useKerning;
+	word ucs;
+	SBit_HashItem *cache;
 
 	useKerning = FT_HAS_KERNING(ttf->face);
-	word ucs = charsets_gbk_to_ucs(*str);
-	SBit_HashItem *cache =
-		sbitCacheFind(ttf, ucs, get_pixel_mode(get_render_mode(ttf, false)));
+	ucs = charsets_gbk_to_ucs(*str);
+	cache = sbitCacheFind(ttf, ucs);
 
 	if (cache) {
 		if (useKerning && *previous && cache->glyph_index) {
@@ -1347,13 +1429,12 @@ static void ttf_disp_putnstring_reversal(p_ttf ttf, int *x, int *y, pixel color,
 		*previous = cache->glyph_index;
 	} else {
 		glyphIndex = FT_Get_Char_Index(ttf->face, ucs);
-		// disable hinting when loading chinese characters
-		if (is_hanzi)
-			error = FT_Load_Glyph(ttf->face, glyphIndex, FT_LOAD_NO_HINTING);
-		else
-			error = FT_Load_Glyph(ttf->face, glyphIndex, FT_LOAD_DEFAULT);
-		if (error)
+		error = ttf_load_glyph(ttf, glyphIndex, false);
+
+		if (error) {
 			return;
+		}
+
 		if (ttf->face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
 			error =
 				FT_Render_Glyph(ttf->face->glyph, get_render_mode(ttf, false));
@@ -1363,7 +1444,7 @@ static void ttf_disp_putnstring_reversal(p_ttf ttf, int *x, int *y, pixel color,
 		}
 		slot = ttf->face->glyph;
 
-		if (ttf->embolden)
+		if (ttf->config.embolden)
 			FT_GlyphSlot_Embolden(slot);
 
 		if (useKerning && *previous && glyphIndex) {
@@ -1402,6 +1483,10 @@ extern void disp_putnstring_reversal_truetype(p_ttf cttf, p_ttf ettf, int x,
 											  dword wordspace, int top,
 											  int height, int bot)
 {
+	FT_UInt cprevious, eprevious;
+	dword cpu, bus;
+	int fid = -1;
+
 	if (cttf == NULL || ettf == NULL)
 		return;
 
@@ -1411,19 +1496,16 @@ extern void disp_putnstring_reversal_truetype(p_ttf cttf, p_ttf ettf, int x,
 	}
 
 	x = PSP_SCREEN_WIDTH - x - 1, y = PSP_SCREEN_HEIGHT - y - 1;
-
-	FT_UInt cprevious, eprevious;
-
 	cprevious = eprevious = 0;
-
-	dword cpu, bus;
-
 	power_get_clock(&cpu, &bus);
-	if (cpu < 222 && config.ttf_haste_up)
-		power_set_clock(222, 111);
+
+	if (cpu < 222 && config.ttf_haste_up) {
+		fid = freq_enter(222, 111);
+	}
+
 	while (*str != 0 && count > 0) {
-		if (!check_range(x, y)) {
-			scene_power_save(true);
+		if (!check_range(x, y) && fid >= 0) {
+			freq_leave(fid);
 			return;
 		}
 		if (x < 0)
@@ -1437,14 +1519,11 @@ extern void disp_putnstring_reversal_truetype(p_ttf cttf, p_ttf ettf, int x,
 										 &count, wordspace, top,
 										 height, bot, &eprevious, false);
 		} else {
+			int j;
+
 			if (x < 0) {
 				break;
-#if 0
-				x = 0;
-				y += DISP_BOOK_FONTSIZE;
-#endif
 			}
-			int j;
 
 			for (j = 0; j < (*str == 0x09 ? config.tabstop : 1); ++j)
 				x -= DISP_BOOK_FONTSIZE / 2 + wordspace;
@@ -1452,7 +1531,8 @@ extern void disp_putnstring_reversal_truetype(p_ttf cttf, p_ttf ettf, int x,
 			count--;
 		}
 	}
-	scene_power_save(true);
+	if (fid >= 0)
+		freq_leave(fid);
 }
 
 /** 
@@ -1514,11 +1594,14 @@ static void _drawBitmap_lvert(byte * buffer, int format, int width, int height,
 //      dbg_printf(d, "%s: %d, %d, %d", __func__, x, y, scr_height);
 		for (j = 0; j < height; j++)
 			for (i = 0; i < width / 3; i++) {
+				pixel origcolor;
+
 				if (y - i < 0 || y - i >= scr_height
 					|| x + j < 0 || x + j >= scr_width)
 					continue;
+
 				// RGB or BGR ?
-				pixel origcolor = *disp_get_vaddr((x + j), (y - i));
+				origcolor = *disp_get_vaddr((x + j), (y - i));
 
 				ra = buffer[j * pitch + i * 3];
 				ga = buffer[j * pitch + i * 3 + 1];
@@ -1541,11 +1624,14 @@ static void _drawBitmap_lvert(byte * buffer, int format, int width, int height,
 	} else if (format == FT_PIXEL_MODE_LCD_V) {
 		for (j = 0; j < height / 3; j++)
 			for (i = 0; i < width; i++) {
+				pixel origcolor;
+
 				if (y - i < 0 || y - i >= scr_height
 					|| x + j < 0 || x + j >= scr_width)
 					continue;
+
 				// RGB or BGR ?
-				pixel origcolor = *disp_get_vaddr((x + j), (y - i));
+				origcolor = *disp_get_vaddr((x + j), (y - i));
 
 				ra = buffer[j * 3 * pitch + i];
 				ga = buffer[(j * 3 + 1) * pitch + i];
@@ -1636,13 +1722,13 @@ static void ttf_disp_putnstring_lvert(p_ttf ttf, int *x, int *y, pixel color,
 	FT_Error error;
 	FT_GlyphSlot slot;
 	FT_UInt glyphIndex;
-
 	FT_Bool useKerning;
+	word ucs;
+	SBit_HashItem *cache;
 
 	useKerning = FT_HAS_KERNING(ttf->face);
-	word ucs = charsets_gbk_to_ucs(*str);
-	SBit_HashItem *cache =
-		sbitCacheFind(ttf, ucs, get_pixel_mode(get_render_mode(ttf, true)));
+	ucs = charsets_gbk_to_ucs(*str);
+	cache = sbitCacheFind(ttf, ucs);
 
 	if (cache) {
 		if (useKerning && *previous && cache->glyph_index) {
@@ -1663,11 +1749,8 @@ static void ttf_disp_putnstring_lvert(p_ttf ttf, int *x, int *y, pixel color,
 		*previous = cache->glyph_index;
 	} else {
 		glyphIndex = FT_Get_Char_Index(ttf->face, ucs);
-		// disable hinting when loading chinese characters
-		if (is_hanzi)
-			error = FT_Load_Glyph(ttf->face, glyphIndex, FT_LOAD_NO_HINTING);
-		else
-			error = FT_Load_Glyph(ttf->face, glyphIndex, FT_LOAD_DEFAULT);
+		error = ttf_load_glyph(ttf, glyphIndex, true);
+
 		if (error)
 			return;
 		if (ttf->face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
@@ -1679,7 +1762,7 @@ static void ttf_disp_putnstring_lvert(p_ttf ttf, int *x, int *y, pixel color,
 		}
 		slot = ttf->face->glyph;
 
-		if (ttf->embolden)
+		if (ttf->config.embolden)
 			FT_GlyphSlot_Embolden(slot);
 
 		if (useKerning && *previous && glyphIndex) {
@@ -1718,6 +1801,10 @@ extern void disp_putnstring_lvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
 										   int count, dword wordspace, int top,
 										   int height, int bot)
 {
+	FT_UInt cprevious, eprevious;
+	dword cpu, bus;
+	int fid = -1;
+
 	if (cttf == NULL || ettf == NULL)
 		return;
 
@@ -1726,18 +1813,15 @@ extern void disp_putnstring_lvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
 			return;
 	}
 
-	FT_UInt cprevious, eprevious;
-
 	cprevious = eprevious = 0;
-
-	dword cpu, bus;
-
 	power_get_clock(&cpu, &bus);
-	if (cpu < 222 && config.ttf_haste_up)
-		power_set_clock(222, 111);
+
+	if (cpu < 222 && config.ttf_haste_up) {
+		fid = freq_enter(222, 111);
+	}
 	while (*str != 0 && count > 0) {
-		if (!check_range(x, y)) {
-			scene_power_save(true);
+		if (!check_range(x, y) && fid >= 0) {
+			freq_leave(fid);
 			return;
 		}
 		if (*str > 0x80) {
@@ -1753,10 +1837,11 @@ extern void disp_putnstring_lvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
 									  &count, wordspace, top,
 									  height, bot, &eprevious, false);
 		} else {
+			int j;
+
 			if (y < DISP_RSPAN + DISP_BOOK_FONTSIZE - 1) {
 				break;
 			}
-			int j;
 
 			for (j = 0; j < (*str == 0x09 ? config.tabstop : 1); ++j)
 				y -= DISP_BOOK_FONTSIZE / 2 + wordspace;
@@ -1764,7 +1849,8 @@ extern void disp_putnstring_lvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
 			count--;
 		}
 	}
-	scene_power_save(true);
+	if (fid >= 0)
+		freq_leave(fid);
 }
 
 /** 
@@ -1827,12 +1913,14 @@ static void _drawBitmap_rvert(byte * buffer, int format, int width, int height,
 	} else if (format == FT_PIXEL_MODE_LCD) {
 		for (j = 0; j < height; j++)
 			for (i = 0; i < width / 3; i++) {
+				pixel origcolor;
+
 				if (y + i < 0 || y + i >= scr_height
 					|| x - j < PSP_SCREEN_WIDTH - scr_width
 					|| x - j >= PSP_SCREEN_WIDTH)
 					continue;
 				// RGB or BGR ?
-				pixel origcolor = *disp_get_vaddr((x - j), (y + i));
+				origcolor = *disp_get_vaddr((x - j), (y + i));
 
 				ra = buffer[j * pitch + i * 3];
 				ga = buffer[j * pitch + i * 3 + 1];
@@ -1855,12 +1943,15 @@ static void _drawBitmap_rvert(byte * buffer, int format, int width, int height,
 	} else if (format == FT_PIXEL_MODE_LCD_V) {
 		for (j = 0; j < height / 3; j++)
 			for (i = 0; i < width; i++) {
+				pixel origcolor;
+
 				if (y + i < 0 || y + i >= scr_height
 					|| x - j < PSP_SCREEN_WIDTH - scr_width
 					|| x - j >= PSP_SCREEN_WIDTH)
 					continue;
+
 				// RGB or BGR ?
-				pixel origcolor = *disp_get_vaddr((x - j), (y + i));
+				origcolor = *disp_get_vaddr((x - j), (y + i));
 
 				ra = buffer[j * 3 * pitch + i];
 				ga = buffer[(j * 3 + 1) * pitch + i];
@@ -1951,13 +2042,13 @@ static void ttf_disp_putnstring_rvert(p_ttf ttf, int *x, int *y, pixel color,
 	FT_Error error;
 	FT_GlyphSlot slot;
 	FT_UInt glyphIndex;
-
 	FT_Bool useKerning;
+	word ucs;
+	SBit_HashItem *cache;
 
 	useKerning = FT_HAS_KERNING(ttf->face);
-	word ucs = charsets_gbk_to_ucs(*str);
-	SBit_HashItem *cache =
-		sbitCacheFind(ttf, ucs, get_pixel_mode(get_render_mode(ttf, true)));
+	ucs = charsets_gbk_to_ucs(*str);
+	cache = sbitCacheFind(ttf, ucs);
 
 	if (cache) {
 		if (useKerning && *previous && cache->glyph_index) {
@@ -1979,11 +2070,8 @@ static void ttf_disp_putnstring_rvert(p_ttf ttf, int *x, int *y, pixel color,
 		*previous = cache->glyph_index;
 	} else {
 		glyphIndex = FT_Get_Char_Index(ttf->face, ucs);
-		// disable hinting when loading chinese characters
-		if (is_hanzi)
-			error = FT_Load_Glyph(ttf->face, glyphIndex, FT_LOAD_NO_HINTING);
-		else
-			error = FT_Load_Glyph(ttf->face, glyphIndex, FT_LOAD_DEFAULT);
+		error = ttf_load_glyph(ttf, glyphIndex, true);
+
 		if (error)
 			return;
 		if (ttf->face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
@@ -1995,7 +2083,7 @@ static void ttf_disp_putnstring_rvert(p_ttf ttf, int *x, int *y, pixel color,
 		}
 		slot = ttf->face->glyph;
 
-		if (ttf->embolden)
+		if (ttf->config.embolden)
 			FT_GlyphSlot_Embolden(slot);
 
 		if (useKerning && *previous && glyphIndex) {
@@ -2034,24 +2122,26 @@ extern void disp_putnstring_rvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
 										   int count, dword wordspace, int top,
 										   int height, int bot)
 {
+	FT_UInt cprevious, eprevious;
+	dword cpu, bus;
+	int fid = -1;
+
 	if (cttf == NULL || ettf == NULL)
 		return;
 
 	if (x < bot)
 		return;
 
-	FT_UInt cprevious, eprevious;
-
 	cprevious = eprevious = 0;
-
-	dword cpu, bus;
-
 	power_get_clock(&cpu, &bus);
+
 	if (cpu < 222 && config.ttf_haste_up)
-		power_set_clock(222, 111);
+		fid = freq_enter(222, 111);
 	while (*str != 0 && count > 0) {
+		int j;
+
 		if (!check_range(x, y)) {
-			scene_power_save(true);
+			freq_leave(fid);
 			return;
 		}
 		if (*str > 0x80) {
@@ -2070,7 +2160,6 @@ extern void disp_putnstring_rvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
 			if (y > PSP_SCREEN_HEIGHT - DISP_RSPAN - DISP_BOOK_FONTSIZE / 2) {
 				break;
 			}
-			int j;
 
 			for (j = 0; j < (*str == 0x09 ? config.tabstop : 1); ++j)
 				y += DISP_BOOK_FONTSIZE / 2 + wordspace;
@@ -2078,37 +2167,28 @@ extern void disp_putnstring_rvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
 			count--;
 		}
 	}
-	scene_power_save(true);
+	if (fid >= 0)
+		freq_leave(fid);
 }
-#endif
 
 extern void ttf_lock(void)
 {
-#ifdef ENABLE_TTF
-	if (ttf_sema >= 0)
-		sceKernelWaitSema(ttf_sema, 1, NULL);
-#endif
+	xr_lock(&ttf_l);
 }
 
 extern void ttf_unlock(void)
 {
-#ifdef ENABLE_TTF
-	if (ttf_sema >= 0)
-		sceKernelSignalSema(ttf_sema, 1);
-#endif
+	xr_unlock(&ttf_l);
 }
 
 extern void ttf_init(void)
 {
-#ifdef ENABLE_TTF
-	ttf_sema = sceKernelCreateSema("TTF Sema", 0, 1, 1, NULL);
-#endif
+	xr_lock_init(&ttf_l);
 }
 
 extern void ttf_free(void)
 {
-#ifdef ENABLE_TTF
-	if (ttf_sema >= 0)
-		sceKernelDeleteSema(ttf_sema);
-#endif
+	xr_lock_destroy(&ttf_l);
 }
+
+#endif

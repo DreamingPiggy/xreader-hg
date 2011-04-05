@@ -1,3 +1,23 @@
+/*
+ * This file is part of xReader.
+ *
+ * Copyright (C) 2008 hrimfaxi (outmatch@gmail.com)
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
 #include <pspkernel.h>
 #include <pspsdk.h>
 #include <pspctrl.h>
@@ -9,6 +29,7 @@
 #include "version.h"
 #include "strsafe.h"
 #include "kubridge.h"
+#include "xrhal.h"
 
 #define MAX_BACKTRACE_NUM 10
 
@@ -37,14 +58,27 @@ static const unsigned char regName[32][5] = {
 
 void ExceptionHandler(PspDebugRegBlock * regs)
 {
-	int i;
+	int i, found;
 	SceCtrlData pad;
+	PspDebugStackTrace traces[MAX_BACKTRACE_NUM];
 
 	pspDebugScreenInit();
 	pspDebugScreenSetBackColor(0x00FF0000);
 	pspDebugScreenSetTextColor(0xFFFFFFFF);
 	pspDebugScreenClear();
-	pspDebugScreenPrintf("xReader has just crashed!\n");
+	pspDebugScreenPrintf("%-21s %s has just crashed!\n", XREADER_VERSION_LONG,
+#ifdef ENABLE_LITE
+						 "lite"
+#else
+						 ""
+#endif
+		);
+
+	pspDebugScreenPrintf("%-21s: %08X\r\n", "PSP firmware version",
+						 xrKernelDevkitVersion());
+	pspDebugScreenPrintf("%-21s: %s\r\n\n", "PSP type",
+						 kuKernelGetModel() ==
+						 PSP_MODEL_STANDARD ? "1000(fat)" : "2000(slim)");
 	pspDebugScreenPrintf("Exception details:\n\n");
 
 	pspDebugScreenPrintf("Exception - %s\n", codeTxt[(regs->cause >> 2) & 31]);
@@ -63,8 +97,7 @@ void ExceptionHandler(PspDebugRegBlock * regs)
 
 	pspDebugScreenPrintf("\n");
 
-	PspDebugStackTrace traces[MAX_BACKTRACE_NUM];
-	int found = pspDebugGetStackTrace2(regs, traces, MAX_BACKTRACE_NUM);
+	found = pspDebugGetStackTrace2(regs, traces, MAX_BACKTRACE_NUM);
 
 	pspDebugScreenPrintf("Call Trace:\n");
 	for (i = 0; i < found; ++i) {
@@ -77,35 +110,41 @@ void ExceptionHandler(PspDebugRegBlock * regs)
 							 (unsigned int) &_ftext);
 	}
 
-	sceKernelDelayThread(1000000);
+	xrKernelDelayThread(1000000);
 	pspDebugScreenPrintf
 		("\n\nPress O to dump information on file exception.log and quit");
 	pspDebugScreenPrintf("\nPress X to restart");
 
 	for (;;) {
-		sceCtrlReadBufferPositive(&pad, 1);
+		xrCtrlReadBufferPositive(&pad, 1);
 		if (pad.Buttons & PSP_CTRL_CIRCLE) {
+			char testo[512];
+			char timestr[80];
 			FILE *log = fopen("exception.log", "w");
+			pspTime tm;
 
 			if (log == NULL) {
 				break;
 			}
-			char testo[512];
-			char timestr[80];
-			pspTime tm;
 
-			SPRINTF_S(testo, "%-21s: %s\r\n", "xReader version",
-					  XREADER_VERSION_LONG);
+			SPRINTF_S(testo, "%-21s: %s %s\r\n", "xReader version",
+					  XREADER_VERSION_LONG,
+#ifdef ENABLE_LITE
+					  "lite"
+#else
+					  ""
+#endif
+				);
 			fwrite(testo, 1, strlen(testo), log);
 			SPRINTF_S(testo, "%-21s: %08X\r\n", "PSP firmware version",
-					  sceKernelDevkitVersion());
+					  xrKernelDevkitVersion());
 			fwrite(testo, 1, strlen(testo), log);
 			SPRINTF_S(testo, "%-21s: %s\r\n", "PSP type",
 					  kuKernelGetModel() ==
 					  PSP_MODEL_STANDARD ? "1000(fat)" : "2000(slim)");
 			fwrite(testo, 1, strlen(testo), log);
 
-			sceRtcGetCurrentClockLocalTime(&tm);
+			xrRtcGetCurrentClockLocalTime(&tm);
 			SPRINTF_S(timestr, "%u-%u-%u %02u:%02u:%02u", tm.year, tm.month,
 					  tm.day, tm.hour, tm.minutes, tm.seconds);
 
@@ -158,9 +197,9 @@ void ExceptionHandler(PspDebugRegBlock * regs)
 		} else if (pad.Buttons & PSP_CTRL_CROSS) {
 			break;
 		}
-		sceKernelDelayThread(100000);
+		xrKernelDelayThread(100000);
 	}
-	sceKernelExitGame();
+	xrKernelExitGame();
 }
 
 int initExceptionHandler(const char *path)
@@ -175,10 +214,10 @@ int initExceptionHandler(const char *path)
 	option.position = 0;
 	option.access = 1;
 
-	if ((modid = sceKernelLoadModule(path, 0, &option)) >= 0) {
+	if ((modid = xrKernelLoadModule(path, 0, &option)) >= 0) {
 		args[0] = (int) ExceptionHandler;
 		args[1] = (int) &exception_regs;
-		sceKernelStartModule(modid, 8, args, &fd, NULL);
+		xrKernelStartModule(modid, 8, args, &fd, NULL);
 		return 0;
 	}
 
