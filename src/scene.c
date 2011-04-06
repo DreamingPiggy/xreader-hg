@@ -122,7 +122,6 @@ int freq_list[][2] = {
 	{333, 166}
 };
 
-extern bool use_prx_power_save;
 extern bool img_needrf, img_needrp, img_needrc;
 
 static int config_num = 0;
@@ -5909,8 +5908,6 @@ extern void scene_init(void)
 			ret = initExceptionHandler(path);
 
 			if (ret == 0) {
-				if (sceKernelDevkitVersion() < 0x03080000)
-					use_prx_power_save = true;
 				prx_loaded = true;
 			} else {
 				dbg_printf(d, "xrPrx.prx load failed, return value %08X",

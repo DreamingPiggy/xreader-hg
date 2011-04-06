@@ -26,9 +26,7 @@ extern "C"
 {
 #endif
 
-#include <psploadexec_kernel.h>
-
-	void xrPlayerSetSpeed(int cpu, int bus);
+int xrKernelInitApitype(void);
 
 #ifdef __cplusplus
 }
