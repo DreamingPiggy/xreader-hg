@@ -365,8 +365,7 @@ static void scene_draw_lyric(void)
 				   136 + (DISP_FONTSIZE + 1) * config.lyricex, COLOR_WHITE);
 	disp_fillrect(6, 136 - (DISP_FONTSIZE + 1) * (1 + config.lyricex) + 1,
 				  473, 136 + (DISP_FONTSIZE + 1) * config.lyricex - 1,
-				  config.usedyncolor ? get_bgcolor_by_time() : config.
-				  msgbcolor);
+				  config.msgbcolor);
 	if (lyric_get_cur_lines(music_get_lyric(), config.lyricex, ly, ss)) {
 		int lidx;
 		dword cpl = 936 / DISP_FONTSIZE;

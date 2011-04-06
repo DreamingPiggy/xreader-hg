@@ -155,8 +155,7 @@ int default_predraw(const win_menu_predraw_data * pData, const char *str,
 	disp_rectangle(*left, *upper, *right, *bottom, COLOR_WHITE);
 	disp_fillrect(*left + 1, *upper + 1,
 				  *right - 1, *bottom - 1,
-				  config.usedyncolor ? get_bgcolor_by_time() : config.
-				  menubcolor);
+				  config.menubcolor);
 	disp_putstring(get_center_pos(*left, *right, str), *upper + 1, COLOR_WHITE,
 				   (const byte *) str);
 	disp_line(*left, *upper + 1 + DISP_FONTSIZE, *right,
@@ -416,7 +415,7 @@ dword scene_flkey(dword * selidx)
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
 		item[i].selrcolor =
-			config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor;
+			config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -433,8 +432,8 @@ dword scene_flkey(dword * selidx)
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
 					 g_predraw.linespace,
-					 config.usedyncolor ? get_bgcolor_by_time() : config.
-					 menubcolor, true, scene_flkey_predraw, NULL,
+					 config.menubcolor,
+					 true, scene_flkey_predraw, NULL,
 					 scene_flkey_menucb)) != INVALID);
 
 	memcpy(&g_predraw, &prev, sizeof(win_menu_predraw_data));
@@ -952,7 +951,7 @@ dword scene_ioptions(dword * selidx)
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
 		item[i].selrcolor =
-			config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor;
+			config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -969,8 +968,8 @@ dword scene_ioptions(dword * selidx)
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
 					 g_predraw.linespace,
-					 config.usedyncolor ? get_bgcolor_by_time() : config.
-					 menubcolor, true, scene_ioptions_predraw, NULL,
+					 config.menubcolor,
+					 true, scene_ioptions_predraw, NULL,
 					 scene_ioptions_menucb)) != INVALID);
 
 	if (orgimgbrightness != config.imgbrightness) {
@@ -1393,7 +1392,7 @@ dword scene_color(dword * selidx)
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
 		item[i].selrcolor =
-			config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor;
+			config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -1410,8 +1409,8 @@ dword scene_color(dword * selidx)
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
 					 g_predraw.linespace,
-					 config.usedyncolor ? get_bgcolor_by_time() : config.
-					 menubcolor, true, scene_color_predraw, NULL,
+					 config.menubcolor,
+					 true, scene_color_predraw, NULL,
 					 scene_color_menucb)) != INVALID);
 
 #ifdef ENABLE_BG
@@ -1842,7 +1841,7 @@ dword scene_boptions(dword * selidx)
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
 		item[i].selrcolor =
-			config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor;
+			config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -1859,8 +1858,8 @@ dword scene_boptions(dword * selidx)
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
 					 g_predraw.linespace,
-					 config.usedyncolor ? get_bgcolor_by_time() : config.
-					 menubcolor, true, scene_boptions_predraw, NULL,
+					 config.menubcolor,
+					 true, scene_boptions_predraw, NULL,
 					 scene_boptions_menucb)) != INVALID);
 
 	if (orgibar != config.infobar || orgvert != config.vertread
@@ -1976,7 +1975,7 @@ dword scene_ctrlset(dword * selidx)
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
 		item[i].selrcolor =
-			config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor;
+			config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -1986,8 +1985,8 @@ dword scene_ctrlset(dword * selidx)
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
 					 g_predraw.linespace,
-					 config.usedyncolor ? get_bgcolor_by_time() : config.
-					 menubcolor, true, scene_ctrlset_predraw, NULL,
+					 config.menubcolor,
+					 true, scene_ctrlset_predraw, NULL,
 					 scene_ctrlset_menucb)) != INVALID);
 #ifdef ENABLE_HPRM
 	if (orghprmctrl != config.hprmctrl) {
@@ -2267,7 +2266,7 @@ dword scene_fontsel(dword * selidx)
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
 		item[i].selrcolor =
-			config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor;
+			config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -2285,8 +2284,7 @@ dword scene_fontsel(dword * selidx)
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
 					 g_predraw.linespace,
-					 config.usedyncolor ? get_bgcolor_by_time() : config.
-					 menubcolor, true, scene_fontsel_predraw, NULL,
+					 config.menubcolor, true, scene_fontsel_predraw, NULL,
 					 scene_fontsel_menucb)) != INVALID);
 	if (orgfontindex != fontindex || orgusettf != config.usettf
 		|| (!config.usettf && orgbookfontindex != bookfontindex)
@@ -2582,7 +2580,7 @@ dword scene_musicopt(dword * selidx)
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
 		item[i].selrcolor =
-			config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor;
+			config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -2599,8 +2597,7 @@ dword scene_musicopt(dword * selidx)
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
 					 g_predraw.linespace,
-					 config.usedyncolor ? get_bgcolor_by_time() : config.
-					 menubcolor, true, scene_musicopt_predraw, NULL,
+					 config.menubcolor, true, scene_musicopt_predraw, NULL,
 					 scene_musicopt_menucb)) != INVALID);
 
 	memcpy(&g_predraw, &prev, sizeof(win_menu_predraw_data));
@@ -2937,7 +2934,7 @@ dword scene_moptions(dword * selidx)
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
 		item[i].selrcolor =
-			config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor;
+			config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -2957,8 +2954,7 @@ dword scene_moptions(dword * selidx)
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
 					 g_predraw.linespace,
-					 config.usedyncolor ? get_bgcolor_by_time() : config.
-					 menubcolor, true, scene_moptions_predraw, NULL,
+					 config.menubcolor, true, scene_moptions_predraw, NULL,
 					 scene_moptions_menucb)) != INVALID);
 
 	if (strcmp(orglanguage, config.language) != 0) {
@@ -3104,7 +3100,7 @@ dword scene_locsave(dword * selidx)
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
 		item[i].selrcolor =
-			config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor;
+			config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -3126,7 +3122,7 @@ dword scene_locsave(dword * selidx)
 				 g_predraw.upper, g_predraw.max_item_len,
 				 g_predraw.item_count, item, NELEMS(item), 0,
 				 g_predraw.linespace,
-				 config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor,
+				 config.menubcolor,
 				 true, scene_locsave_predraw, NULL, scene_locsave_menucb);
 
 	memcpy(&g_predraw, &prev, sizeof(win_menu_predraw_data));
@@ -3143,7 +3139,6 @@ static void scene_open_dir_or_archive(dword * idx)
 				fs_dir_to_menu(config.path, config.shortpath,
 							   &filelist, config.menutextcolor,
 							   config.selicolor,
-							   config.usedyncolor ? get_bgcolor_by_time() :
 							   config.menubcolor, config.selbcolor,
 							   config.showhidden, config.showunknown);
 		else
@@ -3152,8 +3147,6 @@ static void scene_open_dir_or_archive(dword * idx)
 									config.shortpath, &filelist,
 									config.menutextcolor,
 									config.selicolor,
-									config.usedyncolor ?
-									get_bgcolor_by_time() :
 									config.menubcolor, config.selbcolor);
 	else
 		switch (fs_file_get_type(config.path)) {
@@ -3163,7 +3156,6 @@ static void scene_open_dir_or_archive(dword * idx)
 					fs_zip_to_menu(config.shortpath, &filelist,
 								   config.menutextcolor,
 								   config.selicolor,
-								   config.usedyncolor ? get_bgcolor_by_time() :
 								   config.menubcolor, config.selbcolor);
 				break;
 			case fs_filetype_chm:
@@ -3172,7 +3164,6 @@ static void scene_open_dir_or_archive(dword * idx)
 					fs_chm_to_menu(config.shortpath, &filelist,
 								   config.menutextcolor,
 								   config.selicolor,
-								   config.usedyncolor ? get_bgcolor_by_time() :
 								   config.menubcolor, config.selbcolor);
 				break;
 			case fs_filetype_umd:
@@ -3181,7 +3172,6 @@ static void scene_open_dir_or_archive(dword * idx)
 					fs_umd_to_menu(config.shortpath, &filelist,
 								   config.menutextcolor,
 								   config.selicolor,
-								   config.usedyncolor ? get_bgcolor_by_time() :
 								   config.menubcolor, config.selbcolor);
 				break;
 			case fs_filetype_rar:
@@ -3190,7 +3180,6 @@ static void scene_open_dir_or_archive(dword * idx)
 					fs_rar_to_menu(config.shortpath, &filelist,
 								   config.menutextcolor,
 								   config.selicolor,
-								   config.usedyncolor ? get_bgcolor_by_time() :
 								   config.menubcolor, config.selbcolor);
 				break;
 			default:
@@ -3204,7 +3193,6 @@ static void scene_open_dir_or_archive(dword * idx)
 		filecount =
 			fs_dir_to_menu(config.path, config.shortpath, &filelist,
 						   config.menutextcolor, config.selicolor,
-						   config.usedyncolor ? get_bgcolor_by_time() :
 						   config.menubcolor, config.selbcolor,
 						   config.showhidden, config.showunknown);
 	}
@@ -3286,7 +3274,7 @@ dword scene_locload(dword * selidx)
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
 		item[i].selrcolor =
-			config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor;
+			config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -3308,7 +3296,7 @@ dword scene_locload(dword * selidx)
 				 g_predraw.upper, g_predraw.max_item_len,
 				 g_predraw.item_count, item, NELEMS(item), 0,
 				 g_predraw.linespace,
-				 config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor,
+				 config.menubcolor,
 				 true, scene_locload_predraw, NULL, scene_locload_menucb);
 
 	*selidx = (dword) item[1].data;
@@ -3561,7 +3549,7 @@ dword scene_setting_mgr(dword * selidx)
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
 		item[i].selrcolor =
-			config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor;
+			config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -3580,7 +3568,7 @@ dword scene_setting_mgr(dword * selidx)
 		win_menu(g_predraw.left, g_predraw.upper, g_predraw.max_item_len,
 				 g_predraw.item_count, item, NELEMS(item), 0,
 				 g_predraw.linespace,
-				 config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor,
+				 config.menubcolor,
 				 true, scene_setting_mgr_predraw, NULL,
 				 scene_setting_mgr_menucb);
 
@@ -3695,8 +3683,7 @@ void scene_options_predraw(p_win_menuitem item, dword index, dword topindex,
 	disp_rectangle(left, upper, right, bottom, COLOR_WHITE);
 
 	disp_fillrect(left + 1, upper + 1, right - 1, upper + DISP_FONTSIZE,
-				  config.usedyncolor ? get_bgcolor_by_time() : config.
-				  menubcolor);
+				  config.menubcolor);
 	disp_putstring(get_center_pos(left, right, _("设置选项")), upper + 1,
 				   COLOR_WHITE, (const byte *) _("设置选项"));
 	disp_line(left, upper + 1 + DISP_FONTSIZE, right, upper + 1 + DISP_FONTSIZE,
@@ -3746,8 +3733,7 @@ dword scene_options(dword * selidx)
 		item[i].selected = false;
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
-		item[i].selrcolor =
-			config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor;
+		item[i].selrcolor = config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -3768,8 +3754,7 @@ dword scene_options(dword * selidx)
 					 g_predraw.upper,
 					 g_predraw.max_item_len, NELEMS(item), item,
 					 NELEMS(item), index, g_predraw.linespace,
-					 config.usedyncolor ? get_bgcolor_by_time() : config.
-					 menubcolor, true, scene_options_predraw, NULL,
+					 config.menubcolor, true, scene_options_predraw, NULL,
 					 scene_options_menucb)) != INVALID);
 
 	return (dword) item[0].data;
@@ -5173,7 +5158,6 @@ static void scene_enter_dir(dword * idx)
 			fs_list_device(config.path, config.shortpath,
 						   &filelist, config.menutextcolor,
 						   config.selicolor,
-						   config.usedyncolor ? get_bgcolor_by_time() :
 						   config.menubcolor, config.selbcolor);
 	} else if (strnicmp(config.path, "ms0:/", 5) == 0) {
 		if (fat_inited == false) {
@@ -5184,7 +5168,6 @@ static void scene_enter_dir(dword * idx)
 			fs_dir_to_menu(config.path, config.shortpath,
 						   &filelist, config.menutextcolor,
 						   config.selicolor,
-						   config.usedyncolor ? get_bgcolor_by_time() :
 						   config.menubcolor, config.selbcolor,
 						   config.showhidden, config.showunknown);
 	} else
@@ -5192,8 +5175,7 @@ static void scene_enter_dir(dword * idx)
 			fs_flashdir_to_menu(config.path, config.shortpath,
 								&filelist, config.menutextcolor,
 								config.selicolor,
-								config.usedyncolor ? get_bgcolor_by_time()
-								: config.menubcolor, config.selbcolor);
+								config.menubcolor, config.selbcolor);
 	quicksort(filelist,
 			  (filecount > 0
 			   && filelist[0].compname->ptr[0] == '.') ? 1 : 0,
@@ -5237,28 +5219,24 @@ static void scene_enter_archive(dword * idx, enum ArchiveType type)
 			filecount =
 				fs_zip_to_menu(config.shortpath, &filelist,
 							   config.menutextcolor, config.selicolor,
-							   config.usedyncolor ? get_bgcolor_by_time() :
 							   config.menubcolor, config.selbcolor);
 			break;
 		case RAR:
 			filecount =
 				fs_rar_to_menu(config.shortpath, &filelist,
 							   config.menutextcolor, config.selicolor,
-							   config.usedyncolor ? get_bgcolor_by_time() :
 							   config.menubcolor, config.selbcolor);
 			break;
 		case CHM:
 			filecount =
 				fs_chm_to_menu(config.shortpath, &filelist,
 							   config.menutextcolor, config.selicolor,
-							   config.usedyncolor ? get_bgcolor_by_time() :
 							   config.menubcolor, config.selbcolor);
 			break;
 		case UMD:
 			filecount =
 				fs_umd_to_menu(config.shortpath, &filelist,
 							   config.menutextcolor, config.selicolor,
-							   config.usedyncolor ? get_bgcolor_by_time() :
 							   config.menubcolor, config.selbcolor);
 			break;
 	}
@@ -5417,8 +5395,6 @@ void scene_filelist(void)
 						fs_empty_dir(&filecount,
 									 config.menutextcolor,
 									 config.selicolor,
-									 config.usedyncolor ?
-									 get_bgcolor_by_time() :
 									 config.menubcolor, config.selbcolor);
 					idx = 0;
 					idx =
@@ -5427,8 +5403,6 @@ void scene_filelist(void)
 								 HRR * (DISP_FONTSIZE + 1),
 								 WRR * 4, HRR * 2, filelist,
 								 filecount, idx, 0,
-								 config.usedyncolor ?
-								 get_bgcolor_by_time() :
 								 config.menubcolor, false,
 								 scene_filelist_predraw,
 								 scene_filelist_postdraw,
@@ -5463,9 +5437,7 @@ void scene_filelist(void)
 							 139 - HRR * (DISP_FONTSIZE + 1),
 							 WRR * 4, HRR * 2, filelist,
 							 filecount, idx, 0,
-							 config.usedyncolor ? get_bgcolor_by_time()
-							 : config.menubcolor, false,
-							 scene_filelist_predraw,
+							 config.menubcolor, false, scene_filelist_predraw,
 							 scene_filelist_postdraw, scene_filelist_menucb);
 		} else {
 			config.isreading = false;
@@ -5478,8 +5450,6 @@ void scene_filelist(void)
 						fs_umd_to_menu(config.shortpath, &filelist,
 									   config.menutextcolor,
 									   config.selicolor,
-									   config.usedyncolor ?
-									   get_bgcolor_by_time() :
 									   config.menubcolor, config.selbcolor);
 					break;
 				case scene_in_zip:
@@ -5487,8 +5457,6 @@ void scene_filelist(void)
 						fs_zip_to_menu(config.shortpath, &filelist,
 									   config.menutextcolor,
 									   config.selicolor,
-									   config.usedyncolor ?
-									   get_bgcolor_by_time() :
 									   config.menubcolor, config.selbcolor);
 					break;
 				case scene_in_chm:
@@ -5496,8 +5464,6 @@ void scene_filelist(void)
 						fs_chm_to_menu(config.shortpath, &filelist,
 									   config.menutextcolor,
 									   config.selicolor,
-									   config.usedyncolor ?
-									   get_bgcolor_by_time() :
 									   config.menubcolor, config.selbcolor);
 					break;
 				case scene_in_rar:
@@ -5505,8 +5471,6 @@ void scene_filelist(void)
 						fs_rar_to_menu(config.shortpath, &filelist,
 									   config.menutextcolor,
 									   config.selicolor,
-									   config.usedyncolor ?
-									   get_bgcolor_by_time() :
 									   config.menubcolor, config.selbcolor);
 					break;
 				default:
@@ -5517,8 +5481,6 @@ void scene_filelist(void)
 							fs_list_device(config.path, config.shortpath,
 										   &filelist, config.menutextcolor,
 										   config.selicolor,
-										   config.usedyncolor ?
-										   get_bgcolor_by_time() :
 										   config.menubcolor, config.selbcolor);
 					} else {
 						filecount =
@@ -5526,10 +5488,7 @@ void scene_filelist(void)
 										   config.shortpath, &filelist,
 										   config.menutextcolor,
 										   config.selicolor,
-										   config.usedyncolor ?
-										   get_bgcolor_by_time() :
-										   config.menubcolor,
-										   config.selbcolor,
+										   config.menubcolor, config.selbcolor,
 										   config.showhidden,
 										   config.showunknown);
 					}
@@ -5542,10 +5501,7 @@ void scene_filelist(void)
 								   config.shortpath, &filelist,
 								   config.menutextcolor,
 								   config.selicolor,
-								   config.usedyncolor ?
-								   get_bgcolor_by_time() :
-								   config.menubcolor,
-								   config.selbcolor,
+								   config.menubcolor, config.selbcolor,
 								   config.showhidden, config.showunknown);
 			}
 			quicksort(filelist,
