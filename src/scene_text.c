@@ -1614,8 +1614,7 @@ bool scene_bookmark(PBookViewData pView)
 		item[i].selected = false;
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
-		item[i].selrcolor =
-			config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor;
+		item[i].selrcolor = config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 	}
 
@@ -1624,8 +1623,7 @@ bool scene_bookmark(PBookViewData pView)
 
 	if ((index =
 		 win_menu(64, 62, 7, 9, item, 9, 0, 0,
-				  config.usedyncolor ? get_bgcolor_by_time() : config.
-				  menubcolor, true, scene_bookmark_predraw, NULL,
+				  config.menubcolor, true, scene_bookmark_predraw, NULL,
 				  scene_bookmark_menucb)) != INVALID);
 
 	return (bool)(int) item[1].data;
@@ -2291,7 +2289,7 @@ dword scene_txtkey(dword * selidx)
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
 		item[i].selrcolor =
-			config.usedyncolor ? get_bgcolor_by_time() : config.menubcolor;
+			config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -2308,8 +2306,7 @@ dword scene_txtkey(dword * selidx)
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
 					 g_predraw.linespace,
-					 config.usedyncolor ? get_bgcolor_by_time() : config.
-					 menubcolor, true, scene_txtkey_predraw, NULL,
+					 config.menubcolor, true, scene_txtkey_predraw, NULL,
 					 scene_txtkey_menucb)) != INVALID);
 
 	memcpy(&g_predraw, &prev, sizeof(win_menu_predraw_data));
