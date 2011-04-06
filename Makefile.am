@@ -16,7 +16,7 @@ EXTRA_DIST =			\
 	Changelog.txt \
 	msg \
 	src/include \
-	Revision.sh \
+	Revision.py \
 	lib \
 	resource \
 	scripts \

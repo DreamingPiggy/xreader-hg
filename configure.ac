@@ -14,7 +14,7 @@ AC_PSPDEV_PATH
 CONFIGURE_CMDLINE=$@
 AC_SUBST(CONFIGURE_CMDLINE)
 
-${srcdir}/Revision.sh ${srcdir}
+${srcdir}/Revision.py ${srcdir}
 
 AM_INIT_AUTOMAKE([foreign no-exeext])
 AM_INIT_AUTOMAKE([xReader], [$xReader_version])
