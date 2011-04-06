@@ -1975,8 +1975,7 @@ dword scene_imgkey(dword * selidx)
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, g_predraw.item_count, 0,
 					 g_predraw.linespace,
-					 config.usedyncolor ? get_bgcolor_by_time() : config.
-					 menubcolor, true, scene_imgkey_predraw, NULL,
+					 config.menubcolor, true, scene_imgkey_predraw, NULL,
 					 scene_imgkey_menucb)) != INVALID);
 
 	memcpy(&g_predraw, &prev, sizeof(win_menu_predraw_data));
