@@ -129,9 +129,6 @@ text:efont_embolden
 text:infobar_use_ttf_mode
 阅读文本时是否使用TTF字体显示信息栏
 
-ui:usedyncolor
-是否打开xReader的复活节彩蛋
-
 music::apetagorder
 APETagV2是否优先于ID3TagV2读取
 
