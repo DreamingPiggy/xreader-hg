@@ -44,7 +44,6 @@
 #include "genericplayer.h"
 #include "musicinfo.h"
 #include "common/utils.h"
-#include "xrhal.h"
 #include "at3player.h"
 #include "buffered_reader.h"
 #include "malloc.h"
@@ -163,7 +162,7 @@ static int at3_seek_seconds(double seconds)
 	if (data.use_buffer) {
 		ret = buffered_reader_seek(data.r, pos);
 	} else {
-		ret = xrIoLseek(data.fd, pos, SEEK_SET);
+		ret = sceIoLseek(data.fd, pos, SEEK_SET);
 	}
 
 	if (ret >= 0) {
@@ -248,7 +247,7 @@ static int at3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			at3_seek_seconds(g_play_time);
 		}
 		xAudioClearSndBuf(buf, snd_buf_frame_size);
-		xrKernelDelayThread(100000);
+		sceKernelDelayThread(100000);
 		return 0;
 	}
 
@@ -284,7 +283,7 @@ static int at3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 						return -1;
 					}
 				} else {
-					if (xrIoRead(data.fd, at3_data_buffer, at3_data_align) !=
+					if (sceIoRead(data.fd, at3_data_buffer, at3_data_align) !=
 						at3_data_align) {
 						__end();
 						return -1;
@@ -309,7 +308,7 @@ static int at3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 						return -1;
 					}
 				} else {
-					if (xrIoRead(data.fd, at3_data_buffer + 8, at3_data_align)
+					if (sceIoRead(data.fd, at3_data_buffer + 8, at3_data_align)
 						!= at3_data_align) {
 						__end();
 						return -1;
@@ -321,7 +320,7 @@ static int at3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			at3_codec_buffer[6] = (unsigned long) at3_data_buffer;
 			at3_codec_buffer[8] = (unsigned long) at3_mix_buffer;
 
-			res = xrAudiocodecDecode(at3_codec_buffer, decode_type);
+			res = sceAudiocodecDecode(at3_codec_buffer, decode_type);
 
 			if (res < 0) {
 				__end();
@@ -351,13 +350,13 @@ static int at3_load(const char *spath, const char *lpath)
 
 	__init();
 
-	data.fd = xrIoOpen(spath, PSP_O_RDONLY, 0777);
+	data.fd = sceIoOpen(spath, PSP_O_RDONLY, 0777);
 
 	if (data.fd < 0) {
 		goto failed;
 	}
 
-	if (xrIoRead(data.fd, riff_header, sizeof(riff_header)) !=
+	if (sceIoRead(data.fd, riff_header, sizeof(riff_header)) !=
 		sizeof(riff_header)) {
 		goto failed;
 	}
@@ -366,7 +365,7 @@ static int at3_load(const char *spath, const char *lpath)
 		goto failed;
 	}
 
-	if (xrIoRead(data.fd, wavefmt_header, sizeof(wavefmt_header)) !=
+	if (sceIoRead(data.fd, wavefmt_header, sizeof(wavefmt_header)) !=
 		sizeof(wavefmt_header)) {
 		goto failed;
 	}
@@ -381,7 +380,7 @@ static int at3_load(const char *spath, const char *lpath)
 		goto failed;
 	}
 
-	if (xrIoRead(data.fd, wavefmt_data, wavefmt_header[2]) != wavefmt_header[2]) {
+	if (sceIoRead(data.fd, wavefmt_data, wavefmt_header[2]) != wavefmt_header[2]) {
 		free(wavefmt_data);
 		goto failed;
 	}
@@ -399,20 +398,20 @@ static int at3_load(const char *spath, const char *lpath)
 	free(wavefmt_data);
 
 	// Search for data header
-	if (xrIoRead(data.fd, data_header, sizeof(data_header)) !=
+	if (sceIoRead(data.fd, data_header, sizeof(data_header)) !=
 		sizeof(data_header)) {
 		goto failed;
 	}
 
 	while (data_header[0] != 0x61746164) {
-		xrIoLseek32(data.fd, data_header[1], PSP_SEEK_CUR);
-		if (xrIoRead(data.fd, data_header, sizeof(data_header)) !=
+		sceIoLseek32(data.fd, data_header[1], PSP_SEEK_CUR);
+		if (sceIoRead(data.fd, data_header, sizeof(data_header)) !=
 			sizeof(data_header)) {
 			goto failed;
 		}
 	}
 
-	at3_data_start = xrIoLseek32(data.fd, 0, PSP_SEEK_CUR);
+	at3_data_start = sceIoLseek32(data.fd, 0, PSP_SEEK_CUR);
 	at3_data_size = data_header[1];
 
 	if (at3_data_size % at3_data_align != 0) {
@@ -446,10 +445,10 @@ static int at3_load(const char *spath, const char *lpath)
 
 		at3_codec_buffer[26] = 0x20;
 
-		if (xrAudiocodecCheckNeedMem(at3_codec_buffer, 0x1001) < 0)
+		if (sceAudiocodecCheckNeedMem(at3_codec_buffer, 0x1001) < 0)
 			goto failed;
 
-		if (xrAudiocodecGetEDRAM(at3_codec_buffer, 0x1001) < 0)
+		if (sceAudiocodecGetEDRAM(at3_codec_buffer, 0x1001) < 0)
 			goto failed;
 
 		at3_getEDRAM = true;
@@ -459,7 +458,7 @@ static int at3_load(const char *spath, const char *lpath)
 		if (at3_data_align == 0x130)
 			at3_codec_buffer[10] = 6;
 
-		if (xrAudiocodecInit(at3_codec_buffer, 0x1001) < 0) {
+		if (sceAudiocodecInit(at3_codec_buffer, 0x1001) < 0) {
 			goto failed;
 		}
 	} else if (at3_type == TYPE_ATRAC3PLUS) {
@@ -484,15 +483,15 @@ static int at3_load(const char *spath, const char *lpath)
 		at3_codec_buffer[12] = 0x1;
 		at3_codec_buffer[14] = 0x1;
 
-		if (xrAudiocodecCheckNeedMem(at3_codec_buffer, 0x1000) < 0)
+		if (sceAudiocodecCheckNeedMem(at3_codec_buffer, 0x1000) < 0)
 			goto failed;
 
-		if (xrAudiocodecGetEDRAM(at3_codec_buffer, 0x1000) < 0)
+		if (sceAudiocodecGetEDRAM(at3_codec_buffer, 0x1000) < 0)
 			goto failed;
 
 		at3_getEDRAM = true;
 
-		if (xrAudiocodecInit(at3_codec_buffer, 0x1000) < 0) {
+		if (sceAudiocodecInit(at3_codec_buffer, 0x1000) < 0) {
 			goto failed;
 		}
 	} else {
@@ -512,9 +511,9 @@ static int at3_load(const char *spath, const char *lpath)
 	}
 
 	if (data.use_buffer) {
-		SceOff cur = xrIoLseek(data.fd, 0, PSP_SEEK_CUR);
+		SceOff cur = sceIoLseek(data.fd, 0, PSP_SEEK_CUR);
 
-		xrIoClose(data.fd);
+		sceIoClose(data.fd);
 		data.fd = -1;
 		data.r = buffered_reader_open(spath, g_io_buffer_size, 1);
 
@@ -575,7 +574,7 @@ static int at3_end(void)
 	}
 
 	if (data.fd >= 0) {
-		xrIoClose(data.fd);
+		sceIoClose(data.fd);
 		data.fd = -1;
 	}
 
@@ -585,7 +584,7 @@ static int at3_end(void)
 	}
 
 	if (at3_getEDRAM) {
-		xrAudiocodecReleaseEDRAM(at3_codec_buffer);
+		sceAudiocodecReleaseEDRAM(at3_codec_buffer);
 		at3_getEDRAM = false;
 	}
 

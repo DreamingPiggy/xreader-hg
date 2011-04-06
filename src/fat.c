@@ -28,7 +28,6 @@
 #include "fat.h"
 #include <stdio.h>
 #include "dbg.h"
-#include "xrhal.h"
 #include "thread_lock.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
@@ -58,7 +57,7 @@ void fat_powerdown(void)
 	dbg_printf(d, "%s", __func__);
 
 	fat_lock();
-	xrIoClose(fatfd);
+	sceIoClose(fatfd);
 	fatfd = -1;
 }
 
@@ -66,7 +65,7 @@ void fat_powerup(void)
 {
 	dbg_printf(d, "%s", __func__);
 
-	fatfd = xrIoOpen("msstor:", PSP_O_RDONLY, 0777);
+	fatfd = sceIoOpen("msstor:", PSP_O_RDONLY, 0777);
 	fat_unlock();
 }
 
@@ -86,24 +85,24 @@ extern bool fat_init(void)
 
 	xr_lock_init(&fat_l);
 	fat_lock();
-	fatfd = xrIoOpen("msstor:", PSP_O_RDONLY, 0777);
+	fatfd = sceIoOpen("msstor:", PSP_O_RDONLY, 0777);
 	if (fatfd < 0) {
 		fat_unlock();
 		return false;
 	}
-	if (xrIoRead(fatfd, &mbr, sizeof(mbr)) != sizeof(mbr)) {
-		xrIoClose(fatfd);
+	if (sceIoRead(fatfd, &mbr, sizeof(mbr)) != sizeof(mbr)) {
+		sceIoClose(fatfd);
 		fatfd = -1;
 		fat_unlock();
 		return false;
 	}
 	dbr_pos = mbr.dpt[0].start_sec * 0x200;
-	if (xrIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos
-		|| xrIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
+	if (sceIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos
+		|| sceIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
 		dbr_pos = 0;
-		if (xrIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos
-			|| xrIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
-			xrIoClose(fatfd);
+		if (sceIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos
+			|| sceIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
+			sceIoClose(fatfd);
 			fatfd = -1;
 			fat_unlock();
 			return false;
@@ -146,7 +145,7 @@ extern bool fat_init(void)
 		data_pos = root_pos;
 		data_pos += 1ull * dbr.root_entry * sizeof(t_fat_entry);
 	}
-	xrIoClose(fatfd);
+	sceIoClose(fatfd);
 	fat_unlock();
 	return true;
 }
@@ -213,7 +212,7 @@ static bool fat_load_table(void)
 		return true;
 	}
 
-	fatfd = xrIoOpen("msstor:", PSP_O_RDONLY, 0777);
+	fatfd = sceIoOpen("msstor:", PSP_O_RDONLY, 0777);
 
 	if (fatfd < 0)
 		return false;
@@ -223,18 +222,18 @@ static bool fat_load_table(void)
 		  fat32) ? dbr.ufat.fat32.sec_per_fat : dbr.sec_per_fat) *
 		dbr.bytes_per_sec;
 
-	if (xrIoLseek
+	if (sceIoLseek
 		(fatfd, dbr_pos + dbr.reserved_sec * dbr.bytes_per_sec,
 		 PSP_SEEK_SET) != dbr_pos + dbr.reserved_sec * dbr.bytes_per_sec
 		|| (fat_table = malloc(fat_table_size)) == NULL) {
-		xrIoClose(fatfd);
+		sceIoClose(fatfd);
 		fatfd = -1;
 		return false;
 	}
-	if ((xrIoRead(fatfd, fat_table, fat_table_size) != fat_table_size)
+	if ((sceIoRead(fatfd, fat_table, fat_table_size) != fat_table_size)
 		|| (fat_type == fat12 && !convert_table_fat12())
 		|| (fat_type == fat16 && !convert_table_fat16())) {
-		xrIoClose(fatfd);
+		sceIoClose(fatfd);
 		fatfd = -1;
 		free(fat_table);
 		fat_table = NULL;
@@ -254,7 +253,7 @@ static void fat_free_table(void)
 			free(fat_table);
 			fat_table = NULL;
 		}
-		xrIoClose(fatfd);
+		sceIoClose(fatfd);
 	}
 }
 
@@ -294,8 +293,8 @@ static bool fat_dir_list(u32 clus, u32 * count, p_fat_entry * entrys)
 		*count = dbr.root_entry;
 		if ((*entrys = malloc(*count * sizeof(**entrys))) == NULL)
 			return false;
-		if (xrIoLseek(fatfd, root_pos, PSP_SEEK_SET) != root_pos
-			|| xrIoRead(fatfd, *entrys,
+		if (sceIoLseek(fatfd, root_pos, PSP_SEEK_SET) != root_pos
+			|| sceIoRead(fatfd, *entrys,
 						*count * sizeof(t_fat_entry)) !=
 			*count * sizeof(t_fat_entry)) {
 			free(*entrys);
@@ -326,8 +325,8 @@ static bool fat_dir_list(u32 clus, u32 * count, p_fat_entry * entrys)
 		do {
 			u64 epos = data_pos + 1ull * (c2 - 2) * bytes_per_clus;
 
-			if (xrIoLseek(fatfd, epos, PSP_SEEK_SET) != epos
-				|| xrIoRead(fatfd, &(*entrys)[ep],
+			if (sceIoLseek(fatfd, epos, PSP_SEEK_SET) != epos
+				|| sceIoRead(fatfd, &(*entrys)[ep],
 							bytes_per_clus) != bytes_per_clus) {
 				free(*entrys);
 				return false;
@@ -438,7 +437,7 @@ extern bool fat_locate(const char *name, char *sname, dword clus,
 	if (!fat_dir_list(clus, &count, &entrys))
 		return false;
 
-	dl = xrIoDopen(sname);
+	dl = sceIoDopen(sname);
 
 	if (dl < 0)
 		return false;
@@ -469,7 +468,7 @@ extern bool fat_locate(const char *name, char *sname, dword clus,
 
 			memset(&sid, 0, sizeof(SceIoDirent));
 
-			while ((result = xrIoDread(dl, &sid)) > 0
+			while ((result = sceIoDread(dl, &sid)) > 0
 				   && (sid.d_stat.st_attr & 0x08) > 0);
 			if (result == 0)
 				break;
@@ -481,7 +480,7 @@ extern bool fat_locate(const char *name, char *sname, dword clus,
 					entrys[i].norm.filename[0] = 0x05;
 				memcpy(info, &entrys[i], sizeof(t_fat_entry));
 				free(entrys);
-				if (xrKernelDevkitVersion() <= 0x03070110) {
+				if (sceKernelDevkitVersion() <= 0x03070110) {
 					strcat_s(sname, 256, sid.d_name);
 				} else {
 					char short_name[256];
@@ -491,7 +490,7 @@ extern bool fat_locate(const char *name, char *sname, dword clus,
 				}
 				if ((info->norm.attr & FAT_FILEATTR_DIRECTORY) > 0)
 					strcat_s(sname, 256, "/");
-				xrIoDclose(dl);
+				sceIoDclose(dl);
 				return true;
 			}
 			if ((u8) entrys[i].norm.filename[0] == 0xE5)
@@ -502,7 +501,7 @@ extern bool fat_locate(const char *name, char *sname, dword clus,
 			if (stricmp(name, longnames) == 0) {
 				memcpy(info, &entrys[i], sizeof(t_fat_entry));
 				free(entrys);
-				if (xrKernelDevkitVersion() <= 0x03070110) {
+				if (sceKernelDevkitVersion() <= 0x03070110) {
 					strcat_s(sname, 256, sid.d_name);
 				} else {
 					char short_name[256];
@@ -512,13 +511,13 @@ extern bool fat_locate(const char *name, char *sname, dword clus,
 				}
 				if ((info->norm.attr & FAT_FILEATTR_DIRECTORY) > 0)
 					strcat_s(sname, 256, "/");
-				xrIoDclose(dl);
+				sceIoDclose(dl);
 				return true;
 			}
 		}
 	}
 	free(entrys);
-	xrIoDclose(dl);
+	sceIoDclose(dl);
 	return false;
 }
 
@@ -584,16 +583,16 @@ extern dword fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 
 	clus = fat_dir_clus(dir, sdir);
 
-	if (clus == 0 || (dl = xrIoDopen(sdir)) < 0) {
+	if (clus == 0 || (dl = sceIoDopen(sdir)) < 0) {
 		fat_free_table();
-		xrIoDclose(dl);
+		sceIoDclose(dl);
 		fat_unlock();
 		return INVALID;
 	}
 
 	if (!fat_dir_list(clus, &ecount, &entrys)) {
 		fat_free_table();
-		xrIoDclose(dl);
+		sceIoDclose(dl);
 		fat_unlock();
 		return INVALID;
 	}
@@ -610,7 +609,7 @@ extern dword fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 	if (count == 0 || (*info = malloc(count * sizeof(**info))) == NULL) {
 		free(entrys);
 		fat_free_table();
-		xrIoDclose(dl);
+		sceIoDclose(dl);
 		fat_unlock();
 		return INVALID;
 	}
@@ -631,7 +630,7 @@ extern dword fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 			continue;
 		memset(&sid, 0, sizeof(SceIoDirent));
 
-		while ((result = xrIoDread(dl, &sid)) > 0
+		while ((result = sceIoDread(dl, &sid)) > 0
 			   && ((sid.d_stat.st_attr & 0x08) > 0
 				   || (sid.d_name[0] == '.' && sid.d_name[1] == 0)));
 
@@ -645,7 +644,7 @@ extern dword fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 			inf->filename[0] = 0xE5;
 		if (!fat_get_longname(entrys, i, inf->longname))
 			STRCPY_S(inf->longname, inf->filename);
-		if (xrKernelDevkitVersion() <= 0x03070110) {
+		if (sceKernelDevkitVersion() <= 0x03070110) {
 			STRCPY_S(inf->filename, sid.d_name);
 		}
 		inf->filesize = entrys[i].norm.filesize;
@@ -662,7 +661,7 @@ extern dword fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 	}
 	free(entrys);
 	fat_free_table();
-	xrIoDclose(dl);
+	sceIoDclose(dl);
 	fat_unlock();
 	return cur;
 }
@@ -670,7 +669,7 @@ extern dword fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 extern void fat_free(void)
 {
 	if (fatfd >= 0) {
-		xrIoClose(fatfd);
+		sceIoClose(fatfd);
 		fatfd = -1;
 	}
 	memset(&dbr, 0, sizeof(dbr));

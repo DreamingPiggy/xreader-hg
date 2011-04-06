@@ -34,7 +34,6 @@
 #include "common/utils.h"
 #include "buffer.h"
 #include "dbg.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -223,7 +222,7 @@ int dbg_open_psp_logfile(DBG * d, const char *logfile)
 	extern void dbg_write_psp_logfile(void *arg, const char *str);
 	extern void dbg_close_psp_logfile(void *arg);
 	SceUID fd =
-		xrIoOpen(logfile, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
+		sceIoOpen(logfile, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
 	if (fd < 0) {
 		return -1;
 	}
@@ -243,7 +242,7 @@ void dbg_write_psp_logfile(void *arg, const char *str)
 		newstr[l] = '\n';
 		newstr[l + 1] = '\0';
 	}
-	xrIoWrite(fd, newstr, l + 1);
+	sceIoWrite(fd, newstr, l + 1);
 	free(newstr);
 }
 
@@ -251,7 +250,7 @@ void dbg_close_psp_logfile(void *arg)
 {
 	SceUID fd = (SceUID) arg;
 
-	xrIoClose(fd);
+	sceIoClose(fd);
 }
 #endif
 
@@ -365,7 +364,7 @@ int dbg_printf(DBG * d, const char *fmt, ...)
 
 	va_start(ap, fmt);
 
-	xrRtcGetCurrentClockLocalTime(&tm);
+	sceRtcGetCurrentClockLocalTime(&tm);
 
 	SPRINTF_S(timestr, "%u-%u-%u %02u:%02u:%02u", tm.year, tm.month, tm.day,
 			  tm.hour, tm.minutes, tm.seconds);
@@ -577,7 +576,7 @@ double pspDiffTime(u64 * t1, u64 * t2)
 	if (!t1 || !t2)
 		return 0.0;
 
-	d = (*t1 - *t2) * 1.0 / xrRtcGetTickResolution();
+	d = (*t1 - *t2) * 1.0 / sceRtcGetTickResolution();
 
 	return d;
 }

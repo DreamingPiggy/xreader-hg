@@ -32,7 +32,6 @@
 #include "display.h"
 #include "ctrl.h"
 #include "power.h"
-#include "xrhal.h"
 #include "dbg.h"
 
 PSP_MODULE_INFO("XREADER", 0x0200, 1, 6);
@@ -72,7 +71,7 @@ static int power_callback(int arg1, int powerInfo, void *arg)
 	if ((powerInfo & (PSP_POWER_CB_POWER_SWITCH | PSP_POWER_CB_STANDBY)) > 0) {
 		power_down();
 	} else if ((powerInfo & PSP_POWER_CB_RESUME_COMPLETE) > 0) {
-		xrKernelDelayThread(1500000);
+		sceKernelDelayThread(1500000);
 		power_up();
 	}
 
@@ -84,12 +83,12 @@ static int exit_callback(int arg1, int arg2, void *arg)
 	extern volatile bool xreader_scene_inited;
 
 	while (xreader_scene_inited == false) {
-		xrKernelDelayThread(1);
+		sceKernelDelayThread(1);
 	}
 
 	scene_exit();
-	xrPowerUnregisterCallback(0);
-	xrKernelExitGame();
+	scePowerUnregisterCallback(0);
+	sceKernelExitGame();
 
 	return 0;
 }
@@ -98,12 +97,12 @@ static int CallbackThread(unsigned int args, void *argp)
 {
 	int cbid;
 
-	cbid = xrKernelCreateCallback("Exit Callback", exit_callback, NULL);
-	xrKernelRegisterExitCallback(cbid);
-	xrPowerUnregisterCallback(0);
-	cbid = xrKernelCreateCallback("Power Callback", power_callback, NULL);
-	xrPowerRegisterCallback(0, cbid);
-	xrKernelSleepThreadCB();
+	cbid = sceKernelCreateCallback("Exit Callback", exit_callback, NULL);
+	sceKernelRegisterExitCallback(cbid);
+	scePowerUnregisterCallback(0);
+	cbid = sceKernelCreateCallback("Power Callback", power_callback, NULL);
+	scePowerRegisterCallback(0, cbid);
+	sceKernelSleepThreadCB();
 
 	return 0;
 }
@@ -111,12 +110,12 @@ static int CallbackThread(unsigned int args, void *argp)
 /* Sets up the callback thread and returns its thread id */
 static int SetupCallbacks(void)
 {
-	int thid = xrKernelCreateThread("Callback Thread", CallbackThread, 0x11,
+	int thid = sceKernelCreateThread("Callback Thread", CallbackThread, 0x11,
 									0x10000,
 									0, 0);
 
 	if (thid >= 0) {
-		xrKernelStartThread(thid, 0, 0);
+		sceKernelStartThread(thid, 0, 0);
 	}
 
 	return thid;
@@ -133,14 +132,14 @@ int main(int argc, char *argv[])
 	int thid;
 
 	SetupCallbacks();
-	thid = xrKernelCreateThread("User Thread", main_thread, 45, 0x40000,
+	thid = sceKernelCreateThread("User Thread", main_thread, 45, 0x40000,
 									PSP_THREAD_ATTR_USER, NULL);
 
 	if (thid < 0)
-		xrKernelSleepThread();
+		sceKernelSleepThread();
 
-	xrKernelStartThread(thid, 0, NULL);
-	xrKernelSleepThread();
+	sceKernelStartThread(thid, 0, NULL);
+	sceKernelSleepThread();
 
 	return 0;
 }

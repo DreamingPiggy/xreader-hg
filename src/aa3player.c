@@ -44,7 +44,6 @@
 #include "genericplayer.h"
 #include "musicinfo.h"
 #include "common/utils.h"
-#include "xrhal.h"
 #include "aa3player.h"
 #include "buffered_reader.h"
 #include "malloc.h"
@@ -164,7 +163,7 @@ static int aa3_seek_seconds(double seconds)
 	if (data.use_buffer) {
 		ret = buffered_reader_seek(data.r, pos);
 	} else {
-		ret = xrIoLseek(data.fd, pos, SEEK_SET);
+		ret = sceIoLseek(data.fd, pos, SEEK_SET);
 	}
 
 	if (ret >= 0) {
@@ -249,7 +248,7 @@ static int aa3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			aa3_seek_seconds(g_play_time);
 		}
 		xAudioClearSndBuf(buf, snd_buf_frame_size);
-		xrKernelDelayThread(100000);
+		sceKernelDelayThread(100000);
 		return 0;
 	}
 
@@ -285,7 +284,7 @@ static int aa3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 						return -1;
 					}
 				} else {
-					if (xrIoRead(data.fd, aa3_data_buffer, aa3_data_align) !=
+					if (sceIoRead(data.fd, aa3_data_buffer, aa3_data_align) !=
 						aa3_data_align) {
 						__end();
 						return -1;
@@ -310,7 +309,7 @@ static int aa3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 						return -1;
 					}
 				} else {
-					if (xrIoRead(data.fd, aa3_data_buffer + 8, aa3_data_align)
+					if (sceIoRead(data.fd, aa3_data_buffer + 8, aa3_data_align)
 						!= aa3_data_align) {
 						__end();
 						return -1;
@@ -322,7 +321,7 @@ static int aa3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			aa3_codec_buffer[6] = (unsigned long) aa3_data_buffer;
 			aa3_codec_buffer[8] = (unsigned long) aa3_mix_buffer;
 
-			res = xrAudiocodecDecode(aa3_codec_buffer, decode_type);
+			res = sceAudiocodecDecode(aa3_codec_buffer, decode_type);
 
 			if (res < 0) {
 				__end();
@@ -351,13 +350,13 @@ static int aa3_load(const char *spath, const char *lpath)
 
 	generic_readtag(&g_info, spath);
 
-	data.fd = xrIoOpen(spath, PSP_O_RDONLY, 0777);
+	data.fd = sceIoOpen(spath, PSP_O_RDONLY, 0777);
 
 	if (data.fd < 0) {
 		goto failed;
 	}
 
-	if (xrIoRead(data.fd, aa3_header_buffer, 4) != 4) {
+	if (sceIoRead(data.fd, aa3_header_buffer, 4) != 4) {
 		goto failed;
 	}
 
@@ -370,7 +369,7 @@ static int aa3_load(const char *spath, const char *lpath)
 			u32 id3v2_size, temp_value;
 			u8 id3v2_buffer[6];
 
-			if (xrIoRead(data.fd, id3v2_buffer, 6) != 6) {
+			if (sceIoRead(data.fd, id3v2_buffer, 6) != 6) {
 				goto failed;
 			}
 
@@ -387,9 +386,9 @@ static int aa3_load(const char *spath, const char *lpath)
 			temp_value = (temp_value & 0x7F);
 			id3v2_size = id3v2_size | temp_value;
 
-			xrIoLseek(data.fd, id3v2_size, PSP_SEEK_CUR);
+			sceIoLseek(data.fd, id3v2_size, PSP_SEEK_CUR);
 
-			if (xrIoRead(data.fd, aa3_header_buffer, 4) != 4) {
+			if (sceIoRead(data.fd, aa3_header_buffer, 4) != 4) {
 				goto failed;
 			}
 
@@ -401,7 +400,7 @@ static int aa3_load(const char *spath, const char *lpath)
 			goto failed;
 		}
 
-		if (xrIoRead(data.fd, ea3_header, 0x5C) != 0x5C) {
+		if (sceIoRead(data.fd, ea3_header, 0x5C) != 0x5C) {
 			goto failed;
 		}
 
@@ -449,12 +448,12 @@ static int aa3_load(const char *spath, const char *lpath)
 			aa3_data_align = 8ul * (ea3_info & 0x03FF);
 		}
 
-		aa3_data_start = xrIoLseek(data.fd, 0, PSP_SEEK_CUR);
+		aa3_data_start = sceIoLseek(data.fd, 0, PSP_SEEK_CUR);
 		break;
 	}
 
-	aa3_data_size = xrIoLseek(data.fd, 0, PSP_SEEK_END) - aa3_data_start;
-	xrIoLseek(data.fd, aa3_data_start, PSP_SEEK_SET);
+	aa3_data_size = sceIoLseek(data.fd, 0, PSP_SEEK_END) - aa3_data_start;
+	sceIoLseek(data.fd, aa3_data_start, PSP_SEEK_SET);
 
 	if (aa3_data_size % aa3_data_align != 0) {
 		dbg_printf(d, "%s: aa3_data_size %d aa3_data_align %d not align",
@@ -487,10 +486,10 @@ static int aa3_load(const char *spath, const char *lpath)
 
 		aa3_codec_buffer[26] = 0x20;
 
-		if (xrAudiocodecCheckNeedMem(aa3_codec_buffer, 0x1001) < 0)
+		if (sceAudiocodecCheckNeedMem(aa3_codec_buffer, 0x1001) < 0)
 			goto failed;
 
-		if (xrAudiocodecGetEDRAM(aa3_codec_buffer, 0x1001) < 0)
+		if (sceAudiocodecGetEDRAM(aa3_codec_buffer, 0x1001) < 0)
 			goto failed;
 
 		aa3_getEDRAM = true;
@@ -500,7 +499,7 @@ static int aa3_load(const char *spath, const char *lpath)
 		if (aa3_data_align == 0x130)
 			aa3_codec_buffer[10] = 6;
 
-		if (xrAudiocodecInit(aa3_codec_buffer, 0x1001) < 0) {
+		if (sceAudiocodecInit(aa3_codec_buffer, 0x1001) < 0) {
 			goto failed;
 		}
 	} else if (aa3_type == TYPE_ATRAC3PLUS) {
@@ -525,15 +524,15 @@ static int aa3_load(const char *spath, const char *lpath)
 		aa3_codec_buffer[12] = 0x1;
 		aa3_codec_buffer[14] = 0x1;
 
-		if (xrAudiocodecCheckNeedMem(aa3_codec_buffer, 0x1000) < 0)
+		if (sceAudiocodecCheckNeedMem(aa3_codec_buffer, 0x1000) < 0)
 			goto failed;
 
-		if (xrAudiocodecGetEDRAM(aa3_codec_buffer, 0x1000) < 0)
+		if (sceAudiocodecGetEDRAM(aa3_codec_buffer, 0x1000) < 0)
 			goto failed;
 
 		aa3_getEDRAM = true;
 
-		if (xrAudiocodecInit(aa3_codec_buffer, 0x1000) < 0) {
+		if (sceAudiocodecInit(aa3_codec_buffer, 0x1000) < 0) {
 			goto failed;
 		}
 	} else {
@@ -553,9 +552,9 @@ static int aa3_load(const char *spath, const char *lpath)
 	}
 
 	if (data.use_buffer) {
-		SceOff cur = xrIoLseek(data.fd, 0, PSP_SEEK_CUR);
+		SceOff cur = sceIoLseek(data.fd, 0, PSP_SEEK_CUR);
 
-		xrIoClose(data.fd);
+		sceIoClose(data.fd);
 		data.fd = -1;
 		data.r = buffered_reader_open(spath, g_io_buffer_size, 1);
 
@@ -610,7 +609,7 @@ static int aa3_end(void)
 	}
 
 	if (data.fd >= 0) {
-		xrIoClose(data.fd);
+		sceIoClose(data.fd);
 		data.fd = -1;
 	}
 
@@ -620,7 +619,7 @@ static int aa3_end(void)
 	}
 
 	if (aa3_getEDRAM) {
-		xrAudiocodecReleaseEDRAM(aa3_codec_buffer);
+		sceAudiocodecReleaseEDRAM(aa3_codec_buffer);
 		aa3_getEDRAM = false;
 	}
 

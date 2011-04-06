@@ -37,7 +37,6 @@
 #include "mp3info.h"
 #include "musicinfo.h"
 #include "genericplayer.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -165,7 +164,7 @@ static int tta_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			tta_seek_seconds(g_play_time);
 		}
 		xAudioClearSndBuf(buf, snd_buf_frame_size);
-		xrKernelDelayThread(100000);
+		sceKernelDelayThread(100000);
 		return 0;
 	}
 

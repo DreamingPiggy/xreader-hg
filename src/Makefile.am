@@ -120,7 +120,6 @@ xReader_elf_SOURCES = \
 	power.h \
 	freq_lock.c \
 	freq_lock.h \
-	xrhal.h \
 	image_queue.h \
 	image_queue_server.c \
 	fontconfig.c \

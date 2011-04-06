@@ -42,7 +42,6 @@
 #include "conf.h"
 #include "unumd.h"
 #include "depdb.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -611,20 +610,20 @@ static p_text text_open(const char *filename, t_fs_filetype ft,
 
 	if (txt == NULL)
 		return NULL;
-	if ((fd = xrIoOpen(filename, PSP_O_RDONLY, 0777)) < 0) {
+	if ((fd = sceIoOpen(filename, PSP_O_RDONLY, 0777)) < 0) {
 		text_close(txt);
 		return NULL;
 	}
 	STRCPY_S(txt->filename, filename);
-	txt->size = xrIoLseek32(fd, 0, PSP_SEEK_END);
+	txt->size = sceIoLseek32(fd, 0, PSP_SEEK_END);
 	if ((txt->buf = calloc(1, txt->size + 1)) == NULL) {
-		xrIoClose(fd);
+		sceIoClose(fd);
 		text_close(txt);
 		return NULL;
 	}
-	xrIoLseek32(fd, 0, PSP_SEEK_SET);
-	xrIoRead(fd, txt->buf, txt->size);
-	xrIoClose(fd);
+	sceIoLseek32(fd, 0, PSP_SEEK_SET);
+	sceIoRead(fd, txt->buf, txt->size);
+	sceIoClose(fd);
 	text_decode(txt, encode);
 	if (ft == fs_filetype_html)
 		txt->size = html_to_text(txt->buf, txt->size, true);
@@ -727,10 +726,10 @@ extern p_text text_open_in_umd(const char *umdfile, const char *chaptername,
 	p_text txt;
 	char *p;
 
-	if (xrIoGetstat(umdfile, &state) < 0) {
+	if (sceIoGetstat(umdfile, &state) < 0) {
 		return NULL;
 	}
-	if ((fd = xrIoOpen(umdfile, PSP_O_RDONLY, 0777)) < 0) {
+	if ((fd = sceIoOpen(umdfile, PSP_O_RDONLY, 0777)) < 0) {
 		return NULL;
 	}
 	filesize = state.st_size;
@@ -739,8 +738,8 @@ extern p_text text_open_in_umd(const char *umdfile, const char *chaptername,
 		return NULL;
 	}
 	buffer_prepare_copy(pRaw, filesize);
-	xrIoRead(fd, pRaw->ptr, filesize);
-	xrIoClose(fd);
+	sceIoRead(fd, pRaw->ptr, filesize);
+	sceIoClose(fd);
 	p = pRaw->ptr;
 	if (*(int *) p != 0xde9a9b89) {
 		dbg_printf(d,
@@ -804,7 +803,7 @@ extern p_text text_open_in_pdb(const char *pdbfile, const char *chaptername,
 	buffer *pbuf;
 	p_text txt;
 
-	if (xrIoGetstat(pdbfile, &state) < 0) {
+	if (sceIoGetstat(pdbfile, &state) < 0) {
 		return NULL;
 	}
 
@@ -872,12 +871,12 @@ static p_text text_open_binary(const char *filename, bool vert)
 
 	if (txt == NULL)
 		return NULL;
-	if ((fd = xrIoOpen(filename, PSP_O_RDONLY, 0777)) < 0) {
+	if ((fd = sceIoOpen(filename, PSP_O_RDONLY, 0777)) < 0) {
 		text_close(txt);
 		return NULL;
 	}
 	STRCPY_S(txt->filename, filename);
-	txt->size = xrIoLseek32(fd, 0, PSP_SEEK_END);
+	txt->size = sceIoLseek32(fd, 0, PSP_SEEK_END);
 	if (txt->size > 256 * 1024) {
 		if (kuKernelGetModel() != PSP_MODEL_STANDARD) {
 			if (txt->size > 4 * 1024 * 1024)
@@ -889,13 +888,13 @@ static p_text text_open_binary(const char *filename, bool vert)
 
 	if ((txt->buf = calloc(1, (txt->size + 15) / 16 * bpr)) == NULL
 		|| (tmpbuf = calloc(1, txt->size)) == NULL) {
-		xrIoClose(fd);
+		sceIoClose(fd);
 		text_close(txt);
 		return NULL;
 	}
-	xrIoLseek32(fd, 0, PSP_SEEK_SET);
-	xrIoRead(fd, tmpbuf, txt->size);
-	xrIoClose(fd);
+	sceIoLseek32(fd, 0, PSP_SEEK_SET);
+	sceIoRead(fd, tmpbuf, txt->size);
+	sceIoClose(fd);
 
 	txt->row_count = (txt->size + 15) / 16;
 	cbuf = tmpbuf;

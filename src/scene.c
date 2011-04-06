@@ -71,7 +71,6 @@
 #include "kubridge.h"
 #include "clock.h"
 #include "musicdrv.h"
-#include "xrhal.h"
 #include "image_queue.h"
 #include "conf_cmdline.h"
 #include "pspvaudio.h"
@@ -315,11 +314,11 @@ t_win_menu_op scene_flkey_menucb(dword key, p_win_menuitem item, dword * count,
 			disp_flip();
 
 			do {
-				xrCtrlReadBufferPositive(&ctl, 1);
+				sceCtrlReadBufferPositive(&ctl, 1);
 			} while (ctl.Buttons != 0);
 
 			do {
-				xrCtrlReadBufferPositive(&ctl, 1);
+				sceCtrlReadBufferPositive(&ctl, 1);
 				key1 = (ctl.Buttons & ~PSP_CTRL_SELECT) & ~PSP_CTRL_START;
 			} while ((key1 &
 					  ~(PSP_CTRL_UP | PSP_CTRL_DOWN | PSP_CTRL_LEFT |
@@ -327,9 +326,9 @@ t_win_menu_op scene_flkey_menucb(dword key, p_win_menuitem item, dword * count,
 			key2 = key1;
 			while ((key2 & key1) == key1) {
 				key1 = key2;
-				xrCtrlReadBufferPositive(&ctl, 1);
+				sceCtrlReadBufferPositive(&ctl, 1);
 				key2 = (ctl.Buttons & ~PSP_CTRL_SELECT) & ~PSP_CTRL_START;
-				xrKernelDelayThread(50000);
+				sceKernelDelayThread(50000);
 			}
 			if (config.flkey[*index] == key1 || config.flkey2[*index] == key1)
 				return win_menu_op_force_redraw;
@@ -353,7 +352,7 @@ t_win_menu_op scene_flkey_menucb(dword key, p_win_menuitem item, dword * count,
 			config.flkey2[*index] = config.flkey[*index];
 			config.flkey[*index] = key1;
 			do {
-				xrCtrlReadBufferPositive(&ctl, 1);
+				sceCtrlReadBufferPositive(&ctl, 1);
 			} while (ctl.Buttons != 0);
 			return win_menu_op_force_redraw;
 		case PSP_CTRL_TRIANGLE:
@@ -5618,7 +5617,7 @@ void scene_filelist(void)
 				break;
 		}
 		if (config.dis_scrsave)
-			xrPowerTick(0);
+			scePowerTick(0);
 
 #if 0
 #ifdef DMALLOC
@@ -5666,7 +5665,7 @@ int load_rdriver(void)
 	SceUID mod = kuKernelLoadModule("ms0:/seplugins/xr_rdriver.prx", 0, NULL);
 
 	if (mod >= 0) {
-		mod = xrKernelStartModule(mod, 0, NULL, NULL, NULL);
+		mod = sceKernelStartModule(mod, 0, NULL, NULL, NULL);
 		if (mod < 0) {
 			dbg_printf(d, "%s: error1 %08x", __func__, mod);
 		}
@@ -5744,16 +5743,16 @@ extern void scene_init(void)
 	dbg_printf(d, infomsg);
 	dbg_printf(d, "configure as %s", CONFIGURE_CMDLINE);
 
-	xrRtcGetCurrentTick(&dbglasttick);
+	sceRtcGetCurrentTick(&dbglasttick);
 	start = dbglasttick;
 #ifdef ENABLE_USB
 	if (config.enableusb)
 		usb_open();
 #endif
-	xrRtcGetCurrentTick(&dbgnow);
+	sceRtcGetCurrentTick(&dbgnow);
 	dbg_printf(d, "usb_open(): %.2fs", pspDiffTime(&dbgnow, &dbglasttick));
 
-	xrRtcGetCurrentTick(&dbglasttick);
+	sceRtcGetCurrentTick(&dbglasttick);
 
 	STRCPY_S(config.path, "ms0:/");
 	STRCPY_S(config.shortpath, "ms0:/");
@@ -5775,16 +5774,16 @@ extern void scene_init(void)
 		conf_save(&config);
 	} else {
 		conf_load(&config);
-		xrRtcGetCurrentTick(&dbgnow);
+		sceRtcGetCurrentTick(&dbgnow);
 		dbg_printf(d, "conf_load() etc: %.2fs",
 				   pspDiffTime(&dbgnow, &dbglasttick));
 	}
 
 #ifdef ENABLE_BG
-	xrRtcGetCurrentTick(&dbglasttick);
+	sceRtcGetCurrentTick(&dbglasttick);
 	bg_load(config.bgfile, config.bgarch, config.bgcolor,
 			fs_file_get_type(config.bgfile), config.grayscale, config.bgwhere);
-	xrRtcGetCurrentTick(&dbgnow);
+	sceRtcGetCurrentTick(&dbgnow);
 	dbg_printf(d, "bg_load(): %.2fs", pspDiffTime(&dbgnow, &dbglasttick));
 #endif
 
@@ -5792,7 +5791,7 @@ extern void scene_init(void)
 	STRCAT_S(fontzipfile, "fonts.zip");
 
 	for (_fsize = 10; _fsize <= 32; _fsize += 2) {
-		xrRtcGetCurrentTick(&dbglasttick);
+		sceRtcGetCurrentTick(&dbglasttick);
 		SPRINTF_S(efontfile, "ASC%02d", _fsize);
 		SPRINTF_S(cfontfile, "GBK%02d", _fsize);
 		if (disp_has_zipped_font(fontzipfile, efontfile, cfontfile)) {
@@ -5828,17 +5827,17 @@ extern void scene_init(void)
 				bookfontcount++;
 			}
 		}
-		xrRtcGetCurrentTick(&dbgnow);
+		sceRtcGetCurrentTick(&dbgnow);
 		dbg_printf(d, "has_font(%d): %.2f second", _fsize,
 				   pspDiffTime(&dbgnow, &dbglasttick));
 	}
-	xrRtcGetCurrentTick(&dbglasttick);
+	sceRtcGetCurrentTick(&dbglasttick);
 	if (fontcount == 0 || !scene_load_font() || !scene_load_book_font()) {
 		pspDebugScreenInit();
 		pspDebugScreenPrintf
 			("Error loading font file! Press any buttun for exit!");
 		ctrl_waitany();
-		xrKernelExitGame();
+		sceKernelExitGame();
 	}
 
 	if (config.usettf && !using_ttf) {
@@ -5847,10 +5846,10 @@ extern void scene_init(void)
 
 	recalc_size(&drperpage, &rowsperpage, &pixelsperrow);
 	cur_book_view.rrow = INVALID;
-	xrRtcGetCurrentTick(&dbgnow);
+	sceRtcGetCurrentTick(&dbgnow);
 	dbg_printf(d, "scene_load_font() & scene_load_book_font(): %.2f second",
 			   pspDiffTime(&dbgnow, &dbglasttick));
-	xrRtcGetCurrentTick(&dbglasttick);
+	sceRtcGetCurrentTick(&dbglasttick);
 #ifdef ENABLE_HPRM
 	ctrl_enablehprm(config.hprmctrl);
 #endif
@@ -5865,24 +5864,24 @@ extern void scene_init(void)
 	STRCAT_S(locconf, "location.conf");
 	location_init(locconf, locaval);
 
-	xrRtcGetCurrentTick(&dbgnow);
+	sceRtcGetCurrentTick(&dbgnow);
 	dbg_printf(d, "misc_init(): %.2f second",
 			   pspDiffTime(&dbgnow, &dbglasttick));
 
 #ifdef ENABLE_MUSIC
-	xrRtcGetCurrentTick(&dbglasttick);
+	sceRtcGetCurrentTick(&dbglasttick);
 	music_init();
-	xrRtcGetCurrentTick(&dbgnow);
+	sceRtcGetCurrentTick(&dbgnow);
 	dbg_printf(d, "music_init(): %.2fs", pspDiffTime(&dbgnow, &dbglasttick));
 
 	if (config.confver < 0x00090100 || music_list_load(musiclst_path) != 0) {
-		xrRtcGetCurrentTick(&dbglasttick);
+		sceRtcGetCurrentTick(&dbglasttick);
 		music_add_dir("ms0:/MUSIC/", "ms0:/MUSIC/");
-		xrRtcGetCurrentTick(&dbgnow);
+		sceRtcGetCurrentTick(&dbgnow);
 		dbg_printf(d, "music_add_dir(): %.2fs",
 				   pspDiffTime(&dbgnow, &dbglasttick));
 	}
-	xrRtcGetCurrentTick(&dbglasttick);
+	sceRtcGetCurrentTick(&dbglasttick);
 #ifdef ENABLE_HPRM
 	music_set_hprm(!config.hprmctrl);
 #endif
@@ -5892,25 +5891,25 @@ extern void scene_init(void)
 		music_list_play();
 	}
 
-	xrRtcGetCurrentTick(&dbgnow);
+	sceRtcGetCurrentTick(&dbgnow);
 #endif
 
 #ifndef _DEBUG
 	{
 		int fw;
 
-		fw = xrKernelDevkitVersion();
+		fw = sceKernelDevkitVersion();
 
 		if (fw >= 0x03070100 && fw != 0x05000310) {
 			char path[PATH_MAX];
 			int ret;
 
-			xrRtcGetCurrentTick(&dbglasttick);
+			sceRtcGetCurrentTick(&dbglasttick);
 			SPRINTF_S(path, "%sxrPrx.prx", scene_appdir());
 			ret = initExceptionHandler(path);
 
 			if (ret == 0) {
-				if (xrKernelDevkitVersion() < 0x03080000)
+				if (sceKernelDevkitVersion() < 0x03080000)
 					use_prx_power_save = true;
 				prx_loaded = true;
 			} else {
@@ -5921,14 +5920,14 @@ extern void scene_init(void)
 			ret = load_rdriver();
 			dbg_printf(d, "load_rdriver returns 0x%08x", ret);
 
-			xrRtcGetCurrentTick(&dbgnow);
+			sceRtcGetCurrentTick(&dbgnow);
 			dbg_printf(d, "initExceptionHandler(): %.2fs",
 					pspDiffTime(&dbgnow, &dbglasttick));
 		}
 	}
 #endif
 
-	xrRtcGetCurrentTick(&end);
+	sceRtcGetCurrentTick(&end);
 	dbg_printf(d, "Load finished in %.2fs, press any key to continue",
 			   pspDiffTime(&end, &start));
 	if (printDebugInfo) {
@@ -5938,7 +5937,7 @@ extern void scene_init(void)
 		dbg_close_handle(d, 2);
 #endif
 		while (ctrl_read() == PSP_CTRL_LTRIGGER) {
-			xrKernelDelayThread(100000);
+			sceKernelDelayThread(100000);
 		}
 		ctrl_waitany();
 	}
@@ -5999,7 +5998,7 @@ extern void scene_exit(void)
 #ifdef ENABLE_USB
 	usb_close();
 #endif
-	xrGuTerm();
+	sceGuTerm();
 	dbg_close(d);
 	simple_gettext_destroy();
 
@@ -6012,7 +6011,7 @@ extern void scene_exit(void)
 		RestoreExitGame();
 	}
 
-	xrKernelExitGame();
+	sceKernelExitGame();
 }
 
 extern const char *scene_appdir(void)
@@ -6070,7 +6069,7 @@ dword get_bgcolor_by_time(void)
 	dword origColor;
 	int cur_month, next_month;
 
-	xrRtcGetCurrentClockLocalTime(&tm);
+	sceRtcGetCurrentClockLocalTime(&tm);
 
 	cur_month = tm.month;
 	next_month = tm.month == 12 ? 1 : tm.month + 1;
@@ -6078,7 +6077,7 @@ dword get_bgcolor_by_time(void)
 	origColor =
 		lerp_color(colortbl[cur_month - 1],
 				   colortbl[next_month - 1],
-				   1.0 * tm.day / xrRtcGetDaysInMonth(tm.year, cur_month));
+				   1.0 * tm.day / sceRtcGetDaysInMonth(tm.year, cur_month));
 
 	if (tm.hour >= 12) {
 		origColor =

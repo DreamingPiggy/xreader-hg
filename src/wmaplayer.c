@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <assert.h>
 #include <math.h>
+#include <pspaudiocodec.h>
 #include "config.h"
 #include "ssv.h"
 #include "scene.h"
@@ -41,7 +42,6 @@
 #include "mediaengine.h"
 #include "cooleyesBridge.h"
 #include "buffered_reader.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -112,7 +112,7 @@ static int64_t asf_read_cb(void *userdata, void *buf, SceSize size)
 	if (reader->use_buffer) {
 		ret = buffered_reader_read(reader->r, buf, size);
 	} else {
-		ret = xrIoRead(reader->fd, buf, size);
+		ret = sceIoRead(reader->fd, buf, size);
 	}
 
 //  dbg_printf(d, "%s 0x%08x %d", __func__, (u32)buf, size);
@@ -140,7 +140,7 @@ static int64_t asf_seek_cb(void *userdata, void *buf, SceOff offset, int whence)
 									 offset);
 		}
 	} else {
-		ret = xrIoLseek(reader->fd, offset, whence);
+		ret = sceIoLseek(reader->fd, offset, whence);
 	}
 
 //  dbg_printf(d, "%s@0x%08x 0x%08x %d", __func__, ret, offset, whence);
@@ -183,10 +183,10 @@ static int wma_seek_seconds(SceAsfParser * parser, double npt)
 	u32 ms = (u32) (npt * 1000L);
 	int ret;
 
-	ret = xrAsfSeekTime(parser, 1, &ms);
+	ret = sceAsfSeekTime(parser, 1, &ms);
 
 	if (ret < 0) {
-		dbg_printf(d, "xrAsfSeekTime = 0x%08x", ret);
+		dbg_printf(d, "sceAsfSeekTime = 0x%08x", ret);
 		return ret;
 	}
 
@@ -204,10 +204,10 @@ static int wma_process_single(void)
 	memset(wma_frame_buffer, 0, wma_block_align);
 	frame = (SceAsfFrame *) (((u8 *) & asfparser) + 14536 - 32);
 	frame->pData = wma_frame_buffer;
-	ret = xrAsfGetFrameData(&asfparser, 1, frame);
+	ret = sceAsfGetFrameData(&asfparser, 1, frame);
 
 	if (ret < 0) {
-		dbg_printf(d, "xrAsfGetFrameData = 0x%08x", ret);
+		dbg_printf(d, "sceAsfGetFrameData = 0x%08x", ret);
 		return -1;
 	}
 
@@ -223,10 +223,10 @@ static int wma_process_single(void)
 	wma_codec_buffer[18] = frame->iUnk5;
 	wma_codec_buffer[19] = frame->iUnk3;
 
-	ret = xrAudiocodecDecode(wma_codec_buffer, 0x1005);
+	ret = sceAudiocodecDecode(wma_codec_buffer, 0x1005);
 
 	if (ret < 0) {
-		dbg_printf(d, "xrAudiocodecDecode = 0x%08x", ret);
+		dbg_printf(d, "sceAudiocodecDecode = 0x%08x", ret);
 		return -1;
 	}
 
@@ -301,7 +301,7 @@ static int wma_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			g_buff_frame_size = g_buff_frame_start = 0;
 		}
 		xAudioClearSndBuf(buf, snd_buf_frame_size);
-		xrKernelDelayThread(100000);
+		sceKernelDelayThread(100000);
 		return 0;
 	}
 
@@ -382,10 +382,10 @@ static int parse_standard_tag(struct WMAStdTag *tag)
 	memset(tag, 0, sizeof(*tag));
 
 	ret =
-		xrAsfParser_685E0DA7(&asfparser, &ms, 0x00004000, NULL, &start, &size);
+		sceAsfParser_685E0DA7(&asfparser, &ms, 0x00004000, NULL, &start, &size);
 
 	if (ret < 0) {
-		dbg_printf(d, "%s: xrAsfParser_685E0DA7@0x%08x", __func__, ret);
+		dbg_printf(d, "%s: sceAsfParser_685E0DA7@0x%08x", __func__, ret);
 		return ret;
 	}
 
@@ -513,10 +513,10 @@ static int parse_ex_tag(struct WMAExTag *tag)
 	tag->value = NULL;
 
 	ret =
-		xrAsfParser_685E0DA7(&asfparser, &ms, 0x00008000, NULL, &start, &size);
+		sceAsfParser_685E0DA7(&asfparser, &ms, 0x00008000, NULL, &start, &size);
 
 	if (ret < 0) {
-		dbg_printf(d, "%s: xrAsfParser_685E0DA7@0x%08x", __func__, ret);
+		dbg_printf(d, "%s: sceAsfParser_685E0DA7@0x%08x", __func__, ret);
 		return ret;
 	}
 
@@ -829,17 +829,17 @@ static int init_audiocodec()
 
 	memset(wma_codec_buffer, 0, sizeof(wma_codec_buffer));
 	wma_codec_buffer[5] = 1;
-	ret = xrAudiocodecCheckNeedMem(wma_codec_buffer, 0x1005);
+	ret = sceAudiocodecCheckNeedMem(wma_codec_buffer, 0x1005);
 
 	if (ret < 0) {
-		dbg_printf(d, "xrAudiocodecCheckNeedMem=0x%08X", ret);
+		dbg_printf(d, "sceAudiocodecCheckNeedMem=0x%08X", ret);
 		return -1;
 	}
 
-	ret = xrAudiocodecGetEDRAM(wma_codec_buffer, 0x1005);
+	ret = sceAudiocodecGetEDRAM(wma_codec_buffer, 0x1005);
 
 	if (ret < 0) {
-		dbg_printf(d, "xrAudiocodecGetEDRAM=0x%08X", ret);
+		dbg_printf(d, "sceAudiocodecGetEDRAM=0x%08X", ret);
 		return -1;
 	}
 
@@ -856,9 +856,9 @@ static int init_audiocodec()
 	p16[1] = wma_bits_per_sample;
 	p16[2] = wma_flag;
 
-	ret = xrAudiocodecInit(wma_codec_buffer, 0x1005);
+	ret = sceAudiocodecInit(wma_codec_buffer, 0x1005);
 	if (ret < 0) {
-		dbg_printf(d, "xrAudiocodecInit=0x%08X", ret);
+		dbg_printf(d, "sceAudiocodecInit=0x%08X", ret);
 		return -1;
 	}
 
@@ -932,15 +932,15 @@ static int wma_load(const char *spath, const char *lpath)
 
 		g_info.filesize = buffered_reader_length(data.r);
 	} else {
-		data.fd = xrIoOpen(spath, PSP_O_RDONLY, 0777);
+		data.fd = sceIoOpen(spath, PSP_O_RDONLY, 0777);
 
 		if (data.fd < 0) {
 			__end();
 			return -1;
 		}
 
-		g_info.filesize = xrIoLseek(data.fd, 0, PSP_SEEK_END);
-		xrIoLseek(data.fd, 0, PSP_SEEK_SET);
+		g_info.filesize = sceIoLseek(data.fd, 0, PSP_SEEK_END);
+		sceIoLseek(data.fd, 0, PSP_SEEK_SET);
 	}
 
 	if (config.use_vaudio)
@@ -953,7 +953,7 @@ static int wma_load(const char *spath, const char *lpath)
 		return -1;
 	}
 
-	ret = cooleyesMeBootStart(xrKernelDevkitVersion(), 3);
+	ret = cooleyesMeBootStart(sceKernelDevkitVersion(), 3);
 
 	if (ret < 0) {
 		dbg_printf(d, "cooleyesMeBootStart@0x%08x", ret);
@@ -963,10 +963,10 @@ static int wma_load(const char *spath, const char *lpath)
 	memset(&asfparser, 0, sizeof(asfparser));
 	init_asf_codecdata1(&asfparser);
 
-	ret = xrAsfCheckNeedMem(&asfparser);
+	ret = sceAsfCheckNeedMem(&asfparser);
 
 	if (ret < 0) {
-		dbg_printf(d, "xrAsfCheckNeedMem = 0x%08x", ret);
+		dbg_printf(d, "sceAsfCheckNeedMem = 0x%08x", ret);
 		goto failed;
 	}
 
@@ -979,14 +979,14 @@ static int wma_load(const char *spath, const char *lpath)
 
 	init_asf_codecdata2(&asfparser);
 
-	ret = xrAsfInitParser(&asfparser, &data, &asf_read_cb, &asf_seek_cb);
+	ret = sceAsfInitParser(&asfparser, &data, &asf_read_cb, &asf_seek_cb);
 
 	if (ret < 0) {
-		dbg_printf(d, "xrAsfInitParser = 0x%08x", ret);
+		dbg_printf(d, "sceAsfInitParser = 0x%08x", ret);
 		goto failed;
 	}
 
-	dbg_printf(d, "xrAsfInitParser OK");
+	dbg_printf(d, "sceAsfInitParser OK");
 
 	g_info.channels = *((u16 *) codecdata);
 	g_info.sample_freq = *((u32 *) (codecdata + 4));
@@ -1078,13 +1078,13 @@ static int wma_end(void)
 		}
 	} else {
 		if (data.fd >= 0) {
-			xrIoClose(data.fd);
+			sceIoClose(data.fd);
 			data.fd = -1;
 		}
 	}
 
 	if (wma_getEDRAM) {
-		xrAudiocodecReleaseEDRAM(wma_codec_buffer);
+		sceAudiocodecReleaseEDRAM(wma_codec_buffer);
 		wma_getEDRAM = 0;
 	}
 
@@ -1105,7 +1105,7 @@ static int wma_end(void)
 
 	g_buff_size = 0;
 	free_bitrate(&g_inst_br);
-	cooleyesMeBootStart(xrKernelDevkitVersion(), 4);
+	cooleyesMeBootStart(sceKernelDevkitVersion(), 4);
 	generic_end();
 
 	return 0;

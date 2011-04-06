@@ -46,7 +46,6 @@
 #include "bg.h"
 #include "osk.h"
 #include "scene.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -1187,7 +1186,7 @@ static int image_readjpg2(FILE * infile, dword * pwidth, dword * pheight,
 
 	dbg_printf(d, "%s: data 0x%08x", __func__, (unsigned) *image_data);
 
-	xrRtcGetCurrentTick(&dbglasttick);
+	sceRtcGetCurrentTick(&dbglasttick);
 	imgdata = *image_data;
 
 	while (cinfo.output_scanline < cinfo.output_height) {
@@ -1197,7 +1196,7 @@ static int image_readjpg2(FILE * infile, dword * pwidth, dword * pheight,
 		for (i = 0; i < cinfo.output_width; i++)
 			*imgdata++ = RGB(sline[i * 3], sline[i * 3 + 1], sline[i * 3 + 2]);
 	}
-	xrRtcGetCurrentTick(&dbgnow);
+	sceRtcGetCurrentTick(&dbgnow);
 	dbg_printf(d, "提取扫描线完成耗时:%.2f秒",
 			   pspDiffTime(&dbgnow, &dbglasttick));
 	free(sline);
@@ -1398,7 +1397,7 @@ extern int exif_readjpg_in_rar(const char *rarfile, const char *filename,
 	}
 
 	rar.idx = 0;
-	xrRtcGetCurrentTick(&dbgnow);
+	sceRtcGetCurrentTick(&dbgnow);
 	dbg_printf(d, "找到RAR中JPG文件耗时%.2f秒",
 			   pspDiffTime(&dbgnow, &dbglasttick));
 	exif_data = exif_data_new_from_data(rar.buf, rar.size);
@@ -1417,7 +1416,7 @@ extern int image_readjpg_in_rar(const char *rarfile, const char *filename,
 	t_image_rar rar;
 	int result;
 
-	xrRtcGetCurrentTick(&dbglasttick);
+	sceRtcGetCurrentTick(&dbglasttick);
 	extract_rar_file_into_image(&rar, rarfile, filename);
 
 	if (rar.buf == NULL) {
@@ -1425,7 +1424,7 @@ extern int image_readjpg_in_rar(const char *rarfile, const char *filename,
 	}
 
 	rar.idx = 0;
-	xrRtcGetCurrentTick(&dbgnow);
+	sceRtcGetCurrentTick(&dbgnow);
 	dbg_printf(d, "解压RAR中JPG文件耗时%.2f秒",
 			   pspDiffTime(&dbgnow, &dbglasttick));
 	result = image_readjpg2((FILE *) & rar, pwidth, pheight,

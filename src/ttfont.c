@@ -41,7 +41,6 @@
 #include "text.h"
 #include "power.h"
 #include "freq_lock.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -124,23 +123,23 @@ static p_ttf ttf_open_file_to_memory(const char *filename, int size,
 	if (filename == NULL || size == 0)
 		return NULL;
 
-	fd = xrIoOpen(filename, PSP_O_RDONLY, 0777);
+	fd = sceIoOpen(filename, PSP_O_RDONLY, 0777);
 
 	if (fd < 0) {
 		return NULL;
 	}
 
-	fileSize = xrIoLseek32(fd, 0, PSP_SEEK_END);
-	xrIoLseek32(fd, 0, PSP_SEEK_SET);
+	fileSize = sceIoLseek32(fd, 0, PSP_SEEK_END);
+	sceIoLseek32(fd, 0, PSP_SEEK_SET);
 	buf = malloc(fileSize);
 
 	if (buf == NULL) {
-		xrIoClose(fd);
+		sceIoClose(fd);
 		return NULL;
 	}
 
-	xrIoRead(fd, buf, fileSize);
-	xrIoClose(fd);
+	sceIoRead(fd, buf, fileSize);
+	sceIoClose(fd);
 
 	ttf = ttf_open_buffer(buf, fileSize, size, ttfname, false);
 

@@ -60,7 +60,6 @@
 #include "simple_gettext.h"
 #include "charsets.h"
 #include "dbg.h"
-#include "xrhal.h"
 #include "image_queue.h"
 #include "xaudiolib.h"
 #ifdef DMALLOC
@@ -329,10 +328,10 @@ const char *get_week_str(int day)
 
 static void scene_mp3bar_delay_action(void)
 {
-	xrKernelDelayThread(50000);
+	sceKernelDelayThread(50000);
 
 	if (config.dis_scrsave)
-		xrPowerTick(0);
+		scePowerTick(0);
 }
 
 #if defined(ENABLE_MUSIC) && defined(ENABLE_LYRIC)
@@ -600,8 +599,8 @@ static void scene_draw_mp3bar(bool * firstdup)
 				  config.usedyncolor ? get_bgcolor_by_time() : config.
 				  msgbcolor);
 
-	xrRtcGetCurrentClockLocalTime(&tm);
-	pos = xrRtcGetDayOfWeek(tm.year, tm.month, tm.day);
+	sceRtcGetCurrentClockLocalTime(&tm);
+	pos = sceRtcGetDayOfWeek(tm.year, tm.month, tm.day);
 	pos = pos >= 7 ? 7 : pos;
 	power_get_clock(&cpu, &bus);
 	SPRINTF_S(infostr,
@@ -620,11 +619,11 @@ static void scene_draw_mp3bar(bool * firstdup)
 		}
 	}
 
-	xrRtcGetCurrentTick(&mem_now);
+	sceRtcGetCurrentTick(&mem_now);
 
 	if (pspDiffTime(&mem_now, &mem_prev) > 3.0) {
 		memory_free = get_free_mem();
-		xrRtcGetCurrentTick(&mem_prev);
+		sceRtcGetCurrentTick(&mem_prev);
 	}
 
 	disp_putstring(6 + DISP_FONTSIZE * 2, 6, COLOR_WHITE,
@@ -669,7 +668,7 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 	static dword oldkey;
 #endif
 
-	xrRtcGetCurrentTick(&end);
+	sceRtcGetCurrentTick(&end);
 	interval = pspDiffTime(&end, &start);
 
 	switch (key) {
@@ -727,7 +726,7 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 			config.lyricencode++;
 			if ((dword) config.lyricencode > 4)
 				config.lyricencode = 0;
-			xrKernelDelayThread(200000);
+			sceKernelDelayThread(200000);
 #endif
 			break;
 		case (PSP_CTRL_RIGHT | PSP_CTRL_TRIANGLE):
@@ -736,59 +735,59 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 			if ((dword) config.mp3encode > 4)
 				config.mp3encode = 0;
 //          music_set_encode(config.mp3encode);
-			xrKernelDelayThread(200000);
+			sceKernelDelayThread(200000);
 #endif
 			break;
 		case PSP_CTRL_LTRIGGER:
 #ifdef ENABLE_MUSIC
 			if (key != oldkey) {
-				xrRtcGetCurrentTick(&start);
-				xrRtcGetCurrentTick(&end);
+				sceRtcGetCurrentTick(&start);
+				sceRtcGetCurrentTick(&end);
 				interval = pspDiffTime(&end, &start);
 			}
 
 			if (interval >= 0.5) {
 				musicdrv_fbackward(5);
-				xrKernelDelayThread(200000);
+				sceKernelDelayThread(200000);
 			}
 #endif
 			break;
 		case PSP_CTRL_RTRIGGER:
 #ifdef ENABLE_MUSIC
 			if (key != oldkey) {
-				xrRtcGetCurrentTick(&start);
-				xrRtcGetCurrentTick(&end);
+				sceRtcGetCurrentTick(&start);
+				sceRtcGetCurrentTick(&end);
 				interval = pspDiffTime(&end, &start);
 			}
 
 			if (interval >= 0.5) {
 				musicdrv_fforward(5);
-				xrKernelDelayThread(200000);
+				sceKernelDelayThread(200000);
 			}
 #endif
 			break;
 		case PSP_CTRL_UP:
 #ifdef ENABLE_MUSIC
 			musicdrv_fforward(30);
-			xrKernelDelayThread(200000);
+			sceKernelDelayThread(200000);
 #endif
 			break;
 		case PSP_CTRL_DOWN:
 #ifdef ENABLE_MUSIC
 			musicdrv_fbackward(30);
-			xrKernelDelayThread(200000);
+			sceKernelDelayThread(200000);
 #endif
 			break;
 		case PSP_CTRL_LEFT:
 #ifdef ENABLE_MUSIC
 			musicdrv_fbackward(5);
-			xrKernelDelayThread(200000);
+			sceKernelDelayThread(200000);
 #endif
 			break;
 		case PSP_CTRL_RIGHT:
 #ifdef ENABLE_MUSIC
 			musicdrv_fforward(5);
-			xrKernelDelayThread(200000);
+			sceKernelDelayThread(200000);
 #endif
 			break;
 		case PSP_CTRL_SELECT:
@@ -830,7 +829,7 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 				music_next();
 		}
 
-		xrRtcGetCurrentTick(&start);
+		sceRtcGetCurrentTick(&start);
 	}
 
 	oldkey = key;
@@ -849,14 +848,14 @@ void scene_mp3bar(void)
 	if (saveimage != NULL)
 		disp_getimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, saveimage);
 
-	xrRtcGetCurrentTick(&start);
-	xrRtcGetCurrentTick(&end);
-	xrRtcGetCurrentTick(&timer_start);
+	sceRtcGetCurrentTick(&start);
+	sceRtcGetCurrentTick(&end);
+	sceRtcGetCurrentTick(&timer_start);
 
 	while (1) {
 		dword key;
 
-		xrRtcGetCurrentTick(&timer_end);
+		sceRtcGetCurrentTick(&timer_end);
 #ifdef ENABLE_MUSIC
 		if (pspDiffTime(&timer_end, &timer_start) >= 1.0) {
 			struct music_info info;
@@ -867,7 +866,7 @@ void scene_mp3bar(void)
 				g_ins_kbps = info.ins_kbps;
 			}
 
-			xrRtcGetCurrentTick(&timer_start);
+			sceRtcGetCurrentTick(&timer_start);
 			secticks++;
 		}
 #endif
@@ -885,7 +884,7 @@ void scene_mp3bar(void)
 
 		if (config.autosleep != 0 && secticks > 60 * config.autosleep) {
 			power_down();
-			xrPowerRequestSuspend();
+			scePowerRequestSuspend();
 			secticks = 0;
 		}
 

@@ -30,7 +30,6 @@
 #include "dbg.h"
 #include "archive.h"
 #include "buffer.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -46,51 +45,51 @@ extern bool copy_file(const char *src, const char *dest, t_copy_cb cb,
 		return false;
 
 	if (ocb != NULL) {
-		fd2 = xrIoOpen(dest, PSP_O_RDONLY, 0777);
+		fd2 = sceIoOpen(dest, PSP_O_RDONLY, 0777);
 		if (fd2 >= 0) {
 			if (!ocb(dest, data)) {
-				xrIoClose(fd2);
+				sceIoClose(fd2);
 				return false;
 			}
-			xrIoClose(fd2);
+			sceIoClose(fd2);
 		}
 	}
 
-	fd1 = xrIoOpen(src, PSP_O_RDONLY, 0777);
+	fd1 = sceIoOpen(src, PSP_O_RDONLY, 0777);
 
 	if (fd1 < 0) {
 		if (cb != NULL)
 			cb(src, dest, false, data);
 		return false;
 	}
-	fd2 = xrIoOpen(dest, PSP_O_CREAT | PSP_O_RDWR, 0777);
+	fd2 = sceIoOpen(dest, PSP_O_CREAT | PSP_O_RDWR, 0777);
 	if (fd2 < 0) {
 		if (cb != NULL)
 			cb(src, dest, false, data);
-		xrIoClose(fd1);
+		sceIoClose(fd1);
 		return false;
 	}
 
-	while ((readbytes = xrIoRead(fd1, buf, 1024 * 1024)) > 0)
-		if (xrIoWrite(fd2, buf, readbytes) != readbytes) {
+	while ((readbytes = sceIoRead(fd1, buf, 1024 * 1024)) > 0)
+		if (sceIoWrite(fd2, buf, readbytes) != readbytes) {
 			if (cb != NULL)
 				cb(src, dest, false, data);
-			xrIoClose(fd1);
-			xrIoClose(fd2);
+			sceIoClose(fd1);
+			sceIoClose(fd2);
 			return true;
 		}
 	free(buf);
 	if (cb != NULL)
 		cb(src, dest, true, data);
-	xrIoClose(fd1);
-	xrIoClose(fd2);
+	sceIoClose(fd1);
+	sceIoClose(fd2);
 	return true;
 }
 
 extern dword copy_dir(const char *src, const char *dest, t_copy_cb cb,
 					  t_copy_overwritecb ocb, void *data)
 {
-	int dl = xrIoDopen(src);
+	int dl = sceIoDopen(src);
 	dword result = 0;
 	SceIoDirent sid;
 
@@ -100,10 +99,10 @@ extern dword copy_dir(const char *src, const char *dest, t_copy_cb cb,
 		return 0;
 	}
 
-	xrIoMkdir(dest, 0777);
+	sceIoMkdir(dest, 0777);
 	memset(&sid, 0, sizeof(SceIoDirent));
 
-	while (xrIoDread(dl, &sid)) {
+	while (sceIoDread(dl, &sid)) {
 		char copysrc[260], copydest[260];
 
 		if (sid.d_name[0] == '.')
@@ -119,7 +118,7 @@ extern dword copy_dir(const char *src, const char *dest, t_copy_cb cb,
 			++result;
 		memset(&sid, 0, sizeof(SceIoDirent));
 	}
-	xrIoDclose(dl);
+	sceIoDclose(dl);
 	return result;
 }
 
@@ -190,20 +189,20 @@ extern bool extract_archive_file(const char *archname, const char *archpath,
 	if (ocb != NULL) {
 		SceUID fd;
 
-		fd = xrIoOpen(dest, PSP_O_RDONLY, 0777);
+		fd = sceIoOpen(dest, PSP_O_RDONLY, 0777);
 		if (fd >= 0) {
 			if (!ocb(dest, data)) {
-				xrIoClose(fd);
+				sceIoClose(fd);
 				return false;
 			}
-			xrIoClose(fd);
+			sceIoClose(fd);
 		}
 	}
 
 	dbg_printf(d, "extract_archive_file: %s %s %s, ft = %d", archname,
 			   archpath, dest, ft);
 
-	fd = xrIoOpen(dest, PSP_O_CREAT | PSP_O_RDWR, 0777);
+	fd = sceIoOpen(dest, PSP_O_CREAT | PSP_O_RDWR, 0777);
 
 	if (fd < 0)
 		return false;
@@ -219,7 +218,7 @@ extern bool extract_archive_file(const char *archname, const char *archpath,
 	ptr = archdata->ptr;
 
 	while (buffer_cache > 0) {
-		int bytes = xrIoWrite(fd, ptr, buffer_cache);
+		int bytes = sceIoWrite(fd, ptr, buffer_cache);
 
 		if (bytes < 0) {
 			goto exit;
@@ -233,7 +232,7 @@ extern bool extract_archive_file(const char *archname, const char *archpath,
 	result = true;
 
   exit:
-	xrIoClose(fd);
+	sceIoClose(fd);
 	if (archdata != NULL) {
 		buffer_free(archdata);
 	}

@@ -29,7 +29,6 @@
 #include "conf.h"
 #include "musicmgr.h"
 #include "dbg.h"
-#include "xrhal.h"
 #include "thread_lock.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
@@ -179,11 +178,11 @@ static int update_freq(void)
 
 //  dbg_printf(d, "%s: should set cpu/bus to %d/%d", __func__, cpu, bus);
 
-	if (xrPowerGetCpuClockFrequency() != cpu
-		|| xrPowerGetBusClockFrequency() != bus) {
+	if (scePowerGetCpuClockFrequency() != cpu
+		|| scePowerGetBusClockFrequency() != bus) {
 		power_set_clock(cpu, bus);
 		{
-//          dbg_printf(d, "%s: cpu: %d, bus: %d", __func__, xrPowerGetCpuClockFrequency(), xrPowerGetBusClockFrequency());
+//          dbg_printf(d, "%s: cpu: %d, bus: %d", __func__, scePowerGetCpuClockFrequency(), scePowerGetBusClockFrequency());
 		}
 	}
 

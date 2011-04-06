@@ -34,7 +34,6 @@
 #include "scene.h"
 #include "display.h"
 #include "ttfont.h"
-#include "xrhal.h"
 
 bool use_prx_power_save = false;
 
@@ -42,27 +41,27 @@ extern void power_set_clock(dword cpu, dword bus)
 {
 	if (use_prx_power_save) {
 		xrPlayerSetSpeed(cpu, bus);
-		// 15Mhz can't use xrPlayerSetSpeed
+		// 15Mhz can't use scePlayerSetSpeed
 		if (cpu <= 15) {
 			power_set_clock(33, 16);
-			xrPowerSetCpuClockFrequency(cpu);
-			xrPowerSetBusClockFrequency(bus);
+			scePowerSetCpuClockFrequency(cpu);
+			scePowerSetBusClockFrequency(bus);
 		}
 	} else {
 		if (cpu > 222 || bus > 111)
-			xrPowerSetClockFrequency(cpu, cpu, bus);
+			scePowerSetClockFrequency(cpu, cpu, bus);
 		else {
-			xrPowerSetClockFrequency(222, 222, 111);
-			xrPowerSetCpuClockFrequency(cpu);
-			xrPowerSetBusClockFrequency(bus);
+			scePowerSetClockFrequency(222, 222, 111);
+			scePowerSetCpuClockFrequency(cpu);
+			scePowerSetBusClockFrequency(bus);
 		}
 	}
 }
 
 extern void power_get_clock(dword * cpu, dword * bus)
 {
-	*cpu = xrPowerGetCpuClockFrequency();
-	*bus = xrPowerGetBusClockFrequency();
+	*cpu = scePowerGetCpuClockFrequency();
+	*bus = scePowerGetBusClockFrequency();
 }
 
 extern void power_get_battery(int *percent, int *lifetime, int *tempe,
@@ -70,24 +69,24 @@ extern void power_get_battery(int *percent, int *lifetime, int *tempe,
 {
 	int t;
 
-	t = xrPowerGetBatteryLifePercent();
+	t = scePowerGetBatteryLifePercent();
 	if (t >= 0)
 		*percent = t;
 	else
 		*percent = 0;
-	t = xrPowerGetBatteryLifeTime();
+	t = scePowerGetBatteryLifeTime();
 	if (t >= 0)
 		*lifetime = t;
 	else
 		*lifetime = 0;
-	t = xrPowerGetBatteryTemp();
+	t = scePowerGetBatteryTemp();
 	if (t >= 0)
 		*tempe = t;
 	else
 		*tempe = 0;
-	t = xrPowerGetBatteryVolt();
+	t = scePowerGetBatteryVolt();
 	if (t >= 0)
-		*volt = xrPowerGetBatteryVolt();
+		*volt = scePowerGetBatteryVolt();
 	else
 		*volt = 0;
 }
@@ -97,7 +96,7 @@ static char status_str[256] = "";
 
 extern const char *power_get_battery_charging(void)
 {
-	int status = xrPowerGetBatteryChargingStatus();
+	int status = scePowerGetBatteryChargingStatus();
 
 	if (last_status != status) {
 		status_str[0] = 0;

@@ -31,7 +31,6 @@
 #endif
 #endif
 #include "ctrl.h"
-#include "xrhal.h"
 #include "thread_lock.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
@@ -50,11 +49,11 @@ static struct psp_mutex_t hprm_l;
 
 extern void ctrl_init(void)
 {
-	xrCtrlSetSamplingCycle(0);
+	sceCtrlSetSamplingCycle(0);
 #ifdef ENABLE_ANALOG
-	xrCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
+	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 #else
-	xrCtrlSetSamplingMode(PSP_CTRL_MODE_DIGITAL);
+	sceCtrlSetSamplingMode(PSP_CTRL_MODE_DIGITAL);
 #endif
 #ifdef ENABLE_HPRM
 	xr_lock_init(&hprm_l);
@@ -73,7 +72,7 @@ extern bool ctrl_analog(int *x, int *y)
 {
 	SceCtrlData ctl;
 
-	xrCtrlReadBufferPositive(&ctl, 1);
+	sceCtrlReadBufferPositive(&ctl, 1);
 
 	if (ctl.Buttons & PSP_CTRL_HOLD) {
 		return false;
@@ -94,14 +93,14 @@ extern dword ctrl_read_cont(void)
 {
 	SceCtrlData ctl;
 
-	xrCtrlReadBufferPositive(&ctl, 1);
+	sceCtrlReadBufferPositive(&ctl, 1);
 
 #ifdef ENABLE_HPRM
-	if (hprmenable && xrHprmIsRemoteExist()) {
+	if (hprmenable && sceHprmIsRemoteExist()) {
 		u32 key;
 
 		if (xr_lock(&hprm_l) >= 0) {
-			xrHprmPeekCurrentKey(&key);
+			sceHprmPeekCurrentKey(&key);
 			xr_unlock(&hprm_l);
 
 			if (key > 0) {
@@ -139,10 +138,10 @@ extern dword ctrl_read(void)
 	SceCtrlData ctl;
 
 #ifdef ENABLE_HPRM
-	if (hprmenable && xrHprmIsRemoteExist()) {
+	if (hprmenable && sceHprmIsRemoteExist()) {
 		u32 key;
 
-		xrHprmPeekCurrentKey(&key);
+		sceHprmPeekCurrentKey(&key);
 
 		if (key > 0) {
 			switch (key) {
@@ -167,7 +166,7 @@ extern dword ctrl_read(void)
 	}
 #endif
 
-	xrCtrlReadBufferPositive(&ctl, 1);
+	sceCtrlReadBufferPositive(&ctl, 1);
 
 	if (ctl.Buttons == last_btn) {
 		if (ctl.TimeStamp - last_tick < CTRL_REPEAT_TIME)
@@ -185,8 +184,8 @@ extern void ctrl_waitreleaseintime(int i)
 	SceCtrlData ctl;
 
 	do {
-		xrCtrlReadBufferPositive(&ctl, 1);
-		xrKernelDelayThread(i);
+		sceCtrlReadBufferPositive(&ctl, 1);
+		sceKernelDelayThread(i);
 	} while (ctl.Buttons != 0);
 }
 
@@ -199,10 +198,10 @@ extern int ctrl_waitreleasekey(dword key)
 {
 	SceCtrlData pad;
 
-	xrCtrlReadBufferPositive(&pad, 1);
+	sceCtrlReadBufferPositive(&pad, 1);
 	while (pad.Buttons == key) {
-		xrKernelDelayThread(50000);
-		xrCtrlReadBufferPositive(&pad, 1);
+		sceKernelDelayThread(50000);
+		sceCtrlReadBufferPositive(&pad, 1);
 	}
 
 	return 0;
@@ -213,7 +212,7 @@ extern dword ctrl_waitany(void)
 	dword key;
 
 	while ((key = ctrl_read()) == 0) {
-		xrKernelDelayThread(50000);
+		sceKernelDelayThread(50000);
 	}
 	return key;
 }
@@ -223,7 +222,7 @@ extern dword ctrl_waitkey(dword keymask)
 	dword key;
 
 	while ((key = ctrl_read()) != key) {
-		xrKernelDelayThread(50000);
+		sceKernelDelayThread(50000);
 	}
 	return key;
 }
@@ -233,7 +232,7 @@ extern dword ctrl_waitmask(dword keymask)
 	dword key;
 
 	while (((key = ctrl_read()) & keymask) == 0) {
-		xrKernelDelayThread(50000);
+		sceKernelDelayThread(50000);
 	}
 	return key;
 }
@@ -244,7 +243,7 @@ extern dword ctrl_waitlyric(void)
 	dword key;
 
 	while ((key = ctrl_read()) == 0) {
-		xrKernelDelayThread(50000);
+		sceKernelDelayThread(50000);
 		if (lyric_check_changed(music_get_lyric()))
 			break;
 	}
@@ -268,13 +267,13 @@ extern dword ctrl_hprm_raw(void)
 {
 	u32 key = 0;
 
-/*	if(xrKernelDevkitVersion() >= 0x02000010)
+/*	if(sceKernelDevkitVersion() >= 0x02000010)
 		return 0;*/
-	if (!xrHprmIsRemoteExist())
+	if (!sceHprmIsRemoteExist())
 		return 0;
 
 	if (xr_lock(&hprm_l) >= 0) {
-		xrHprmPeekCurrentKey(&key);
+		sceHprmPeekCurrentKey(&key);
 		xr_unlock(&hprm_l);
 	}
 
@@ -288,7 +287,7 @@ extern dword ctrl_waittime(dword t)
 	time_t t1 = time(NULL);
 
 	while ((key = ctrl_read()) == 0) {
-		xrKernelDelayThread(50000);
+		sceKernelDelayThread(50000);
 		if (time(NULL) - t1 >= t)
 			return 0;
 	}
@@ -298,6 +297,6 @@ extern dword ctrl_waittime(dword t)
 #ifdef ENABLE_HPRM
 extern void ctrl_enablehprm(bool enable)
 {
-	hprmenable = /*(xrKernelDevkitVersion() < 0x02000010) && */ enable;
+	hprmenable = /*(sceKernelDevkitVersion() < 0x02000010) && */ enable;
 }
 #endif

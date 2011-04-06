@@ -30,9 +30,9 @@
 #include <pspkernel.h>
 #include <pspaudio.h>
 #include <pspaudiocodec.h>
+#include <psputility.h>
 #include <kubridge.h>
 #include "config.h"
-#include "xrhal.h"
 #include "mediaengine.h"
 #include "pspvaudio.h"
 #include "common/datatype.h"
@@ -75,7 +75,7 @@ int load_me_prx(int mode)
 
 	if (mode & AVCODEC) {
 		prev = *((unsigned long*)0x08fc1000);
-		ret = xrUtilityLoadAvModule(PSP_AV_MODULE_AVCODEC);
+		ret = sceUtilityLoadAvModule(PSP_AV_MODULE_AVCODEC);
 
 		if (prev != *((unsigned long*)0x08fc1000)) {
 			fprintf(stderr, "avcodec: 0x08fc1000 changed\n");
@@ -111,7 +111,7 @@ int load_me_prx(int mode)
 
 		if (g_modid >= 0) {
 			prev = *((unsigned long*)0x08fc1000);
-			ret = xrKernelStartModule(g_modid, 0, 0, &status, NULL);
+			ret = sceKernelStartModule(g_modid, 0, 0, &status, NULL);
 
 			if (prev != *((unsigned long*)0x08fc1000)) {
 				fprintf(stderr, "cooleye_bridge: 0x08fc1000 changed\n");
@@ -132,7 +132,7 @@ int load_me_prx(int mode)
 
 		if (g_modid2 >= 0) {
 			prev = *((unsigned long*)0x08fc1000);
-			ret = xrKernelStartModule(g_modid2, 0, 0, &status, NULL);
+			ret = sceKernelStartModule(g_modid2, 0, 0, &status, NULL);
 
 			if (prev != *((unsigned long*)0x08fc1000)) {
 				fprintf(stderr, "asfparser: 0x08fc1000 changed\n");

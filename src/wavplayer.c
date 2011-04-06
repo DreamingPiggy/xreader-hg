@@ -33,7 +33,6 @@
 #include "ssv.h"
 #include "genericplayer.h"
 #include "musicinfo.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -115,7 +114,7 @@ static int wav_seek_seconds(double seconds)
 								   g_wav_byte_per_frame);
 	} else {
 		ret =
-			xrIoLseek(data.fd,
+			sceIoLseek(data.fd,
 					  g_wav_data_offset +
 					  (uint32_t) (seconds * g_info.sample_freq) *
 					  g_wav_byte_per_frame, SEEK_SET);
@@ -176,7 +175,7 @@ static int wav_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			wav_seek_seconds(g_play_time);
 		}
 		xAudioClearSndBuf(buf, snd_buf_frame_size);
-		xrKernelDelayThread(100000);
+		sceKernelDelayThread(100000);
 		return 0;
 	}
 
@@ -210,7 +209,7 @@ static int wav_audiocallback(void *buf, unsigned int reqn, void *pdata)
 										 WAVE_BUFFER_SIZE * sizeof(*g_buff));
 			} else {
 				ret =
-					xrIoRead(data.fd, g_buff,
+					sceIoRead(data.fd, g_buff,
 							 WAVE_BUFFER_SIZE * sizeof(*g_buff));
 			}
 
@@ -256,7 +255,7 @@ static int __init(void)
 
 static int wave_get_16(SceUID fd, uint16_t * buf)
 {
-	int ret = xrIoRead(fd, buf, sizeof(*buf));
+	int ret = sceIoRead(fd, buf, sizeof(*buf));
 
 	if (ret == 2) {
 		return 0;
@@ -267,7 +266,7 @@ static int wave_get_16(SceUID fd, uint16_t * buf)
 
 static int wave_get_32(SceUID fd, uint32_t * buf)
 {
-	int ret = xrIoRead(fd, buf, sizeof(*buf));
+	int ret = sceIoRead(fd, buf, sizeof(*buf));
 
 	if (ret == 4) {
 		return 0;
@@ -278,7 +277,7 @@ static int wave_get_32(SceUID fd, uint32_t * buf)
 
 static int wave_skip_n_bytes(SceUID fd, int n)
 {
-	return xrIoLseek(fd, n, SEEK_CUR) >= 0 ? 0 : -1;
+	return sceIoLseek(fd, n, SEEK_CUR) >= 0 ? 0 : -1;
 }
 
 /**
@@ -307,15 +306,15 @@ static int wav_load(const char *spath, const char *lpath)
 	}
 
 	data.use_buffer = true;
-	data.fd = xrIoOpen(spath, PSP_O_RDONLY, 0777);
+	data.fd = sceIoOpen(spath, PSP_O_RDONLY, 0777);
 
 	if (data.fd < 0) {
 		__end();
 		return -1;
 	}
 
-	g_info.filesize = xrIoLseek(data.fd, 0, PSP_SEEK_END);
-	xrIoLseek(data.fd, 0, PSP_SEEK_SET);
+	g_info.filesize = sceIoLseek(data.fd, 0, PSP_SEEK_END);
+	sceIoLseek(data.fd, 0, PSP_SEEK_SET);
 
 	// 'RIFF' keyword
 	if (wave_get_32(data.fd, &temp) != 0) {
@@ -426,8 +425,8 @@ static int wav_load(const char *spath, const char *lpath)
 	if (data.use_buffer) {
 		dword cur_pos;
 
-		cur_pos = xrIoLseek(data.fd, 0, PSP_SEEK_CUR);
-		xrIoClose(data.fd);
+		cur_pos = sceIoLseek(data.fd, 0, PSP_SEEK_CUR);
+		sceIoClose(data.fd);
 		data.fd = -1;
 
 		data.r = buffered_reader_open(spath, g_io_buffer_size, 1);
@@ -492,7 +491,7 @@ static int __end(void)
 		}
 	} else {
 		if (data.fd >= 0) {
-			xrIoClose(data.fd);
+			sceIoClose(data.fd);
 			data.fd = -1;
 		}
 	}

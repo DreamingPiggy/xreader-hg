@@ -44,7 +44,6 @@
 #include "genericplayer.h"
 #include "musicinfo.h"
 #include "common/utils.h"
-#include "xrhal.h"
 #include "m4aplayer.h"
 #include "buffered_reader.h"
 #include "malloc.h"
@@ -226,7 +225,7 @@ static int m4a_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			m4a_seek_seconds(g_play_time);
 		}
 		xAudioClearSndBuf(buf, snd_buf_frame_size);
-		xrKernelDelayThread(100000);
+		sceKernelDelayThread(100000);
 		return 0;
 	}
 
@@ -271,7 +270,7 @@ static int m4a_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			aac_codec_buffer[7] = buffer_size;
 			aac_codec_buffer[9] = aac_sample_per_frame * 4;
 
-			res = xrAudiocodecDecode(aac_codec_buffer, 0x1003);
+			res = sceAudiocodecDecode(aac_codec_buffer, 0x1003);
 
 			if (res < 0) {
 				if (buffer != NULL) {
@@ -408,15 +407,15 @@ static int m4a_load(const char *spath, const char *lpath)
 
 	__init();
 
-	fd = xrIoOpen(spath, PSP_O_RDONLY, 0777);
+	fd = sceIoOpen(spath, PSP_O_RDONLY, 0777);
 
 	if (fd < 0) {
 		goto failed;
 	}
 
-	g_info.filesize = xrIoLseek(fd, 0, PSP_SEEK_END);
+	g_info.filesize = sceIoLseek(fd, 0, PSP_SEEK_END);
 
-	xrIoClose(fd);
+	sceIoClose(fd);
 
 	mp4file = MP4Read(spath, 0);
 
@@ -488,11 +487,11 @@ static int m4a_load(const char *spath, const char *lpath)
 
 	memset(aac_codec_buffer, 0, sizeof(aac_codec_buffer));
 
-	if (xrAudiocodecCheckNeedMem(aac_codec_buffer, 0x1003) < 0) {
+	if (sceAudiocodecCheckNeedMem(aac_codec_buffer, 0x1003) < 0) {
 		goto failed;
 	}
 
-	if (xrAudiocodecGetEDRAM(aac_codec_buffer, 0x1003) < 0) {
+	if (sceAudiocodecGetEDRAM(aac_codec_buffer, 0x1003) < 0) {
 		goto failed;
 	}
 
@@ -504,7 +503,7 @@ static int m4a_load(const char *spath, const char *lpath)
 		aac_codec_buffer[10] = g_info.sample_freq;
 	}
 
-	if (xrAudiocodecInit(aac_codec_buffer, 0x1003) < 0) {
+	if (sceAudiocodecInit(aac_codec_buffer, 0x1003) < 0) {
 		goto failed;
 	}
 
@@ -558,7 +557,7 @@ static int m4a_end(void)
 	}
 
 	if (aac_getEDRAM) {
-		xrAudiocodecReleaseEDRAM(aac_codec_buffer);
+		sceAudiocodecReleaseEDRAM(aac_codec_buffer);
 		aac_getEDRAM = false;
 	}
 
