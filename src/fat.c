@@ -23,15 +23,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pspkernel.h>
+#include <stdio.h>
+#include <pspinit.h>
+#include "kubridge.h"
 #include "common/utils.h"
 #include "charsets.h"
 #include "fat.h"
-#include <stdio.h>
 #include "dbg.h"
 #include "thread_lock.h"
+#include "xrPrx/xrPrx.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
+
+#define PSP_GO 5
 
 static int fatfd = -1;
 static t_fat_dbr dbr;
@@ -52,20 +57,54 @@ static enum
 
 static struct psp_mutex_t fat_l;
 
+static void msstor_close(void)
+{
+	if(fatfd >= 0) {
+		sceIoClose(fatfd);
+		fatfd = -1;
+	}
+}
+
+static int is_on_ef0(void)
+{
+	int model, apitype;
+
+	apitype = xrKernelInitApitype();
+	model = kuKernelGetModel();
+
+	if(apitype == 0x152 && model == PSP_GO) {
+		return 1;
+	}
+
+	return 0;
+}
+
+static SceUID msstor_reopen(void)
+{
+	msstor_close();
+
+	if(is_on_ef0()) {
+		fatfd = sceIoOpen("msstoremu:", PSP_O_RDONLY, 0777);
+	} else {
+		fatfd = sceIoOpen("msstor:", PSP_O_RDONLY, 0777);
+	}
+
+	return fatfd;
+}
+
 void fat_powerdown(void)
 {
 	dbg_printf(d, "%s", __func__);
 
 	fat_lock();
-	sceIoClose(fatfd);
-	fatfd = -1;
+	msstor_close();
 }
 
 void fat_powerup(void)
 {
 	dbg_printf(d, "%s", __func__);
 
-	fatfd = sceIoOpen("msstor:", PSP_O_RDONLY, 0777);
+	fatfd = msstor_reopen();
 	fat_unlock();
 }
 
@@ -85,14 +124,13 @@ extern bool fat_init(void)
 
 	xr_lock_init(&fat_l);
 	fat_lock();
-	fatfd = sceIoOpen("msstor:", PSP_O_RDONLY, 0777);
+	fatfd = msstor_reopen();
 	if (fatfd < 0) {
 		fat_unlock();
 		return false;
 	}
 	if (sceIoRead(fatfd, &mbr, sizeof(mbr)) != sizeof(mbr)) {
-		sceIoClose(fatfd);
-		fatfd = -1;
+		msstor_close();
 		fat_unlock();
 		return false;
 	}
@@ -102,8 +140,7 @@ extern bool fat_init(void)
 		dbr_pos = 0;
 		if (sceIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos
 			|| sceIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
-			sceIoClose(fatfd);
-			fatfd = -1;
+			msstor_close();
 			fat_unlock();
 			return false;
 		}
@@ -145,7 +182,7 @@ extern bool fat_init(void)
 		data_pos = root_pos;
 		data_pos += 1ull * dbr.root_entry * sizeof(t_fat_entry);
 	}
-	sceIoClose(fatfd);
+	msstor_close();
 	fat_unlock();
 	return true;
 }
@@ -212,7 +249,7 @@ static bool fat_load_table(void)
 		return true;
 	}
 
-	fatfd = sceIoOpen("msstor:", PSP_O_RDONLY, 0777);
+	fatfd = msstor_reopen();
 
 	if (fatfd < 0)
 		return false;
@@ -226,15 +263,13 @@ static bool fat_load_table(void)
 		(fatfd, dbr_pos + dbr.reserved_sec * dbr.bytes_per_sec,
 		 PSP_SEEK_SET) != dbr_pos + dbr.reserved_sec * dbr.bytes_per_sec
 		|| (fat_table = malloc(fat_table_size)) == NULL) {
-		sceIoClose(fatfd);
-		fatfd = -1;
+		msstor_close();
 		return false;
 	}
 	if ((sceIoRead(fatfd, fat_table, fat_table_size) != fat_table_size)
 		|| (fat_type == fat12 && !convert_table_fat12())
 		|| (fat_type == fat16 && !convert_table_fat16())) {
-		sceIoClose(fatfd);
-		fatfd = -1;
+		msstor_close();
 		free(fat_table);
 		fat_table = NULL;
 		return false;
@@ -253,7 +288,7 @@ static void fat_free_table(void)
 			free(fat_table);
 			fat_table = NULL;
 		}
-		sceIoClose(fatfd);
+		msstor_close();
 	}
 }
 
@@ -668,10 +703,7 @@ extern dword fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 
 extern void fat_free(void)
 {
-	if (fatfd >= 0) {
-		sceIoClose(fatfd);
-		fatfd = -1;
-	}
+	msstor_close();
 	memset(&dbr, 0, sizeof(dbr));
 	memset(&mbr, 0, sizeof(mbr));
 	root_pos = 0;
