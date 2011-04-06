@@ -136,7 +136,6 @@ typedef struct
 	dword selicolor;
 	dword selbcolor;
 	dword msgbcolor;
-	bool usedyncolor;
 	dword rowspace;
 	t_conf_infobar infobar;
 	int infobar_style;

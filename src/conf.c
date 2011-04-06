@@ -249,7 +249,6 @@ static void conf_default(p_conf conf)
 	conf->selicolor = RGB(0xFF, 0xFF, 0x40);
 	conf->selbcolor = RGB(0x20, 0x20, 0xDF);
 	conf->msgbcolor = RGB(0x18, 0x28, 0x50);
-	conf->usedyncolor = false;
 
 	STRCPY_S(conf->cttfpath, scene_appdir());
 	STRCAT_S(conf->cttfpath, "fonts/gbk.ttf");
@@ -914,8 +913,6 @@ extern bool ini_conf_load(const char *inifilename, p_conf conf)
 		iniparser_getunsigned(dict, "UI:selbcolor", conf->selbcolor);
 	conf->msgbcolor =
 		iniparser_getunsigned(dict, "UI:msgbcolor", conf->msgbcolor);
-	conf->usedyncolor =
-		iniparser_getboolean(dict, "UI:usedyncolor", conf->usedyncolor);
 	conf->rowspace = iniparser_getint(dict, "Text:rowspace", conf->rowspace);
 	conf->infobar =
 		stringToInfobar(iniparser_getstring
@@ -1242,8 +1239,6 @@ extern bool ini_conf_save(p_conf conf)
 						hexToString(buf, sizeof(buf), conf->selbcolor));
 	iniparser_setstring(dict, "UI:msgbcolor",
 						hexToString(buf, sizeof(buf), conf->msgbcolor));
-	iniparser_setstring(dict, "UI:usedyncolor",
-						booleanToString(buf, sizeof(buf), conf->usedyncolor));
 	iniparser_setstring(dict, "Text:rowspace",
 						dwordToString(buf, sizeof(buf), conf->rowspace));
 	iniparser_setstring(dict, "Text:infobar",
