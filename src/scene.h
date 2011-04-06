@@ -53,6 +53,9 @@ extern "C"
 
 	extern int freq_list[][2];
 
+	extern int psp_model;
+	extern int psp_fw_version;
+
 #ifdef __cplusplus
 }
 #endif

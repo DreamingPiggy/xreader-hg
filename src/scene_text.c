@@ -776,7 +776,7 @@ int scene_book_reload(PBookViewData pView, dword selidx)
 		|| where == scene_in_rar) {
 		STRCPY_S(pView->filename, filelist[selidx].compname->ptr);
 		STRCPY_S(pView->archname, config.shortpath);
-		if (sceKernelDevkitVersion() <= 0x03070110) {
+		if (psp_fw_version <= 0x03070110) {
 			STRCPY_S(pView->bookmarkname, config.shortpath);
 		} else {
 			STRCPY_S(pView->bookmarkname, config.path);
@@ -790,7 +790,7 @@ int scene_book_reload(PBookViewData pView, dword selidx)
 		STRCAT_S(pView->filename, filelist[selidx].compname->ptr);
 		STRCPY_S(pView->archname, config.shortpath);
 		STRCAT_S(pView->archname, filelist[selidx].shortname->ptr);
-		if (sceKernelDevkitVersion() <= 0x03070110) {
+		if (psp_fw_version <= 0x03070110) {
 			STRCPY_S(pView->bookmarkname, pView->archname);
 		} else {
 			STRCPY_S(pView->bookmarkname, pView->filename);

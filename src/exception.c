@@ -29,6 +29,7 @@
 #include "version.h"
 #include "strsafe.h"
 #include "kubridge.h"
+#include "scene.h"
 
 #define MAX_BACKTRACE_NUM 10
 
@@ -73,11 +74,8 @@ void ExceptionHandler(PspDebugRegBlock * regs)
 #endif
 		);
 
-	pspDebugScreenPrintf("%-21s: %08X\r\n", "PSP firmware version",
-						 sceKernelDevkitVersion());
-	pspDebugScreenPrintf("%-21s: %s\r\n\n", "PSP type",
-						 kuKernelGetModel() ==
-						 PSP_MODEL_STANDARD ? "1000(fat)" : "2000(slim)");
+	pspDebugScreenPrintf("%-21s: %08X\r\n", "PSP firmware version", psp_fw_version);
+	pspDebugScreenPrintf("%-21s: 0%dg\r\n\n", "PSP type", psp_model + 1);
 	pspDebugScreenPrintf("Exception details:\n\n");
 
 	pspDebugScreenPrintf("Exception - %s\n", codeTxt[(regs->cause >> 2) & 31]);
@@ -135,12 +133,9 @@ void ExceptionHandler(PspDebugRegBlock * regs)
 #endif
 				);
 			fwrite(testo, 1, strlen(testo), log);
-			SPRINTF_S(testo, "%-21s: %08X\r\n", "PSP firmware version",
-					  sceKernelDevkitVersion());
+			SPRINTF_S(testo, "%-21s: %08X\r\n", "PSP firmware version", psp_fw_version);
 			fwrite(testo, 1, strlen(testo), log);
-			SPRINTF_S(testo, "%-21s: %s\r\n", "PSP type",
-					  kuKernelGetModel() ==
-					  PSP_MODEL_STANDARD ? "1000(fat)" : "2000(slim)");
+			SPRINTF_S(testo, "%-21s: 0%dg\r\n", "PSP type", psp_model + 1);
 			fwrite(testo, 1, strlen(testo), log);
 
 			sceRtcGetCurrentClockLocalTime(&tm);

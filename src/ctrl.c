@@ -267,7 +267,7 @@ extern dword ctrl_hprm_raw(void)
 {
 	u32 key = 0;
 
-/*	if(sceKernelDevkitVersion() >= 0x02000010)
+/*	if(psp_fw_version >= 0x02000010)
 		return 0;*/
 	if (!sceHprmIsRemoteExist())
 		return 0;
@@ -297,6 +297,6 @@ extern dword ctrl_waittime(dword t)
 #ifdef ENABLE_HPRM
 extern void ctrl_enablehprm(bool enable)
 {
-	hprmenable = /*(sceKernelDevkitVersion() < 0x02000010) && */ enable;
+	hprmenable = /*(psp_fw_version < 0x02000010) && */ enable;
 }
 #endif

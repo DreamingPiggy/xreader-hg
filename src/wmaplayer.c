@@ -42,6 +42,7 @@
 #include "mediaengine.h"
 #include "cooleyesBridge.h"
 #include "buffered_reader.h"
+#include "scene.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -953,7 +954,7 @@ static int wma_load(const char *spath, const char *lpath)
 		return -1;
 	}
 
-	ret = cooleyesMeBootStart(sceKernelDevkitVersion(), 3);
+	ret = cooleyesMeBootStart(psp_fw_version, 3);
 
 	if (ret < 0) {
 		dbg_printf(d, "cooleyesMeBootStart@0x%08x", ret);
@@ -1105,7 +1106,7 @@ static int wma_end(void)
 
 	g_buff_size = 0;
 	free_bitrate(&g_inst_br);
-	cooleyesMeBootStart(sceKernelDevkitVersion(), 4);
+	cooleyesMeBootStart(psp_fw_version, 4);
 	generic_end();
 
 	return 0;

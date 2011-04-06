@@ -262,7 +262,7 @@ static void conf_default(p_conf conf)
 	conf->apetagorder = true;
 	STRCPY_S(conf->language, "zh_CN");
 	conf->filelistwidth = 160;
-	if (kuKernelGetModel() == PSP_MODEL_STANDARD) {
+	if (psp_model == PSP_MODEL_STANDARD) {
 		conf->ttf_load_to_memory = false;
 	} else {
 		conf->ttf_load_to_memory = true;

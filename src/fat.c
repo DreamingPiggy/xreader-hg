@@ -25,13 +25,13 @@
 #include <pspkernel.h>
 #include <stdio.h>
 #include <pspinit.h>
-#include "kubridge.h"
 #include "common/utils.h"
 #include "charsets.h"
 #include "fat.h"
 #include "dbg.h"
 #include "thread_lock.h"
 #include "xrPrx/xrPrx.h"
+#include "scene.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -67,12 +67,11 @@ static void msstor_close(void)
 
 static int is_on_ef0(void)
 {
-	int model, apitype;
+	int apitype;
 
 	apitype = xrKernelInitApitype();
-	model = kuKernelGetModel();
 
-	if(apitype == 0x152 && model == PSP_GO) {
+	if(apitype == 0x152 && psp_model == PSP_GO) {
 		return 1;
 	}
 
@@ -515,7 +514,7 @@ extern bool fat_locate(const char *name, char *sname, dword clus,
 					entrys[i].norm.filename[0] = 0x05;
 				memcpy(info, &entrys[i], sizeof(t_fat_entry));
 				free(entrys);
-				if (sceKernelDevkitVersion() <= 0x03070110) {
+				if (psp_fw_version <= 0x03070110) {
 					strcat_s(sname, 256, sid.d_name);
 				} else {
 					char short_name[256];
@@ -536,7 +535,7 @@ extern bool fat_locate(const char *name, char *sname, dword clus,
 			if (stricmp(name, longnames) == 0) {
 				memcpy(info, &entrys[i], sizeof(t_fat_entry));
 				free(entrys);
-				if (sceKernelDevkitVersion() <= 0x03070110) {
+				if (psp_fw_version <= 0x03070110) {
 					strcat_s(sname, 256, sid.d_name);
 				} else {
 					char short_name[256];
@@ -679,7 +678,7 @@ extern dword fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 			inf->filename[0] = 0xE5;
 		if (!fat_get_longname(entrys, i, inf->longname))
 			STRCPY_S(inf->longname, inf->filename);
-		if (sceKernelDevkitVersion() <= 0x03070110) {
+		if (psp_fw_version <= 0x03070110) {
 			STRCPY_S(inf->filename, sid.d_name);
 		}
 		inf->filesize = entrys[i].norm.filesize;

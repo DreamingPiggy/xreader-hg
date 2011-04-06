@@ -33,13 +33,13 @@ int getCpuClock()
 
 void setBusClock(int bus)
 {
-	if (bus >= 54 && bus <= 111 && sceKernelDevkitVersion() < 0x03070110)
+	if (bus >= 54 && bus <= 111 && psp_fw_version < 0x03070110)
 		scePowerSetBusClockFrequency(bus);
 }
 
 void sceSetCpuClock(int cpu, int bus)
 {
-	if (sceKernelDevkitVersion() < 0x03070110) {
+	if (psp_fw_version < 0x03070110) {
 		scePowerSetCpuClockFrequency(cpu);
 		if (scePowerGetCpuClockFrequency() < cpu)
 			scePowerSetCpuClockFrequency(++cpu);
