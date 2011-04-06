@@ -386,9 +386,7 @@ static void scene_draw_mp3bar_music_staff(void)
 	struct music_info info = { 0 };
 
 	disp_rectangle(5, 262 - DISP_FONTSIZE * 4, 474, 267, COLOR_WHITE);
-	disp_fillrect(6, 263 - DISP_FONTSIZE * 4, 473, 266,
-				  config.usedyncolor ? get_bgcolor_by_time() : config.
-				  msgbcolor);
+	disp_fillrect(6, 263 - DISP_FONTSIZE * 4, 473, 266, config.msgbcolor);
 	info.type =
 		MD_GET_AVGKBPS | MD_GET_FREQ | MD_GET_CURTIME | MD_GET_DURATION |
 		MD_GET_DECODERNAME;
@@ -594,9 +592,7 @@ static void scene_draw_mp3bar(bool * firstdup)
 		disp_duptocache();
 
 	disp_rectangle(5, 5, 474, 8 + DISP_FONTSIZE * 2, COLOR_WHITE);
-	disp_fillrect(6, 6, 473, 7 + DISP_FONTSIZE * 2,
-				  config.usedyncolor ? get_bgcolor_by_time() : config.
-				  msgbcolor);
+	disp_fillrect(6, 6, 473, 7 + DISP_FONTSIZE * 2, config.msgbcolor);
 
 	sceRtcGetCurrentClockLocalTime(&tm);
 	pos = sceRtcGetDayOfWeek(tm.year, tm.month, tm.day);
