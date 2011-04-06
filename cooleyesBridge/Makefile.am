@@ -24,7 +24,7 @@ cooleyesBridge_elf_SOURCES = main.c sceAudio_driver3xx.S sceMeCore_driver3xx.S
 
 TARGET = cooleyesBridge
 
-PSP_FW_VERSION=401
+PSP_FW_VERSION = 635
 BUILD_PRX=1
 
 # Use the kernel's small inbuilt libc

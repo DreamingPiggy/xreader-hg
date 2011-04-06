@@ -255,7 +255,7 @@ clean-local:
 	$(RM) -rf __SCE__xReader %__SCE__xReader xReader xReader% xReader.prx \
 		PARAM.SFO EBOOT.PBP
 
-PSP_FW_VERSION = 401
+PSP_FW_VERSION = 635
 BUILD_PRX = 1
 PSP_LARGE_MEMORY = 1
 
