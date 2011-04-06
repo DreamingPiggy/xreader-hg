@@ -37,7 +37,6 @@
 #include "conf.h"
 #include "text.h"
 #include "power.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -92,7 +91,7 @@ extern t_win_menu_op win_menu_defcb(dword key, p_win_menuitem item,
 static void win_menu_delay_action(void)
 {
 	if (config.dis_scrsave)
-		xrPowerTick(0);
+		scePowerTick(0);
 }
 
 extern dword win_menu(dword x, dword y, dword max_width, dword max_height,
@@ -127,7 +126,7 @@ extern dword win_menu(dword x, dword y, dword max_width, dword max_height,
 		(topindex + max_height >
 		 count) ? (count - 1) : (topindex + max_height - 1);
 
-	xrRtcGetCurrentTick(&timer_start);
+	sceRtcGetCurrentTick(&timer_start);
 	while (1) {
 		t_win_menu_op op;
 		dword key;
@@ -233,17 +232,17 @@ extern dword win_menu(dword x, dword y, dword max_width, dword max_height,
 		lastsel = index;
 
 		while ((key = ctrl_read()) == 0) {
-			xrRtcGetCurrentTick(&timer_end);
+			sceRtcGetCurrentTick(&timer_end);
 			if (pspDiffTime(&timer_end, &timer_start) >= 1.0) {
-				xrRtcGetCurrentTick(&timer_start);
+				sceRtcGetCurrentTick(&timer_start);
 				secticks++;
 			}
 			if (config.autosleep != 0 && secticks > 60 * config.autosleep) {
 				power_down();
-				xrPowerRequestSuspend();
+				scePowerRequestSuspend();
 				secticks = 0;
 			}
-			xrKernelDelayThread(20000);
+			sceKernelDelayThread(20000);
 			win_menu_delay_action();
 		}
 		if (key != 0) {
@@ -253,17 +252,17 @@ extern dword win_menu(dword x, dword y, dword max_width, dword max_height,
 				cb(key, item, &count, max_height, &topindex,
 				   &index)) == win_menu_op_continue) {
 			while ((key = ctrl_read()) == 0) {
-				xrRtcGetCurrentTick(&timer_end);
+				sceRtcGetCurrentTick(&timer_end);
 				if (pspDiffTime(&timer_end, &timer_start) >= 1.0) {
-					xrRtcGetCurrentTick(&timer_start);
+					sceRtcGetCurrentTick(&timer_start);
 					secticks++;
 				}
 				if (config.autosleep != 0 && secticks > 60 * config.autosleep) {
 					power_down();
-					xrPowerRequestSuspend();
+					scePowerRequestSuspend();
 					secticks = 0;
 				}
-				xrKernelDelayThread(20000);
+				sceKernelDelayThread(20000);
 				win_menu_delay_action();
 			}
 		}

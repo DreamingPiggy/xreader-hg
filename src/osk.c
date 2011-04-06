@@ -31,7 +31,6 @@
 #include "strsafe.h"
 #include "common/datatype.h"
 #include "conf.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -102,7 +101,7 @@ int _get_osk_input(char *buf, int size, unsigned short desc[128])
 	osk.datacount = 1;
 	osk.data = &data;
 
-	rc = xrUtilityOskInitStart(&osk);
+	rc = sceUtilityOskInitStart(&osk);
 
 	if (rc) {
 		free(saveimage);
@@ -114,15 +113,15 @@ int _get_osk_input(char *buf, int size, unsigned short desc[128])
 	while (!done) {
 		int i, j = 0;
 
-		switch (xrUtilityOskGetStatus()) {
+		switch (sceUtilityOskGetStatus()) {
 			case PSP_UTILITY_DIALOG_INIT:
 				break;
 			case PSP_UTILITY_DIALOG_VISIBLE:
 				ClearScreen(saveimage);
-				xrUtilityOskUpdate(2);	// 2 is taken from ps2dev.org recommendation
+				sceUtilityOskUpdate(2);	// 2 is taken from ps2dev.org recommendation
 				break;
 			case PSP_UTILITY_DIALOG_QUIT:
-				xrUtilityOskShutdownStart();
+				sceUtilityOskShutdownStart();
 				break;
 			case PSP_UTILITY_DIALOG_FINISHED:
 				done = true;
@@ -142,12 +141,12 @@ int _get_osk_input(char *buf, int size, unsigned short desc[128])
 		}
 
 		strcpy_s(buf, size, tstr);
-		xrDisplayWaitVblankStart();
-		xrGuSwapBuffers();
+		sceDisplayWaitVblankStart();
+		sceGuSwapBuffers();
 	}
 
-	xrDisplayWaitVblankStart();
-	buffer = xrGuSwapBuffers();
+	sceDisplayWaitVblankStart();
+	buffer = sceGuSwapBuffers();
 
 	free(saveimage);
 	disp_fix_osk(buffer);

@@ -39,7 +39,6 @@
 #include "image_queue.h"
 #include "pspscreen.h"
 #include "ctrl.h"
-#include "xrhal.h"
 #include "kubridge.h"
 #include "common/utils.h"
 #include "thread_lock.h"
@@ -85,14 +84,14 @@ void cache_on(bool on)
 		cache_img_cnt = 0;
 		cache_next_image();
 		ccacher.first_run = true;
-		xrKernelSetEventFlag(cache_del_event, CACHE_EVENT_DELETED);
+		sceKernelSetEventFlag(cache_del_event, CACHE_EVENT_DELETED);
 
 		ccacher.on = on;
 	} else {
 		ccacher.on = on;
 
 		while (!cacher_cleared) {
-			xrKernelDelayThread(100000);
+			sceKernelDelayThread(100000);
 		}
 
 		if (ccacher.caches != NULL) {
@@ -196,7 +195,7 @@ int cache_delete_first(void)
 		int ret;
 
 		ret = cache_delete(0);
-		xrKernelSetEventFlag(cache_del_event, CACHE_EVENT_DELETED);
+		sceKernelSetEventFlag(cache_del_event, CACHE_EVENT_DELETED);
 		cache_unlock();
 
 		return ret;
@@ -513,14 +512,14 @@ static int start_cache(dword selidx)
 		SceUInt timeout = 10000;
 
 		// wait until user notify cache delete
-		re = xrKernelWaitEventFlag(cache_del_event, CACHE_EVENT_DELETED,
+		re = sceKernelWaitEventFlag(cache_del_event, CACHE_EVENT_DELETED,
 								   PSP_EVENT_WAITAND, NULL, &timeout);
 
 		if (re == SCE_KERNEL_ERROR_WAIT_TIMEOUT) {
 			return 0;
 		}
 
-		xrKernelSetEventFlag(cache_del_event, CACHE_EVENT_UNDELETED);
+		sceKernelSetEventFlag(cache_del_event, CACHE_EVENT_UNDELETED);
 	}
 
 	cache_lock();
@@ -576,7 +575,7 @@ int cache_routine(void)
 		cache_clear();
 	}
 
-	xrKernelDelayThread(100000);
+	sceKernelDelayThread(100000);
 
 	return 0;
 }
@@ -587,7 +586,7 @@ int cache_init(void)
 	ccacher.caches_size = 0;
 	ccacher.caches_cap = 0;
 
-	cache_del_event = xrKernelCreateEventFlag("cache_del_event", 0, 0, 0);
+	cache_del_event = sceKernelCreateEventFlag("cache_del_event", 0, 0, 0);
 	ccacher.caches = NULL;
 
 	return 0;
@@ -614,7 +613,7 @@ void cache_free(void)
 	xr_lock_destroy(&cacher_locker);
 
 	if (cache_del_event >= 0) {
-		xrKernelDeleteEventFlag(cache_del_event);
+		sceKernelDeleteEventFlag(cache_del_event);
 		cache_del_event = -1;
 	}
 }

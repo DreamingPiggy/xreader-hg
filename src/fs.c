@@ -44,7 +44,6 @@
 #include "freq_lock.h"
 #include "musicdrv.h"
 #include "dbg.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -246,7 +245,7 @@ extern dword fs_flashdir_to_menu(const char *dir, const char *sdir,
 
 	fid = freq_enter_hotzone();
 	strcpy_s((char *) sdir, 256, dir);
-	fd = xrIoDopen(dir);
+	fd = sceIoDopen(dir);
 
 	if (fd < 0) {
 		freq_leave(fid);
@@ -257,7 +256,7 @@ extern dword fs_flashdir_to_menu(const char *dir, const char *sdir,
 		itemcount = DIR_INC_SIZE;
 		*mitem = win_realloc_items(NULL, 0, itemcount);
 		if (*mitem == NULL) {
-			xrIoDclose(fd);
+			sceIoDclose(fd);
 			freq_leave(fid);
 			return 0;
 		}
@@ -277,7 +276,7 @@ extern dword fs_flashdir_to_menu(const char *dir, const char *sdir,
 
 	memset(&info, 0, sizeof(SceIoDirent));
 
-	while (xrIoDread(fd, &info) > 0) {
+	while (sceIoDread(fd, &info) > 0) {
 		if ((info.d_stat.st_mode & FIO_S_IFMT) == FIO_S_IFDIR) {
 			if (info.d_name[0] == '.' && info.d_name[1] == 0)
 				continue;
@@ -354,7 +353,7 @@ extern dword fs_flashdir_to_menu(const char *dir, const char *sdir,
 		cur_count++;
 	}
 
-	xrIoDclose(fd);
+	sceIoDclose(fd);
 	freq_leave(fid);
 
 	// Remove unused item

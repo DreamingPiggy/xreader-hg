@@ -23,4 +23,4 @@
 void setBusClock(int bus);
 void setCpuClock(int cpu);
 int getCpuClock();
-void xrSetCpuClock(int cpu, int bus);
+void sceSetCpuClock(int cpu, int bus);

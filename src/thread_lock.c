@@ -22,10 +22,9 @@
 #include <string.h>
 #include <pspsdk.h>
 #include <pspkernel.h>
-#include "xrhal.h"
 #include "thread_lock.h"
 
-#define CURRENT_THREAD xrKernelGetThreadId()
+#define CURRENT_THREAD sceKernelGetThreadId()
 
 typedef unsigned long dword;
 
@@ -60,7 +59,7 @@ int xr_lock(struct psp_mutex_t *s)
 			}
 		}
 
-		xrKernelDelayThread(1000);
+		sceKernelDelayThread(1000);
 	}
 
 	return -1;

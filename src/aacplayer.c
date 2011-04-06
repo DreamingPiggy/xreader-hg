@@ -42,7 +42,6 @@
 #include "scene.h"
 #include "genericplayer.h"
 #include "common/utils.h"
-#include "xrhal.h"
 #include "aacplayer.h"
 #include "buffered_reader.h"
 #include "malloc.h"
@@ -191,7 +190,7 @@ static int aac_audiocallback(void *buf, unsigned int reqn, void *pdata)
 
 	if (g_status == ST_PAUSED) {
 		xAudioClearSndBuf(buf, snd_buf_frame_size);
-		xrKernelDelayThread(100000);
+		sceKernelDelayThread(100000);
 		return 0;
 	}
 
@@ -227,7 +226,7 @@ static int aac_audiocallback(void *buf, unsigned int reqn, void *pdata)
 					return -1;
 				}
 			} else {
-				if (xrIoRead(data.fd, aac_header_buf, 7) != 7) {
+				if (sceIoRead(data.fd, aac_header_buf, 7) != 7) {
 					__end();
 					return -1;
 				}
@@ -253,7 +252,7 @@ static int aac_audiocallback(void *buf, unsigned int reqn, void *pdata)
 					return -1;
 				}
 			} else {
-				if (xrIoRead(data.fd, aac_data_buffer, frame_size) !=
+				if (sceIoRead(data.fd, aac_data_buffer, frame_size) !=
 					frame_size) {
 					free(aac_data_buffer);
 					__end();
@@ -266,7 +265,7 @@ static int aac_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			aac_codec_buffer[7] = frame_size;
 			aac_codec_buffer[9] = aac_sample_per_frame * 4;
 
-			res = xrAudiocodecDecode(aac_codec_buffer, 0x1003);
+			res = sceAudiocodecDecode(aac_codec_buffer, 0x1003);
 
 			free(aac_data_buffer);
 
@@ -386,15 +385,15 @@ static int aac_load(const char *spath, const char *lpath)
 
 		g_info.filesize = buffered_reader_length(data.r);
 	} else {
-		data.fd = xrIoOpen(spath, PSP_O_RDONLY, 0777);
+		data.fd = sceIoOpen(spath, PSP_O_RDONLY, 0777);
 
 		if (data.fd < 0) {
 			__end();
 			return -1;
 		}
 
-		g_info.filesize = xrIoLseek(data.fd, 0, PSP_SEEK_END);
-		xrIoLseek(data.fd, 0, PSP_SEEK_SET);
+		g_info.filesize = sceIoLseek(data.fd, 0, PSP_SEEK_END);
+		sceIoLseek(data.fd, 0, PSP_SEEK_SET);
 	}
 
 	if (config.use_vaudio)
@@ -409,18 +408,18 @@ static int aac_load(const char *spath, const char *lpath)
 
 	memset(aac_codec_buffer, 0, sizeof(aac_codec_buffer));
 
-	if (xrAudiocodecCheckNeedMem(aac_codec_buffer, 0x1003) < 0) {
+	if (sceAudiocodecCheckNeedMem(aac_codec_buffer, 0x1003) < 0) {
 		goto failed;
 	}
 
-	if (xrAudiocodecGetEDRAM(aac_codec_buffer, 0x1003) < 0) {
+	if (sceAudiocodecGetEDRAM(aac_codec_buffer, 0x1003) < 0) {
 		goto failed;
 	}
 
 	aac_getEDRAM = true;
 
 	aac_codec_buffer[10] = g_info.sample_freq;
-	if (xrAudiocodecInit(aac_codec_buffer, 0x1003) < 0) {
+	if (sceAudiocodecInit(aac_codec_buffer, 0x1003) < 0) {
 		goto failed;
 	}
 
@@ -483,7 +482,7 @@ static int aac_end(void)
 	generic_end();
 
 	if (aac_getEDRAM) {
-		xrAudiocodecReleaseEDRAM(aac_codec_buffer);
+		sceAudiocodecReleaseEDRAM(aac_codec_buffer);
 		aac_getEDRAM = false;
 	}
 
@@ -494,7 +493,7 @@ static int aac_end(void)
 		}
 	} else {
 		if (data.fd >= 0) {
-			xrIoClose(data.fd);
+			sceIoClose(data.fd);
 			data.fd = -1;
 		}
 	}

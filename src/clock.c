@@ -22,33 +22,32 @@
 #include <psppower.h>
 #include <pspsdk.h>
 #include "scene.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
 
 int getCpuClock()
 {
-	return xrPowerGetCpuClockFrequency();
+	return scePowerGetCpuClockFrequency();
 }
 
 void setBusClock(int bus)
 {
-	if (bus >= 54 && bus <= 111 && xrKernelDevkitVersion() < 0x03070110)
-		xrPowerSetBusClockFrequency(bus);
+	if (bus >= 54 && bus <= 111 && sceKernelDevkitVersion() < 0x03070110)
+		scePowerSetBusClockFrequency(bus);
 }
 
-void xrSetCpuClock(int cpu, int bus)
+void sceSetCpuClock(int cpu, int bus)
 {
-	if (xrKernelDevkitVersion() < 0x03070110) {
-		xrPowerSetCpuClockFrequency(cpu);
-		if (xrPowerGetCpuClockFrequency() < cpu)
-			xrPowerSetCpuClockFrequency(++cpu);
+	if (sceKernelDevkitVersion() < 0x03070110) {
+		scePowerSetCpuClockFrequency(cpu);
+		if (scePowerGetCpuClockFrequency() < cpu)
+			scePowerSetCpuClockFrequency(++cpu);
 	} else {
-		xrPowerSetClockFrequency(cpu, cpu, cpu / 2);
-		if (xrPowerGetCpuClockFrequency() < cpu) {
+		scePowerSetClockFrequency(cpu, cpu, cpu / 2);
+		if (scePowerGetCpuClockFrequency() < cpu) {
 			cpu++;
-			xrPowerSetClockFrequency(cpu, cpu, cpu / 2);
+			scePowerSetClockFrequency(cpu, cpu, cpu / 2);
 		}
 	}
 }

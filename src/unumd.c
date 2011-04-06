@@ -25,7 +25,6 @@
 #include "zlib.h"
 #include "dbg.h"
 #include "charsets.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -182,7 +181,7 @@ int read_umd_buf(SceUID fd, buffer ** pbuf)
 
 	p = *pbuf;
 
-	if ((p->used = xrIoRead(fd, p->ptr, p->used)) < 0) {
+	if ((p->used = sceIoRead(fd, p->ptr, p->used)) < 0) {
 		dbg_printf(d, "%s read umd file chunk error,ret:%d!", __func__,
 				   p->used);
 		buffer_free(*pbuf);
@@ -220,7 +219,7 @@ int get_chunk_buf(SceUID fd, buffer ** pbuf, char **pchunk, size_t stwant)
 			p = *pbuf;
 			//dbg_printf(d, "%s new ptr:%p,%x%x%x!",__func__,p->ptr,*p->ptr,*(p->ptr+1),*(p->ptr+2));
 		}
-		if (xrIoRead(fd, p->ptr + stremain, p->size - stremain) < 0) {
+		if (sceIoRead(fd, p->ptr + stremain, p->size - stremain) < 0) {
 			//dbg_printf(d, "%s read umd file chunk error,ret:%d!",__func__,p->used);
 			buffer_free(*pbuf);
 			return -1;
@@ -258,7 +257,7 @@ int get_offset_chunk_buf(SceUID fd, buffer ** pbuf, char **pchunk,
 		if (stremain < stpre_offset) {
 			stremain = stpre_offset - stremain;
 			while (stremain > p->size) {
-				if (xrIoRead(fd, p->ptr, p->size) < 0) {
+				if (sceIoRead(fd, p->ptr, p->size) < 0) {
 					//dbg_printf(d, "%s read umd file pre offset chunk error!",__func__);
 					buffer_free(*pbuf);
 					return -3;
@@ -266,7 +265,7 @@ int get_offset_chunk_buf(SceUID fd, buffer ** pbuf, char **pchunk,
 				umdfile_remain -= p->size;
 				stremain -= p->size;
 			}
-			if (xrIoRead(fd, p->ptr, stremain) < 0) {
+			if (sceIoRead(fd, p->ptr, stremain) < 0) {
 				//dbg_printf(d, "%s read umd file pre offset chunk error!",__func__);
 				buffer_free(*pbuf);
 				return -4;
@@ -288,7 +287,7 @@ int get_offset_chunk_buf(SceUID fd, buffer ** pbuf, char **pchunk,
 			p = *pbuf;
 			//dbg_printf(d, "%s new ptr:%p,%x%x%x!",__func__,p->ptr,*p->ptr,*(p->ptr+1),*(p->ptr+2));
 		}
-		if (xrIoRead(fd, p->ptr + stremain, p->size - stremain) < 0) {
+		if (sceIoRead(fd, p->ptr + stremain, p->size - stremain) < 0) {
 			//dbg_printf(d, "%s read umd file chunk error,ret:%d!",__func__,p->used);
 			buffer_free(*pbuf);
 			return -1;
@@ -613,12 +612,12 @@ int locate_umd_img1(const char *umdfile, size_t file_offset, SceUID * pfd)
 	do {
 		struct UMDHeaderDataEx *pEx;
 
-		if ((*pfd = xrIoOpen(umdfile, PSP_O_RDONLY, 0777)) < 0) {
+		if ((*pfd = sceIoOpen(umdfile, PSP_O_RDONLY, 0777)) < 0) {
 			return -2;
 		}
-		if (0 < xrIoLseek(*pfd, file_offset, SEEK_SET))
+		if (0 < sceIoLseek(*pfd, file_offset, SEEK_SET))
 			return -3;
-		if ((stread = xrIoRead(*pfd, buf, 9)) < 0) {
+		if ((stread = sceIoRead(*pfd, buf, 9)) < 0) {
 			dbg_printf(d, "%s read umd file head chunk error!", __func__);
 			break;
 		}
@@ -630,7 +629,7 @@ int locate_umd_img1(const char *umdfile, size_t file_offset, SceUID * pfd)
 		return pEx->Length - 9;
 	} while (false);
 	if (*pfd) {
-		xrIoClose(*pfd);
+		sceIoClose(*pfd);
 		*pfd = -1;
 	}
 	return ret;
@@ -704,16 +703,16 @@ int read_umd_chapter_content(const char *umdfile, u_int index,
 		char *p;
 		struct UMDHeaderDataEx *pEx;
 
-		if (xrIoGetstat(umdfile, &sta) < 0 || sta.st_size < chunk_pos) {
+		if (sceIoGetstat(umdfile, &sta) < 0 || sta.st_size < chunk_pos) {
 			return -1;
 		}
-		if ((fd = xrIoOpen(umdfile, PSP_O_RDONLY, 0777)) < 0) {
+		if ((fd = sceIoOpen(umdfile, PSP_O_RDONLY, 0777)) < 0) {
 			return -2;
 		}
-		if (xrIoLseek(fd, chunk_pos, PSP_SEEK_SET) < 0) {
+		if (sceIoLseek(fd, chunk_pos, PSP_SEEK_SET) < 0) {
 			break;
 		}
-		if ((stlen = xrIoRead(fd, buf, 9)) < 0) {
+		if ((stlen = sceIoRead(fd, buf, 9)) < 0) {
 			//dbg_printf(d, "%s read umd file head chunk error!",__func__);
 			break;
 		}
@@ -837,7 +836,7 @@ int read_umd_chapter_content(const char *umdfile, u_int index,
 								buffer_free(pzbuf);
 							if (puzbuf)
 								buffer_free(puzbuf);
-							xrIoClose(fd);
+							sceIoClose(fd);
 							return 0;
 						}
 					}
@@ -874,7 +873,7 @@ int read_umd_chapter_content(const char *umdfile, u_int index,
 	if (puzbuf)
 		buffer_free(puzbuf);
 	if (fd)
-		xrIoClose(fd);
+		sceIoClose(fd);
 	return ret;
 }
 
@@ -898,10 +897,10 @@ int parse_umd_chapters(const char *umdfile, p_umd_chapter * pchapter)
 		
 		if (!umdfile || !pchapter || !(*pchapter))
 			break;
-		if (xrIoGetstat(umdfile, &sta) < 0) {
+		if (sceIoGetstat(umdfile, &sta) < 0) {
 			return -1;
 		}
-		if ((fd = xrIoOpen(umdfile, PSP_O_RDONLY, 0777)) < 0) {
+		if ((fd = sceIoOpen(umdfile, PSP_O_RDONLY, 0777)) < 0) {
 			return -2;
 		}
 
@@ -1003,7 +1002,7 @@ int parse_umd_chapters(const char *umdfile, p_umd_chapter * pchapter)
 					} else if (i >= stChapterCount) {
 						//dbg_printf(d,"%s get img chapters %d more than list %d",__func__,i,stChapterCount);
 						buffer_free(pRaw);
-						xrIoClose(fd);
+						sceIoClose(fd);
 						return i + 1;
 					}
 					pHeadEx = (struct UMDHeaderDataEx *) p;
@@ -1042,7 +1041,7 @@ int parse_umd_chapters(const char *umdfile, p_umd_chapter * pchapter)
 							}
 							//cout << "parse done" << endl;
 							buffer_free(pRaw);
-							xrIoClose(fd);
+							sceIoClose(fd);
 							return i + 1;
 						}
 					} else {
@@ -1051,7 +1050,7 @@ int parse_umd_chapters(const char *umdfile, p_umd_chapter * pchapter)
 					}
 				}
 				buffer_free(pRaw);
-				xrIoClose(fd);
+				sceIoClose(fd);
 				return -1;
 			} else if (pHead->hdType == 0x83) {
 				size_t stChapterCount;
@@ -1186,7 +1185,7 @@ int parse_umd_chapters(const char *umdfile, p_umd_chapter * pchapter)
 						if (pzbuf)
 							buffer_free(pzbuf);
 						buffer_free(pRaw);
-						xrIoClose(fd);
+						sceIoClose(fd);
 						return stChapterCount + 1;
 					}
 					if (*(pRaw->ptr + buf_offset) == '#') {
@@ -1223,7 +1222,7 @@ int parse_umd_chapters(const char *umdfile, p_umd_chapter * pchapter)
 								if (pzbuf)
 									buffer_free(pzbuf);
 								buffer_free(pRaw);
-								xrIoClose(fd);
+								sceIoClose(fd);
 								return stChapterCount + 1;
 							}
 						}
@@ -1261,6 +1260,6 @@ int parse_umd_chapters(const char *umdfile, p_umd_chapter * pchapter)
 	if (pRaw)
 		buffer_free(pRaw);
 	if (fd > 0)
-		xrIoClose(fd);
+		sceIoClose(fd);
 	return 1;
 }

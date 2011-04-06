@@ -34,7 +34,6 @@
 #include "genericplayer.h"
 #include "musicinfo.h"
 #include "dbg.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -166,7 +165,7 @@ static int mpc_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			g_buff_frame_size = g_buff_frame_start = 0;
 		}
 		xAudioClearSndBuf(buf, snd_buf_frame_size);
-		xrKernelDelayThread(100000);
+		sceKernelDelayThread(100000);
 		return 0;
 	}
 

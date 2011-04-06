@@ -23,7 +23,6 @@
 
 #include <pspgu.h>
 #include <pspdisplay.h>
-#include "xrhal.h"
 #include "common/datatype.h"
 
 typedef dword pixel;
@@ -53,7 +52,7 @@ extern byte disp_ewidth[0x80];
 extern pixel *vram_draw;
 
 // sceDisplayWaitVblankStart function alias name, define is faster than function call (even at most time this is inline linked)
-#define disp_waitv() xrDisplayWaitVblankStart()
+#define disp_waitv() sceDisplayWaitVblankStart()
 
 #define disp_get_vaddr(x, y) (vram_draw + (x) + ((y) << 9))
 

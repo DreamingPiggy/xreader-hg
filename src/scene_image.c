@@ -54,7 +54,6 @@
 #include "math.h"
 #include "freq_lock.h"
 #include "dbg.h"
-#include "xrhal.h"
 #include "image_queue.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
@@ -205,7 +204,7 @@ static int cache_wait_avail()
 			return -1;
 		}
 
-		xrKernelDelayThread(10000);
+		sceKernelDelayThread(10000);
 	}
 
 	return 0;
@@ -224,7 +223,7 @@ static int cache_wait_loaded()
 			return -1;
 		}
 
-		xrKernelDelayThread(10000);
+		sceKernelDelayThread(10000);
 	}
 
 	return 0;
@@ -236,7 +235,7 @@ static int cache_get_image(dword selidx)
 	u64 start, now;
 	int ret;
 
-	xrRtcGetCurrentTick(&start);
+	sceRtcGetCurrentTick(&start);
 
 	if (cache_wait_avail() != 0) {
 		return -1;
@@ -250,7 +249,7 @@ static int cache_get_image(dword selidx)
 		return -1;
 	}
 
-	xrRtcGetCurrentTick(&now);
+	sceRtcGetCurrentTick(&now);
 
 	if (img->status == CACHE_OK && img->result == 0) {
 		dbg_printf(d, "CLIENT: Image %u load OK in %.3f s, %ux%u",
@@ -958,13 +957,13 @@ static bool is_need_delay(void)
 	static u64 start, end;
 
 	if (g_imgpaging_count == 0)
-		xrRtcGetCurrentTick(&start);
+		sceRtcGetCurrentTick(&start);
 
-	xrRtcGetCurrentTick(&end);
+	sceRtcGetCurrentTick(&end);
 
 	if (pspDiffTime(&start, &end) >= 0.1) {
 		g_imgpaging_count++;
-		xrRtcGetCurrentTick(&start);
+		sceRtcGetCurrentTick(&start);
 	}
 
 	if (config.imgpaging_duration <= 1
@@ -992,7 +991,7 @@ static bool is_need_delay(void)
 			g_imgpaging_count = 0;
 		}
 
-		xrKernelDelayThread(100000);
+		sceKernelDelayThread(100000);
 
 		return true;
 	}
@@ -1006,13 +1005,13 @@ static bool splashz(void)
 	double s, t, t2;
 
 	if (z_mode_cnt == 0)
-		xrRtcGetCurrentTick(&start);
+		sceRtcGetCurrentTick(&start);
 
-	xrRtcGetCurrentTick(&end);
+	sceRtcGetCurrentTick(&end);
 
 	if (pspDiffTime(&start, &end) >= 0.1) {
 		z_mode_cnt++;
-		xrRtcGetCurrentTick(&start);
+		sceRtcGetCurrentTick(&start);
 	}
 
 	s = sqrt(1. * (destx - srcx) * (destx - srcx) +
@@ -1269,7 +1268,7 @@ static bool image_paging_leftright_smooth(bool is_forward)
 	}
 
 	g_imgpaging_count = config.imgpaging_duration;
-	xrKernelDelayThread(100000 * config.imgpaging_duration);
+	sceKernelDelayThread(100000 * config.imgpaging_duration);
 
 	if (!in_move_z_mode) {
 		return enter_z_mode(is_forward, true);
@@ -1313,7 +1312,7 @@ static bool image_paging_updown_smooth(bool is_forward)
 	}
 
 	g_imgpaging_count = config.imgpaging_duration;
-	xrKernelDelayThread(100000 * config.imgpaging_duration);
+	sceKernelDelayThread(100000 * config.imgpaging_duration);
 
 	if (!in_move_z_mode) {
 		return enter_z_mode(is_forward, false);
@@ -1488,7 +1487,7 @@ static int image_handle_input(dword * selidx, dword key)
 
 		if (config.imgpaging == conf_imgpaging_updown ||
 			config.imgpaging == conf_imgpaging_leftright)
-			xrKernelDelayThread(200000);
+			sceKernelDelayThread(200000);
 
 		if (!image_paging(true, config.imgpaging))
 			goto next;
@@ -1502,7 +1501,7 @@ static int image_handle_input(dword * selidx, dword key)
 			   || key == CTRL_BACK) {
 		if (config.imgpaging == conf_imgpaging_updown ||
 			config.imgpaging == conf_imgpaging_leftright)
-			xrKernelDelayThread(200000);
+			sceKernelDelayThread(200000);
 
 		if (!image_paging(false, config.imgpaging))
 			goto next;
@@ -1549,8 +1548,8 @@ static int image_handle_input(dword * selidx, dword key)
 		img_needrp = true;
 
 		do {
-			xrCtrlReadBufferPositive(&ctl, 1);
-			xrKernelDelayThread(10000);
+			sceCtrlReadBufferPositive(&ctl, 1);
+			sceKernelDelayThread(10000);
 			t += 10000;
 		} while (ctl.Buttons != 0 && t <= 500000);
 	} else if (key == config.imgkey[9] || key == config.imgkey2[9]
@@ -1631,7 +1630,7 @@ static int image_handle_input(dword * selidx, dword key)
 static void scene_image_delay_action(void)
 {
 	if (config.dis_scrsave)
-		xrPowerTick(0);
+		scePowerTick(0);
 }
 
 static int scene_slideshow_forward(dword * selidx)
@@ -1640,7 +1639,7 @@ static int scene_slideshow_forward(dword * selidx)
 
 	if (config.imgpaging == conf_imgpaging_updown ||
 		config.imgpaging == conf_imgpaging_leftright) {
-		xrKernelDelayThread(200000);
+		sceKernelDelayThread(200000);
 	}
 
 	if (!image_paging(true, config.imgpaging)) {
@@ -1683,7 +1682,7 @@ dword scene_readimage(dword selidx)
 		cache_on(true);
 	}
 
-	xrRtcGetCurrentTick(&timer_start);
+	sceRtcGetCurrentTick(&timer_start);
 
 	while (1) {
 		u64 dbgnow, dbglasttick;
@@ -1695,7 +1694,7 @@ dword scene_readimage(dword selidx)
 			dword ret;
 
 			fid = freq_enter_hotzone();
-			xrRtcGetCurrentTick(&dbglasttick);
+			sceRtcGetCurrentTick(&dbglasttick);
 			ret = scene_reloadimage(selidx);
 
 			if (ret == -1) {
@@ -1704,7 +1703,7 @@ dword scene_readimage(dword selidx)
 			}
 
 			img_needrf = false;
-			xrRtcGetCurrentTick(&dbgnow);
+			sceRtcGetCurrentTick(&dbgnow);
 			dbg_printf(d, _("装载图像时间: %.2f秒"),
 					   pspDiffTime(&dbgnow, &dbglasttick));
 			freq_leave(fid);
@@ -1714,10 +1713,10 @@ dword scene_readimage(dword selidx)
 			int fid;
 
 			fid = freq_enter_hotzone();
-			xrRtcGetCurrentTick(&dbglasttick);
+			sceRtcGetCurrentTick(&dbglasttick);
 			scene_rotateimage();
 			img_needrc = false;
-			xrRtcGetCurrentTick(&dbgnow);
+			sceRtcGetCurrentTick(&dbgnow);
 			dbg_printf(d, _("旋转图像时间: %.2f秒"),
 					   pspDiffTime(&dbgnow, &dbglasttick));
 			freq_leave(fid);
@@ -1755,7 +1754,7 @@ dword scene_readimage(dword selidx)
 						   || key == CTRL_BACK)) {
 				prev_image(&selidx);
 			} else {
-				xrPowerTick(0);
+				scePowerTick(0);
 				if (config.imgpaging == conf_imgpaging_direct ||
 					config.imgpaging == conf_imgpaging_updown ||
 					config.imgpaging == conf_imgpaging_leftright) {
@@ -1764,9 +1763,9 @@ dword scene_readimage(dword selidx)
 						ret = scene_slideshow_forward(&selidx);
 					}
 				} else {
-					xrRtcGetCurrentTick(&slide_end);
+					sceRtcGetCurrentTick(&slide_end);
 					if (pspDiffTime(&slide_end, &slide_start) >= 0.1) {
-						xrRtcGetCurrentTick(&slide_start);
+						sceRtcGetCurrentTick(&slide_start);
 					} else {
 						lasttime = now;
 						ret = scene_slideshow_forward(&selidx);
@@ -1780,16 +1779,16 @@ dword scene_readimage(dword selidx)
 			showinfo = false;
 		}
 
-		xrRtcGetCurrentTick(&timer_end);
+		sceRtcGetCurrentTick(&timer_end);
 
 		if (pspDiffTime(&timer_end, &timer_start) >= 1.0) {
-			xrRtcGetCurrentTick(&timer_start);
+			sceRtcGetCurrentTick(&timer_start);
 			secticks++;
 		}
 
 		if (config.autosleep != 0 && secticks > 60 * config.autosleep) {
 			power_down();
-			xrPowerRequestSuspend();
+			scePowerRequestSuspend();
 			secticks = 0;
 		}
 
@@ -1849,13 +1848,13 @@ static t_win_menu_op scene_imgkey_menucb(dword key, p_win_menuitem item,
 
 			ctrl_waitrelease();
 			do {
-				xrCtrlReadBufferPositive(&ctl, 1);
+				sceCtrlReadBufferPositive(&ctl, 1);
 				key1 = (ctl.Buttons & ~PSP_CTRL_SELECT) & ~PSP_CTRL_START;
 			} while (key1 == 0);
 			key2 = key1;
 			while ((key2 & key1) == key1) {
 				key1 = key2;
-				xrCtrlReadBufferPositive(&ctl, 1);
+				sceCtrlReadBufferPositive(&ctl, 1);
 				key2 = (ctl.Buttons & ~PSP_CTRL_SELECT) & ~PSP_CTRL_START;
 			}
 			if (config.imgkey[*index] == key1 || config.imgkey2[*index] == key1)
@@ -1880,7 +1879,7 @@ static t_win_menu_op scene_imgkey_menucb(dword key, p_win_menuitem item,
 			config.imgkey2[*index] = config.imgkey[*index];
 			config.imgkey[*index] = key1;
 			do {
-				xrCtrlReadBufferPositive(&ctl, 1);
+				sceCtrlReadBufferPositive(&ctl, 1);
 			} while (ctl.Buttons != 0);
 			return win_menu_op_force_redraw;
 		case PSP_CTRL_TRIANGLE:

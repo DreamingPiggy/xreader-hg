@@ -22,6 +22,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
+#include <psprtc.h>
 #include "config.h"
 #include "scene.h"
 #include "xaudiolib.h"
@@ -34,7 +35,6 @@
 #include "genericplayer.h"
 #include "WavPack/wavpack.h"
 #include "musicinfo.h"
-#include "xrhal.h"
 #include "simple_gettext.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
@@ -160,7 +160,7 @@ static int handle_seek(void)
 	u64 timer_end;
 
 	if (g_status == ST_FFORWARD) {
-		xrRtcGetCurrentTick(&timer_end);
+		sceRtcGetCurrentTick(&timer_end);
 
 		generic_lock();
 		if (g_last_seek_is_forward) {
@@ -180,7 +180,7 @@ static int handle_seek(void)
 					return -1;
 				}
 
-				xrKernelDelayThread(100000);
+				sceKernelDelayThread(100000);
 			} else {
 				generic_lock();
 
@@ -195,13 +195,13 @@ static int handle_seek(void)
 				g_status = ST_PLAYING;
 
 				generic_unlock();
-				xrKernelDelayThread(100000);
+				sceKernelDelayThread(100000);
 			}
 		} else {
 			generic_unlock();
 		}
 	} else if (g_status == ST_FBACKWARD) {
-		xrRtcGetCurrentTick(&timer_end);
+		sceRtcGetCurrentTick(&timer_end);
 
 		generic_lock();
 		if (!g_last_seek_is_forward) {
@@ -221,7 +221,7 @@ static int handle_seek(void)
 					g_play_time = 0;
 				}
 
-				xrKernelDelayThread(100000);
+				sceKernelDelayThread(100000);
 			} else {
 				generic_lock();
 
@@ -236,7 +236,7 @@ static int handle_seek(void)
 				g_status = ST_PLAYING;
 
 				generic_unlock();
-				xrKernelDelayThread(100000);
+				sceKernelDelayThread(100000);
 			}
 		} else {
 			generic_unlock();
@@ -273,7 +273,7 @@ static int wv_audiocallback(void *buf, unsigned int reqn, void *pdata)
 
 		g_buff_frame_size = g_buff_frame_start = 0;
 		xAudioClearSndBuf(buf, snd_buf_frame_size);
-		xrKernelDelayThread(100000);
+		sceKernelDelayThread(100000);
 		return 0;
 	}
 
@@ -557,15 +557,15 @@ static int wv_load(const char *spath, const char *lpath)
 		return -1;
 	}
 
-	fd = xrIoOpen(spath, PSP_O_RDONLY, 0777);
+	fd = sceIoOpen(spath, PSP_O_RDONLY, 0777);
 
 	if (fd < 0) {
 		__end();
 		return -1;
 	}
 
-	g_info.filesize = xrIoLseek(fd, 0, PSP_SEEK_END);
-	xrIoClose(fd);
+	g_info.filesize = sceIoLseek(fd, 0, PSP_SEEK_END);
+	sceIoClose(fd);
 
 	g_decoder =
 		open_wvfile(spath, OPEN_WVC | OPEN_TAGS | OPEN_2CH_MAX | OPEN_NORMALIZE,

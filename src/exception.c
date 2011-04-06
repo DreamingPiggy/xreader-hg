@@ -29,7 +29,6 @@
 #include "version.h"
 #include "strsafe.h"
 #include "kubridge.h"
-#include "xrhal.h"
 
 #define MAX_BACKTRACE_NUM 10
 
@@ -75,7 +74,7 @@ void ExceptionHandler(PspDebugRegBlock * regs)
 		);
 
 	pspDebugScreenPrintf("%-21s: %08X\r\n", "PSP firmware version",
-						 xrKernelDevkitVersion());
+						 sceKernelDevkitVersion());
 	pspDebugScreenPrintf("%-21s: %s\r\n\n", "PSP type",
 						 kuKernelGetModel() ==
 						 PSP_MODEL_STANDARD ? "1000(fat)" : "2000(slim)");
@@ -110,13 +109,13 @@ void ExceptionHandler(PspDebugRegBlock * regs)
 							 (unsigned int) &_ftext);
 	}
 
-	xrKernelDelayThread(1000000);
+	sceKernelDelayThread(1000000);
 	pspDebugScreenPrintf
 		("\n\nPress O to dump information on file exception.log and quit");
 	pspDebugScreenPrintf("\nPress X to restart");
 
 	for (;;) {
-		xrCtrlReadBufferPositive(&pad, 1);
+		sceCtrlReadBufferPositive(&pad, 1);
 		if (pad.Buttons & PSP_CTRL_CIRCLE) {
 			char testo[512];
 			char timestr[80];
@@ -137,14 +136,14 @@ void ExceptionHandler(PspDebugRegBlock * regs)
 				);
 			fwrite(testo, 1, strlen(testo), log);
 			SPRINTF_S(testo, "%-21s: %08X\r\n", "PSP firmware version",
-					  xrKernelDevkitVersion());
+					  sceKernelDevkitVersion());
 			fwrite(testo, 1, strlen(testo), log);
 			SPRINTF_S(testo, "%-21s: %s\r\n", "PSP type",
 					  kuKernelGetModel() ==
 					  PSP_MODEL_STANDARD ? "1000(fat)" : "2000(slim)");
 			fwrite(testo, 1, strlen(testo), log);
 
-			xrRtcGetCurrentClockLocalTime(&tm);
+			sceRtcGetCurrentClockLocalTime(&tm);
 			SPRINTF_S(timestr, "%u-%u-%u %02u:%02u:%02u", tm.year, tm.month,
 					  tm.day, tm.hour, tm.minutes, tm.seconds);
 
@@ -197,9 +196,9 @@ void ExceptionHandler(PspDebugRegBlock * regs)
 		} else if (pad.Buttons & PSP_CTRL_CROSS) {
 			break;
 		}
-		xrKernelDelayThread(100000);
+		sceKernelDelayThread(100000);
 	}
-	xrKernelExitGame();
+	sceKernelExitGame();
 }
 
 int initExceptionHandler(const char *path)
@@ -214,10 +213,10 @@ int initExceptionHandler(const char *path)
 	option.position = 0;
 	option.access = 1;
 
-	if ((modid = xrKernelLoadModule(path, 0, &option)) >= 0) {
+	if ((modid = sceKernelLoadModule(path, 0, &option)) >= 0) {
 		args[0] = (int) ExceptionHandler;
 		args[1] = (int) &exception_regs;
-		xrKernelStartModule(modid, 8, args, &fd, NULL);
+		sceKernelStartModule(modid, 8, args, &fd, NULL);
 		return 0;
 	}
 

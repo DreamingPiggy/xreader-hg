@@ -35,7 +35,6 @@
 #include "fs.h"
 #include "archive.h"
 #include "dbg.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -98,11 +97,11 @@ static inline void setVertexUV(Vertex * vertex, u16 x, u16 y, u16 z, u32 color,
 
 extern void disp_init(void)
 {
-	xrDisplaySetMode(0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT);
+	sceDisplaySetMode(0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT);
 	vram_page = 0;
 	vram_disp = (pixel *) 0x04000000;
 	vram_draw = (pixel *) (0x44000000 + PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES);
-	xrDisplaySetFrameBuf(vram_disp, PSP_SCREEN_SCANLINE, PSP_DISPLAY_PIXEL_FORMAT_8888,
+	sceDisplaySetFrameBuf(vram_disp, PSP_SCREEN_SCANLINE, PSP_DISPLAY_PIXEL_FORMAT_8888,
 						 PSP_DISPLAY_SETBUF_NEXTFRAME);
 }
 
@@ -112,27 +111,27 @@ extern void init_gu(void)
 {
 	void *vram = NULL;
 
-	xrGuInit();
+	sceGuInit();
 
-	xrGuStart(GU_DIRECT, list);
-	xrGuDispBuffer(PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, vram, PSP_SCREEN_SCANLINE);
+	sceGuStart(GU_DIRECT, list);
+	sceGuDispBuffer(PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, vram, PSP_SCREEN_SCANLINE);
 	vram += PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES;
-	xrGuDrawBuffer(GU_PSM_8888, vram, PSP_SCREEN_SCANLINE);
+	sceGuDrawBuffer(GU_PSM_8888, vram, PSP_SCREEN_SCANLINE);
 	vram += PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES * 2;
-	xrGuDepthBuffer(vram, PSP_SCREEN_SCANLINE);
-	xrGuOffset(2048 - (PSP_SCREEN_WIDTH / 2), 2048 - (PSP_SCREEN_HEIGHT / 2));
-	xrGuViewport(2048, 2048, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT);
-	xrGuDepthRange(65535, 0);
-	xrGuScissor(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT);
-	xrGuEnable(GU_SCISSOR_TEST);
-	xrGuFrontFace(GU_CW);
-	xrGuClear(GU_COLOR_BUFFER_BIT | GU_DEPTH_BUFFER_BIT);
-	xrGuEnable(GU_TEXTURE_2D);
-	xrGuFinish();
-	xrGuSync(0, 0);
+	sceGuDepthBuffer(vram, PSP_SCREEN_SCANLINE);
+	sceGuOffset(2048 - (PSP_SCREEN_WIDTH / 2), 2048 - (PSP_SCREEN_HEIGHT / 2));
+	sceGuViewport(2048, 2048, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT);
+	sceGuDepthRange(65535, 0);
+	sceGuScissor(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT);
+	sceGuEnable(GU_SCISSOR_TEST);
+	sceGuFrontFace(GU_CW);
+	sceGuClear(GU_COLOR_BUFFER_BIT | GU_DEPTH_BUFFER_BIT);
+	sceGuEnable(GU_TEXTURE_2D);
+	sceGuFinish();
+	sceGuSync(0, 0);
 
-	xrDisplayWaitVblankStart();
-	xrGuDisplay(1);
+	sceDisplayWaitVblankStart();
+	sceGuDisplay(1);
 }
 
 extern void disp_putpixel(int x, int y, pixel color)
@@ -238,16 +237,16 @@ extern bool disp_has_zipped_font(const char *zipfile, const char *efont,
 
 extern bool disp_has_font(const char *efont, const char *cfont)
 {
-	int fd = xrIoOpen(efont, PSP_O_RDONLY, 0777);
+	int fd = sceIoOpen(efont, PSP_O_RDONLY, 0777);
 
 	if (fd < 0)
 		return false;
-	xrIoClose(fd);
+	sceIoClose(fd);
 
-	fd = xrIoOpen(cfont, PSP_O_RDONLY, 0777);
+	fd = sceIoOpen(cfont, PSP_O_RDONLY, 0777);
 	if (fd < 0)
 		return false;
-	xrIoClose(fd);
+	sceIoClose(fd);
 	return true;
 }
 
@@ -610,41 +609,41 @@ extern bool disp_load_font(const char *efont, const char *cfont)
 	int fd;
 
 	disp_free_font();
-   	fd = xrIoOpen(efont, PSP_O_RDONLY, 0777);
+   	fd = sceIoOpen(efont, PSP_O_RDONLY, 0777);
 
 	if (fd < 0)
 		return false;
 
-	size = xrIoLseek32(fd, 0, PSP_SEEK_END);
+	size = sceIoLseek32(fd, 0, PSP_SEEK_END);
 
 	if ((efont_buffer = calloc(1, size)) == NULL) {
-		xrIoClose(fd);
+		sceIoClose(fd);
 		return false;
 	}
 
-	xrIoLseek32(fd, 0, PSP_SEEK_SET);
-	xrIoRead(fd, efont_buffer, size);
-	xrIoClose(fd);
+	sceIoLseek32(fd, 0, PSP_SEEK_SET);
+	sceIoRead(fd, efont_buffer, size);
+	sceIoClose(fd);
 	book_efont_buffer = efont_buffer;
 
-	fd = xrIoOpen(cfont, PSP_O_RDONLY, 0777);
+	fd = sceIoOpen(cfont, PSP_O_RDONLY, 0777);
 
 	if (fd < 0) {
 		disp_free_font();
 		return false;
 	}
 
-	size = xrIoLseek32(fd, 0, PSP_SEEK_END);
+	size = sceIoLseek32(fd, 0, PSP_SEEK_END);
 
 	if ((cfont_buffer = calloc(1, size)) == NULL) {
 		disp_free_font();
-		xrIoClose(fd);
+		sceIoClose(fd);
 		return false;
 	}
 
-	xrIoLseek32(fd, 0, PSP_SEEK_SET);
-	xrIoRead(fd, cfont_buffer, size);
-	xrIoClose(fd);
+	sceIoLseek32(fd, 0, PSP_SEEK_SET);
+	sceIoRead(fd, cfont_buffer, size);
+	sceIoClose(fd);
 	book_cfont_buffer = cfont_buffer;
 
 	return true;
@@ -733,45 +732,45 @@ extern bool disp_load_book_font(const char *efont, const char *cfont)
 		book_efont_buffer = NULL;
 	}
 
-	fd = xrIoOpen(efont, PSP_O_RDONLY, 0777);
+	fd = sceIoOpen(efont, PSP_O_RDONLY, 0777);
 
 	if (fd < 0)
 		return false;
 
-	size = xrIoLseek32(fd, 0, PSP_SEEK_END);
+	size = sceIoLseek32(fd, 0, PSP_SEEK_END);
 
 	if ((book_efont_buffer = calloc(1, size)) == NULL) {
-		xrIoClose(fd);
+		sceIoClose(fd);
 		return false;
 	}
 
-	xrIoLseek32(fd, 0, PSP_SEEK_SET);
-	xrIoRead(fd, book_efont_buffer, size);
-	xrIoClose(fd);
+	sceIoLseek32(fd, 0, PSP_SEEK_SET);
+	sceIoRead(fd, book_efont_buffer, size);
+	sceIoClose(fd);
 
 	if (book_cfont_buffer != NULL && cfont_buffer != book_cfont_buffer) {
 		free(book_cfont_buffer);
 		book_cfont_buffer = NULL;
 	}
 
-	fd = xrIoOpen(cfont, PSP_O_RDONLY, 0777);
+	fd = sceIoOpen(cfont, PSP_O_RDONLY, 0777);
 
 	if (fd < 0) {
 		disp_free_font();
 		return false;
 	}
 
-	size = xrIoLseek32(fd, 0, PSP_SEEK_END);
+	size = sceIoLseek32(fd, 0, PSP_SEEK_END);
 
 	if ((book_cfont_buffer = calloc(1, size)) == NULL) {
 		disp_free_font();
-		xrIoClose(fd);
+		sceIoClose(fd);
 		return false;
 	}
 
-	xrIoLseek32(fd, 0, PSP_SEEK_SET);
-	xrIoRead(fd, book_cfont_buffer, size);
-	xrIoClose(fd);
+	sceIoLseek32(fd, 0, PSP_SEEK_SET);
+	sceIoRead(fd, book_cfont_buffer, size);
+	sceIoClose(fd);
 
 	return true;
 }
@@ -810,9 +809,9 @@ extern void disp_flip(void)
 	vram_draw =
 		(pixel *) 0x44000000 + (vram_page ? 0 : (512 * PSP_SCREEN_HEIGHT));
 	disp_waitv();
-	xrDisplaySetFrameBuf(vram_disp, 512, PSP_DISPLAY_PIXEL_FORMAT_8888,
+	sceDisplaySetFrameBuf(vram_disp, 512, PSP_DISPLAY_PIXEL_FORMAT_8888,
 						 PSP_DISPLAY_SETBUF_IMMEDIATE);
-	framebuffer = xrGuSwapBuffers();
+	framebuffer = sceGuSwapBuffers();
 }
 
 extern void disp_getimage_draw(dword x, dword y, dword w, dword h, pixel * buf)
@@ -859,16 +858,16 @@ extern void disp_newputimage(int x, int y, int w, int h, int bufw, int startx,
 {
 	Vertex *vertices;
 
-	xrGuStart(GU_DIRECT, list);
-	xrGuTexFilter(GU_LINEAR, GU_LINEAR);
-	xrGuShadeModel(GU_SMOOTH);
-	xrGuAmbientColor(0xFFFFFFFF);
-	vertices = (Vertex *) xrGuGetMemory(2 * sizeof(Vertex));
+	sceGuStart(GU_DIRECT, list);
+	sceGuTexFilter(GU_LINEAR, GU_LINEAR);
+	sceGuShadeModel(GU_SMOOTH);
+	sceGuAmbientColor(0xFFFFFFFF);
+	vertices = (Vertex *) sceGuGetMemory(2 * sizeof(Vertex));
 
-	xrGuTexMode(GU_PSM_8888, 0, 0, swizzled ? 1 : 0);
-	xrGuTexImage(0, 512, 512, bufw, buf);
-	xrGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);
-	xrGuTexFilter(GU_LINEAR, GU_LINEAR);
+	sceGuTexMode(GU_PSM_8888, 0, 0, swizzled ? 1 : 0);
+	sceGuTexImage(0, 512, 512, bufw, buf);
+	sceGuTexFunc(GU_TFX_REPLACE, GU_TCC_RGBA);
+	sceGuTexFilter(GU_LINEAR, GU_LINEAR);
 	vertices[0].u = startx;
 	vertices[0].v = starty;
 	vertices[0].x = x;
@@ -881,11 +880,11 @@ extern void disp_newputimage(int x, int y, int w, int h, int bufw, int startx,
 	vertices[1].y = y + h;
 	vertices[1].z = 0;
 	vertices[1].color = 0;
-	xrGuDrawArray(GU_SPRITES,
+	sceGuDrawArray(GU_SPRITES,
 				  GU_TEXTURE_16BIT | GU_COLOR_8888 | GU_VERTEX_16BIT |
 				  GU_TRANSFORM_2D, 2, 0, vertices);
-	xrGuFinish();
-	xrGuSync(0, 0);
+	sceGuFinish();
+	sceGuSync(0, 0);
 }
 
 /**
@@ -977,7 +976,7 @@ extern void disp_fix_osk(void *buffer)
 		vram_draw =
 			(pixel *) 0x44000000 + (vram_page ? 0 : (512 * PSP_SCREEN_HEIGHT));
 	}
-	xrDisplaySetFrameBuf(vram_disp, 512, PSP_DISPLAY_PIXEL_FORMAT_8888,
+	sceDisplaySetFrameBuf(vram_disp, 512, PSP_DISPLAY_PIXEL_FORMAT_8888,
 						 PSP_DISPLAY_SETBUF_IMMEDIATE);
 }
 
@@ -2051,71 +2050,71 @@ extern void disp_putnstringrvert(int x, int y, pixel color, const byte * str,
 
 extern void disp_fillvram(pixel color)
 {
-	xrGuStart(GU_DIRECT, list);
-	xrGuClearColor(color);
-	xrGuClear(GU_COLOR_BUFFER_BIT);
-	xrGuFinish();
-	xrGuSync(0, 0);
+	sceGuStart(GU_DIRECT, list);
+	sceGuClearColor(color);
+	sceGuClear(GU_COLOR_BUFFER_BIT);
+	sceGuFinish();
+	sceGuSync(0, 0);
 }
 
 extern void disp_fillrect(dword x1, dword y1, dword x2, dword y2, pixel color)
 {
 	VertexColor *vertices;
 
-	xrGuStart(GU_DIRECT, list);
-	vertices = xrGuGetMemory(2 * sizeof(*vertices));
+	sceGuStart(GU_DIRECT, list);
+	vertices = sceGuGetMemory(2 * sizeof(*vertices));
 	setVertex(&vertices[0], x1, y1, 0, color);
 	setVertex(&vertices[1], x2 + 1, y2 + 1, 0, color);
 
-	xrGuDisable(GU_TEXTURE_2D);
-	xrGuDrawArray(GU_SPRITES,
+	sceGuDisable(GU_TEXTURE_2D);
+	sceGuDrawArray(GU_SPRITES,
 				  GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, 0,
 				  vertices);
-	xrGuEnable(GU_TEXTURE_2D);
+	sceGuEnable(GU_TEXTURE_2D);
 
-	xrGuFinish();
-	xrGuSync(0, 0);
+	sceGuFinish();
+	sceGuSync(0, 0);
 }
 
 extern void disp_rectangle(dword x1, dword y1, dword x2, dword y2, pixel color)
 {
 	VertexColor *vertices;
 
-	xrGuStart(GU_DIRECT, list);
-	vertices = xrGuGetMemory(5 * sizeof(*vertices));
+	sceGuStart(GU_DIRECT, list);
+	vertices = sceGuGetMemory(5 * sizeof(*vertices));
 	setVertex(&vertices[0], x1, y1, 0, color);
 	setVertex(&vertices[1], x2, y1, 0, color);
 	setVertex(&vertices[2], x2, y2, 0, color);
 	setVertex(&vertices[3], x1, y2, 0, color);
 	setVertex(&vertices[4], x1, y1, 0, color);
 
-	xrGuDisable(GU_TEXTURE_2D);
-	xrGuDrawArray(GU_LINE_STRIP,
+	sceGuDisable(GU_TEXTURE_2D);
+	sceGuDrawArray(GU_LINE_STRIP,
 				  GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 5, 0,
 				  vertices);
-	xrGuEnable(GU_TEXTURE_2D);
+	sceGuEnable(GU_TEXTURE_2D);
 
-	xrGuFinish();
-	xrGuSync(0, 0);
+	sceGuFinish();
+	sceGuSync(0, 0);
 }
 
 extern void disp_line(dword x1, dword y1, dword x2, dword y2, pixel color)
 {
 	VertexColor *vertices;
 
-	xrGuStart(GU_DIRECT, list);
-	vertices = xrGuGetMemory(2 * sizeof(*vertices));
+	sceGuStart(GU_DIRECT, list);
+	vertices = sceGuGetMemory(2 * sizeof(*vertices));
 	setVertex(&vertices[0], x1, y1, 0, color);
 	setVertex(&vertices[1], x2, y2, 0, color);
 
-	xrGuDisable(GU_TEXTURE_2D);
-	xrGuDrawArray(GU_LINES,
+	sceGuDisable(GU_TEXTURE_2D);
+	sceGuDrawArray(GU_LINES,
 				  GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, 0,
 				  vertices);
-	xrGuEnable(GU_TEXTURE_2D);
+	sceGuEnable(GU_TEXTURE_2D);
 
-	xrGuFinish();
-	xrGuSync(0, 0);
+	sceGuFinish();
+	sceGuSync(0, 0);
 }
 
 pixel *disp_swizzle_image(pixel * buf, int width, int height)

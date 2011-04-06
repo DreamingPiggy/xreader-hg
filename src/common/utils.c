@@ -27,7 +27,6 @@
 #include "utils.h"
 #include "strsafe.h"
 #include "dbg.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -100,14 +99,14 @@ extern bool utils_del_file(const char *file)
 	SceIoStat stat;
 
 	memset(&stat, 0, sizeof(SceIoStat));
-	result = xrIoGetstat(file, &stat);
+	result = sceIoGetstat(file, &stat);
 	if (result < 0)
 		return false;
 	stat.st_attr &= ~0x0F;
-	result = xrIoChstat(file, &stat, 3);
+	result = sceIoChstat(file, &stat, 3);
 	if (result < 0)
 		return false;
-	result = xrIoRemove(file);
+	result = sceIoRemove(file);
 	if (result < 0)
 		return false;
 
@@ -117,14 +116,14 @@ extern bool utils_del_file(const char *file)
 extern dword utils_del_dir(const char *dir)
 {
 	dword count = 0;
-	int dl = xrIoDopen(dir);
+	int dl = sceIoDopen(dir);
 	SceIoDirent sid;
 
 	if (dl < 0)
 		return count;
 
 	memset(&sid, 0, sizeof(SceIoDirent));
-	while (xrIoDread(dl, &sid)) {
+	while (sceIoDread(dl, &sid)) {
 		char compPath[260];
 
 		if (sid.d_name[0] == '.')
@@ -142,8 +141,8 @@ extern dword utils_del_dir(const char *dir)
 		}
 		memset(&sid, 0, sizeof(SceIoDirent));
 	}
-	xrIoDclose(dl);
-	xrIoRmdir(dir);
+	sceIoDclose(dl);
+	sceIoRmdir(dir);
 
 	return count;
 }
@@ -155,10 +154,10 @@ bool utils_is_file_exists(const char *filename)
 	if (!filename)
 		return false;
 
-	uid = xrIoOpen(filename, PSP_O_RDONLY, 0777);
+	uid = sceIoOpen(filename, PSP_O_RDONLY, 0777);
 	if (uid < 0)
 		return false;
-	xrIoClose(uid);
+	sceIoClose(uid);
 	return true;
 }
 

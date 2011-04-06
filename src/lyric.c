@@ -30,7 +30,6 @@
 #include "conf.h"
 #include "charsets.h"
 #include "lyric.h"
-#include "xrhal.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -218,19 +217,19 @@ extern bool lyric_open(p_lyric l, const char *filename)
 		return false;
 
 	memset(l, 0, sizeof(t_lyric));
-	fd = xrIoOpen(filename, PSP_O_RDONLY, 0777);
+	fd = sceIoOpen(filename, PSP_O_RDONLY, 0777);
 
 	if (fd < 0)
 		return false;
-	l->size = xrIoLseek32(fd, 0, PSP_SEEK_END);
+	l->size = sceIoLseek32(fd, 0, PSP_SEEK_END);
 	if ((l->whole = malloc(l->size + 1)) == NULL) {
-		xrIoClose(fd);
+		sceIoClose(fd);
 		return false;
 	}
-	xrIoLseek32(fd, 0, PSP_SEEK_SET);
-	xrIoRead(fd, l->whole, l->size);
+	sceIoLseek32(fd, 0, PSP_SEEK_SET);
+	sceIoRead(fd, l->whole, l->size);
 	l->whole[l->size] = 0;
-	xrIoClose(fd);
+	sceIoClose(fd);
 
 	parse_lyric(l);
 
@@ -242,20 +241,20 @@ extern void lyric_init(p_lyric l)
 	if (l == NULL)
 		return;
 	memset(l, 0, sizeof(t_lyric));
-	l->sema = xrKernelCreateSema("lyric sem", 0, 1, 1, NULL);
+	l->sema = sceKernelCreateSema("lyric sem", 0, 1, 1, NULL);
 }
 
 extern void lyric_close(p_lyric l)
 {
 	if (l == NULL || !l->succ)
 		return;
-	xrKernelWaitSema(l->sema, 1, NULL);
+	sceKernelWaitSema(l->sema, 1, NULL);
 	l->succ = false;
 	if (l->whole != NULL)
 		free(l->whole);
 	if (l->count > 0 && l->lines != NULL)
 		free(l->lines);
-	xrKernelSignalSema(l->sema, 1);
+	sceKernelSignalSema(l->sema, 1);
 }
 
 extern void lyric_update_pos(p_lyric l, void *tm)
@@ -264,7 +263,7 @@ extern void lyric_update_pos(p_lyric l, void *tm)
 
 	if (l == NULL || !l->succ)
 		return;
-	xrKernelWaitSema(l->sema, 1, NULL);
+	sceKernelWaitSema(l->sema, 1, NULL);
 	t = *(mad_timer_t *) tm;
 
 	while (l->idx >= 0 && mad_timer_compare(l->lines[l->idx].t, t) > 0) {
@@ -276,7 +275,7 @@ extern void lyric_update_pos(p_lyric l, void *tm)
 		l->idx++;
 		l->changed = true;
 	}
-	xrKernelSignalSema(l->sema, 1);
+	sceKernelSignalSema(l->sema, 1);
 }
 
 extern bool lyric_get_cur_lines(p_lyric l, int extralines, const char **lines,
@@ -286,7 +285,7 @@ extern bool lyric_get_cur_lines(p_lyric l, int extralines, const char **lines,
 
 	if (l == NULL || !l->succ)
 		return false;
-	xrKernelWaitSema(l->sema, 1, NULL);
+	sceKernelWaitSema(l->sema, 1, NULL);
 	if (l->changed)
 		l->changed = false;
 
@@ -298,7 +297,7 @@ extern bool lyric_get_cur_lines(p_lyric l, int extralines, const char **lines,
 			lines[j] = NULL;
 		++j;
 	}
-	xrKernelSignalSema(l->sema, 1);
+	sceKernelSignalSema(l->sema, 1);
 
 	return true;
 }
@@ -307,12 +306,12 @@ extern bool lyric_check_changed(p_lyric l)
 {
 	if (l == NULL || !l->succ)
 		return false;
-	xrKernelWaitSema(l->sema, 1, NULL);
+	sceKernelWaitSema(l->sema, 1, NULL);
 	if (l->changed) {
 		l->changed = false;
 		return true;
 	}
-	xrKernelSignalSema(l->sema, 1);
+	sceKernelSignalSema(l->sema, 1);
 	return false;
 }
 

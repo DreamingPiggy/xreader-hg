@@ -58,7 +58,6 @@
 #include "musicinfo.h"
 #include "power.h"
 #include "image_queue.h"
-#include "xrhal.h"
 #include "thread_lock.h"
 #include "freq_lock.h"
 #ifdef DMALLOC
@@ -741,8 +740,8 @@ static int music_thread(SceSize arg, void *argp)
 	g_thread_actived = 1;
 	g_thread_exited = 0;
 
-	xrRtcGetCurrentTick(&start);
-	xrRtcGetCurrentTick(&end);
+	sceRtcGetCurrentTick(&start);
+	sceRtcGetCurrentTick(&end);
 
 	while (g_thread_actived) {
 		music_lock();
@@ -769,32 +768,32 @@ static int music_thread(SceSize arg, void *argp)
 			}
 
 			music_unlock();
-			xrKernelDelayThread(100000);
+			sceKernelDelayThread(100000);
 		} else {
 			music_unlock();
-			xrKernelDelayThread(500000);
+			sceKernelDelayThread(500000);
 		}
 
 		if (g_music_hprm_enable) {
 			key = ctrl_hprm_raw();
-			xrRtcGetCurrentTick(&end);
+			sceRtcGetCurrentTick(&end);
 			interval = pspDiffTime(&end, &start);
 
 			if (key == PSP_HPRM_FORWARD || key == PSP_HPRM_BACK
 				|| key == PSP_HPRM_PLAYPAUSE) {
 				if (key != oldkey) {
-					xrRtcGetCurrentTick(&start);
-					xrRtcGetCurrentTick(&end);
+					sceRtcGetCurrentTick(&start);
+					sceRtcGetCurrentTick(&end);
 					interval = pspDiffTime(&end, &start);
 				}
 
 				if (interval >= 0.5) {
 					if (key == PSP_HPRM_FORWARD) {
 						musicdrv_fforward(5);
-						xrKernelDelayThread(200000);
+						sceKernelDelayThread(200000);
 					} else if (key == PSP_HPRM_BACK) {
 						musicdrv_fbackward(5);
-						xrKernelDelayThread(200000);
+						sceKernelDelayThread(200000);
 					}
 				}
 
@@ -802,7 +801,7 @@ static int music_thread(SceSize arg, void *argp)
 
 				if (key == PSP_HPRM_PLAYPAUSE && interval >= 4.0) {
 					power_down();
-					xrPowerRequestSuspend();
+					scePowerRequestSuspend();
 				}
 			} else {
 				if ((oldkey == PSP_HPRM_FORWARD || oldkey == PSP_HPRM_BACK
@@ -820,17 +819,17 @@ static int music_thread(SceSize arg, void *argp)
 					}
 				}
 				oldkey = key;
-				xrRtcGetCurrentTick(&start);
+				sceRtcGetCurrentTick(&start);
 			}
 		}
 
 		{
-			int thid = xrKernelGetThreadId();
-			int oldpri = xrKernelGetThreadCurrentPriority();
+			int thid = sceKernelGetThreadId();
+			int oldpri = sceKernelGetThreadCurrentPriority();
 
-			xrKernelChangeThreadPriority(thid, 90);
+			sceKernelChangeThreadPriority(thid, 90);
 			cache_routine();
-			xrKernelChangeThreadPriority(thid, oldpri);
+			sceKernelChangeThreadPriority(thid, oldpri);
 		}
 	}
 
@@ -846,7 +845,7 @@ int music_init(void)
 
 	cache_init();
 
-	xrRtcGetCurrentClockLocalTime(&tm);
+	sceRtcGetCurrentClockLocalTime(&tm);
 	srand(tm.microseconds);
 	xr_lock_init(&music_l);
 
@@ -906,14 +905,14 @@ int music_init(void)
 	g_list.first_time = true;
 	g_shuffle.first_time = true;
 	stack_init(&played);
-	g_music_thread = xrKernelCreateThread("Music Thread",
+	g_music_thread = sceKernelCreateThread("Music Thread",
 										  music_thread, 0x12, 0x10000, 0, NULL);
 
 	if (g_music_thread < 0) {
 		return -EBUSY;
 	}
 
-	xrKernelStartThread(g_music_thread, 0, 0);
+	sceKernelStartThread(g_music_thread, 0, 0);
 
 	return 0;
 }
@@ -932,7 +931,7 @@ int music_free(void)
 	while (ret != 0) {
 		ret = music_stop();
 		if (ret != 0)
-			xrKernelDelayThread(100000);
+			sceKernelDelayThread(100000);
 	}
 
 	g_list.is_list_playing = 0;
@@ -940,10 +939,10 @@ int music_free(void)
 	music_unlock();
 	free_shuffle_data();
 
-	if (xrKernelWaitThreadEnd(g_music_thread, &to) != 0) {
-		xrKernelTerminateDeleteThread(g_music_thread);
+	if (sceKernelWaitThreadEnd(g_music_thread, &to) != 0) {
+		sceKernelTerminateDeleteThread(g_music_thread);
 	} else {
-		xrKernelDeleteThread(g_music_thread);
+		sceKernelDeleteThread(g_music_thread);
 	}
 
 	xr_lock_destroy(&music_l);
@@ -1154,7 +1153,7 @@ static bool music_is_file_exist(const char *filename)
 {
 	SceIoStat sta;
 
-	if (xrIoGetstat(filename, &sta) < 0) {
+	if (sceIoGetstat(filename, &sta) < 0) {
 		return false;
 	}
 
