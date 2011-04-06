@@ -25,6 +25,7 @@
 #include <pspsdk.h>
 #include <psppower.h>
 #include <pspdisplay.h>
+#include <kubridge.h>
 #include "fat.h"
 #include "conf.h"
 #include "scene.h"
@@ -40,6 +41,9 @@ PSP_HEAP_SIZE_KB(-512);
 
 static unsigned int lock_count = 0;
 static unsigned int intr_flags = 0;
+
+int psp_model;
+int psp_fw_version;
 
 /**
  * malloc lock for malloc-2.6.4 in newlib-0.17,
@@ -130,6 +134,9 @@ static int main_thread(unsigned int args, void *argp)
 int main(int argc, char *argv[])
 {
 	int thid;
+
+	psp_model = kuKernelGetModel();
+	psp_fw_version = sceKernelDevkitVersion();
 
 	SetupCallbacks();
 	thid = sceKernelCreateThread("User Thread", main_thread, 45, 0x40000,

@@ -878,7 +878,7 @@ static p_text text_open_binary(const char *filename, bool vert)
 	STRCPY_S(txt->filename, filename);
 	txt->size = sceIoLseek32(fd, 0, PSP_SEEK_END);
 	if (txt->size > 256 * 1024) {
-		if (kuKernelGetModel() != PSP_MODEL_STANDARD) {
+		if (psp_model != PSP_MODEL_STANDARD) {
 			if (txt->size > 4 * 1024 * 1024)
 				txt->size = 4 * 1024 * 1024;
 		} else {
@@ -1076,7 +1076,7 @@ static p_text text_open_binary_in_zip(const char *zipfile, const char *filename,
 	txt->buf = buffer_free_weak(buf);
 
 	if (txt->size > 256 * 1024) {
-		if (kuKernelGetModel() != PSP_MODEL_STANDARD) {
+		if (psp_model != PSP_MODEL_STANDARD) {
 			if (txt->size > 4 * 1024 * 1024)
 				txt->size = 4 * 1024 * 1024;
 		} else {
@@ -1293,7 +1293,7 @@ static p_text text_open_binary_in_rar(const char *rarfile, const char *filename,
 	txt->buf = buffer_free_weak(buf);
 
 	if (txt->size > 256 * 1024) {
-		if (kuKernelGetModel() != PSP_MODEL_STANDARD) {
+		if (psp_model != PSP_MODEL_STANDARD) {
 			if (txt->size > 4 * 1024 * 1024)
 				txt->size = 4 * 1024 * 1024;
 		} else {

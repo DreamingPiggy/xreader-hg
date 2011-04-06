@@ -5851,11 +5851,7 @@ extern void scene_init(void)
 
 #ifndef _DEBUG
 	{
-		int fw;
-
-		fw = sceKernelDevkitVersion();
-
-		if (fw >= 0x03070100 && fw != 0x05000310) {
+		if (psp_fw_version >= 0x03070100 && psp_fw_version != 0x05000310) {
 			char path[PATH_MAX];
 			int ret;
 
