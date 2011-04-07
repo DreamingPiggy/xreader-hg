@@ -24,7 +24,7 @@
 #include "Revision.h"
 #include "config.h"
 
-#define XREADER_VERSION_LONG VERSION " Built "  __TIME__ " " __DATE__ " " "(REV" REVISION ")"
+#define XREADER_VERSION_LONG VERSION " Built "  __TIME__ " " __DATE__ " " "(" REVISION ")"
 #define XREADER_VERSION_STR_LONG PACKAGE_NAME " " XREADER_VERSION_LONG
 
 #endif
