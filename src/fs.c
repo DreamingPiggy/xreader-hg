@@ -188,7 +188,7 @@ extern dword fs_list_device(const char *dir, const char *sdir,
 
 	strcpy_s((char *) sdir, 256, dir);
 
-	cur_count = config.hide_flash ? 1 : 3;
+	cur_count = config.hide_flash ? 2 : 4;
 	*mitem = win_realloc_items(NULL, 0, cur_count);
 	if (*mitem == NULL)
 		return 0;
@@ -204,18 +204,19 @@ extern dword fs_list_device(const char *dir, const char *sdir,
 	item[0].selrcolor = selrcolor;
 	item[0].selbcolor = selbcolor;
 
+	STRCPY_S(item[1].name, "<SystemStorage>");
+	buffer_copy_string(item[1].compname, "ef0:");
+	item[1].data = (void *) fs_filetype_dir;
+	item[1].width = 13;
+	item[1].selected = false;
+	item[1].icolor = icolor;
+	item[1].selicolor = selicolor;
+	item[1].selrcolor = selrcolor;
+	item[1].selbcolor = selbcolor;
+	
 	if (config.hide_flash == false) {
-		STRCPY_S(item[1].name, "<NandFlash 0>");
-		buffer_copy_string(item[1].compname, "flash0:");
-		item[1].data = (void *) fs_filetype_dir;
-		item[1].width = 13;
-		item[1].selected = false;
-		item[1].icolor = icolor;
-		item[1].selicolor = selicolor;
-		item[1].selrcolor = selrcolor;
-		item[1].selbcolor = selbcolor;
-		STRCPY_S(item[2].name, "<NandFlash 1>");
-		buffer_copy_string(item[2].compname, "flash1:");
+		STRCPY_S(item[2].name, "<NandFlash 0>");
+		buffer_copy_string(item[2].compname, "flash0:");
 		item[2].data = (void *) fs_filetype_dir;
 		item[2].width = 13;
 		item[2].selected = false;
@@ -223,6 +224,15 @@ extern dword fs_list_device(const char *dir, const char *sdir,
 		item[2].selicolor = selicolor;
 		item[2].selrcolor = selrcolor;
 		item[2].selbcolor = selbcolor;
+		STRCPY_S(item[3].name, "<NandFlash 1>");
+		buffer_copy_string(item[3].compname, "flash1:");
+		item[3].data = (void *) fs_filetype_dir;
+		item[3].width = 13;
+		item[3].selected = false;
+		item[3].icolor = icolor;
+		item[3].selicolor = selicolor;
+		item[3].selrcolor = selrcolor;
+		item[3].selbcolor = selbcolor;
 	}
 
 	return cur_count;
