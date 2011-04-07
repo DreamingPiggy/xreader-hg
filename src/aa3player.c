@@ -248,7 +248,6 @@ static int aa3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			aa3_seek_seconds(g_play_time);
 		}
 		xAudioClearSndBuf(buf, snd_buf_frame_size);
-		sceKernelDelayThread(100000);
 		return 0;
 	}
 
