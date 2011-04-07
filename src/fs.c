@@ -207,7 +207,7 @@ extern dword fs_list_device(const char *dir, const char *sdir,
 	STRCPY_S(item[1].name, "<SystemStorage>");
 	buffer_copy_string(item[1].compname, "ef0:");
 	item[1].data = (void *) fs_filetype_dir;
-	item[1].width = 13;
+	item[1].width = 15;
 	item[1].selected = false;
 	item[1].icolor = icolor;
 	item[1].selicolor = selicolor;
