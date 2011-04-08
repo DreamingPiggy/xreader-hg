@@ -164,7 +164,6 @@ static int tta_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			tta_seek_seconds(g_play_time);
 		}
 		xAudioClearSndBuf(buf, snd_buf_frame_size);
-		sceKernelDelayThread(100000);
 		return 0;
 	}
 
