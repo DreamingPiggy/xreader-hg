@@ -88,7 +88,6 @@ p_text fs = NULL;
 t_conf config;
 p_win_menuitem filelist = NULL, copylist = NULL, cutlist = NULL;
 dword filecount = 0, copycount = 0, cutcount = 0;
-static bool fat_inited = false;
 #ifdef ENABLE_MUSIC
 char musiclst_path[PATH_MAX];
 #endif
@@ -3134,13 +3133,14 @@ static void scene_open_dir_or_archive(dword * idx)
 	dword plen = strlen(config.path);
 
 	if (plen > 0 && config.path[plen - 1] == '/')
-		if (strnicmp(config.path, "ms0:/", 5) == 0)
+		if (strnicmp(config.path, "ms0:/", 5) == 0) {
 			filecount =
 				fs_dir_to_menu(config.path, config.shortpath,
 							   &filelist, config.menutextcolor,
 							   config.selicolor,
 							   config.menubcolor, config.selbcolor,
 							   config.showhidden, config.showunknown);
+		}
 		else
 			filecount =
 				fs_flashdir_to_menu(config.path,
@@ -4787,10 +4787,6 @@ t_win_menu_op scene_filelist_menucb(dword key, p_win_menuitem item,
 		return win_menu_op_cancel;
 	} else if (key == config.flkey[7]) {
 		dbg_printf(d, "%s: 返回到上一个文件", __func__);
-		if (fat_inited == false) {
-			fat_init();
-			fat_inited = true;
-		}
 
 		if (prev_lastfile[0] == '\0' ||
 			prev_path[0] == '\0' || prev_shortpath[0] == '\0')
@@ -5152,18 +5148,12 @@ static void scene_enter_dir(dword * idx)
 		STRCAT_S(config.shortpath, "/");
 	}
 	if (config.path[0] == 0) {
-		fat_inited = false;
-		fat_free();
 		filecount =
 			fs_list_device(config.path, config.shortpath,
 						   &filelist, config.menutextcolor,
 						   config.selicolor,
 						   config.menubcolor, config.selbcolor);
 	} else if (strnicmp(config.path, "ms0:/", 5) == 0) {
-		if (fat_inited == false) {
-			fat_init();
-			fat_inited = true;
-		}
 		filecount =
 			fs_dir_to_menu(config.path, config.shortpath,
 						   &filelist, config.menutextcolor,
@@ -5475,8 +5465,6 @@ void scene_filelist(void)
 					break;
 				default:
 					if (config.path[0] == '\0') {
-						fat_inited = false;
-						fat_free();
 						filecount =
 							fs_list_device(config.path, config.shortpath,
 										   &filelist, config.menutextcolor,
@@ -5809,9 +5797,32 @@ extern void scene_init(void)
 	ctrl_enablehprm(config.hprmctrl);
 #endif
 	init_gu();
-	if (fat_init())
-		fat_inited = true;
 
+	{
+		if (psp_fw_version >= 0x03070100 && psp_fw_version != 0x05000310) {
+			char path[PATH_MAX];
+			int ret;
+
+			sceRtcGetCurrentTick(&dbglasttick);
+			SPRINTF_S(path, "%sxrPrx.prx", scene_appdir());
+			ret = initExceptionHandler(path);
+
+			if (ret == 0) {
+				prx_loaded = true;
+			} else {
+				dbg_printf(d, "xrPrx.prx load failed, return value %08X",
+						(unsigned int) ret);
+			}
+
+			ret = load_rdriver();
+			dbg_printf(d, "load_rdriver returns 0x%08x", ret);
+
+			sceRtcGetCurrentTick(&dbgnow);
+			dbg_printf(d, "initExceptionHandler(): %.2fs",
+					pspDiffTime(&dbgnow, &dbglasttick));
+		}
+	}
+	
 	STRCPY_S(bmfile, scene_appdir());
 	STRCAT_S(bmfile, "bookmark.conf");
 	bookmark_init(bmfile);
@@ -5847,33 +5858,6 @@ extern void scene_init(void)
 	}
 
 	sceRtcGetCurrentTick(&dbgnow);
-#endif
-
-#ifndef _DEBUG
-	{
-		if (psp_fw_version >= 0x03070100 && psp_fw_version != 0x05000310) {
-			char path[PATH_MAX];
-			int ret;
-
-			sceRtcGetCurrentTick(&dbglasttick);
-			SPRINTF_S(path, "%sxrPrx.prx", scene_appdir());
-			ret = initExceptionHandler(path);
-
-			if (ret == 0) {
-				prx_loaded = true;
-			} else {
-				dbg_printf(d, "xrPrx.prx load failed, return value %08X",
-						(unsigned int) ret);
-			}
-
-			ret = load_rdriver();
-			dbg_printf(d, "load_rdriver returns 0x%08x", ret);
-
-			sceRtcGetCurrentTick(&dbgnow);
-			dbg_printf(d, "initExceptionHandler(): %.2fs",
-					pspDiffTime(&dbgnow, &dbglasttick));
-		}
-	}
 #endif
 
 	sceRtcGetCurrentTick(&end);
@@ -5943,7 +5927,6 @@ extern void scene_exit(void)
 	load_fontsize_to_config();
 	conf_save(&config);
 
-	fat_free();
 #ifdef ENABLE_USB
 	usb_close();
 #endif
