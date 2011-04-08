@@ -273,7 +273,6 @@ static int wv_audiocallback(void *buf, unsigned int reqn, void *pdata)
 
 		g_buff_frame_size = g_buff_frame_start = 0;
 		xAudioClearSndBuf(buf, snd_buf_frame_size);
-		sceKernelDelayThread(100000);
 		return 0;
 	}
 
