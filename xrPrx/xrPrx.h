@@ -27,6 +27,10 @@ extern "C"
 #endif
 
 int xrKernelInitApitype(void);
+SceUID xrIoOpen(const char *file, int flags, SceMode mode);
+SceOff xrIoLseek(SceUID fd, SceOff offset, int whence);
+int xrIoRead(SceUID fd, void *data, SceSize size);
+int xrIoClose(SceUID fd);
 
 #ifdef __cplusplus
 }
