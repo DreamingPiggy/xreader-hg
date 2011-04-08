@@ -36,7 +36,7 @@
 #include "dmalloc.h"
 #endif
 
-#define PSP_GO 5
+#define PSP_GO 4
 
 static int fatfd = -1;
 static t_fat_dbr dbr;
@@ -56,11 +56,12 @@ static enum
 } fat_type = fat16;
 
 static struct psp_mutex_t fat_l;
+static bool fat_inited = false;
 
 static void msstor_close(void)
 {
 	if(fatfd >= 0) {
-		sceIoClose(fatfd);
+		xrIoClose(fatfd);
 		fatfd = -1;
 	}
 }
@@ -83,9 +84,9 @@ static SceUID msstor_reopen(void)
 	msstor_close();
 
 	if(is_on_ef0()) {
-		fatfd = sceIoOpen("msstoremu:", PSP_O_RDONLY, 0777);
+		fatfd = xrIoOpen("eflash0a0f0:", PSP_O_RDONLY, 0777);
 	} else {
-		fatfd = sceIoOpen("msstor:", PSP_O_RDONLY, 0777);
+		fatfd = xrIoOpen("msstor:", PSP_O_RDONLY, 0777);
 	}
 
 	return fatfd;
@@ -117,7 +118,7 @@ void fat_unlock(void)
 	xr_unlock(&fat_l);
 }
 
-extern bool fat_init(void)
+static bool fat_init(void)
 {
 	u64 total_sec, fat_sec, root_sec, data_sec, data_clus;
 
@@ -128,17 +129,17 @@ extern bool fat_init(void)
 		fat_unlock();
 		return false;
 	}
-	if (sceIoRead(fatfd, &mbr, sizeof(mbr)) != sizeof(mbr)) {
+	if (xrIoRead(fatfd, &mbr, sizeof(mbr)) != sizeof(mbr)) {
 		msstor_close();
 		fat_unlock();
 		return false;
 	}
 	dbr_pos = mbr.dpt[0].start_sec * 0x200;
-	if (sceIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos
-		|| sceIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
+	if (xrIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos
+		|| xrIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
 		dbr_pos = 0;
-		if (sceIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos
-			|| sceIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
+		if (xrIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos
+			|| xrIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
 			msstor_close();
 			fat_unlock();
 			return false;
@@ -181,9 +182,27 @@ extern bool fat_init(void)
 		data_pos = root_pos;
 		data_pos += 1ull * dbr.root_entry * sizeof(t_fat_entry);
 	}
+
 	msstor_close();
+	fat_inited = true;
 	fat_unlock();
+
 	return true;
+}
+
+static void fat_free(void)
+{
+	msstor_close();
+	memset(&dbr, 0, sizeof(dbr));
+	memset(&mbr, 0, sizeof(mbr));
+	root_pos = 0;
+	data_pos = 0;
+	bytes_per_clus = 0;
+	loadcount = 0;
+	clus_max = 0;
+	fat_type = fat16;
+	fat_inited = false;
+	xr_lock_destroy(&fat_l);
 }
 
 static bool convert_table_fat12(void)
@@ -258,14 +277,14 @@ static bool fat_load_table(void)
 		  fat32) ? dbr.ufat.fat32.sec_per_fat : dbr.sec_per_fat) *
 		dbr.bytes_per_sec;
 
-	if (sceIoLseek
+	if (xrIoLseek
 		(fatfd, dbr_pos + dbr.reserved_sec * dbr.bytes_per_sec,
 		 PSP_SEEK_SET) != dbr_pos + dbr.reserved_sec * dbr.bytes_per_sec
 		|| (fat_table = malloc(fat_table_size)) == NULL) {
 		msstor_close();
 		return false;
 	}
-	if ((sceIoRead(fatfd, fat_table, fat_table_size) != fat_table_size)
+	if ((xrIoRead(fatfd, fat_table, fat_table_size) != fat_table_size)
 		|| (fat_type == fat12 && !convert_table_fat12())
 		|| (fat_type == fat16 && !convert_table_fat16())) {
 		msstor_close();
@@ -327,8 +346,8 @@ static bool fat_dir_list(u32 clus, u32 * count, p_fat_entry * entrys)
 		*count = dbr.root_entry;
 		if ((*entrys = malloc(*count * sizeof(**entrys))) == NULL)
 			return false;
-		if (sceIoLseek(fatfd, root_pos, PSP_SEEK_SET) != root_pos
-			|| sceIoRead(fatfd, *entrys,
+		if (xrIoLseek(fatfd, root_pos, PSP_SEEK_SET) != root_pos
+			|| xrIoRead(fatfd, *entrys,
 						*count * sizeof(t_fat_entry)) !=
 			*count * sizeof(t_fat_entry)) {
 			free(*entrys);
@@ -359,8 +378,8 @@ static bool fat_dir_list(u32 clus, u32 * count, p_fat_entry * entrys)
 		do {
 			u64 epos = data_pos + 1ull * (c2 - 2) * bytes_per_clus;
 
-			if (sceIoLseek(fatfd, epos, PSP_SEEK_SET) != epos
-				|| sceIoRead(fatfd, &(*entrys)[ep],
+			if (xrIoLseek(fatfd, epos, PSP_SEEK_SET) != epos
+				|| xrIoRead(fatfd, &(*entrys)[ep],
 							bytes_per_clus) != bytes_per_clus) {
 				free(*entrys);
 				return false;
@@ -572,8 +591,10 @@ static u32 fat_dir_clus(const char *dir, char *shortdir)
 		fat_free_table();
 		return 0;
 	}
-	if (strcmp(partname, "ms0:") != 0 && strcmp(partname, "fatms:") != 0
-		&& strcmp(partname, "fatms0:") != 0) {
+	if (strcmp(partname, "ms0:") != 0 &&
+			strcmp(partname, "fatms:") != 0 && 
+			strcmp(partname, "fatms:") != 0 && 
+			strcmp(partname, "ef0:") != 0) {
 		fat_free_table();
 		return 0;
 	}
@@ -610,8 +631,21 @@ extern dword fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 
 	fat_lock();
 
+	if(!fat_inited) {
+		fat_init();
+	}
+
+	if(!fat_inited) {
+		fat_unlock();
+		fat_free();
+
+		return INVALID;
+	}
+
 	if (!fat_load_table() || fatfd < 0) {
 		fat_unlock();
+		fat_free();
+
 		return INVALID;
 	}
 
@@ -621,6 +655,8 @@ extern dword fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 		fat_free_table();
 		sceIoDclose(dl);
 		fat_unlock();
+		fat_free();
+
 		return INVALID;
 	}
 
@@ -628,6 +664,8 @@ extern dword fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 		fat_free_table();
 		sceIoDclose(dl);
 		fat_unlock();
+		fat_free();
+
 		return INVALID;
 	}
 
@@ -645,6 +683,8 @@ extern dword fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 		fat_free_table();
 		sceIoDclose(dl);
 		fat_unlock();
+		fat_free();
+
 		return INVALID;
 	}
 
@@ -693,25 +733,14 @@ extern dword fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 		inf->attr = entrys[i].norm.attr;
 		cur++;
 	}
+
 	free(entrys);
 	fat_free_table();
 	sceIoDclose(dl);
 	fat_unlock();
-	return cur;
-}
+	fat_free();
 
-extern void fat_free(void)
-{
-	msstor_close();
-	memset(&dbr, 0, sizeof(dbr));
-	memset(&mbr, 0, sizeof(mbr));
-	root_pos = 0;
-	data_pos = 0;
-	bytes_per_clus = 0;
-	loadcount = 0;
-	clus_max = 0;
-	fat_type = fat16;
-	xr_lock_destroy(&fat_l);
+	return cur;
 }
 
 /**
@@ -728,7 +757,6 @@ extern bool fat_longnametoshortname(char *shortname, const char *longname,
 	p_fat_info info = NULL;
 	char dirname[PATH_MAX], spath[PATH_MAX], longfilename[PATH_MAX];
 	char *p = NULL;
-	bool manual_init = false;
 	dword i, count;
 
 	STRCPY_S(dirname, longname);
@@ -739,15 +767,7 @@ extern bool fat_longnametoshortname(char *shortname, const char *longname,
 		STRCPY_S(longfilename, dirname);
 	}
 
-	if (fatfd < 0) {
-		manual_init = true;
-		fat_init();
-	}
-
 	count = fat_readdir(dirname, spath, &info);
-
-	if (manual_init)
-		fat_free();
 
 	if (count == INVALID || info == NULL) {
 		return false;

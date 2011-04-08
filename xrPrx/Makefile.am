@@ -33,7 +33,8 @@ USE_KERNEL_LIBS = 1
 PRX_EXPORTS = exports.exp
 
 PSPSDK=$(shell psp-config --pspsdk-path)
-LIBS=-lpspkernel
+libdir = $(top_srcdir)/lib
+LIBS=-L$(libdir) -lpspkernel -lpspsystemctrl_kernel
 
 include $(PSPSDK)/lib/build.mak
 

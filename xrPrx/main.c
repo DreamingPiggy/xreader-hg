@@ -22,6 +22,7 @@
 #include <pspdebug.h>
 #include <pspsdk.h>
 #include <pspsysmem_kernel.h>
+#include <psputilsforkernel.h>
 #include <psppower.h>
 #include <pspinit.h>
 #include <string.h>
@@ -38,7 +39,6 @@ PspDebugRegBlock *exception_regs;
 
 void _pspDebugExceptionHandler(void);
 int sceKernelRegisterDefaultExceptionHandler(void *func);
-int sceKernelRegisterDefaultExceptionHandler371(void *func);
 
 int xrKernelInitApitype(void)
 {
@@ -52,28 +52,85 @@ int xrKernelInitApitype(void)
 	return apitype;
 }
 
+SceUID xrIoOpen(const char *file, int flags, SceMode mode)
+{
+	SceUID fd;
+	u32 k1, level;
+
+	k1 = pspSdkSetK1(0);
+	level = sctrlKernelSetUserLevel(8);
+	fd = sceIoOpen(file, flags, mode);
+	sctrlKernelSetUserLevel(level);
+	pspSdkSetK1(k1);
+
+	return fd;
+}
+
+SceOff xrIoLseek(SceUID fd, SceOff offset, int whence)
+{
+	SceOff ret;
+	u32 k1, level;
+
+	k1 = pspSdkSetK1(0);
+	level = sctrlKernelSetUserLevel(8);
+	ret = sceIoLseek(fd, offset, whence);
+	sctrlKernelSetUserLevel(level);
+	pspSdkSetK1(k1);
+
+	return ret;
+}
+
+int xrIoRead(SceUID fd, void *data, SceSize size)
+{
+	int ret;
+	u32 k1, level;
+
+	k1 = pspSdkSetK1(0);
+	level = sctrlKernelSetUserLevel(8);
+	ret = sceIoRead(fd, data, size);
+	sctrlKernelSetUserLevel(level);
+	pspSdkSetK1(k1);
+
+	return ret;
+}
+
+int xrIoClose(SceUID fd)
+{
+	SceUID ret;
+	u32 k1, level;
+
+	k1 = pspSdkSetK1(0);
+	level = sctrlKernelSetUserLevel(8);
+	ret = sceIoClose(fd);
+	sctrlKernelSetUserLevel(level);
+	pspSdkSetK1(k1);
+
+	return ret;
+}
+
+void sync_cache(void)
+{
+	sceKernelIcacheInvalidateAll();
+	sceKernelDcacheWritebackInvalidateAll();
+}
+
 /* Entry point */
 int module_start(SceSize args, void *argp)
 {
+#ifndef _DEBUG
 	int ret = 0;
 
-#ifndef _DEBUG
 	if (args != 8)
-		return -1;
+		return 0;
 	curr_handler = (PspDebugErrorHandler) ((int *) argp)[0];
 	exception_regs = (PspDebugRegBlock *) ((int *) argp)[1];
 	if (!curr_handler || !exception_regs)
 		return -1;
 
-	if (sceKernelDevkitVersion() < 0x03070110)
-		ret = sceKernelRegisterDefaultExceptionHandler((void *)
-													   _pspDebugExceptionHandler);
-	else
-		ret = sceKernelRegisterDefaultExceptionHandler371((void *)
-														  _pspDebugExceptionHandler);
+	ret = sceKernelRegisterDefaultExceptionHandler((void *)_pspDebugExceptionHandler);
 #endif
 
-	return ret;
+	return 0;
 }
 
 int module_stop(SceSize args, void *argp)
