@@ -215,7 +215,8 @@ int musicdrv_get_status(void)
 int musicdrv_suspend(void)
 {
 	if (cur_musicdrv == NULL)
-		return -EBUSY;
+		return 0;
+
 	if (cur_musicdrv->suspend)
 		return cur_musicdrv->suspend();
 	else
