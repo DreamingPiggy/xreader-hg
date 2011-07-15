@@ -258,6 +258,7 @@ clean-local:
 PSP_FW_VERSION = 635
 BUILD_PRX = 1
 PSP_LARGE_MEMORY = 1
+PRX_EXPORTS = exports.exp
 
 libdir = $(top_srcdir)/lib
 if MUSIC

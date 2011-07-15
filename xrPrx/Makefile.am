@@ -7,10 +7,12 @@ CFLAGS =
 EXEEXT =
 OBJEXT = o
 
+AM_CFLAGS = -I $(top_srcdir)/src/include
+
 if OPTIMIZE
-AM_CFLAGS = -Os -G0 -Wall -fno-builtin-printf
+AM_CFLAGS += -Os -G0 -Wall -fno-builtin-printf
 else
-AM_CFLAGS = -O0 -G0 -g -Wall
+AM_CFLAGS += -O0 -G0 -g -Wall
 endif
 CCASFLAGS = $(CFLAGS) $(INCLUDES)
 

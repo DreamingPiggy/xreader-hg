@@ -35,7 +35,7 @@
 
 PSP_MODULE_INFO("xr_RDLib", 0x1007, 1, 0);
 
-u32 orig_funcs[2];
+void *orig_funcs[2];
 
 int ExitPatched(void)
 {
@@ -66,8 +66,8 @@ int RestoreExitGame(void)
 {
 	int k1 = pspSdkSetK1(0);
 
-	sctrlHENPatchSyscall((u32) ExitPatched, (void *) orig_funcs[0]);
-	sctrlHENPatchSyscall((u32) ExitPatched2, (void *) orig_funcs[1]);
+	sctrlHENPatchSyscall(ExitPatched, (void *) orig_funcs[0]);
+	sctrlHENPatchSyscall(ExitPatched2, (void *) orig_funcs[1]);
 
 	pspSdkSetK1(k1);
 	return 0;
@@ -118,10 +118,8 @@ int module_start(SceSize args, void *argp)
 							   sceKernelGetBlockHeadAddr(pid), size,
 							   BOOTLOAD_GAME | BOOTLOAD_POPS | BOOTLOAD_UMDEMU);
 
-	orig_funcs[0] =
-		sctrlHENFindFunction("sceLoadExec", "LoadExecForUser", 0x05572A5F);
-	orig_funcs[1] =
-		sctrlHENFindFunction("sceLoadExec", "LoadExecForUser", 0x2AC9954B);
+	orig_funcs[0] = (void*) sctrlHENFindFunction("sceLoadExec", "LoadExecForUser", 0x05572A5F);
+	orig_funcs[1] = (void*) sctrlHENFindFunction("sceLoadExec", "LoadExecForUser", 0x2AC9954B);
 	sctrlHENPatchSyscall(orig_funcs[0], ExitPatched);	// sceKernelExitGame
 	sctrlHENPatchSyscall(orig_funcs[1], ExitPatched2);	// sceKernelExitGameWithStatus
 
