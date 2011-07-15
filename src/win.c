@@ -488,3 +488,85 @@ extern int win_get_max_pixel_width(const p_win_menuitem pItem, int size)
 
 	return max;
 }
+
+p_win_menu win_menu_new(void)
+{
+	p_win_menu menu;
+
+	menu = (p_win_menu)malloc(sizeof(*menu));
+
+	if(menu == NULL) {
+		return NULL;
+	}
+
+	menu->root = NULL;
+	menu->size = menu->cap = 0;
+
+	return menu;
+}
+
+int win_menu_add(p_win_menu menu, p_win_menuitem item)
+{
+	if(menu->size >= menu->cap) {
+		p_win_menuitem newmenu;
+
+		newmenu = realloc(menu->root, (MENU_REALLOC_INCR + menu->cap) * sizeof(menu->root[0]));
+
+		if(newmenu == NULL) {
+			return -1;
+		}
+
+		menu->root = newmenu;
+		menu->cap += MENU_REALLOC_INCR;
+	}
+
+	menu->root[menu->size] = *item;
+	menu->size++;
+
+	return 0;
+}
+
+void win_menuitem_destory(p_win_menuitem item)
+{
+	buffer_free(item->compname);
+	buffer_free(item->shortname);
+}
+
+void win_menu_destroy(p_win_menu menu)
+{
+	int i;
+
+	for(i=0; i<menu->size; ++i) {
+		win_menuitem_destory(&menu->root[i]);
+	}
+
+	free(menu->root);
+	free(menu);
+}
+
+void debug_item(p_win_menuitem p, int size)
+{
+	int i;
+
+	for(i=0; i<size; ++i) {
+		printf("compname: %s\n", p[i].compname->ptr);
+		printf("shortname: %s\n", p[i].shortname->ptr);
+	}
+}
+
+void win_menuitem_new(p_win_menuitem p)
+{
+	memset(p, 0, sizeof(*p));
+
+	p->compname = buffer_init();
+	p->shortname = buffer_init();
+}
+
+void win_menuitem_free(p_win_menuitem p)
+{
+	buffer_free(p->compname);
+	p->compname = NULL;
+
+	buffer_free(p->shortname);
+	p->shortname = NULL;
+}

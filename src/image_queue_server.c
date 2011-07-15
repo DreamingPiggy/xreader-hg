@@ -45,8 +45,8 @@
 #include "dmalloc.h"
 #endif
 
-extern p_win_menuitem filelist;
-extern u32 filecount;
+extern p_win_menu g_menu;
+
 volatile u32 *cache_selidx = NULL;
 
 volatile cacher_context ccacher;
@@ -212,12 +212,12 @@ static int cache_add_by_selidx(u32 selidx, int where)
 	archname = config.shortpath;
 
 	if (where == scene_in_dir) {
-		filename = filelist[selidx].shortname->ptr;
+		filename = g_menu->root[selidx].shortname->ptr;
 	} else {
-		filename = filelist[selidx].compname->ptr;
+		filename = g_menu->root[selidx].compname->ptr;
 	}
 
-	filesize = filelist[selidx].data3;
+	filesize = g_menu->root[selidx].data3;
 
 	type = fs_file_get_type(filename);
 
@@ -441,20 +441,20 @@ static u32 cache_get_next_image(u32 pos, bool forward)
 {
 	if (forward) {
 		do {
-			if (pos < filecount - 1) {
+			if (pos < g_menu->size - 1) {
 				pos++;
 			} else {
 				pos = 0;
 			}
-		} while (!fs_is_image((t_fs_filetype) filelist[pos].data));
+		} while (!fs_is_image((t_fs_filetype) g_menu->root[pos].data));
 	} else {
 		do {
 			if (pos > 0) {
 				pos--;
 			} else {
-				pos = filecount - 1;
+				pos = g_menu->size - 1;
 			}
-		} while (!fs_is_image((t_fs_filetype) filelist[pos].data));
+		} while (!fs_is_image((t_fs_filetype) g_menu->root[pos].data));
 	}
 
 	return pos;
@@ -465,14 +465,14 @@ static u32 count_img(void)
 {
 	u32 i = 0;
 
-	if (filecount == 0 || filelist == NULL)
+	if (g_menu->size == 0 || g_menu->root == NULL)
 		return 0;
 
 	if (cache_img_cnt != 0)
 		return cache_img_cnt;
 
-	for (i = 0; i < filecount; ++i) {
-		if (fs_is_image((t_fs_filetype) filelist[i].data))
+	for (i = 0; i < g_menu->size; ++i) {
+		if (fs_is_image((t_fs_filetype) g_menu->root[i].data))
 			cache_img_cnt++;
 	}
 

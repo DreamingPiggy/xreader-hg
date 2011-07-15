@@ -91,16 +91,16 @@ static int open_image(u32 selidx)
 	shareimg = (imgshow == imgdata) ? true : false;
 
 	if (scene_in_umd == where) {
-		size_t pos = filelist[selidx].data2[1] << 16;
+		size_t pos = g_menu->root[selidx].data2[1] << 16;
 
-		pos += filelist[selidx].data2[0];
+		pos += g_menu->root[selidx].data2[0];
 		result = image_open_umd(filename, config.shortpath,
-								(t_fs_filetype) filelist[selidx].data, pos, 0,
+								(t_fs_filetype) g_menu->root[selidx].data, pos, 0,
 								&width, &height, &imgdata, &bgcolor);
 	} else {
 		result =
 			image_open_archive(filename, config.shortpath,
-							   (t_fs_filetype) filelist[selidx].data, &width,
+							   (t_fs_filetype) g_menu->root[selidx].data, &width,
 							   &height, &imgdata, &bgcolor, where);
 	}
 
@@ -281,10 +281,10 @@ static int scene_reloadimage(u32 selidx)
 	reset_image_ptr();
 
 	if (where == scene_in_zip || where == scene_in_chm || where == scene_in_rar)
-		STRCPY_S(filename, filelist[selidx].compname->ptr);
+		STRCPY_S(filename, g_menu->root[selidx].compname->ptr);
 	else {
 		STRCPY_S(filename, config.shortpath);
-		STRCAT_S(filename, filelist[selidx].shortname->ptr);
+		STRCAT_S(filename, g_menu->root[selidx].shortname->ptr);
 	}
 
 	if (config.use_image_queue) {
@@ -302,10 +302,10 @@ static int scene_reloadimage(u32 selidx)
 		recalc_brightness();
 	}
 
-	STRCPY_S(config.lastfile, filelist[selidx].compname->ptr);
+	STRCPY_S(config.lastfile, g_menu->root[selidx].compname->ptr);
 	STRCPY_S(prev_path, config.path);
 	STRCPY_S(prev_shortpath, config.shortpath);
-	STRCPY_S(prev_lastfile, filelist[selidx].compname->ptr);
+	STRCPY_S(prev_lastfile, g_menu->root[selidx].compname->ptr);
 	prev_where = where;
 	oldangle = 0;
 
@@ -483,7 +483,7 @@ static void scene_show_info(int selidx)
 		disp_fillrect(0, PSP_SCREEN_HEIGHT - DISP_FONTSIZE, 479, 271, 0);
 		disp_putnstring(0, PSP_SCREEN_HEIGHT - DISP_FONTSIZE,
 						COLOR_WHITE,
-						(const u8 *) filelist[selidx].name,
+						(const u8 *) g_menu->root[selidx].name,
 						960 / DISP_FONTSIZE - ilen - 1, 0, 0, DISP_FONTSIZE, 0);
 		disp_putnstring(PSP_SCREEN_WIDTH -
 						DISP_FONTSIZE / 2 * ilen,
@@ -1257,7 +1257,7 @@ static void next_image(u32 * selidx, bool * should_exit)
 	}
 
 	do {
-		if (*selidx < filecount - 1)
+		if (*selidx < g_menu->size - 1)
 			(*selidx)++;
 		else {
 			if (config.img_no_repeat == false) {
@@ -1267,7 +1267,7 @@ static void next_image(u32 * selidx, bool * should_exit)
 				return;
 			}
 		}
-	} while (!fs_is_image((t_fs_filetype) filelist[*selidx].data));
+	} while (!fs_is_image((t_fs_filetype) g_menu->root[*selidx].data));
 
 	if (*selidx != orgidx)
 		img_needrf = img_needrc = img_needrp = true;
@@ -1294,8 +1294,8 @@ static void prev_image(u32 * selidx)
 		if (*selidx > 0)
 			(*selidx)--;
 		else
-			*selidx = filecount - 1;
-	} while (!fs_is_image((t_fs_filetype) filelist[*selidx].data));
+			*selidx = g_menu->size - 1;
+	} while (!fs_is_image((t_fs_filetype) g_menu->root[*selidx].data));
 
 	if (*selidx != orgidx)
 		img_needrf = img_needrc = img_needrp = true;

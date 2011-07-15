@@ -42,6 +42,16 @@ typedef struct
 	u32 data3;
 } t_win_menuitem, *p_win_menuitem;
 
+enum {
+	MENU_REALLOC_INCR = 64,
+};
+
+typedef struct _t_win_menu {
+	p_win_menuitem root;
+	u32 size;
+	u32 cap;
+} t_win_menu, *p_win_menu;
+
 typedef struct _win_menu_predraw_data
 {
 	int max_item_len;
@@ -95,5 +105,12 @@ extern p_win_menuitem win_copy_item(p_win_menuitem dst,
 
 extern int win_get_max_length(const p_win_menuitem pItem, int size);
 extern int win_get_max_pixel_width(const p_win_menuitem pItem, int size);
+
+p_win_menu win_menu_new(void);
+int win_menu_add(p_win_menu menu, p_win_menuitem item);
+void win_menuitem_destory(p_win_menuitem menu);
+void win_menu_destroy(p_win_menu menu);
+void win_menuitem_new(p_win_menuitem p);
+void win_menuitem_free(p_win_menuitem p);
 
 #endif
