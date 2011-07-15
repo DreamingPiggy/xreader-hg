@@ -250,10 +250,14 @@ void scene_mp3_list(void)
 
 	memcpy(&prev, &g_predraw, sizeof(prev));
 
+#ifdef ENABLE_NLS
 	if (strcmp(simple_textdomain(NULL), "zh_CN") == 0)
 		g_predraw.max_item_len = WRR * 4;
 	else
 		g_predraw.max_item_len = WRR * 5;
+#else
+	g_predraw.max_item_len = WRR * 4;
+#endif
 
 	for (i = 0; i < music_maxindex(); i++) {
 		struct music_file *fl = music_get(i);
@@ -641,12 +645,18 @@ static void scene_draw_mp3bar(bool * firstdup)
 	} else
 		SPRINTF_S(infostr, _("[电源供电]   剩余内存: %dKB"),
 				  memory_free / 1024);
+
+#ifdef ENABLE_NLS
 	if (strcmp(simple_textdomain(NULL), "en_US") == 0)
 		disp_putstring(6, 7 + DISP_FONTSIZE, COLOR_WHITE,
 					   (const u8 *) infostr);
 	else
 		disp_putstring(6 + DISP_FONTSIZE, 7 + DISP_FONTSIZE,
 					   COLOR_WHITE, (const u8 *) infostr);
+#else
+	disp_putstring(6, 7 + DISP_FONTSIZE, COLOR_WHITE,
+				   (const u8 *) infostr);
+#endif
 
 	scene_draw_lyric();
 
@@ -842,9 +852,18 @@ void scene_mp3bar(void)
 {
 	bool firstdup = true;
 	u64 timer_start, timer_end;
-	pixel *saveimage = (pixel *) memalign(16,
+	pixel *saveimage;
+
+#ifdef DMALLOC
+	dmalloc_log_changed(dmark, 1, 0, 1);
+#else
+	debug_malloc();
+#endif
+
+	saveimage = (pixel *) memalign(16,
 										  PSP_SCREEN_WIDTH *
 										  PSP_SCREEN_HEIGHT * sizeof(pixel));
+
 	if (saveimage != NULL)
 		disp_getimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, saveimage);
 
