@@ -34,6 +34,9 @@
 #include "ctrl.h"
 #include "power.h"
 #include "dbg.h"
+#ifdef DMALLOC
+#include "dmalloc.h"
+#endif
 
 PSP_MODULE_INFO("XREADER", 0x0200, 1, 6);
 PSP_MAIN_THREAD_PARAMS(45, 256, PSP_THREAD_ATTR_USER);
@@ -155,6 +158,15 @@ int main(int argc, char *argv[])
 void debug_malloc(void)
 {
 #ifdef DMALLOC
+	static unsigned mark = -1;
+
+	if(mark == -1) {
+		mark = dmalloc_mark();
+	} else {
+		dmalloc_log_changed(mark, 1, 0, 1);
+		dmalloc_log_stats();
+		dmalloc_log_unfreed();
+	}
 #else
 	struct mallinfo info;
 
