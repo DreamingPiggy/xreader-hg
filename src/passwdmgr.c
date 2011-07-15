@@ -33,156 +33,221 @@
 #include "dmalloc.h"
 #endif
 
-static buffer **list = NULL;
-static int list_count = 0;
+enum {
+	LINEBUF = 256,
+};
 
-static char *chopper(const char *str)
+static char g_read_buf[LINEBUF] __attribute__((aligned(64)));
+static char *read_ptr = NULL;
+static int read_cnt = 0;
+
+static int read_char(SceUID fd, char *c)
 {
-	char *p = strdup(str);
+	if(read_cnt <= 0) {
+		read_cnt = sceIoRead(fd, g_read_buf, LINEBUF);
 
-	if (p[strlen(p) - 1] == '\n' || p[strlen(p) - 1] == '\r')
-		p[strlen(p) - 1] = '\0';
-	if (p[strlen(p) - 1] == '\n' || p[strlen(p) - 1] == '\r')
-		p[strlen(p) - 1] = '\0';
+		if(read_cnt < 0) {
+			return read_cnt;
+		}
 
-	return p;
+		if(read_cnt == 0) {
+			return read_cnt;
+		}
+
+		read_ptr = g_read_buf;
+	}
+
+	read_cnt--;
+	*c = *read_ptr++;
+
+	return 1;
+}
+
+/**
+  * @return how many bytes we have read, or -1 when EOF 
+  */
+static int read_lines(SceUID fd, char *lines, size_t linebuf_size)
+{
+	char *p;
+	int ret;
+	size_t re;
+
+	if(linebuf_size == 0) {
+		return -1;
+	}
+
+	p = lines;
+	re = linebuf_size;
+
+	while(re -- != 0) {
+		ret = read_char(fd, p);
+
+		if(ret < 0) {
+			break;
+		}
+
+		if(ret == 0) {
+			if(p == lines) {
+				ret = -1;
+			}
+
+			break;
+		}
+
+		if(*p == '\r') {
+			continue;
+		}
+
+		if(*p == '\n') {
+			break;
+		}
+
+		p++;
+	}
+
+	if(p < lines + linebuf_size) {
+		*p = '\0';
+	}
+
+	return ret >= 0 ? p - lines : ret;
+}
+
+typedef struct _password {
+	buffer *b;
+	struct _password *next;
+} password;
+
+static password g_pwd_head = { NULL, NULL };
+static password *g_pwd_tail = &g_pwd_head;
+
+int add_password(const char *passwd)
+{
+	password *pwd;
+
+	for(pwd = g_pwd_head.next; pwd != NULL; pwd = pwd->next) {
+		if(0 == strcmp(passwd, pwd->b->ptr)) {
+			return 0;
+		}
+	}
+	
+	pwd = (password *)malloc(sizeof(*pwd));
+
+	if(pwd == NULL) {
+		return -1;
+	}
+
+	pwd->b = buffer_init_string(passwd);
+	pwd->next = NULL;
+	g_pwd_tail->next = pwd;
+	g_pwd_tail = pwd;
+
+	return 0;
 }
 
 bool load_passwords(void)
 {
-	char path[PATH_MAX];
-	char buf[80];
-	FILE *fp;
-	int t = 0;
+	SceUID fd;
+	char linebuf[LINEBUF], path[PATH_MAX];
 
 	STRCPY_S(path, scene_appdir());
 	STRCAT_S(path, "password.lst");
-	fp = fopen(path, "rb");
-	if (fp == NULL) {
+
+	fd = sceIoOpen(path, PSP_O_RDONLY, 0);
+
+	if(fd < 0) {
 		return false;
 	}
 
-	free_passwords();
-	while (fgets(buf, sizeof(buf), fp) != NULL) {
-		t++;
-	}
-	fseek(fp, 0, SEEK_SET);
+	linebuf[sizeof(linebuf)-1] = '\0';
 
-	list = malloc(sizeof(list[0]) * t);
-	while (fgets(buf, sizeof(buf), fp) != NULL) {
-		char *t;
-
-		if (buf[0] == '\0' || buf[0] == '\r' || buf[0] == '\n')
-			continue;
-		t = chopper(buf);
-
-		add_password(t);
-		free(t);
+	while(read_lines(fd, linebuf, sizeof(linebuf)-1) >= 0) {
+		add_password(linebuf);
 	}
 
-	fclose(fp);
+	sceIoClose(fd);
 
 	return true;
 }
 
 bool save_passwords(void)
 {
-	FILE *fp;
+	password *pwd;
+	SceUID fd;
 	char path[PATH_MAX];
-	int i, n;
 
 	STRCPY_S(path, scene_appdir());
 	STRCAT_S(path, "password.lst");
-	fp = fopen(path, "wb");
-	if (fp == NULL) {
+	
+	fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
+
+	if(fd < 0) {
 		return false;
 	}
 
-	for (i = 0, n = get_password_count(); i < n; ++i) {
-		buffer *b = get_password(i);
-
-		fprintf(fp, "%s\r\n", b->ptr);
+	for(pwd = g_pwd_head.next; pwd != NULL; pwd = pwd->next) {
+		sceIoWrite(fd, pwd->b->ptr, strlen(pwd->b->ptr));
+		sceIoWrite(fd, "\r\n", sizeof("\r\n")-1);
 	}
-	fclose(fp);
+	
+	sceIoClose(fd);
+
 	return true;
+}
+
+/*
+ * @return next password after deleted password
+ */
+static password *free_password(password *pwd)
+{
+	password *next;
+
+	buffer_free(pwd->b);
+	pwd->b = NULL;
+	next = pwd->next;
+	free(pwd);
+
+	return next;
 }
 
 void free_passwords(void)
 {
-	if (list != NULL) {
-		int i;
+	password *pwd;
 
-		for (i = 0; i < list_count; ++i)
-			buffer_free(list[i]);
-		free(list);
-		list = NULL;
-		list_count = 0;
+	pwd = g_pwd_head.next;
+
+	while(pwd != NULL) {
+		pwd = free_password(pwd);
 	}
+
+	g_pwd_head.next = NULL;
+	g_pwd_tail = &g_pwd_head;
 }
 
-static int find_password(const char *password)
+size_t get_password_count(void)
 {
-	int i, n;
+	password *pwd;
+	size_t i;
 
-	if (list == NULL || password == NULL)
-		return -1;
+	pwd = g_pwd_head.next;
+	i = 0;
 
-	for (i = 0, n = get_password_count(); i < n; ++i) {
-		if (list[i]->ptr && strcmp(password, list[i]->ptr) == 0)
-			return i;
+	while(pwd != NULL) {
+		pwd = pwd->next;
+		i++;
 	}
 
-	return -1;
-}
-
-void add_password(const char *passwd)
-{
-	int s;
-
-	if (passwd == NULL || passwd[0] == '\0')
-		return;
-	if ((s = find_password(passwd)) != -1) {
-		if (s != 0) {
-			buffer *t;
-
-			memcpy(&t, &list[s], sizeof(list[s]));
-			memcpy(&list[s], &list[0], sizeof(list[s]));
-			memcpy(&list[0], &t, sizeof(list[s]));
-		}
-		return;
-	}
-
-	if (list == NULL) {
-		char *t;
-
-		list = malloc(sizeof(list[0]));
-		t = chopper(passwd);
-
-		list[0] = buffer_init_string(t);
-		free(t);
-		list_count = 1;
-	} else {
-		char *t;
-
-		list = safe_realloc(list, sizeof(list[0]) * (list_count + 1));
-		memmove(list + 1, list, sizeof(list[0]) * list_count);
-		t = chopper(passwd);
-
-		list[0] = buffer_init_string(t);
-		free(t);
-		list_count++;
-	}
-}
-
-int get_password_count(void)
-{
-	return list_count;
+	return i;
 }
 
 buffer *get_password(int num)
 {
-	if (num < 0 || num >= list_count)
-		return NULL;
+	password *pwd;
 
-	return list[num];
+	pwd = g_pwd_head.next;
+
+	while(num-->0 && pwd != NULL) {
+		pwd = pwd->next;
+	}
+
+	return pwd->b;
 }
