@@ -117,7 +117,7 @@ static p_ttf ttf_open_file_to_memory(const char *filename, int size,
 									 const char *ttfname)
 {
 	p_ttf ttf;
-	byte *buf;
+	u8 *buf;
 	int fd, fileSize;
 
 	if (filename == NULL || size == 0)
@@ -423,9 +423,9 @@ static FT_Render_Mode get_render_mode(p_ttf ttf, bool isVertical)
  * @param wpDes 目的颜色指针
  * @param wAlpha alpha值(0-255)
  */
-static inline void MakeAlpha(byte * wpSrc, byte * wpDes, byte wAlpha)
+static inline void MakeAlpha(u8 * wpSrc, u8 * wpDes, u8 wAlpha)
 {
-	word result;
+	u16 result;
 
 	if (*wpDes == *wpSrc && wAlpha == 255)
 		return;
@@ -454,15 +454,15 @@ static inline void MakeAlpha(byte * wpSrc, byte * wpDes, byte wAlpha)
  * @param scr_height 绘图区最大高度
  * @param color 颜色
  */
-static void _drawBitmap_horz(byte * buffer, int format, int width, int height,
+static void _drawBitmap_horz(u8 * buffer, int format, int width, int height,
 							 int pitch, FT_Int x, FT_Int y,
 							 int scr_width, int scr_height, pixel color)
 {
 	FT_Int i, j;
 	pixel pix, grey;
-	byte ra, ga, ba;
-	byte rd, gd, bd;
-	byte rs, gs, bs;
+	u8 ra, ga, ba;
+	u8 rd, gd, bd;
+	u8 rs, gs, bs;
 
 	if (!buffer)
 		return;
@@ -681,15 +681,15 @@ static FT_Error ttf_load_glyph(p_ttf ttf, FT_UInt glyphIndex, bool is_vertical)
  * @param is_hanzi 是否为汉字
  */
 static void ttf_disp_putnstring_horz(p_ttf ttf, int *x, int *y, pixel color,
-									 const byte ** str, int *count,
-									 dword wordspace, int top, int height,
+									 const u8 ** str, int *count,
+									 u32 wordspace, int top, int height,
 									 int bot, FT_UInt * previous, bool is_hanzi)
 {
 	FT_Error error;
 	FT_GlyphSlot slot;
 	FT_UInt glyphIndex;
 	FT_Bool useKerning;
-	word ucs;
+	u16 ucs;
 	SBit_HashItem *cache;
 
 	useKerning = FT_HAS_KERNING(ttf->face);
@@ -762,8 +762,8 @@ static void ttf_disp_putnstring_horz(p_ttf ttf, int *x, int *y, pixel color,
 	}
 }
 
-extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const byte * str,
-									 dword maxpixels, dword wordspace)
+extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const u8 * str,
+									 u32 maxpixels, u32 wordspace)
 {
 	FT_Error error;
 	FT_GlyphSlot slot;
@@ -775,9 +775,9 @@ extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const byte * str,
 	if (str == NULL || maxpixels == 0 || cttf == NULL || ettf == NULL)
 		return 0;
 
-	while (*str != 0 && x < maxpixels && bytetable[*(byte *) str] != 1) {
+	while (*str != 0 && x < maxpixels && bytetable[*(u8 *) str] != 1) {
 		if (*str > 0x80) {
-			word ucs;
+			u16 ucs;
 			SBit_HashItem *cache;
 
 			useKerning = FT_HAS_KERNING(cttf->face);
@@ -846,7 +846,7 @@ extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const byte * str,
 			(str) += 2;
 			(count) += 2;
 		} else if (*str > 0x1F) {
-			word ucs;
+			u16 ucs;
 			SBit_HashItem *cache;
 
 			useKerning = FT_HAS_KERNING(ettf->face);
@@ -925,7 +925,7 @@ extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const byte * str,
 			(count)++;
 		}
 	}
-	if (bytetable[*(byte *) str] == 1) {
+	if (bytetable[*(u8 *) str] == 1) {
 		if (*str == '\r' && *(str + 1) == '\n') {
 			count += 2;
 		} else {
@@ -936,14 +936,14 @@ extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const byte * str,
 	return count;
 }
 
-static int ttf_get_char_width(p_ttf cttf, const byte * str)
+static int ttf_get_char_width(p_ttf cttf, const u8 * str)
 {
 	FT_Error error;
 	FT_GlyphSlot slot;
 	FT_UInt glyphIndex;
 	FT_Bool useKerning;
 	int x = 0;
-	word ucs;
+	u16 ucs;
 
 	if (str == NULL)
 		return 0;
@@ -978,17 +978,17 @@ static int ttf_get_char_width(p_ttf cttf, const byte * str)
 }
 
 extern int ttf_get_string_width_english(p_ttf cttf, p_ttf ettf,
-										const byte * str, dword maxpixels,
-										dword maxbytes, dword wordspace)
+										const u8 * str, u32 maxpixels,
+										u32 maxbytes, u32 wordspace)
 {
-	dword width = 0;
-	const byte *ostr = str;
+	u32 width = 0;
+	const u8 *ostr = str;
 	static int hanzi_len, hanzi_size = 0;
-	dword bytes = 0;
-	const byte *word_start, *word_end;
+	u32 bytes = 0;
+	const u8 *word_start, *word_end;
 
 	if (hanzi_len == 0 || hanzi_size != DISP_BOOK_FONTSIZE) {
-		hanzi_len = ttf_get_char_width(cttf, (const byte *) "字");
+		hanzi_len = ttf_get_char_width(cttf, (const u8 *) "字");
 		hanzi_size = DISP_BOOK_FONTSIZE;
 	}
 
@@ -1014,7 +1014,7 @@ extern int ttf_get_string_width_english(p_ttf cttf, p_ttf ettf,
 				if (word_start == NULL) {
 					int ret;
 
-					// search for next English word
+					// search for next English u16
 					word_end = word_start = str;
 					ret = 0;
 					while (word_end <= ostr + maxbytes
@@ -1048,17 +1048,17 @@ extern int ttf_get_string_width_english(p_ttf cttf, p_ttf ettf,
 	return str - ostr;
 }
 
-extern int ttf_get_string_width(p_ttf cttf, p_ttf ettf, const byte * str,
-								dword maxpixels, dword maxbytes,
-								dword wordspace, dword * pwidth)
+extern int ttf_get_string_width(p_ttf cttf, p_ttf ettf, const u8 * str,
+								u32 maxpixels, u32 maxbytes,
+								u32 wordspace, u32 * pwidth)
 {
-	dword width = 0;
-	const byte *ostr = str;
+	u32 width = 0;
+	const u8 *ostr = str;
 	static int hanzi_len, hanzi_size = 0;
-	dword bytes = 0;
+	u32 bytes = 0;
 
 	if (hanzi_len == 0 || hanzi_size != DISP_BOOK_FONTSIZE) {
-		hanzi_len = ttf_get_char_width(cttf, (const byte *) "字");
+		hanzi_len = ttf_get_char_width(cttf, (const u8 *) "字");
 		hanzi_size = DISP_BOOK_FONTSIZE;
 	}
 
@@ -1099,12 +1099,12 @@ extern int ttf_get_string_width(p_ttf cttf, p_ttf ettf, const byte * str,
 }
 
 extern void disp_putnstring_horz_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
-										  pixel color, const byte * str,
-										  int count, dword wordspace, int top,
+										  pixel color, const u8 * str,
+										  int count, u32 wordspace, int top,
 										  int height, int bot)
 {
 	FT_UInt cprevious, eprevious;
-	dword cpu, bus;
+	u32 cpu, bus;
 	int fid = -1;
 
 	
@@ -1154,15 +1154,15 @@ extern void disp_putnstring_horz_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
 		freq_leave(fid);
 }
 
-extern void ttf_load_ewidth(p_ttf ttf, byte * ewidth, int size)
+extern void ttf_load_ewidth(p_ttf ttf, u8 * ewidth, int size)
 {
 	FT_Error error;
 	FT_GlyphSlot slot;
 	FT_UInt glyphIndex;
 	FT_Bool useKerning;
 	FT_UInt eprevious = 0;
-	byte width;
-	word ucs;
+	u8 width;
+	u16 ucs;
 
 	if (ttf == NULL || ewidth == NULL || size == 0)
 		return;
@@ -1224,15 +1224,15 @@ extern void ttf_load_ewidth(p_ttf ttf, byte * ewidth, int size)
  * @param scr_height 绘图区最大高度
  * @param color 颜色
  */
-static void _drawBitmap_reversal(byte * buffer, int format, int width,
+static void _drawBitmap_reversal(u8 * buffer, int format, int width,
 								 int height, int pitch, FT_Int x, FT_Int y,
 								 int scr_width, int scr_height, pixel color)
 {
 	FT_Int i, j;
 	pixel pix, grey;
-	byte ra, ga, ba;
-	byte rd, gd, bd;
-	byte rs, gs, bs;
+	u8 ra, ga, ba;
+	u8 rd, gd, bd;
+	u8 rs, gs, bs;
 
 	if (!buffer)
 		return;
@@ -1394,8 +1394,8 @@ static void drawBitmap_reversal(FT_Bitmap * bitmap, FT_Int x, FT_Int y,
  * @param is_hanzi 是否为汉字
  */
 static void ttf_disp_putnstring_reversal(p_ttf ttf, int *x, int *y, pixel color,
-										 const byte ** str, int *count,
-										 dword wordspace, int top, int height,
+										 const u8 ** str, int *count,
+										 u32 wordspace, int top, int height,
 										 int bot, FT_UInt * previous,
 										 bool is_hanzi)
 {
@@ -1403,7 +1403,7 @@ static void ttf_disp_putnstring_reversal(p_ttf ttf, int *x, int *y, pixel color,
 	FT_GlyphSlot slot;
 	FT_UInt glyphIndex;
 	FT_Bool useKerning;
-	word ucs;
+	u16 ucs;
 	SBit_HashItem *cache;
 
 	useKerning = FT_HAS_KERNING(ttf->face);
@@ -1478,12 +1478,12 @@ static void ttf_disp_putnstring_reversal(p_ttf ttf, int *x, int *y, pixel color,
 
 extern void disp_putnstring_reversal_truetype(p_ttf cttf, p_ttf ettf, int x,
 											  int y, pixel color,
-											  const byte * str, int count,
-											  dword wordspace, int top,
+											  const u8 * str, int count,
+											  u32 wordspace, int top,
 											  int height, int bot)
 {
 	FT_UInt cprevious, eprevious;
-	dword cpu, bus;
+	u32 cpu, bus;
 	int fid = -1;
 
 	if (cttf == NULL || ettf == NULL)
@@ -1550,15 +1550,15 @@ extern void disp_putnstring_reversal_truetype(p_ttf cttf, p_ttf ettf, int x,
  * @param scr_height 绘图区最大高度
  * @param color 颜色
  */
-static void _drawBitmap_lvert(byte * buffer, int format, int width, int height,
+static void _drawBitmap_lvert(u8 * buffer, int format, int width, int height,
 							  int pitch, FT_Int x, FT_Int y, int scr_width,
 							  int scr_height, pixel color)
 {
 	FT_Int i, j;
 	pixel pix, grey;
-	byte ra, ga, ba;
-	byte rd, gd, bd;
-	byte rs, gs, bs;
+	u8 ra, ga, ba;
+	u8 rd, gd, bd;
+	u8 rs, gs, bs;
 
 	if (!buffer)
 		return;
@@ -1713,8 +1713,8 @@ static inline void drawBitmap_lvert(FT_Bitmap * bitmap, FT_Int x, FT_Int y,
  * @param is_hanzi 是否为汉字
  */
 static void ttf_disp_putnstring_lvert(p_ttf ttf, int *x, int *y, pixel color,
-									  const byte ** str, int *count,
-									  dword wordspace, int top, int height,
+									  const u8 ** str, int *count,
+									  u32 wordspace, int top, int height,
 									  int bot, FT_UInt * previous,
 									  bool is_hanzi)
 {
@@ -1722,7 +1722,7 @@ static void ttf_disp_putnstring_lvert(p_ttf ttf, int *x, int *y, pixel color,
 	FT_GlyphSlot slot;
 	FT_UInt glyphIndex;
 	FT_Bool useKerning;
-	word ucs;
+	u16 ucs;
 	SBit_HashItem *cache;
 
 	useKerning = FT_HAS_KERNING(ttf->face);
@@ -1796,12 +1796,12 @@ static void ttf_disp_putnstring_lvert(p_ttf ttf, int *x, int *y, pixel color,
 }
 
 extern void disp_putnstring_lvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
-										   pixel color, const byte * str,
-										   int count, dword wordspace, int top,
+										   pixel color, const u8 * str,
+										   int count, u32 wordspace, int top,
 										   int height, int bot)
 {
 	FT_UInt cprevious, eprevious;
-	dword cpu, bus;
+	u32 cpu, bus;
 	int fid = -1;
 
 	if (cttf == NULL || ettf == NULL)
@@ -1868,15 +1868,15 @@ extern void disp_putnstring_lvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
  * @param scr_height 绘图区最大高度
  * @param color 颜色
  */
-static void _drawBitmap_rvert(byte * buffer, int format, int width, int height,
+static void _drawBitmap_rvert(u8 * buffer, int format, int width, int height,
 							  int pitch, FT_Int x, FT_Int y, int scr_width,
 							  int scr_height, pixel color)
 {
 	FT_Int i, j;
 	pixel pix, grey;
-	byte ra, ga, ba;
-	byte rd, gd, bd;
-	byte rs, gs, bs;
+	u8 ra, ga, ba;
+	u8 rd, gd, bd;
+	u8 rs, gs, bs;
 
 	if (!buffer)
 		return;
@@ -2033,8 +2033,8 @@ static inline void drawBitmap_rvert(FT_Bitmap * bitmap, FT_Int x, FT_Int y,
  * @param is_hanzi 是否为汉字
  */
 static void ttf_disp_putnstring_rvert(p_ttf ttf, int *x, int *y, pixel color,
-									  const byte ** str, int *count,
-									  dword wordspace, int top, int height,
+									  const u8 ** str, int *count,
+									  u32 wordspace, int top, int height,
 									  int bot, FT_UInt * previous,
 									  bool is_hanzi)
 {
@@ -2042,7 +2042,7 @@ static void ttf_disp_putnstring_rvert(p_ttf ttf, int *x, int *y, pixel color,
 	FT_GlyphSlot slot;
 	FT_UInt glyphIndex;
 	FT_Bool useKerning;
-	word ucs;
+	u16 ucs;
 	SBit_HashItem *cache;
 
 	useKerning = FT_HAS_KERNING(ttf->face);
@@ -2117,12 +2117,12 @@ static void ttf_disp_putnstring_rvert(p_ttf ttf, int *x, int *y, pixel color,
 }
 
 extern void disp_putnstring_rvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
-										   pixel color, const byte * str,
-										   int count, dword wordspace, int top,
+										   pixel color, const u8 * str,
+										   int count, u32 wordspace, int top,
 										   int height, int bot)
 {
 	FT_UInt cprevious, eprevious;
-	dword cpu, bus;
+	u32 cpu, bus;
 	int fid = -1;
 
 	if (cttf == NULL || ettf == NULL)

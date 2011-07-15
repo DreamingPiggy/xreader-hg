@@ -62,7 +62,7 @@ DWord swap_DWord(DWord r)
 #define GET_DWord(fd,n)  { sceIoRead(fd, &n, 4); n = swap_DWord( n ); }
 #define GET_DDWord(fd,n)  { int a; sceIoRead(fd, &n, 4); n = swap_DWord( n ); sceIoRead(fd, &a, 4);}
 
-static inline void _zero_fill(byte * p, int len)
+static inline void _zero_fill(u8 * p, int len)
 {
 	while (len-- > 0)
 		*p++ = '\0';
@@ -83,7 +83,7 @@ void selectSwap()
 DWord decompress_huge(buffer * m_buf, buffer ** puzbuf)
 {
 	DWord i, j;
-	byte c;
+	u8 c;
 	int di, n;
 	unsigned int temp_c;
 	char *pbuf = m_buf->ptr;
@@ -100,7 +100,7 @@ DWord decompress_huge(buffer * m_buf, buffer ** puzbuf)
 		else if (c > 0x7F) {
 			temp_c = c;
 			temp_c = (temp_c << 8);
-			temp_c = temp_c + (byte) pbuf[i++];
+			temp_c = temp_c + (u8) pbuf[i++];
 			di = (temp_c & 0x3FFF) >> COUNT_BITS;
 			n = (temp_c & ((1 << COUNT_BITS) - 1)) + 3;
 			for (; n--; ++j)

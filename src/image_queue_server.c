@@ -47,13 +47,13 @@
 #endif
 
 extern p_win_menuitem filelist;
-extern dword filecount;
-volatile dword *cache_selidx = NULL;
+extern u32 filecount;
+volatile u32 *cache_selidx = NULL;
 
 volatile cacher_context ccacher;
 
 static volatile bool cacher_cleared = true;
-static dword cache_img_cnt = 0;
+static u32 cache_img_cnt = 0;
 static uint16_t curr_times = 0, avoid_times = 0;
 
 static struct psp_mutex_t cacher_locker;
@@ -202,13 +202,13 @@ static cache_image_t *cache_get(const char *archname, const char *filename);
  * @param where 文件位置类型
  *
  */
-static int cache_add_by_selidx(dword selidx, int where)
+static int cache_add_by_selidx(u32 selidx, int where)
 {
 	t_fs_filetype type;
 	cache_image_t img;
 	const char *archname;
 	const char *filename;
-	dword filesize;
+	u32 filesize;
 
 	archname = config.shortpath;
 
@@ -262,7 +262,7 @@ static int cache_add_by_selidx(dword selidx, int where)
 void dbg_dump_cache(void)
 {
 	cache_image_t *p;
-	dword c;
+	u32 c;
 
 	cache_lock();
 	p = ccacher.caches;
@@ -306,7 +306,7 @@ int start_cache_next_image(void)
 	cache_image_t *p = NULL;
 	cache_image_t tmp;
 	t_fs_filetype ft;
-	dword free_memory;
+	u32 free_memory;
 	int fid;
 
 	if (avoid_times && curr_times++ < avoid_times) {
@@ -360,7 +360,7 @@ int start_cache_next_image(void)
 	if (tmp.result == 0 && tmp.data != NULL && config.imgbrightness != 100) {
 		pixel *t = tmp.data;
 		short b = 100 - config.imgbrightness;
-		dword i;
+		u32 i;
 
 		for (i = 0; i < tmp.height * tmp.width; i++) {
 			*t = disp_grayscale(*t, 0, 0, 0, b);
@@ -386,7 +386,7 @@ int start_cache_next_image(void)
 	}
 
 	if (tmp.result == 0) {
-		dword memory_used;
+		u32 memory_used;
 
 		memory_used = tmp.width * tmp.height * sizeof(pixel);
 
@@ -438,7 +438,7 @@ int start_cache_next_image(void)
 	return 0;
 }
 
-static dword cache_get_next_image(dword pos, bool forward)
+static u32 cache_get_next_image(u32 pos, bool forward)
 {
 	if (forward) {
 		do {
@@ -462,9 +462,9 @@ static dword cache_get_next_image(dword pos, bool forward)
 }
 
 /* Count how many img in archive */
-static dword count_img(void)
+static u32 count_img(void)
 {
-	dword i = 0;
+	u32 i = 0;
 
 	if (filecount == 0 || filelist == NULL)
 		return 0;
@@ -480,11 +480,11 @@ static dword count_img(void)
 	return cache_img_cnt;
 }
 
-static int start_cache(dword selidx)
+static int start_cache(u32 selidx)
 {
 	int re;
-	dword pos;
-	dword size;
+	u32 pos;
+	u32 size;
 
 	if (ccacher.first_run) {
 		ccacher.first_run = false;
@@ -572,7 +572,7 @@ int cache_init(void)
 	return 0;
 }
 
-int cache_setup(unsigned max_cache_img, dword * c_selidx)
+int cache_setup(unsigned max_cache_img, u32 * c_selidx)
 {
 	cache_selidx = c_selidx;
 	ccacher.caches_cap = max_cache_img;

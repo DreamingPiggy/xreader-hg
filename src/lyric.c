@@ -34,8 +34,8 @@
 #include "dmalloc.h"
 #endif
 
-__inline bool lyric_add(p_lyric l, dword sec, dword fra, const char *line,
-						dword size)
+__inline bool lyric_add(p_lyric l, u32 sec, u32 fra, const char *line,
+						u32 size)
 {
 	int i;
 	mad_timer_t t;
@@ -70,8 +70,8 @@ static void parse_lyric(p_lyric l)
 {
 	int i = 0;
 	const char *ls = NULL, *rs = NULL, *ts = NULL;
-	dword minute;
-	dword *isec = NULL, *iex = NULL;
+	u32 minute;
+	u32 *isec = NULL, *iex = NULL;
 	int tc = 0;
 	double sec;
 	bool islyric = false;
@@ -150,8 +150,8 @@ static void parse_lyric(p_lyric l)
 									free(iex);
 								tc = 0;
 							} else {
-								isec[tc] = (dword) sec;
-								iex[tc] = (dword) ((sec - isec[tc])
+								isec[tc] = (u32) sec;
+								iex[tc] = (u32) ((sec - isec[tc])
 												   * MAD_TIMER_RESOLUTION);
 								++tc;
 							}
@@ -279,7 +279,7 @@ extern void lyric_update_pos(p_lyric l, void *tm)
 }
 
 extern bool lyric_get_cur_lines(p_lyric l, int extralines, const char **lines,
-								dword * sizes)
+								u32 * sizes)
 {
 	int i, j = 0;
 
@@ -315,7 +315,7 @@ extern bool lyric_check_changed(p_lyric l)
 	return false;
 }
 
-void lyric_decode(const char *lrcsrc, char *lrcdst, dword * size)
+void lyric_decode(const char *lrcsrc, char *lrcdst, u32 * size)
 {
 	t_conf_encode enc = config.lyricencode;
 
@@ -328,17 +328,17 @@ void lyric_decode(const char *lrcsrc, char *lrcdst, dword * size)
 				int ilen = strnlen((const char *) lrcsrc, *size);
 				int i = 0;
 
-				i = charsets_bg5hk2cjk((const byte *) lrcsrc, ilen,
-									   (byte *) lrcdst, *size);
+				i = charsets_bg5hk2cjk((const u8 *) lrcsrc, ilen,
+									   (u8 *) lrcdst, *size);
 				lrcdst[i] = 0;
 			}
 			break;
 		case conf_encode_sjis:
 			{
-				byte *targ = NULL;
+				u8 *targ = NULL;
 
-				charsets_sjis_conv((const byte *) lrcsrc,
-								   (byte **) & targ, (dword *) size);
+				charsets_sjis_conv((const u8 *) lrcsrc,
+								   (u8 **) & targ, (u32 *) size);
 				strncpy(lrcdst, (const char *) targ, *size);
 				free(targ);
 			}
@@ -349,14 +349,14 @@ void lyric_decode(const char *lrcsrc, char *lrcdst, dword * size)
 
 				while (i < l) {
 					ucs4_t u = 0x1FFF;
-					int p = utf8_mbtowc(&u, (const byte *) lrcsrc + i,
+					int p = utf8_mbtowc(&u, (const u8 *) lrcsrc + i,
 										l - i);
 
 					if (p < 0)
 						break;
 					if (u > 0xFFFF)
 						u = 0x1FFF;
-					j += gbk_wctomb((byte *) lrcdst + j, u, 2);
+					j += gbk_wctomb((u8 *) lrcdst + j, u, 2);
 					i += p;
 				}
 				lrcdst[j] = 0;

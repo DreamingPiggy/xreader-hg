@@ -47,7 +47,7 @@ extern void conf_set_file(const char *filename)
 	STRCPY_S(conf_filename, filename);
 }
 
-extern void conf_get_keyname(dword key, char *res)
+extern void conf_get_keyname(u32 key, char *res)
 {
 	res[0] = 0;
 	if ((key & PSP_CTRL_CIRCLE) > 0)
@@ -325,7 +325,7 @@ static char *intToString(char *str, int size, int i)
 	return str;
 }
 
-static char *dwordToString(char *str, int size, dword dw)
+static char *dwordToString(char *str, int size, u32 dw)
 {
 	if (str == NULL || size == 0)
 		return NULL;

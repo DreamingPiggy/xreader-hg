@@ -37,13 +37,13 @@
 
 typedef struct
 {
-	word indx;					/* index into big table */
-	word used;					/* bitmask of used entries */
+	u16 indx;					/* index into big table */
+	u16 used;					/* bitmask of used entries */
 } Summary16;
 
 /* BIG5 table */
 
-static const word big5_2uni_pagea1[6121] = {
+static const u16 big5_2uni_pagea1[6121] = {
 	/* 0xa1 */
 	0x3000, 0xff0c, 0x3001, 0x3002, 0xff0e, 0x2022, 0xff1b, 0xff1a,
 	0xff1f, 0xff01, 0xfe30, 0x2026, 0x2025, 0xfe50, 0xff64, 0xfe52,
@@ -865,7 +865,7 @@ static const word big5_2uni_pagea1[6121] = {
 	0x247b, 0x247c, 0x247d,
 };
 
-static const word big5_2uni_pagec9[7652] = {
+static const u16 big5_2uni_pagec9[7652] = {
 	/* 0xc9 */
 	0x4e42, 0x4e5c, 0x51f5, 0x531a, 0x5382, 0x4e07, 0x4e0c, 0x4e47,
 	0x4e8d, 0x56d7, 0xfa0c, 0x5c6e, 0x5f73, 0x4e0f, 0x5187, 0x4e0e,
@@ -1894,7 +1894,7 @@ static const word big5_2uni_pagec9[7652] = {
 
 /* HKSCS table */
 
-static const word hkscs_2uni_page88[627] = {
+static const u16 hkscs_2uni_page88[627] = {
 	/* 0x88 */
 	0x7e43, 0x7e44, 0x7e45, 0x7e46, 0x7e47, 0x7e48, 0x7e49, 0x7e4a,
 	0x7e4b, 0x7e4c, 0x7e4d, 0x7e4e, 0x7e4f, 0x7e50, 0x7e51, 0x7e52,
@@ -1981,7 +1981,7 @@ static const word hkscs_2uni_page88[627] = {
 	0x80b2, 0x66dd, 0x33f7, 0x6562,
 };
 
-static const word hkscs_2uni_page8d[3140] = {
+static const u16 hkscs_2uni_page8d[3140] = {
 	/* 0x8d */
 	0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd,
 	0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd,
@@ -2404,7 +2404,7 @@ static const word hkscs_2uni_page8d[3140] = {
 	0x2cdf, 0x7e34, 0x6f90, 0x6ee6, 0x7e37,
 };
 
-static const word hkscs_2uni_pagec6[471] = {
+static const u16 hkscs_2uni_pagec6[471] = {
 	/* 0xc6 */
 	0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd,
 	0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd,
@@ -2470,7 +2470,7 @@ static const word hkscs_2uni_pagec6[471] = {
 	0x00d3, 0x0078, 0x00cb, 0x018a, 0x016a,
 };
 
-static const word hkscs_2uni_pagef9[942] = {
+static const u16 hkscs_2uni_pagef9[942] = {
 	/* 0xf9 */
 	0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd,
 	0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd, 0x81bd,
@@ -2722,7 +2722,7 @@ static const ucs4_t hkscs_2uni_upages[945] = {
 };
 
 /* SJIS table */
-static const word jisx0213_to_ucs_combining[][2] = {
+static const u16 jisx0213_to_ucs_combining[][2] = {
 	{0x304b, 0x309a},
 	{0x304d, 0x309a},
 	{0x304f, 0x309a},
@@ -2750,7 +2750,7 @@ static const word jisx0213_to_ucs_combining[][2] = {
 	{0x02e5, 0x02e9},
 };
 
-static const word jisx0213_to_ucs_main[120 * 94] = {
+static const u16 jisx0213_to_ucs_main[120 * 94] = {
 	/* 0x12121..0x1217E */
 	0x1000, 0x1001, 0x1002, 0x830c, 0x830e, 0x10fb, 0x831a, 0x831b,
 	0x831f, 0x8301, 0x109b, 0x109c, 0x00b4, 0x8340, 0x00a8, 0x833e,
@@ -4691,7 +4691,7 @@ static const short jisx0213_from_ucs_level1[2715] = {
 	674, -1, 675,
 };
 
-static const word gbkext1_2uni_page81[6080] = {
+static const u16 gbkext1_2uni_page81[6080] = {
 	/* 0x81 */
 	0x4e02, 0x4e04, 0x4e05, 0x4e06, 0x4e0f, 0x4e12, 0x4e17, 0x4e1f,
 	0x4e20, 0x4e21, 0x4e23, 0x4e26, 0x4e29, 0x4e2e, 0x4e2f, 0x4e31,
@@ -5494,7 +5494,7 @@ static const word gbkext1_2uni_page81[6080] = {
 	0x72d4, 0x72d5, 0x72d6, 0x72d8, 0x72da, 0x72db,
 };
 
-static const word gbkext2_2uni_pagea8[8272] = {
+static const u16 gbkext2_2uni_pagea8[8272] = {
 	/* 0xa8 */
 	0x02ca, 0x02cb, 0x02d9, 0x2013, 0x2015, 0x2025, 0x2035, 0x2105,
 	0x2109, 0x2196, 0x2197, 0x2198, 0x2199, 0x2215, 0x221f, 0x2223,
@@ -6618,7 +6618,7 @@ static const word gbkext2_2uni_pagea8[8272] = {
 	0xfa1f, 0xfa20, 0xfa21, 0xfa23, 0xfa24, 0xfa27, 0xfa28, 0xfa29,
 };
 
-static const word gbkext_inv_2charset[14313] = {
+static const u16 gbkext_inv_2charset[14313] = {
 	0xa840, 0xa841, 0xa842, 0xa95c, 0xa843, 0xa844, 0xa845, 0xa846,
 	0xa847, 0xa848, 0xa959, 0xa849, 0xa84a, 0xa84b, 0xa84c, 0xa84d,
 	0xa84e, 0xa84f, 0xa850, 0xa851, 0xa852, 0xa892, 0xa853, 0xa854,
@@ -8902,7 +8902,7 @@ static const Summary16 gbkext_inv_uni2indx_pagefe[31] = {
 	{14311, 0x0000}, {14311, 0x0000}, {14311, 0x0014},
 };
 
-static const word cp936ext_2uni_pagea6[181 - 159] = {
+static const u16 cp936ext_2uni_pagea6[181 - 159] = {
 	/* 0xa6 */
 	0xfe35,
 	0xfe36, 0xfe39, 0xfe3a, 0xfe3f, 0xfe40, 0xfe3d, 0xfe3e, 0xfe41,
@@ -8910,29 +8910,29 @@ static const word cp936ext_2uni_pagea6[181 - 159] = {
 	0xfe38, 0xfe31, 0xfffd, 0xfe33, 0xfe34,
 };
 
-static const word cp936ext_2uni_pagea8[128 - 122] = {
+static const u16 cp936ext_2uni_pagea8[128 - 122] = {
 	/* 0xa8 */
 	0x0251, 0xfffd, 0x0144, 0x0148, 0xfffd, 0x0261,
 };
 
-static const word cp936ext_page01[16] = {
+static const u16 cp936ext_page01[16] = {
 	0x0000, 0x0000, 0x0000, 0x0000, 0xa8bd, 0x0000, 0x0000, 0x0000,	/*0x40-0x47 */
 	0xa8be, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,	/*0x48-0x4f */
 };
 
-static const word cp936ext_page02[24] = {
+static const u16 cp936ext_page02[24] = {
 	0x0000, 0xa8bb, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,	/*0x50-0x57 */
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,	/*0x58-0x5f */
 	0x0000, 0xa8c0, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,	/*0x60-0x67 */
 };
 
-static const word cp936ext_pagefe[24] = {
+static const u16 cp936ext_pagefe[24] = {
 	0x0000, 0xa6f2, 0x0000, 0xa6f4, 0xa6f5, 0xa6e0, 0xa6e1, 0xa6f0,	/*0x30-0x37 */
 	0xa6f1, 0xa6e2, 0xa6e3, 0xa6ee, 0xa6ef, 0xa6e6, 0xa6e7, 0xa6e4,	/*0x38-0x3f */
 	0xa6e5, 0xa6e8, 0xa6e9, 0xa6ea, 0xa6eb, 0x0000, 0x0000, 0x0000,	/*0x40-0x47 */
 };
 
-static const word gb2312_2uni_page21[831] = {
+static const u16 gb2312_2uni_page21[831] = {
 	/* 0x21 */
 	0x3000, 0x3001, 0x3002, 0x30fb, 0x02c9, 0x02c7, 0x00a8, 0x3003,
 	0x3005, 0x2015, 0xff5e, 0x2016, 0x2026, 0x2018, 0x2019, 0x201c,
@@ -9050,7 +9050,7 @@ static const word gb2312_2uni_page21[831] = {
 	0x2545, 0x2546, 0x2547, 0x2548, 0x2549, 0x254a, 0x254b,
 };
 
-static const word gb2312_2uni_page30[6768] = {
+static const u16 gb2312_2uni_page30[6768] = {
 	/* 0x30 */
 	0x554a, 0x963f, 0x57c3, 0x6328, 0x54ce, 0x5509, 0x54c0, 0x7691,
 	0x764c, 0x853c, 0x77ee, 0x827e, 0x788d, 0x7231, 0x9698, 0x978d,
@@ -9989,7 +9989,7 @@ static const word gb2312_2uni_page30[6768] = {
 	0x9f2f, 0x9f39, 0x9f37, 0x9f3d, 0x9f3e, 0x9f44,
 };
 
-static const word gb2312_2charset[7445] = {
+static const u16 gb2312_2charset[7445] = {
 	0x2168, 0x216c, 0x2127, 0x2163, 0x2140, 0x2141, 0x2824, 0x2822,
 	0x2828, 0x2826, 0x283a, 0x282c, 0x282a, 0x2830, 0x282e, 0x2142,
 	0x2834, 0x2832, 0x2839, 0x2821, 0x2825, 0x2827, 0x2829, 0x282d,
@@ -11420,7 +11420,7 @@ static const Summary16 gb2312_uni2indx_pageff[15] = {
 
 /* ASCII <-> ucs4 */
 
-static int ascii_wctomb(byte * r, ucs4_t wc, int n)
+static int ascii_wctomb(u8 * r, ucs4_t wc, int n)
 {
 	if (wc < 0x0080) {
 		*r = wc;
@@ -11429,9 +11429,9 @@ static int ascii_wctomb(byte * r, ucs4_t wc, int n)
 	return RET_ILUNI;
 }
 
-static int ascii_mbtowc(ucs4_t * pwc, const byte * s, int n)
+static int ascii_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 {
-	byte c = *s;
+	u8 c = *s;
 
 	if (c < 0x80) {
 		*pwc = (ucs4_t) c;
@@ -11442,18 +11442,18 @@ static int ascii_mbtowc(ucs4_t * pwc, const byte * s, int n)
 
 /* BIG5 convert to ucs4 */
 
-static int big5_mbtowc(ucs4_t * pwc, const byte * s, int n)
+static int big5_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 {
-	byte c1 = s[0];
+	u8 c1 = s[0];
 
 	if ((c1 >= 0xa1 && c1 <= 0xc7) || (c1 >= 0xc9 && c1 <= 0xf9)) {
 		if (n >= 2) {
-			byte c2 = s[1];
+			u8 c2 = s[1];
 
 			if ((c2 >= 0x40 && c2 < 0x7f)
 				|| (c2 >= 0xa1 && c2 < 0xff)) {
-				dword i = 157 * (c1 - 0xa1) + (c2 - (c2 >= 0xa1 ? 0x62 : 0x40));
-				word wc = 0xfffd;
+				u32 i = 157 * (c1 - 0xa1) + (c2 - (c2 >= 0xa1 ? 0x62 : 0x40));
+				u16 wc = 0xfffd;
 
 				if (i < 6280) {
 					if (i < 6121)
@@ -11476,20 +11476,20 @@ static int big5_mbtowc(ucs4_t * pwc, const byte * s, int n)
 
 /* HKSCS convert to ucs4 */
 
-static int hkscs_mbtowc(ucs4_t * pwc, const byte * s, int n)
+static int hkscs_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 {
-	byte c1 = s[0];
+	u8 c1 = s[0];
 
 	if ((c1 >= 0x88 && c1 <= 0x8b) || (c1 >= 0x8d && c1 <= 0xa0)
 		|| (c1 >= 0xc6 && c1 <= 0xc8) || (c1 >= 0xf9 && c1 <= 0xfe)) {
 		if (n >= 2) {
-			byte c2 = s[1];
+			u8 c2 = s[1];
 
 			if ((c2 >= 0x40 && c2 < 0x7f)
 				|| (c2 >= 0xa1 && c2 < 0xff)) {
-				dword i = 157 * (c1 - 0x80) + (c2 - (c2 >= 0xa1 ? 0x62 : 0x40));
+				u32 i = 157 * (c1 - 0x80) + (c2 - (c2 >= 0xa1 ? 0x62 : 0x40));
 				ucs4_t wc = 0xfffd;
-				word swc;
+				u16 swc;
 
 				if (i < 2041) {
 					if (i < 1883)
@@ -11532,9 +11532,9 @@ static int hkscs_mbtowc(ucs4_t * pwc, const byte * s, int n)
 
 /* BIG5/HKSCS convert to ucs4 */
 
-static int big5hkscs_mbtowc(ucs4_t * pwc, const byte * s, int n)
+static int big5hkscs_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 {
-	byte c = *s;
+	u8 c = *s;
 
 	/* Code set 0 (ASCII) */
 	if (c < 0x80)
@@ -11544,7 +11544,7 @@ static int big5hkscs_mbtowc(ucs4_t * pwc, const byte * s, int n)
 		if (n < 2)
 			return RET_TOOFEW(0);
 		{
-			byte c2 = s[1];
+			u8 c2 = s[1];
 
 			if ((c2 >= 0x40 && c2 < 0x7f)
 				|| (c2 >= 0xa1 && c2 < 0xff)) {
@@ -11562,7 +11562,7 @@ static int big5hkscs_mbtowc(ucs4_t * pwc, const byte * s, int n)
 
 /* JISX0213 -> ucs4 */
 
-static ucs4_t jisx0213_to_ucs4(dword row, dword col)
+static ucs4_t jisx0213_to_ucs4(u32 row, u32 col)
 {
 	ucs4_t val;
 
@@ -11595,7 +11595,7 @@ static ucs4_t jisx0213_to_ucs4(dword row, dword col)
 
 static ucs4_t istate = 0;
 
-static int shift_jisx0213_mbtowc(ucs4_t * pwc, const byte * s, int n)
+static int shift_jisx0213_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 {
 	ucs4_t last_wc = istate;
 
@@ -11605,7 +11605,7 @@ static int shift_jisx0213_mbtowc(ucs4_t * pwc, const byte * s, int n)
 		*pwc = last_wc;
 		return 0;				/* Don't advance the input pointer. */
 	} else {
-		byte c = *s;
+		u8 c = *s;
 
 		if (c < 0x80) {
 			/* Plain ISO646-JP character. */
@@ -11617,13 +11617,13 @@ static int shift_jisx0213_mbtowc(ucs4_t * pwc, const byte * s, int n)
 		} else {
 			if ((c >= 0x81 && c <= 0x9f)
 				|| (c >= 0xe0 && c <= 0xfc)) {
-				/* Two byte character. */
+				/* Two u8 character. */
 				if (n >= 2) {
-					byte c2 = s[1];
+					u8 c2 = s[1];
 
 					if ((c2 >= 0x40 && c2 <= 0x7e)
 						|| (c2 >= 0x80 && c2 <= 0xfc)) {
-						dword c1;
+						u32 c1;
 						ucs4_t wc;
 
 						/* Convert to row and column. */
@@ -11674,9 +11674,9 @@ static int shift_jisx0213_mbtowc(ucs4_t * pwc, const byte * s, int n)
 	}
 }
 
-int utf8_mbtowc(ucs4_t * pwc, const byte * s, int n)
+int utf8_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 {
-	byte c = s[0];
+	u8 c = s[0];
 
 	if (c < 0x80) {
 		*pwc = c;
@@ -11743,7 +11743,7 @@ int utf8_mbtowc(ucs4_t * pwc, const byte * s, int n)
 		return RET_ILSEQ;
 }
 
-int utf16_mbtowc(ucs4_t * pwc, const byte * s, int n)
+int utf16_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 {
 	ucs4_t state = istate;
 	int count = 0;
@@ -11780,7 +11780,7 @@ int utf16_mbtowc(ucs4_t * pwc, const byte * s, int n)
 	return RET_TOOFEW(count);
 }
 
-int utf16be_mbtowc(ucs4_t * pwc, const byte * s, int n)
+int utf16be_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 {
 	int count = 0;
 
@@ -11807,18 +11807,18 @@ int utf16be_mbtowc(ucs4_t * pwc, const byte * s, int n)
 }
 
 /* unicode <-> cjk */
-int gbkext1_mbtowc(ucs4_t * pwc, const byte * s, int n)
+int gbkext1_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 {
-	byte c1 = s[0];
+	u8 c1 = s[0];
 
 	if ((c1 >= 0x81 && c1 <= 0xa0)) {
 		if (n >= 2) {
-			byte c2 = s[1];
+			u8 c2 = s[1];
 
 			if ((c2 >= 0x40 && c2 < 0x7f)
 				|| (c2 >= 0x80 && c2 < 0xff)) {
-				dword i = 190 * (c1 - 0x81) + (c2 - (c2 >= 0x80 ? 0x41 : 0x40));
-				word wc = 0xfffd;
+				u32 i = 190 * (c1 - 0x81) + (c2 - (c2 >= 0x80 ? 0x41 : 0x40));
+				u16 wc = 0xfffd;
 
 				{
 					if (i < 6080)
@@ -11836,18 +11836,18 @@ int gbkext1_mbtowc(ucs4_t * pwc, const byte * s, int n)
 	return RET_ILSEQ;
 }
 
-int gbkext2_mbtowc(ucs4_t * pwc, const byte * s, int n)
+int gbkext2_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 {
-	byte c1 = s[0];
+	u8 c1 = s[0];
 
 	if ((c1 >= 0xa8 && c1 <= 0xfe)) {
 		if (n >= 2) {
-			byte c2 = s[1];
+			u8 c2 = s[1];
 
 			if ((c2 >= 0x40 && c2 < 0x7f)
 				|| (c2 >= 0x80 && c2 < 0xa1)) {
-				dword i = 96 * (c1 - 0x81) + (c2 - (c2 >= 0x80 ? 0x41 : 0x40));
-				word wc = 0xfffd;
+				u32 i = 96 * (c1 - 0x81) + (c2 - (c2 >= 0x80 ? 0x41 : 0x40));
+				u16 wc = 0xfffd;
 
 				{
 					if (i < 12016)
@@ -11865,7 +11865,7 @@ int gbkext2_mbtowc(ucs4_t * pwc, const byte * s, int n)
 	return RET_ILSEQ;
 }
 
-int gbkext_inv_wctomb(byte * r, ucs4_t wc, int n)
+int gbkext_inv_wctomb(u8 * r, ucs4_t wc, int n)
 {
 	if (n >= 2) {
 		const Summary16 *summary = NULL;
@@ -11887,14 +11887,14 @@ int gbkext_inv_wctomb(byte * r, ucs4_t wc, int n)
 		else if (wc >= 0xfe00 && wc < 0xfff0)
 			summary = &gbkext_inv_uni2indx_pagefe[(wc >> 4) - 0xfe0];
 		if (summary) {
-			word used = summary->used;
-			dword i = wc & 0x0f;
+			u16 used = summary->used;
+			u32 i = wc & 0x0f;
 
-			if (used & ((word) 1 << i)) {
-				word c;
+			if (used & ((u16) 1 << i)) {
+				u16 c;
 
 				/* Keep in `used' only the bits 0..i-1. */
-				used &= ((word) 1 << i) - 1;
+				used &= ((u16) 1 << i) - 1;
 				/* Add `summary->indx' and the number of bits set in `used'. */
 				used = (used & 0x5555) + ((used & 0xaaaa) >> 1);
 				used = (used & 0x3333) + ((used & 0xcccc) >> 2);
@@ -11911,18 +11911,18 @@ int gbkext_inv_wctomb(byte * r, ucs4_t wc, int n)
 	return RET_TOOSMALL;
 }
 
-int cp936ext_mbtowc(ucs4_t * pwc, const byte * s, int n)
+int cp936ext_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 {
-	byte c1 = s[0];
+	u8 c1 = s[0];
 
 	if ((c1 == 0xa6) || (c1 == 0xa8)) {
 		if (n >= 2) {
-			byte c2 = s[1];
+			u8 c2 = s[1];
 
 			if ((c2 >= 0x40 && c2 < 0x7f)
 				|| (c2 >= 0x80 && c2 < 0xff)) {
-				dword i = 190 * (c1 - 0x81) + (c2 - (c2 >= 0x80 ? 0x41 : 0x40));
-				word wc = 0xfffd;
+				u32 i = 190 * (c1 - 0x81) + (c2 - (c2 >= 0x80 ? 0x41 : 0x40));
+				u16 wc = 0xfffd;
 
 				if (i < 7410) {
 					if (i >= 7189 && i < 7211)
@@ -11943,10 +11943,10 @@ int cp936ext_mbtowc(ucs4_t * pwc, const byte * s, int n)
 	return RET_ILSEQ;
 }
 
-int cp936ext_wctomb(byte * r, ucs4_t wc, int n)
+int cp936ext_wctomb(u8 * r, ucs4_t wc, int n)
 {
 	if (n >= 2) {
-		word c = 0;
+		u16 c = 0;
 
 		if (wc >= 0x0140 && wc < 0x0150)
 			c = cp936ext_page01[wc - 0x0140];
@@ -11964,17 +11964,17 @@ int cp936ext_wctomb(byte * r, ucs4_t wc, int n)
 	return RET_TOOSMALL;
 }
 
-int gb2312_mbtowc(ucs4_t * pwc, const byte * s, int n)
+int gb2312_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 {
-	byte c1 = s[0];
+	u8 c1 = s[0];
 
 	if ((c1 >= 0x21 && c1 <= 0x29) || (c1 >= 0x30 && c1 <= 0x77)) {
 		if (n >= 2) {
-			byte c2 = s[1];
+			u8 c2 = s[1];
 
 			if (c2 >= 0x21 && c2 < 0x7f) {
-				dword i = 94 * (c1 - 0x21) + (c2 - 0x21);
-				word wc = 0xfffd;
+				u32 i = 94 * (c1 - 0x21) + (c2 - 0x21);
+				u16 wc = 0xfffd;
 
 				if (i < 1410) {
 					if (i < 831)
@@ -11995,7 +11995,7 @@ int gb2312_mbtowc(ucs4_t * pwc, const byte * s, int n)
 	return RET_ILSEQ;
 }
 
-int gb2312_wctomb(byte * r, ucs4_t wc, int n)
+int gb2312_wctomb(u8 * r, ucs4_t wc, int n)
 {
 	if (n >= 2) {
 		const Summary16 *summary = NULL;
@@ -12013,14 +12013,14 @@ int gb2312_wctomb(byte * r, ucs4_t wc, int n)
 		else if (wc >= 0xff00 && wc < 0xfff0)
 			summary = &gb2312_uni2indx_pageff[(wc >> 4) - 0xff0];
 		if (summary) {
-			word used = summary->used;
-			dword i = wc & 0x0f;
+			u16 used = summary->used;
+			u32 i = wc & 0x0f;
 
-			if (used & ((word) 1 << i)) {
-				word c;
+			if (used & ((u16) 1 << i)) {
+				u16 c;
 
 				/* Keep in `used' only the bits 0..i-1. */
-				used &= ((word) 1 << i) - 1;
+				used &= ((u16) 1 << i) - 1;
 				/* Add `summary->indx' and the number of bits set in `used'. */
 				used = (used & 0x5555) + ((used & 0xaaaa) >> 1);
 				used = (used & 0x3333) + ((used & 0xcccc) >> 2);
@@ -12037,15 +12037,15 @@ int gb2312_wctomb(byte * r, ucs4_t wc, int n)
 	return RET_TOOSMALL;
 }
 
-int _gbk_mbtowc(ucs4_t * pwc, const byte * s, int n)
+int _gbk_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 {
-	byte c = *s;
+	u8 c = *s;
 
 	if (c >= 0x81 && c < 0xff) {
 		if (n < 2)
 			return RET_TOOFEW(0);
 		if (c >= 0xa1 && c <= 0xf7) {
-			byte c2 = s[1];
+			u8 c2 = s[1];
 
 			if (c == 0xa1) {
 				if (c2 == 0xa4) {
@@ -12058,7 +12058,7 @@ int _gbk_mbtowc(ucs4_t * pwc, const byte * s, int n)
 				}
 			}
 			if (c2 >= 0xa1 && c2 < 0xff) {
-				byte buf[2];
+				u8 buf[2];
 				int ret;
 
 				buf[0] = c - 0x80;
@@ -12078,7 +12078,7 @@ int _gbk_mbtowc(ucs4_t * pwc, const byte * s, int n)
 		if (c >= 0xa8 && c <= 0xfe)
 			return gbkext2_mbtowc(pwc, s, 2);
 		if (c == 0xa2) {
-			byte c2 = s[1];
+			u8 c2 = s[1];
 
 			if (c2 >= 0xa1 && c2 <= 0xaa) {
 				*pwc = 0x2170 + (c2 - 0xa1);
@@ -12089,9 +12089,9 @@ int _gbk_mbtowc(ucs4_t * pwc, const byte * s, int n)
 	return RET_ILSEQ;
 }
 
-int _gbk_wctomb(byte * r, ucs4_t wc, int n)
+int _gbk_wctomb(u8 * r, ucs4_t wc, int n)
 {
-	byte buf[2];
+	u8 buf[2];
 	int ret;
 
 	if (wc != 0x30fb && wc != 0x2015) {
@@ -12149,9 +12149,9 @@ int _gbk_wctomb(byte * r, ucs4_t wc, int n)
 	return RET_ILUNI;
 }
 
-int gbk_mbtowc(ucs4_t * pwc, const byte * s, int n)
+int gbk_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 {
-	byte c = *s;
+	u8 c = *s;
 
 	/* Code set 0 (ASCII or GB 1988-89) */
 	if (c < 0x80)
@@ -12165,9 +12165,9 @@ int gbk_mbtowc(ucs4_t * pwc, const byte * s, int n)
 	return RET_ILSEQ;
 }
 
-int gbk_wctomb(byte * r, ucs4_t wc, int n)
+int gbk_wctomb(u8 * r, ucs4_t wc, int n)
 {
-	byte buf[2];
+	u8 buf[2];
 	int ret;
 
 	/* Code set 0 (ASCII or GB 1988-89) */
@@ -12193,8 +12193,8 @@ int gbk_wctomb(byte * r, ucs4_t wc, int n)
 }
 
 /* bg5hk -> unicode */
-extern dword charsets_bg5hk2cjk(const byte * big5hk, size_t inputlen,
-								byte * cjk, size_t outputlen)
+extern u32 charsets_bg5hk2cjk(const u8 * big5hk, size_t inputlen,
+								u8 * cjk, size_t outputlen)
 {
 	int transcount = 0;
 
@@ -12202,7 +12202,7 @@ extern dword charsets_bg5hk2cjk(const byte * big5hk, size_t inputlen,
 		cjk[0] = big5hk[0];
 		transcount = 1;
 	} else {
-		dword iunic = 0x1fff;
+		u32 iunic = 0x1fff;
 
 		big5hkscs_mbtowc(&iunic, big5hk, 2);
 		transcount = gbk_wctomb(cjk, iunic, 2);
@@ -12211,18 +12211,18 @@ extern dword charsets_bg5hk2cjk(const byte * big5hk, size_t inputlen,
 }
 
 /* utf-32 (used in rar) string convert */
-extern dword charsets_utf32_conv(const byte * ucs, size_t inputlen, byte * cjk,
+extern u32 charsets_utf32_conv(const u8 * ucs, size_t inputlen, u8 * cjk,
 								 size_t outputlen)
 {
 	int i = 0, j = 0;
 
 	if (cjk == NULL)
-		cjk = (byte *) ucs;
+		cjk = (u8 *) ucs;
 
 	while ((*(ucs + i) != 0 || *(ucs + i + 1) != 0 ||
 			*(ucs + i + 2) != 0 || *(ucs + i + 3) != 0) && inputlen
 		   && outputlen) {
-		int l = gbk_wctomb(cjk + j, *(word *) (ucs + i), 2);
+		int l = gbk_wctomb(cjk + j, *(u16 *) (ucs + i), 2);
 
 		j += l;
 		outputlen -= l;
@@ -12234,16 +12234,16 @@ extern dword charsets_utf32_conv(const byte * ucs, size_t inputlen, byte * cjk,
 }
 
 /* unicode string convert */
-extern dword charsets_ucs_conv(const byte * ucs, size_t inputlen, byte * cjk,
+extern u32 charsets_ucs_conv(const u8 * ucs, size_t inputlen, u8 * cjk,
 							   size_t outputlen)
 {
 	int i = 0, j = 0;
 
 	if (cjk == NULL)
-		cjk = (byte *) ucs;
+		cjk = (u8 *) ucs;
 
 	while ((*(ucs + i) != 0 || *(ucs + i + 1) != 0) && inputlen && outputlen) {
-		int l = gbk_wctomb(cjk + j, *(word *) (ucs + i), 2);
+		int l = gbk_wctomb(cjk + j, *(u16 *) (ucs + i), 2);
 
 		j += l;
 		outputlen -= l;
@@ -12255,13 +12255,13 @@ extern dword charsets_ucs_conv(const byte * ucs, size_t inputlen, byte * cjk,
 }
 
 /* utf-8 string convert */
-extern dword charsets_utf8_conv(const byte * ucs, size_t inputlen, byte * cjk,
+extern u32 charsets_utf8_conv(const u8 * ucs, size_t inputlen, u8 * cjk,
 								size_t outputlen)
 {
 	int i = 0, j = 0, l = strlen((const char *) ucs);
 
 	if (cjk == NULL)
-		cjk = (byte *) ucs;
+		cjk = (u8 *) ucs;
 
 	while (i < l && inputlen && outputlen) {
 		ucs4_t u = 0x1FFF;
@@ -12283,13 +12283,13 @@ extern dword charsets_utf8_conv(const byte * ucs, size_t inputlen, byte * cjk,
 }
 
 /* utf-16 string convert */
-extern dword charsets_utf16_conv(const byte * ucs, size_t inputlen, byte * cjk,
+extern u32 charsets_utf16_conv(const u8 * ucs, size_t inputlen, u8 * cjk,
 								 size_t outputlen)
 {
 	int i = 0, j = 0, l = strlen((const char *) ucs);
 
 	if (cjk == NULL)
-		cjk = (byte *) ucs;
+		cjk = (u8 *) ucs;
 	istate = 0;
 
 	while (i < l && inputlen && outputlen) {
@@ -12315,13 +12315,13 @@ extern dword charsets_utf16_conv(const byte * ucs, size_t inputlen, byte * cjk,
 }
 
 /* utf-16be string convert */
-extern dword charsets_utf16be_conv(const byte * ucs, size_t inputlen,
-								   byte * cjk, size_t outputlen)
+extern u32 charsets_utf16be_conv(const u8 * ucs, size_t inputlen,
+								   u8 * cjk, size_t outputlen)
 {
 	int i = 0, j = 0, l = strlen((const char *) ucs);
 
 	if (cjk == NULL)
-		cjk = (byte *) ucs;
+		cjk = (u8 *) ucs;
 
 	while (i < l && inputlen && outputlen) {
 		ucs4_t u = 0x1FFF;
@@ -12346,14 +12346,14 @@ extern dword charsets_utf16be_conv(const byte * ucs, size_t inputlen,
 }
 
 /* big5 string convert */
-extern dword charsets_big5_conv(const byte * big5, size_t inputlen, byte * cjk,
+extern u32 charsets_big5_conv(const u8 * big5, size_t inputlen, u8 * cjk,
 								size_t outputlen)
 {
 	int ilen = strlen((const char *) big5);
 	int i = 0;
 
 	if (cjk == NULL)
-		cjk = (byte *) big5;
+		cjk = (u8 *) big5;
 
 	while (i < ilen && inputlen && outputlen) {
 		int l = charsets_bg5hk2cjk(big5 + i, 2, cjk + i, 2);
@@ -12368,9 +12368,9 @@ extern dword charsets_big5_conv(const byte * big5, size_t inputlen, byte * cjk,
 }
 
 /* sjis -> unicode */
-int charsets_sjis2cjk(const byte * jis, byte * cjk, int *pcount)
+int charsets_sjis2cjk(const u8 * jis, u8 * cjk, int *pcount)
 {
-	dword iunic = 0x1fff;
+	u32 iunic = 0x1fff;
 
 	*pcount = shift_jisx0213_mbtowc(&iunic, jis, 2);
 	if (*pcount > 0)
@@ -12384,11 +12384,11 @@ int charsets_sjis2cjk(const byte * jis, byte * cjk, int *pcount)
 }
 
 /* sjis string convert */
-extern void charsets_sjis_conv(const byte * jis, byte ** cjk, dword * newsize)
+extern void charsets_sjis_conv(const u8 * jis, u8 ** cjk, u32 * newsize)
 {
 	int ilen = *newsize, jlen = ilen;
 	int i = 0, j = 0, p = 0;
-	byte *cjks;
+	u8 *cjks;
 
 	istate = 0;
 	cjks = malloc(ilen + 1);
@@ -12417,7 +12417,7 @@ extern void charsets_sjis_conv(const byte * jis, byte ** cjk, dword * newsize)
 	*cjk = cjks;
 }
 
-extern word charsets_gbk_to_ucs(const byte * cjk)
+extern u16 charsets_gbk_to_ucs(const u8 * cjk)
 {
 	ucs4_t u = 0;
 

@@ -206,7 +206,7 @@ static int mp3_parse_vbr_tags(mp3_reader_data * data, struct MP3Info *info,
 	b = LB_CONV(b);
 
 	if (b == MKBETAG('X', 'i', 'n', 'g') || b == MKBETAG('I', 'n', 'f', 'o')) {
-		dword cur_pos = sceIoLseek(data->fd, 0, PSP_SEEK_CUR);
+		u32 cur_pos = sceIoLseek(data->fd, 0, PSP_SEEK_CUR);
 
 		if (sceIoRead(data->fd, &b, sizeof(b)) != sizeof(b)) {
 			return -1;
@@ -703,11 +703,11 @@ int read_mp3_info_brute(struct MP3Info *info, mp3_reader_data * data)
 
 				if (info->frames >= 0) {
 					if (info->frames == 0)
-						info->frameoff = malloc(sizeof(dword) * 1024);
+						info->frameoff = malloc(sizeof(u32) * 1024);
 					else
 						info->frameoff =
 							safe_realloc(info->frameoff,
-										 sizeof(dword) * (info->frames + 1024));
+										 sizeof(u32) * (info->frames + 1024));
 					if (info->frameoff == NULL)
 						info->frames = -1;
 					else

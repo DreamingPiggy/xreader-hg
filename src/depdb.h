@@ -84,7 +84,7 @@ typedef struct
 
 typedef struct
 {
-	byte buf[BUFFER_SIZE];
+	u8 buf[BUFFER_SIZE];
 	DWord len;
 	DWord position;
 } __attribute__ ((packed)) pdbbuffer;

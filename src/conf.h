@@ -26,6 +26,7 @@ extern "C"
 {
 #endif
 
+#include <psptypes.h>
 #include "common/datatype.h"
 
 typedef enum
@@ -126,36 +127,36 @@ typedef enum
 typedef struct
 {
 	char path[PATH_MAX];
-	dword forecolor;
-	dword giftranscolor;
-	dword bgcolor;
+	u32 forecolor;
+	u32 giftranscolor;
+	u32 bgcolor;
 	bool have_bg;
-	dword titlecolor;
-	dword menutextcolor;
-	dword menubcolor;
-	dword selicolor;
-	dword selbcolor;
-	dword msgbcolor;
-	dword rowspace;
+	u32 titlecolor;
+	u32 menutextcolor;
+	u32 menubcolor;
+	u32 selicolor;
+	u32 selbcolor;
+	u32 msgbcolor;
+	u32 rowspace;
 	t_conf_infobar infobar;
 	int infobar_style;
-	dword infobar_fontsize;
+	u32 infobar_fontsize;
 	bool rlastrow;
 	bool autobm;
-	dword vertread;
+	u32 vertread;
 	t_conf_encode encode;
 	t_conf_fit fit;
 	bool imginfobar;
 	bool scrollbar;
-	dword scale;
+	u32 scale;
 	t_conf_rotate rotate;
-	dword txtkey[20];
-	dword imgkey[20];
+	u32 txtkey[20];
+	u32 imgkey[20];
 	char shortpath[PATH_MAX];
-	dword confver;
+	u32 confver;
 	bool bicubic;
-	dword wordspace;
-	dword borderspace;
+	u32 wordspace;
+	u32 borderspace;
 	char lastfile[PATH_MAX];
 	t_conf_encode mp3encode;
 	t_conf_encode lyricencode;
@@ -164,7 +165,7 @@ typedef struct
 	char bgarch[PATH_MAX];
 	char bgfile[PATH_MAX];
 	int bgwhere;
-	dword slideinterval;
+	u32 slideinterval;
 	bool hprmctrl;
 	int grayscale;
 	bool showhidden;
@@ -174,12 +175,12 @@ typedef struct
 	t_conf_arrange arrange;
 	bool enableusb;
 	t_conf_viewpos viewpos;
-	dword imgmvspd;
+	u32 imgmvspd;
 	t_conf_imgpaging imgpaging;
-	dword imgpaging_spd;
-	dword imgpaging_interval;
-	dword imgpaging_duration;
-	dword flkey[20];
+	u32 imgpaging_spd;
+	u32 imgpaging_interval;
+	u32 imgpaging_duration;
+	u32 flkey[20];
 	int fontsize;
 	bool reordertxt;
 	bool pagetonext;
@@ -191,11 +192,11 @@ typedef struct
 	int bookfontsize;
 	bool enable_analog;
 	bool img_enable_analog;
-	dword txtkey2[20];
-	dword imgkey2[20];
-	dword flkey2[20];
-	dword imgpagereserve;
-	dword lyricex;
+	u32 txtkey2[20];
+	u32 imgkey2[20];
+	u32 flkey2[20];
+	u32 imgpagereserve;
+	u32 lyricex;
 	bool autoplay;
 	bool usettf;
 	char cttfarch[PATH_MAX];
@@ -210,7 +211,7 @@ typedef struct
 	bool infobar_use_ttf_mode;
 	bool img_no_repeat;
 	bool hide_flash;
-	dword tabstop;
+	u32 tabstop;
 	bool apetagorder;
 	char language[20];
 	int filelistwidth;
@@ -271,7 +272,7 @@ typedef struct
 */
 
 extern void conf_set_file(const char *filename);
-extern void conf_get_keyname(dword key, char *res);
+extern void conf_get_keyname(u32 key, char *res);
 extern bool conf_load(p_conf conf);
 extern bool conf_save(p_conf conf);
 extern const char *conf_get_encodename(t_conf_encode encode);

@@ -77,11 +77,11 @@ static u32 enable_exit_menu = 0;
 
 static u64 start, end;
 
-t_win_menu_op scene_mp3_list_menucb(dword key, p_win_menuitem item,
-									dword * count, dword max_height,
-									dword * topindex, dword * index)
+t_win_menu_op scene_mp3_list_menucb(u32 key, p_win_menuitem item,
+									u32 * count, u32 max_height,
+									u32 * topindex, u32 * index)
 {
-	dword orgidx;
+	u32 orgidx;
 	t_win_menu_op op;
 
 	switch (key) {
@@ -97,7 +97,7 @@ t_win_menu_op scene_mp3_list_menucb(dword key, p_win_menuitem item,
 #ifdef ENABLE_MUSIC
 			if (*index < music_maxindex() - 1) {
 				t_win_menuitem sitem;
-				dword mp3i = *index;
+				u32 mp3i = *index;
 
 				music_movedown(mp3i);
 				memcpy(&sitem, &item[mp3i], sizeof(t_win_menuitem));
@@ -112,7 +112,7 @@ t_win_menu_op scene_mp3_list_menucb(dword key, p_win_menuitem item,
 #ifdef ENABLE_MUSIC
 			if (*index > 0) {
 				t_win_menuitem sitem;
-				dword mp3i = *index;
+				u32 mp3i = *index;
 
 				music_moveup(mp3i);
 				memcpy(&sitem, &item[mp3i], sizeof(t_win_menuitem));
@@ -164,8 +164,8 @@ t_win_menu_op scene_mp3_list_menucb(dword key, p_win_menuitem item,
 	return op;
 }
 
-void scene_mp3_list_predraw(p_win_menuitem item, dword index, dword topindex,
-							dword max_height)
+void scene_mp3_list_predraw(p_win_menuitem item, u32 index, u32 topindex,
+							u32 max_height)
 {
 	int left, right, upper, bottom;
 	int pos, posend;
@@ -181,12 +181,12 @@ void scene_mp3_list_predraw(p_win_menuitem item, dword index, dword topindex,
 
 	disp_rectangle(pos - 2, upper - 1, posend + 1, bottom + 1, COLOR_WHITE);
 	disp_fillrect(pos - 1, upper, posend, bottom, RGB(0x20, 0x40, 0x30));
-	disp_putstring(pos, upper, COLOR_WHITE, (const byte *)
+	disp_putstring(pos, upper, COLOR_WHITE, (const u8 *)
 				   _("要添加乐曲请到文件列表选取音乐文件按○"));
 }
 
-void scene_mp3_list_postdraw(p_win_menuitem item, dword index, dword topindex,
-							 dword max_height)
+void scene_mp3_list_postdraw(p_win_menuitem item, u32 index, u32 topindex,
+							 u32 max_height)
 {
 	char outstr[256];
 	const char *fname;
@@ -221,7 +221,7 @@ void scene_mp3_list_postdraw(p_win_menuitem item, dword index, dword topindex,
 					  242 + 9 * DISP_FONTSIZE, 140 + 6 * DISP_FONTSIZE,
 					  RGB(0x40, 0x40, 0x40));
 		disp_putstring(240 - 9 * DISP_FONTSIZE, 141 + 5 * DISP_FONTSIZE,
-					   COLOR_WHITE, (const byte *) outstr);
+					   COLOR_WHITE, (const u8 *) outstr);
 	} else {
 		disp_rectangle(239 - 9 * DISP_FONTSIZE, 133 - 6 * DISP_FONTSIZE,
 					   243 + 9 * DISP_FONTSIZE, 134 - 5 * DISP_FONTSIZE,
@@ -230,7 +230,7 @@ void scene_mp3_list_postdraw(p_win_menuitem item, dword index, dword topindex,
 					  242 + 9 * DISP_FONTSIZE, 133 - 5 * DISP_FONTSIZE,
 					  RGB(0x40, 0x40, 0x40));
 		disp_putstring(240 - 9 * DISP_FONTSIZE, 134 - 6 * DISP_FONTSIZE,
-					   COLOR_WHITE, (const byte *) outstr);
+					   COLOR_WHITE, (const u8 *) outstr);
 	}
 }
 
@@ -239,8 +239,8 @@ void scene_mp3_list(void)
 #ifdef ENABLE_MUSIC
 	p_win_menuitem item;
 
-	dword i;
-	dword index = 0;
+	u32 i;
+	u32 index = 0;
 
 	win_menu_predraw_data prev;
 
@@ -336,8 +336,8 @@ static void scene_mp3bar_delay_action(void)
 }
 
 #if defined(ENABLE_MUSIC) && defined(ENABLE_LYRIC)
-static void draw_lyric_string(const char **ly, dword lidx, dword * ss,
-							  dword cpl)
+static void draw_lyric_string(const char **ly, u32 lidx, u32 * ss,
+							  u32 cpl)
 {
 	char t[BUFSIZ];
 
@@ -352,7 +352,7 @@ static void draw_lyric_string(const char **ly, dword lidx, dword * ss,
 					(DISP_FONTSIZE + 1) * lidx + 1,
 					(lidx == config.lyricex) ? COLOR_WHITE : RGB(0x7F, 0x7F,
 																 0x7F),
-					(const byte *) t, ss[lidx], 0, 0, DISP_FONTSIZE, 0);
+					(const u8 *) t, ss[lidx], 0, 0, DISP_FONTSIZE, 0);
 }
 #endif
 
@@ -360,7 +360,7 @@ static void scene_draw_lyric(void)
 {
 #if defined(ENABLE_MUSIC) && defined(ENABLE_LYRIC)
 	const char *ly[config.lyricex * 2 + 1];
-	dword ss[config.lyricex * 2 + 1];
+	u32 ss[config.lyricex * 2 + 1];
 
 	disp_rectangle(5, 136 - (DISP_FONTSIZE + 1) * (1 + config.lyricex), 474,
 				   136 + (DISP_FONTSIZE + 1) * config.lyricex, COLOR_WHITE);
@@ -369,7 +369,7 @@ static void scene_draw_lyric(void)
 				  config.msgbcolor);
 	if (lyric_get_cur_lines(music_get_lyric(), config.lyricex, ly, ss)) {
 		int lidx;
-		dword cpl = 936 / DISP_FONTSIZE;
+		u32 cpl = 936 / DISP_FONTSIZE;
 
 		for (lidx = 0; lidx < config.lyricex * 2 + 1; lidx++) {
 			draw_lyric_string(ly, lidx, ss, cpl);
@@ -417,16 +417,16 @@ static void scene_draw_mp3bar_music_staff(void)
 	} else
 		SPRINTF_S(infostr, "%s", conf_get_cyclename(config.mp3cycle));
 	disp_putstring(6 + DISP_FONTSIZE, 265 - DISP_FONTSIZE * 2, COLOR_WHITE,
-				   (const byte *) infostr);
+				   (const u8 *) infostr);
 	disp_putstring(6 + DISP_FONTSIZE, 263 - DISP_FONTSIZE * 4, COLOR_WHITE,
-				   (const byte *)
+				   (const u8 *)
 				   _("  SELECT 编辑列表   ←快速后退   →快速前进"));
 	SPRINTF_S(infostr, "%s  LRC  %s  ID3v1 %s",
 			  _("  SELECT 编辑列表   ←快速后退   →快速前进"),
 			  conf_get_encodename(config.lyricencode),
 			  conf_get_encodename(config.mp3encode));
 	disp_putnstring(6 + DISP_FONTSIZE, 263 - DISP_FONTSIZE * 4, COLOR_WHITE,
-					(const byte *) infostr,
+					(const u8 *) infostr,
 					(468 - DISP_FONTSIZE * 2) * 2 / DISP_FONTSIZE, 0, 0,
 					DISP_FONTSIZE, 0);
 	if(config.use_vaudio) {
@@ -439,66 +439,66 @@ static void scene_draw_mp3bar_music_staff(void)
 	}
 
 	disp_putstring(6 + DISP_FONTSIZE, 264 - DISP_FONTSIZE * 3, COLOR_WHITE,
-				   (const byte *) infostr);
+				   (const u8 *) infostr);
 	info.type = MD_GET_TITLE | MD_GET_ARTIST | MD_GET_ALBUM;
 	if (musicdrv_get_info(&info) == 0) {
 		char tag[512];
 
 		switch (info.encode) {
 			case conf_encode_utf8:
-				charsets_utf8_conv((const byte *) info.artist,
-								   sizeof(info.artist), (byte *) info.artist,
+				charsets_utf8_conv((const u8 *) info.artist,
+								   sizeof(info.artist), (u8 *) info.artist,
 								   sizeof(info.artist));
-				charsets_utf8_conv((const byte *) info.title,
-								   sizeof(info.title), (byte *) info.title,
+				charsets_utf8_conv((const u8 *) info.title,
+								   sizeof(info.title), (u8 *) info.title,
 								   sizeof(info.title));
-				charsets_utf8_conv((const byte *) info.album,
-								   sizeof(info.album), (byte *) info.album,
+				charsets_utf8_conv((const u8 *) info.album,
+								   sizeof(info.album), (u8 *) info.album,
 								   sizeof(info.album));
-				charsets_utf8_conv((const byte *) info.comment,
-								   sizeof(info.comment), (byte *) info.comment,
+				charsets_utf8_conv((const u8 *) info.comment,
+								   sizeof(info.comment), (u8 *) info.comment,
 								   sizeof(info.comment));
 				break;
 			case conf_encode_big5:
-				charsets_big5_conv((const byte *) info.artist,
-								   sizeof(info.artist), (byte *) info.artist,
+				charsets_big5_conv((const u8 *) info.artist,
+								   sizeof(info.artist), (u8 *) info.artist,
 								   sizeof(info.artist));
-				charsets_big5_conv((const byte *) info.title,
-								   sizeof(info.title), (byte *) info.title,
+				charsets_big5_conv((const u8 *) info.title,
+								   sizeof(info.title), (u8 *) info.title,
 								   sizeof(info.title));
-				charsets_big5_conv((const byte *) info.album,
-								   sizeof(info.album), (byte *) info.album,
+				charsets_big5_conv((const u8 *) info.album,
+								   sizeof(info.album), (u8 *) info.album,
 								   sizeof(info.album));
-				charsets_big5_conv((const byte *) info.comment,
-								   sizeof(info.comment), (byte *) info.comment,
+				charsets_big5_conv((const u8 *) info.comment,
+								   sizeof(info.comment), (u8 *) info.comment,
 								   sizeof(info.comment));
 				break;
 			case conf_encode_sjis:
 				{
-					byte *temp;
-					dword size;
+					u8 *temp;
+					u32 size;
 
 					temp = NULL, size = strlen(info.artist);
-					charsets_sjis_conv((const byte *) info.artist,
-									   (byte **) & temp, (dword *) & size);
+					charsets_sjis_conv((const u8 *) info.artist,
+									   (u8 **) & temp, (u32 *) & size);
 					strncpy_s(info.artist, sizeof(info.artist),
 							  (const char *) temp, size);
 					free(temp);
 					temp = NULL, size = strlen(info.title);
-					charsets_sjis_conv((const byte *) info.title,
-									   (byte **) & temp, (dword *) & size);
+					charsets_sjis_conv((const u8 *) info.title,
+									   (u8 **) & temp, (u32 *) & size);
 					strncpy_s(info.title, sizeof(info.title),
 							  (const char *) temp, size);
 					free(temp);
 					temp = NULL, size = strlen(info.album);
-					charsets_sjis_conv((const byte *) info.album,
-									   (byte **) & temp, (dword *) & size);
+					charsets_sjis_conv((const u8 *) info.album,
+									   (u8 **) & temp, (u32 *) & size);
 					strncpy_s(info.album, sizeof(info.album),
 							  (const char *) temp, size);
 					free(temp);
 					temp = NULL, size = strlen(info.comment);
-					charsets_sjis_conv((const byte *) info.comment,
-									   (byte **) & temp, (dword *) & size);
+					charsets_sjis_conv((const u8 *) info.comment,
+									   (u8 **) & temp, (u32 *) & size);
 					strncpy_s(info.comment, sizeof(info.comment),
 							  (const char *) temp, size);
 					free(temp);
@@ -508,18 +508,18 @@ static void scene_draw_mp3bar_music_staff(void)
 				break;
 			case conf_encode_ucs:
 				{
-					charsets_ucs_conv((const byte *) info.artist,
-									  sizeof(info.artist), (byte *) info.artist,
+					charsets_ucs_conv((const u8 *) info.artist,
+									  sizeof(info.artist), (u8 *) info.artist,
 									  sizeof(info.artist));
-					charsets_ucs_conv((const byte *) info.title,
-									  sizeof(info.title), (byte *) info.title,
+					charsets_ucs_conv((const u8 *) info.title,
+									  sizeof(info.title), (u8 *) info.title,
 									  sizeof(info.title));
-					charsets_ucs_conv((const byte *) info.album,
-									  sizeof(info.album), (byte *) info.album,
+					charsets_ucs_conv((const u8 *) info.album,
+									  sizeof(info.album), (u8 *) info.album,
 									  sizeof(info.album));
-					charsets_ucs_conv((const byte *) info.comment,
+					charsets_ucs_conv((const u8 *) info.comment,
 									  sizeof(info.comment),
-									  (byte *) info.comment,
+									  (u8 *) info.comment,
 									  sizeof(info.comment));
 				}
 				break;
@@ -568,7 +568,7 @@ static void scene_draw_mp3bar_music_staff(void)
 		}
 
 		disp_putnstring(6 + DISP_FONTSIZE, 266 - DISP_FONTSIZE, COLOR_WHITE,
-						(const byte *) tag,
+						(const u8 *) tag,
 						(468 - DISP_FONTSIZE * 2) * 2 / DISP_FONTSIZE, 0, 0,
 						DISP_FONTSIZE, 0);
 	}
@@ -577,13 +577,13 @@ static void scene_draw_mp3bar_music_staff(void)
 
 static void scene_draw_mp3bar(bool * firstdup)
 {
-	static dword memory_free = 0;
+	static u32 memory_free = 0;
 	static u64 mem_prev, mem_now;
 
 	char infostr[80];
 	pspTime tm;
-	dword cpu, bus;
-	dword pos;
+	u32 cpu, bus;
+	u32 pos;
 	int percent, lifetime, tempe, volt;
 
 	if (*firstdup) {
@@ -623,7 +623,7 @@ static void scene_draw_mp3bar(bool * firstdup)
 	}
 
 	disp_putstring(6 + DISP_FONTSIZE * 2, 6, COLOR_WHITE,
-				   (const byte *) infostr);
+				   (const u8 *) infostr);
 	power_get_battery(&percent, &lifetime, &tempe, &volt);
 	if (percent >= 0) {
 		if (config.fontsize <= 12) {
@@ -644,10 +644,10 @@ static void scene_draw_mp3bar(bool * firstdup)
 				  memory_free / 1024);
 	if (strcmp(simple_textdomain(NULL), "en_US") == 0)
 		disp_putstring(6, 7 + DISP_FONTSIZE, COLOR_WHITE,
-					   (const byte *) infostr);
+					   (const u8 *) infostr);
 	else
 		disp_putstring(6 + DISP_FONTSIZE, 7 + DISP_FONTSIZE,
-					   COLOR_WHITE, (const byte *) infostr);
+					   COLOR_WHITE, (const u8 *) infostr);
 
 	scene_draw_lyric();
 
@@ -656,12 +656,12 @@ static void scene_draw_mp3bar(bool * firstdup)
 #endif
 }
 
-static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
+static int scene_mp3bar_handle_input(u32 key, pixel ** saveimage)
 {
 	double interval;
 
 #ifdef ENABLE_MUSIC
-	static dword oldkey;
+	static u32 oldkey;
 #endif
 
 	if(!(key & PSP_CTRL_START)) {
@@ -724,7 +724,7 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 		case (PSP_CTRL_LEFT | PSP_CTRL_TRIANGLE):
 #ifdef ENABLE_MUSIC
 			config.lyricencode++;
-			if ((dword) config.lyricencode > 4)
+			if ((u32) config.lyricencode > 4)
 				config.lyricencode = 0;
 			sceKernelDelayThread(200000);
 #endif
@@ -732,7 +732,7 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 		case (PSP_CTRL_RIGHT | PSP_CTRL_TRIANGLE):
 #ifdef ENABLE_MUSIC
 			config.mp3encode++;
-			if ((dword) config.mp3encode > 4)
+			if ((u32) config.mp3encode > 4)
 				config.mp3encode = 0;
 //          music_set_encode(config.mp3encode);
 			sceKernelDelayThread(200000);
@@ -856,7 +856,7 @@ void scene_mp3bar(void)
 	enable_exit_menu = 0;
 
 	while (1) {
-		dword key;
+		u32 key;
 
 		sceRtcGetCurrentTick(&timer_end);
 #ifdef ENABLE_MUSIC

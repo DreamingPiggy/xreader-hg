@@ -372,14 +372,14 @@ static int wav_load(const char *spath, const char *lpath)
 		__end();
 		return -1;
 	}
-	// byte rate
+	// u8 rate
 	if (wave_get_32(data.fd, (uint32_t *) & temp) != 0) {
 		__end();
 		return -1;
 	}
 	g_info.avg_bps = (double) temp *8;
 
-	// byte per sample
+	// u8 per sample
 	if (wave_get_16(data.fd, (uint16_t *) & g_wav_byte_per_frame) != 0) {
 		__end();
 		return -1;
@@ -422,7 +422,7 @@ static int wav_load(const char *spath, const char *lpath)
 	}
 
 	if (data.use_buffer) {
-		dword cur_pos;
+		u32 cur_pos;
 
 		cur_pos = sceIoLseek(data.fd, 0, PSP_SEEK_CUR);
 		sceIoClose(data.fd);

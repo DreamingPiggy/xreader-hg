@@ -28,7 +28,7 @@ typedef struct _lyricline
 {
 	mad_timer_t t;
 	const char *line;
-	dword size;
+	u32 size;
 } t_lyricline, *p_lyricline;
 
 typedef struct _lyric
@@ -37,7 +37,7 @@ typedef struct _lyric
 	SceUID sema;
 	bool changed;
 	char *whole;
-	dword size;
+	u32 size;
 	const char *ar;
 	const char *ti;
 	const char *al;
@@ -54,8 +54,8 @@ extern bool lyric_open_raw(p_lyric l, const char *lyric, size_t size);
 extern void lyric_close(p_lyric l);
 extern void lyric_update_pos(p_lyric l, void *tm);
 extern bool lyric_get_cur_lines(p_lyric l, int extralines, const char **lines,
-								dword * sizes);
-void lyric_decode(const char *lrcsrc, char *lrcdst, dword * size);
+								u32 * sizes);
+void lyric_decode(const char *lrcsrc, char *lrcdst, u32 * size);
 extern bool lyric_check_changed(p_lyric l);
 
 #endif

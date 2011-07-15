@@ -28,8 +28,8 @@ struct UMDHeaderData
 {
 	char Mark;
 	unsigned short hdType;
-	byte Flag;
-	byte Length;
+	u8 Flag;
+	u8 Length;
 } __attribute__ ((packed));
 
 struct UMDHeaderDataEx

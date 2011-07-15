@@ -230,7 +230,7 @@ static char *html_skip_close_tag(char *string, size_t size, char *tag)
 	return res;
 }
 
-extern dword html_to_text(char *string, dword size, bool stripeol)
+extern u32 html_to_text(char *string, u32 size, bool stripeol)
 {
 	char *nstr = NULL, *ntag = string, *cstr = string, *str = string, *prop =
 		NULL;

@@ -25,14 +25,14 @@
 #include <pspdisplay.h>
 #include "common/datatype.h"
 
-typedef dword pixel;
+typedef u32 pixel;
 
 #include "ttfont.h"
 
 extern int DISP_FONTSIZE, DISP_BOOK_FONTSIZE, HRR, WRR;
-extern byte disp_ewidth[0x80];
+extern u8 disp_ewidth[0x80];
 
-// R,G,B color to word value color
+// R,G,B color to u16 value color
 
 #define PIXEL_BYTES 4
 #define COLOR_MAX 255
@@ -178,78 +178,78 @@ extern bool disp_load_book_font(const char *efont, const char *cfont);
 extern void disp_assign_book_font(void);
 extern void disp_free_font(void);
 extern void disp_flip(void);
-extern void disp_getimage(dword x, dword y, dword w, dword h, pixel * buf);
-extern void disp_getimage_draw(dword x, dword y, dword w, dword h, pixel * buf);
+extern void disp_getimage(u32 x, u32 y, u32 w, u32 h, pixel * buf);
+extern void disp_getimage_draw(u32 x, u32 y, u32 w, u32 h, pixel * buf);
 
 extern void disp_newputimage(int x, int y, int w, int h, int bufw, int startx,
 							 int starty, int ow, int oh, pixel * buf,
 							 bool swizzled);
-extern void disp_putimage(dword x, dword y, dword w, dword h, dword startx,
-						  dword starty, pixel * buf);
+extern void disp_putimage(u32 x, u32 y, u32 w, u32 h, u32 startx,
+						  u32 starty, pixel * buf);
 extern void disp_duptocache(void);
 extern void disp_duptocachealpha(int percent);
-extern void disp_rectduptocache(dword x1, dword y1, dword x2, dword y2);
-extern void disp_rectduptocachealpha(dword x1, dword y1, dword x2, dword y2,
+extern void disp_rectduptocache(u32 x1, u32 y1, u32 x2, u32 y2);
+extern void disp_rectduptocachealpha(u32 x1, u32 y1, u32 x2, u32 y2,
 									 int percent);
 
-extern void disp_putnstring(int x, int y, pixel color, const byte * str,
-							int count, dword wordspace, int top, int height,
+extern void disp_putnstring(int x, int y, pixel color, const u8 * str,
+							int count, u32 wordspace, int top, int height,
 							int bot);
 #define disp_putstring(x,y,color,str) disp_putnstring((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_FONTSIZE,PSP_SCREEN_HEIGHT)
 
-extern void disp_putnstringreversal(int x, int y, pixel color, const byte * str,
-									int count, dword wordspace, int top,
+extern void disp_putnstringreversal(int x, int y, pixel color, const u8 * str,
+									int count, u32 wordspace, int top,
 									int height, int bot);
 #define disp_putstringreversal(x,y,color,str) disp_putnstringreversal((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
-extern void disp_putnstringhorz(int x, int y, pixel color, const byte * str,
-								int count, dword wordspace, int top, int height,
+extern void disp_putnstringhorz(int x, int y, pixel color, const u8 * str,
+								int count, u32 wordspace, int top, int height,
 								int bot);
 #define disp_putstringhorz(x,y,color,str) disp_putnstringhorz((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
-extern void disp_putnstringlvert(int x, int y, pixel color, const byte * str,
-								 int count, dword wordspace, int top,
+extern void disp_putnstringlvert(int x, int y, pixel color, const u8 * str,
+								 int count, u32 wordspace, int top,
 								 int height, int bot);
 #define disp_putstringlvert(x,y,color,str) disp_putnstringlvert((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
-extern void disp_putnstringrvert(int x, int y, pixel color, const byte * str,
-								 int count, dword wordspace, int top,
+extern void disp_putnstringrvert(int x, int y, pixel color, const u8 * str,
+								 int count, u32 wordspace, int top,
 								 int height, int bot);
 #define disp_putstringrvert(x,y,color,str) disp_putnstringrvert((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
 extern void disp_putnstringreversal_sys(int x, int y, pixel color,
-										const byte * str, int count,
-										dword wordspace, int top, int height,
+										const u8 * str, int count,
+										u32 wordspace, int top, int height,
 										int bot);
 #define disp_putstringreversal_sys(x,y,color,str) disp_putnstringreversal_sys((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
-extern void disp_putnstringhorz_sys(int x, int y, pixel color, const byte * str,
-									int count, dword wordspace, int top,
+extern void disp_putnstringhorz_sys(int x, int y, pixel color, const u8 * str,
+									int count, u32 wordspace, int top,
 									int height, int bot);
 #define disp_putstringhorz_sys(x,y,color,str) disp_putnstringhorz_sys((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
 extern void disp_putnstringlvert_sys(int x, int y, pixel color,
-									 const byte * str, int count,
-									 dword wordspace, int top, int height,
+									 const u8 * str, int count,
+									 u32 wordspace, int top, int height,
 									 int bot);
 #define disp_putstringlvert_sys(x,y,color,str) disp_putnstringlvert_sys((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
 extern void disp_putnstringrvert_sys(int x, int y, pixel color,
-									 const byte * str, int count,
-									 dword wordspace, int top, int height,
+									 const u8 * str, int count,
+									 u32 wordspace, int top, int height,
 									 int bot);
 #define disp_putstringrvert_sys(x,y,color,str) disp_putnstringrvert_sys((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
 extern void disp_putnstringreversal_sys(int x, int y, pixel color,
-										const byte * str, int count,
-										dword wordspace, int top, int height,
+										const u8 * str, int count,
+										u32 wordspace, int top, int height,
 										int bot);
 #define disp_putstringreversal_sys(x,y,color,str) disp_putnstringreversal_sys((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
 extern void disp_fillvram(pixel color);
-extern void disp_fillrect(dword x1, dword y1, dword x2, dword y2, pixel color);
-extern void disp_rectangle(dword x1, dword y1, dword x2, dword y2, pixel color);
-extern void disp_line(dword x1, dword y1, dword x2, dword y2, pixel color);
+extern void disp_fillrect(u32 x1, u32 y1, u32 x2, u32 y2, pixel color);
+extern void disp_rectangle(u32 x1, u32 y1, u32 x2, u32 y2, pixel color);
+extern void disp_line(u32 x1, u32 y1, u32 x2, u32 y2, pixel color);
 extern bool check_range(int x, int y);
 extern void disp_fix_osk(void *buffer);
 pixel *disp_swizzle_image(pixel * buf, int width, int height);

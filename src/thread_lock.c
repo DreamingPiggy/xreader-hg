@@ -26,12 +26,10 @@
 
 #define CURRENT_THREAD sceKernelGetThreadId()
 
-typedef unsigned long dword;
-
-static dword my_InterlockedExchange(dword volatile *dst, dword exchange)
+static u32 my_InterlockedExchange(u32 volatile *dst, u32 exchange)
 {
 	unsigned int flags = pspSdkDisableInterrupts();
-	dword origvalue = *dst;
+	u32 origvalue = *dst;
 
 	*dst = exchange;
 

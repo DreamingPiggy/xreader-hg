@@ -50,7 +50,7 @@ extern void location_init(const char *filename, int *slotaval)
 	fd = sceIoOpen(fn, PSP_O_RDONLY, 0777);
 
 	if (fd < 0) {
-		byte tempdata[sizeof(t_location) * 10 + sizeof(bool) * 10];
+		u8 tempdata[sizeof(t_location) * 10 + sizeof(bool) * 10];
 
 		if ((fd = sceIoOpen(fn, PSP_O_CREAT | PSP_O_RDWR, 0777)) < 0)
 			return;
@@ -89,7 +89,7 @@ extern bool location_enum(t_location_enum_func func, void *data)
 	return true;
 }
 
-extern bool location_get(dword index, char *comppath, char *shortpath,
+extern bool location_get(u32 index, char *comppath, char *shortpath,
 						 char *compname, char *name, bool * isreading)
 {
 	int fd;
@@ -121,11 +121,11 @@ extern bool location_get(dword index, char *comppath, char *shortpath,
 	return true;
 }
 
-extern bool location_set(dword index, char *comppath, char *shortpath,
+extern bool location_set(u32 index, char *comppath, char *shortpath,
 						 char *compname, char *name, bool isreading)
 {
 	int fd;
-	dword pos;
+	u32 pos;
 	t_location t;
 
 	if ((fd = sceIoOpen(fn, PSP_O_RDWR, 0777)) < 0
@@ -136,7 +136,7 @@ extern bool location_set(dword index, char *comppath, char *shortpath,
 					  PSP_SEEK_SET);
 
 	if (pos < sizeof(t_location) * index + sizeof(bool) * 10) {
-		byte tempdata[sizeof(t_location) * 10 + sizeof(bool) * 10 - pos];
+		u8 tempdata[sizeof(t_location) * 10 + sizeof(bool) * 10 - pos];
 
 		memset(tempdata, 0, sizeof(t_location) * 10 + sizeof(bool) * 10 - pos);
 		sceIoWrite(fd, tempdata,

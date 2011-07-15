@@ -74,37 +74,37 @@ static void text_decode(p_text txt, t_conf_encode encode)
 {
 	if (txt->size < 2)
 		return;
-	if (*(word *) txt->buf == 0xFEFF) {
+	if (*(u16 *) txt->buf == 0xFEFF) {
 		txt->size =
-			charsets_ucs_conv((const byte *) (txt->buf + 2), txt->size - 2,
-							  (byte *) txt->buf, txt->size);
+			charsets_ucs_conv((const u8 *) (txt->buf + 2), txt->size - 2,
+							  (u8 *) txt->buf, txt->size);
 		txt->ucs = 1;
-	} else if (*(word *) txt->buf == 0xFFEF) {
+	} else if (*(u16 *) txt->buf == 0xFFEF) {
 		txt->size =
-			charsets_utf16be_conv((const byte *) (txt->buf + 2), txt->size - 2,
-								  (byte *) txt->buf, txt->size);
+			charsets_utf16be_conv((const u8 *) (txt->buf + 2), txt->size - 2,
+								  (u8 *) txt->buf, txt->size);
 		txt->ucs = 1;
 	} else if (txt->size > 2 && (unsigned char) txt->buf[0] == 0xEF
 			   && (unsigned char) txt->buf[1] == 0xBB
 			   && (unsigned char) txt->buf[2] == 0xBF) {
 		txt->size =
-			charsets_utf8_conv((const byte *) (txt->buf + 3), txt->size - 3,
-							   (byte *) txt->buf, txt->size);
+			charsets_utf8_conv((const u8 *) (txt->buf + 3), txt->size - 3,
+							   (u8 *) txt->buf, txt->size);
 		txt->ucs = 2;
 	} else {
 		switch (encode) {
 			case conf_encode_big5:
 				txt->size =
-					charsets_big5_conv((const byte *) txt->buf, txt->size,
-									   (byte *) txt->buf, txt->size);
+					charsets_big5_conv((const u8 *) txt->buf, txt->size,
+									   (u8 *) txt->buf, txt->size);
 				txt->ucs = 0;
 				break;
 			case conf_encode_sjis:
 				{
 					char *orgbuf = txt->buf;
-					byte *newbuf;
+					u8 *newbuf;
 
-					charsets_sjis_conv((const byte *) orgbuf,
+					charsets_sjis_conv((const u8 *) orgbuf,
 									   &newbuf, &txt->size);
 					txt->buf = (char *) newbuf;
 					if (txt->buf != NULL)
@@ -117,16 +117,16 @@ static void text_decode(p_text txt, t_conf_encode encode)
 			case conf_encode_ucs:
 				{
 					txt->size =
-						charsets_ucs_conv((const byte *) txt->buf, txt->size,
-										  (byte *) txt->buf, txt->size);
+						charsets_ucs_conv((const u8 *) txt->buf, txt->size,
+										  (u8 *) txt->buf, txt->size);
 					txt->ucs = 1;
 				}
 				break;
 			case conf_encode_utf8:
 				{
 					txt->size =
-						charsets_utf8_conv((const byte *) txt->buf, txt->size,
-										   (byte *) txt->buf, txt->size);
+						charsets_utf8_conv((const u8 *) txt->buf, txt->size,
+										   (u8 *) txt->buf, txt->size);
 					txt->ucs = 2;
 				}
 				break;
@@ -158,13 +158,13 @@ bool bytetable[256] = {
 extern p_ttf ettf, cttf;
 #endif
 
-int text_get_string_width_sys(const byte * pos, size_t size, dword wordspace)
+int text_get_string_width_sys(const u8 * pos, size_t size, u32 wordspace)
 {
 	int width = 0;
-	const byte *posend = pos + size;
+	const u8 *posend = pos + size;
 
-	while (pos < posend && bytetable[*(byte *) pos] != 1) {
-		if ((*(byte *) pos) >= 0x80) {
+	while (pos < posend && bytetable[*(u8 *) pos] != 1) {
+		if ((*(u8 *) pos) >= 0x80) {
 			width += DISP_FONTSIZE;
 			width += wordspace * 2;
 			pos += 2;
@@ -195,13 +195,13 @@ int text_get_string_width_sys(const byte * pos, size_t size, dword wordspace)
  * @return 显示宽度，以像素计
  */
 static int text_get_string_width(const char *pos, const char *posend,
-								 dword maxpixel, dword wordspace, dword * count)
+								 u32 maxpixel, u32 wordspace, u32 * count)
 {
 	int width = 0;
 	const char *posstart = pos;
 
-	while (pos < posend && bytetable[*(byte *) pos] != 1) {
-		if ((*(byte *) pos) >= 0x80) {
+	while (pos < posend && bytetable[*(u8 *) pos] != 1) {
+		if ((*(u8 *) pos) >= 0x80) {
 			width += DISP_BOOK_FONTSIZE;
 			if (width > maxpixel)
 				break;
@@ -211,7 +211,7 @@ static int text_get_string_width(const char *pos, const char *posend,
 			int j;
 
 			for (j = 0; j < (*pos == 0x09 ? config.tabstop : 1); ++j)
-				width += disp_ewidth[*(byte *) pos];
+				width += disp_ewidth[*(u8 *) pos];
 			if (width > maxpixel)
 				break;
 			width += wordspace;
@@ -256,16 +256,16 @@ bool is_untruncateable_chars(char ch)
  * @return 显示宽度，以像素计
  */
 static int text_get_string_width_english(const char *pos, const char *posend,
-										 dword maxpixel, dword wordspace,
-										 dword * count)
+										 u32 maxpixel, u32 wordspace,
+										 u32 * count)
 {
 	int width = 0;
 	const char *posstart = pos;
 	const char *word_start, *word_end;
 
 	word_start = NULL, word_end = NULL;
-	while (pos < posend && bytetable[*(byte *) pos] != 1) {
-		if ((*(byte *) pos) >= 0x80) {
+	while (pos < posend && bytetable[*(u8 *) pos] != 1) {
+		if ((*(u8 *) pos) >= 0x80) {
 			width += DISP_BOOK_FONTSIZE;
 			if (width > maxpixel)
 				break;
@@ -276,10 +276,10 @@ static int text_get_string_width_english(const char *pos, const char *posend,
 
 			if (is_untruncateable_chars(*pos)) {
 				if (word_start == NULL) {
-					dword cnt;
+					u32 cnt;
 					int ret;
 
-					// search for next English word
+					// search for next English u16
 					word_end = word_start = pos;
 					while (word_end <= posend
 						   && is_untruncateable_chars(*word_end)) {
@@ -297,7 +297,7 @@ static int text_get_string_width_english(const char *pos, const char *posend,
 				word_end = word_start = NULL;
 			}
 			for (j = 0; j < (*pos == 0x09 ? config.tabstop : 1); ++j)
-				width += disp_ewidth[*(byte *) pos];
+				width += disp_ewidth[*(u8 *) pos];
 			if (width > maxpixel)
 				break;
 			width += wordspace;
@@ -312,11 +312,11 @@ static int text_get_string_width_english(const char *pos, const char *posend,
 	return width;
 }
 
-extern bool text_format(p_text txt, dword max_pixels, dword wordspace,
+extern bool text_format(p_text txt, u32 max_pixels, u32 wordspace,
 						bool ttf_mode)
 {
 	char *pos = txt->buf, *posend = pos + txt->size;
-	dword curs;
+	u32 curs;
 
 	txt->row_count = 0;
 	for (curs = 0; curs < 1024; ++curs)
@@ -342,18 +342,18 @@ extern bool text_format(p_text txt, dword max_pixels, dword wordspace,
 		if (ttf_mode) {
 			if (config.englishtruncate)
 				pos +=
-					ttf_get_string_width_english(cttf, ettf, (const byte *) pos,
+					ttf_get_string_width_english(cttf, ettf, (const u8 *) pos,
 												 max_pixels, posend - pos,
 												 wordspace);
 			else
 				pos +=
-					ttf_get_string_width(cttf, ettf, (const byte *) pos,
+					ttf_get_string_width(cttf, ettf, (const u8 *) pos,
 										 max_pixels, posend - pos, wordspace,
 										 NULL);
 		} else
 #endif
 		{
-			dword count = 0;
+			u32 count = 0;
 
 			if (config.englishtruncate)
 				text_get_string_width_english(pos, posend, max_pixels,
@@ -363,7 +363,7 @@ extern bool text_format(p_text txt, dword max_pixels, dword wordspace,
 									  &count);
 			pos += count;
 		}
-		if (pos + 1 < posend && bytetable[*(byte *) pos] == 1) {
+		if (pos + 1 < posend && bytetable[*(u8 *) pos] == 1) {
 			if (*pos == '\r' && *(pos + 1) == '\n')
 				pos += 2;
 			else
@@ -371,7 +371,7 @@ extern bool text_format(p_text txt, dword max_pixels, dword wordspace,
 		}
 		txt->rows[curs][txt->row_count & 0x3FF].count = pos - startp;
 		txt->row_count++;
-		if (pos + 1 == posend && bytetable[*(byte *) pos] == 1) {
+		if (pos + 1 == posend && bytetable[*(u8 *) pos] == 1) {
 			break;
 		}
 	}
@@ -532,13 +532,13 @@ static size_t text_paragraph_join_alloc_memory(char **txtbuf, size_t txtlen)
  *
  * @return 新文本大小
  */
-static dword text_reorder(char *string, dword size)
+static u32 text_reorder(char *string, u32 size)
 {
 	int i;
 	char *wtxt = string, *ctxt = string, *etxt = string + size;
 
 	while (ctxt < etxt) {
-		while (ctxt < etxt && bytetable[*(byte *) ctxt] == 0)
+		while (ctxt < etxt && bytetable[*(u8 *) ctxt] == 0)
 			*wtxt++ = *ctxt++;
 		if (ctxt >= etxt)
 			break;
@@ -602,7 +602,7 @@ static dword text_reorder(char *string, dword size)
  * @return 新的电子书结构指针
  */
 static p_text text_open(const char *filename, t_fs_filetype ft,
-						dword max_pixels, dword wordspace, t_conf_encode encode,
+						u32 max_pixels, u32 wordspace, t_conf_encode encode,
 						bool reorder)
 {
 	int fd;
@@ -661,7 +661,7 @@ static int fix_symbian_crlf(unsigned char *pos, unsigned char *posend)
 }
 
 extern p_text chapter_open_in_umd(const char *umdfile, const char *chaptername,
-								  u_int index, dword rowpixels, dword wordspace,
+								  u_int index, u32 rowpixels, u32 wordspace,
 								  t_conf_encode encode, bool reorder)
 {
 	extern p_umd_chapter p_umdchapter;
@@ -698,7 +698,7 @@ extern p_text chapter_open_in_umd(const char *umdfile, const char *chaptername,
 	fix_symbian_crlf((unsigned char *) txt->buf,
 					 (unsigned char *) txt->buf + txt->size);
 	buffer_free(pbuf);
-	dbg_printf(d, "%s: after conv file length: %ld", __func__, txt->size);
+	dbg_printf(d, "%s: after conv file length: %u", __func__, txt->size);
 	/* if (ft == fs_filetype_html)
 	   txt->size = html_to_text(txt->buf, txt->size, true); */
 	if (reorder) {
@@ -715,8 +715,8 @@ extern p_text chapter_open_in_umd(const char *umdfile, const char *chaptername,
 }
 
 extern p_text text_open_in_umd(const char *umdfile, const char *chaptername,
-							   t_fs_filetype ft, dword rowpixels,
-							   dword wordspace, t_conf_encode encode,
+							   t_fs_filetype ft, u32 rowpixels,
+							   u32 wordspace, t_conf_encode encode,
 							   bool reorder)
 {
 	int fd;
@@ -775,7 +775,7 @@ extern p_text text_open_in_umd(const char *umdfile, const char *chaptername,
 	memcpy(txt->buf, pbuf->ptr, txt->size);
 	text_decode(txt, conf_encode_ucs);
 	buffer_free(pbuf);
-	dbg_printf(d, "%s: after conv file length %ld", __func__, txt->size);
+	dbg_printf(d, "%s: after conv file length %u", __func__, txt->size);
 	fix_symbian_crlf((unsigned char *) txt->buf,
 					 (unsigned char *) txt->buf + txt->size);
 	if (ft == fs_filetype_html)
@@ -794,8 +794,8 @@ extern p_text text_open_in_umd(const char *umdfile, const char *chaptername,
 }
 
 extern p_text text_open_in_pdb(const char *pdbfile, const char *chaptername,
-							   t_fs_filetype ft, dword rowpixels,
-							   dword wordspace, t_conf_encode encode,
+							   t_fs_filetype ft, u32 rowpixels,
+							   u32 wordspace, t_conf_encode encode,
 							   bool reorder)
 {
 	SceIoStat state;
@@ -863,11 +863,11 @@ static p_text text_open_binary(const char *filename, bool vert)
 {
 	int fd;
 	p_text txt = calloc(1, sizeof(*txt));
-	byte *tmpbuf;
-	dword bpr = (vert ? 43 : 66);
-	dword curs = 0;
-	byte *cbuf;
-	dword i;
+	u8 *tmpbuf;
+	u32 bpr = (vert ? 43 : 66);
+	u32 curs = 0;
+	u8 *cbuf;
+	u32 i;
 
 	if (txt == NULL)
 		return NULL;
@@ -919,7 +919,7 @@ static p_text text_open_binary(const char *filename, bool vert)
 					cbuf[7], cbuf[8], cbuf[9], cbuf[10], cbuf[11],
 					cbuf[12], cbuf[13], cbuf[14], cbuf[15]);
 			if ((i + 1) * 16 > txt->size) {
-				dword padding = (i + 1) * 16 - txt->size;
+				u32 padding = (i + 1) * 16 - txt->size;
 
 				if (padding < 9)
 					memset(&txt->buf[bpr * i + bpr - padding * 2], 0x20,
@@ -929,7 +929,7 @@ static p_text text_open_binary(const char *filename, bool vert)
 									 padding * 2], 0x20, padding * 2 + 1);
 			}
 		} else {
-			dword j;
+			u32 j;
 
 			snprintf(&txt->buf[bpr * i], bpr,
 					"%08X: %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X ",
@@ -942,7 +942,7 @@ static p_text text_open_binary(const char *filename, bool vert)
 				txt->buf[bpr * i + 40 + 10 + j] =
 					(cbuf[j] > 0x1F && cbuf[j] < 0x7F) ? cbuf[j] : '.';
 			if ((i + 1) * 16 > txt->size) {
-				dword padding = (i + 1) * 16 - txt->size;
+				u32 padding = (i + 1) * 16 - txt->size;
 
 				memset(&txt->buf[bpr * i + bpr - padding], 0x20, padding);
 				if ((padding & 1) > 0)
@@ -975,8 +975,8 @@ static p_text text_open_binary(const char *filename, bool vert)
  * @return 新的电子书结构指针
  */
 static p_text text_open_in_gz(const char *gzfile, const char *filename,
-							  t_fs_filetype ft, dword max_pixels,
-							  dword wordspace, t_conf_encode encode,
+							  t_fs_filetype ft, u32 max_pixels,
+							  u32 wordspace, t_conf_encode encode,
 							  bool reorder)
 {
 	p_text txt = calloc(1, sizeof(*txt));
@@ -1050,17 +1050,17 @@ static p_text text_open_in_gz(const char *gzfile, const char *filename,
  * @return 新的电子书结构指针
  */
 static p_text text_open_binary_in_zip(const char *zipfile, const char *filename,
-									  t_fs_filetype ft, dword max_pixels,
-									  dword wordspace, t_conf_encode encode,
+									  t_fs_filetype ft, u32 max_pixels,
+									  u32 wordspace, t_conf_encode encode,
 									  bool reorder, bool vert)
 {
 	p_text txt = calloc(1, sizeof(*txt));
 	buffer *buf = NULL;
-	byte *tmpbuf;
-	dword bpr = (vert ? 43 : 66);
-	dword curs;
-	byte *cbuf;
-	dword i;
+	u8 *tmpbuf;
+	u32 bpr = (vert ? 43 : 66);
+	u32 curs;
+	u8 *cbuf;
+	u32 i;
 
 	if (txt == NULL)
 		return NULL;
@@ -1084,7 +1084,7 @@ static p_text text_open_binary_in_zip(const char *zipfile, const char *filename,
 		}
 	}
 
-	tmpbuf = (byte *) txt->buf;
+	tmpbuf = (u8 *) txt->buf;
 
 	if ((txt->buf = calloc(1, (txt->size + 15) / 16 * bpr)) == NULL) {
 		free(tmpbuf);
@@ -1117,7 +1117,7 @@ static p_text text_open_binary_in_zip(const char *zipfile, const char *filename,
 					cbuf[7], cbuf[8], cbuf[9], cbuf[10], cbuf[11],
 					cbuf[12], cbuf[13], cbuf[14], cbuf[15]);
 			if ((i + 1) * 16 > txt->size) {
-				dword padding = (i + 1) * 16 - txt->size;
+				u32 padding = (i + 1) * 16 - txt->size;
 
 				if (padding < 9)
 					memset(&txt->buf[bpr * i + bpr - padding * 2], 0x20,
@@ -1127,7 +1127,7 @@ static p_text text_open_binary_in_zip(const char *zipfile, const char *filename,
 									 padding * 2], 0x20, padding * 2 + 1);
 			}
 		} else {
-			dword j;
+			u32 j;
 
 			snprintf(&txt->buf[bpr * i], bpr,
 					"%08X: %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X ",
@@ -1140,7 +1140,7 @@ static p_text text_open_binary_in_zip(const char *zipfile, const char *filename,
 				txt->buf[bpr * i + 40 + 10 + j] =
 					(cbuf[j] > 0x1F && cbuf[j] < 0x7F) ? cbuf[j] : '.';
 			if ((i + 1) * 16 > txt->size) {
-				dword padding = (i + 1) * 16 - txt->size;
+				u32 padding = (i + 1) * 16 - txt->size;
 
 				memset(&txt->buf[bpr * i + bpr - padding], 0x20, padding);
 				if ((padding & 1) > 0)
@@ -1160,8 +1160,8 @@ static p_text text_open_binary_in_zip(const char *zipfile, const char *filename,
 }
 
 extern p_text text_open_in_raw(const char *filename, const unsigned char *data,
-							   size_t size, t_fs_filetype ft, dword max_pixels,
-							   dword wordspace, t_conf_encode encode,
+							   size_t size, t_fs_filetype ft, u32 max_pixels,
+							   u32 wordspace, t_conf_encode encode,
 							   bool reorder)
 {
 	p_text txt;
@@ -1215,8 +1215,8 @@ extern p_text text_open_in_raw(const char *filename, const unsigned char *data,
  * @return 新的电子书结构指针
  */
 static p_text text_open_in_zip(const char *zipfile, const char *filename,
-							   t_fs_filetype ft, dword max_pixels,
-							   dword wordspace, t_conf_encode encode,
+							   t_fs_filetype ft, u32 max_pixels,
+							   u32 wordspace, t_conf_encode encode,
 							   bool reorder)
 {
 	p_text txt = calloc(1, sizeof(*txt));
@@ -1267,17 +1267,17 @@ static p_text text_open_in_zip(const char *zipfile, const char *filename,
  * @return 新的电子书结构指针
  */
 static p_text text_open_binary_in_rar(const char *rarfile, const char *filename,
-									  t_fs_filetype ft, dword max_pixels,
-									  dword wordspace, t_conf_encode encode,
+									  t_fs_filetype ft, u32 max_pixels,
+									  u32 wordspace, t_conf_encode encode,
 									  bool reorder, bool vert)
 {
 	p_text txt = calloc(1, sizeof(*txt));
 	buffer *buf = NULL;
-	dword bpr = (vert ? 43 : 66);
-	byte *tmpbuf;
-	dword curs = 0;
-	dword i;
-	byte *cbuf;
+	u32 bpr = (vert ? 43 : 66);
+	u8 *tmpbuf;
+	u32 curs = 0;
+	u32 i;
+	u8 *cbuf;
 
 	if (txt == NULL)
 		return NULL;
@@ -1301,7 +1301,7 @@ static p_text text_open_binary_in_rar(const char *rarfile, const char *filename,
 		}
 	}
 
-	tmpbuf = (byte *) txt->buf;
+	tmpbuf = (u8 *) txt->buf;
 
 	if ((txt->buf = calloc(1, (txt->size + 15) / 16 * bpr)) == NULL) {
 		free(tmpbuf);
@@ -1332,7 +1332,7 @@ static p_text text_open_binary_in_rar(const char *rarfile, const char *filename,
 					cbuf[7], cbuf[8], cbuf[9], cbuf[10], cbuf[11],
 					cbuf[12], cbuf[13], cbuf[14], cbuf[15]);
 			if ((i + 1) * 16 > txt->size) {
-				dword padding = (i + 1) * 16 - txt->size;
+				u32 padding = (i + 1) * 16 - txt->size;
 
 				if (padding < 9)
 					memset(&txt->buf[bpr * i + bpr - padding * 2], 0x20,
@@ -1342,7 +1342,7 @@ static p_text text_open_binary_in_rar(const char *rarfile, const char *filename,
 									 padding * 2], 0x20, padding * 2 + 1);
 			}
 		} else {
-			dword j;
+			u32 j;
 
 			snprintf(&txt->buf[bpr * i], bpr,
 					"%08X: %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X %02X%02X ",
@@ -1355,7 +1355,7 @@ static p_text text_open_binary_in_rar(const char *rarfile, const char *filename,
 				txt->buf[bpr * i + 40 + 10 + j] =
 					(cbuf[j] > 0x1F && cbuf[j] < 0x7F) ? cbuf[j] : '.';
 			if ((i + 1) * 16 > txt->size) {
-				dword padding = (i + 1) * 16 - txt->size;
+				u32 padding = (i + 1) * 16 - txt->size;
 
 				memset(&txt->buf[bpr * i + bpr - padding], 0x20, padding);
 				if ((padding & 1) > 0)
@@ -1388,8 +1388,8 @@ static p_text text_open_binary_in_rar(const char *rarfile, const char *filename,
  * @return 新的电子书结构指针
  */
 static p_text text_open_in_rar(const char *rarfile, const char *filename,
-							   t_fs_filetype ft, dword max_pixels,
-							   dword wordspace, t_conf_encode encode,
+							   t_fs_filetype ft, u32 max_pixels,
+							   u32 wordspace, t_conf_encode encode,
 							   bool reorder)
 {
 	p_text txt = calloc(1, sizeof(*txt));
@@ -1437,8 +1437,8 @@ static p_text text_open_in_rar(const char *rarfile, const char *filename,
  * @return 新的电子书结构指针
  */
 static p_text text_open_in_chm(const char *chmfile, const char *filename,
-							   t_fs_filetype ft, dword max_pixels,
-							   dword wordspace, t_conf_encode encode,
+							   t_fs_filetype ft, u32 max_pixels,
+							   u32 wordspace, t_conf_encode encode,
 							   bool reorder)
 {
 	p_text txt = calloc(1, sizeof(*txt));
@@ -1475,7 +1475,7 @@ static p_text text_open_in_chm(const char *chmfile, const char *filename,
 extern void text_close(p_text fstext)
 {
 	if (fstext != NULL) {
-		dword i;
+		u32 i;
 
 		if (fstext->buf != NULL)
 			free(fstext->buf);
@@ -1490,8 +1490,8 @@ extern void text_close(p_text fstext)
 extern p_text text_open_archive(const char *filename,
 								const char *archname,
 								t_fs_filetype filetype,
-								dword max_pixels,
-								dword wordspace,
+								u32 max_pixels,
+								u32 wordspace,
 								t_conf_encode encode,
 								bool reorder, int where, int vertread)
 {

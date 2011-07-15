@@ -399,10 +399,10 @@ void player_stop()
 	}
 }
 
-int get_samples(byte * buffer)
+int get_samples(u8 * buffer)
 {
 	unsigned int k, depth, unary, binary;
-	byte *p = buffer;
+	u8 *p = buffer;
 	decoder *dec = tta;
 	int *prev = cache;
 	int value, res;

@@ -30,82 +30,82 @@ extern void image_zoom_bicubic(pixel * src, int srcwidth, int srcheight,
 							   pixel * dest, int destwidth, int destheight);
 extern void image_zoom_bilinear(pixel * src, int srcwidth, int srcheight,
 								pixel * dest, int destwidth, int destheight);
-extern int image_rotate(pixel * imgdata, dword * pwidth, dword * pheight,
-						dword organgle, dword newangle);
-extern int image_readpng(const char *filename, dword * pwidth, dword * pheight,
+extern int image_rotate(pixel * imgdata, u32 * pwidth, u32 * pheight,
+						u32 organgle, u32 newangle);
+extern int image_readpng(const char *filename, u32 * pwidth, u32 * pheight,
 						 pixel ** image_data, pixel * bgcolor);
 extern int image_readpng_in_zip(const char *zipfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
 extern int image_readpng_in_chm(const char *chmfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
 extern int image_readpng_in_rar(const char *rarfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
-extern int image_readgif(const char *filename, dword * pwidth, dword * pheight,
+extern int image_readgif(const char *filename, u32 * pwidth, u32 * pheight,
 						 pixel ** image_data, pixel * bgcolor);
 extern int image_readgif_in_zip(const char *zipfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
 extern int image_readgif_in_chm(const char *chmfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
 extern int image_readgif_in_umd(const char *umdfile, size_t file_pos,
-								size_t length, dword * pwidth, dword * pheight,
+								size_t length, u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
 extern int image_readgif_in_rar(const char *rarfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
-extern int image_readjpg(const char *filename, dword * pwidth, dword * pheight,
+extern int image_readjpg(const char *filename, u32 * pwidth, u32 * pheight,
 						 pixel ** image_data, pixel * bgcolor);
 extern int image_readjpg_in_zip(const char *zipfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
 extern int image_readjpg_in_chm(const char *chmfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
 extern int image_readjpg_in_umd(const char *umdfile, size_t file_pos,
-								size_t length, dword * pwidth, dword * pheight,
+								size_t length, u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
 extern int image_readjpg_in_rar(const char *rarfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
-extern int exif_readjpg(const char *filename, dword * pwidth, dword * pheight,
+extern int exif_readjpg(const char *filename, u32 * pwidth, u32 * pheight,
 						pixel ** image_data, pixel * bgcolor);
-extern int image_readbmp(const char *filename, dword * pwidth, dword * pheight,
+extern int image_readbmp(const char *filename, u32 * pwidth, u32 * pheight,
 						 pixel ** image_data, pixel * bgcolor);
 extern int image_readbmp_in_zip(const char *zipfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
 extern int image_readbmp_in_chm(const char *chmfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
 extern int image_readbmp_in_umd(const char *umdfile, size_t file_pos,
-								size_t length, dword * pwidth, dword * pheight,
+								size_t length, u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
 extern int image_readbmp_in_rar(const char *rarfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
-extern int image_readtga(const char *filename, dword * pwidth, dword * pheight,
+extern int image_readtga(const char *filename, u32 * pwidth, u32 * pheight,
 						 pixel ** image_data, pixel * bgcolor);
 extern int image_readtga_in_zip(const char *zipfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
 extern int image_readtga_in_chm(const char *chmfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
 extern int image_readtga_in_rar(const char *rarfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor);
 extern int image_open_normal(const char *filename, t_fs_filetype ft,
-							 dword * pWidth, dword * pHeight,
+							 u32 * pWidth, u32 * pHeight,
 							 pixel ** ppImageData, pixel * pBgColor);
 extern int image_open_umd(const char *chaptername, const char *umdfile,
 						  t_fs_filetype ft, size_t file_pos, size_t length,
-						  dword * pWidth, dword * pHeight, pixel ** ppImageData,
+						  u32 * pWidth, u32 * pHeight, pixel ** ppImageData,
 						  pixel * pBgColor);
 int image_open_archive(const char *filename, const char *archname,
-					   t_fs_filetype ft, dword * pWidth, dword * pHeight,
+					   t_fs_filetype ft, u32 * pWidth, u32 * pHeight,
 					   pixel ** ppImageData, pixel * pBgColor, int where);
 #endif

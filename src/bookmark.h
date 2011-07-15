@@ -25,8 +25,8 @@
 
 struct _bookmark
 {
-	dword row[10];
-	dword index, hash;
+	u32 row[10];
+	u32 index, hash;
 } __attribute__ ((packed));
 typedef struct _bookmark t_bookmark, *p_bookmark;
 

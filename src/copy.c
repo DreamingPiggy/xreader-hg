@@ -37,7 +37,7 @@
 extern bool copy_file(const char *src, const char *dest, t_copy_cb cb,
 					  t_copy_overwritecb ocb, void *data)
 {
-	byte *buf = malloc(1024 * 1024);
+	u8 *buf = malloc(1024 * 1024);
 	int fd1, fd2;
 	int readbytes;
 
@@ -86,11 +86,11 @@ extern bool copy_file(const char *src, const char *dest, t_copy_cb cb,
 	return true;
 }
 
-extern dword copy_dir(const char *src, const char *dest, t_copy_cb cb,
+extern u32 copy_dir(const char *src, const char *dest, t_copy_cb cb,
 					  t_copy_overwritecb ocb, void *data)
 {
 	int dl = sceIoDopen(src);
-	dword result = 0;
+	u32 result = 0;
 	SceIoDirent sid;
 
 	if (dl < 0) {
@@ -132,10 +132,10 @@ extern bool move_file(const char *src, const char *dest, t_copy_cb cb,
 	return result;
 }
 
-extern dword move_dir(const char *src, const char *dest, t_copy_cb cb,
+extern u32 move_dir(const char *src, const char *dest, t_copy_cb cb,
 					  t_copy_overwritecb ocb, void *data)
 {
-	dword result = copy_dir(src, dest, cb, ocb, data);
+	u32 result = copy_dir(src, dest, cb, ocb, data);
 
 	if (result > 0)
 		utils_del_dir(src);

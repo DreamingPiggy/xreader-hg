@@ -27,8 +27,8 @@
 typedef struct
 {
 	char *start;
-	dword count;
-	dword GI;
+	u32 count;
+	u32 GI;
 } t_textrow, *p_textrow;
 
 typedef struct
@@ -36,9 +36,9 @@ typedef struct
 	/** 文件路径名 */
 	char filename[PATH_MAX];
 
-	dword crow;
+	u32 crow;
 
-	dword size;
+	u32 size;
 
 	char *buf;
 
@@ -51,7 +51,7 @@ typedef struct
 	int ucs;
 
 	/** 行数 */
-	dword row_count;
+	u32 row_count;
 
 	/** 行结构指针数组 */
 	p_textrow rows[1024];
@@ -69,7 +69,7 @@ typedef struct
  *
  * @return 是否成功
  */
-extern bool text_format(p_text txt, dword max_pixels, dword wordspace,
+extern bool text_format(p_text txt, u32 max_pixels, u32 wordspace,
 						bool ttf_mode);
 
 /**
@@ -89,8 +89,8 @@ extern bool text_format(p_text txt, dword max_pixels, dword wordspace,
  * @return 新的电子书结构指针
  */
 extern p_text text_open_in_raw(const char *filename, const unsigned char *data,
-							   size_t size, t_fs_filetype ft, dword max_pixels,
-							   dword wordspace, t_conf_encode encode,
+							   size_t size, t_fs_filetype ft, u32 max_pixels,
+							   u32 wordspace, t_conf_encode encode,
 							   bool reorder);
 
 /**
@@ -114,13 +114,13 @@ extern p_text text_open_in_raw(const char *filename, const unsigned char *data,
 extern p_text text_open_archive(const char *filename,
 								const char *archname,
 								t_fs_filetype filetype,
-								dword max_pixels,
-								dword wordspace,
+								u32 max_pixels,
+								u32 wordspace,
 								t_conf_encode encode,
 								bool reorder, int where, int vertread);
 
 extern p_text chapter_open_in_umd(const char *umdfile, const char *chaptername,
-								  u_int index, dword rowpixels, dword wordspace,
+								  u_int index, u32 rowpixels, u32 wordspace,
 								  t_conf_encode encode, bool reorder);
 
 /**
@@ -139,7 +139,7 @@ extern void text_close(p_text fstext);
  *
  * @return 显示长度，以像素计
  */
-int text_get_string_width_sys(const byte * pos, size_t size, dword wordspace);
+int text_get_string_width_sys(const u8 * pos, size_t size, u32 wordspace);
 
 /**
  * 是否为不能截断字符

@@ -630,7 +630,7 @@ static int mp3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 	return 0;
 }
 
-int memp3_decode(void *data, dword data_len, void *pcm_data)
+int memp3_decode(void *data, u32 data_len, void *pcm_data)
 {
 	mp3_codec_buffer[6] = (uint32_t) data;
 	mp3_codec_buffer[8] = (uint32_t) pcm_data;
@@ -643,7 +643,7 @@ int memp3_decode(void *data, dword data_len, void *pcm_data)
 
 static uint8_t memp3_input_buf[2889] __attribute__ ((aligned(64)));
 static uint8_t memp3_decoded_buf[2048 * 4] __attribute__ ((aligned(64)));
-static dword this_frame, buf_end;
+static u32 this_frame, buf_end;
 static bool need_data;
 
 /**

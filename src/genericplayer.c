@@ -54,7 +54,7 @@ volatile u64 g_last_seek_tick = 0;
 /**
  *  按快进退键计数
  */
-volatile dword g_seek_count = 0;
+volatile u32 g_seek_count = 0;
 
 /**
  * 休眠前播放状态

@@ -176,12 +176,12 @@ void filename_to_itemname(p_win_menuitem item, int cur_count,
 	}
 }
 
-extern dword fs_list_device(const char *dir, const char *sdir,
-							p_win_menuitem * mitem, dword icolor,
-							dword selicolor, dword selrcolor, dword selbcolor)
+extern u32 fs_list_device(const char *dir, const char *sdir,
+							p_win_menuitem * mitem, u32 icolor,
+							u32 selicolor, u32 selrcolor, u32 selbcolor)
 {
-	extern dword filecount;
-	dword cur_count = 0;
+	extern u32 filecount;
+	u32 cur_count = 0;
 	p_win_menuitem item = NULL;
 
 	win_item_destroy(mitem, &filecount);
@@ -228,16 +228,16 @@ extern dword fs_list_device(const char *dir, const char *sdir,
 	return cur_count;
 }
 
-extern dword fs_flashdir_to_menu(const char *dir, const char *sdir,
-								 p_win_menuitem * mitem, dword icolor,
-								 dword selicolor, dword selrcolor,
-								 dword selbcolor)
+extern u32 fs_flashdir_to_menu(const char *dir, const char *sdir,
+								 p_win_menuitem * mitem, u32 icolor,
+								 u32 selicolor, u32 selrcolor,
+								 u32 selbcolor)
 {
-	extern dword filecount;
+	extern u32 filecount;
 	int fid;
-	dword itemcount;
+	u32 itemcount;
 	SceIoDirent info;
-	dword cur_count = 0;
+	u32 cur_count = 0;
 	p_win_menuitem item = NULL;
 	int fd;
 
@@ -363,17 +363,17 @@ extern dword fs_flashdir_to_menu(const char *dir, const char *sdir,
 }
 
 // New style fat system custom reading
-extern dword fs_dir_to_menu(const char *dir, char *sdir, p_win_menuitem * mitem,
-							dword icolor, dword selicolor, dword selrcolor,
-							dword selbcolor, bool showhidden, bool showunknown)
+extern u32 fs_dir_to_menu(const char *dir, char *sdir, p_win_menuitem * mitem,
+							u32 icolor, u32 selicolor, u32 selrcolor,
+							u32 selbcolor, bool showhidden, bool showunknown)
 {
-	extern dword filecount;
+	extern u32 filecount;
 	int fid;
 	p_win_menuitem item = NULL;
 	p_fat_info info;
-	dword itemcount = 0;
-	dword count;
-	dword i, cur_count = 0;
+	u32 itemcount = 0;
+	u32 count;
+	u32 i, cur_count = 0;
 
 	win_item_destroy(mitem, &filecount);
 	fid = freq_enter_hotzone();
@@ -482,13 +482,13 @@ extern dword fs_dir_to_menu(const char *dir, char *sdir, p_win_menuitem * mitem,
 	return cur_count;
 }
 
-extern dword fs_zip_to_menu(const char *zipfile, p_win_menuitem * mitem,
-							dword icolor, dword selicolor, dword selrcolor,
-							dword selbcolor)
+extern u32 fs_zip_to_menu(const char *zipfile, p_win_menuitem * mitem,
+							u32 icolor, u32 selicolor, u32 selrcolor,
+							u32 selbcolor)
 {
-	extern dword filecount;
-	dword itemcount;
-	dword cur_count = 1;
+	extern u32 filecount;
+	u32 itemcount;
+	u32 cur_count = 1;
 	int fid;
 	unzFile unzf;
 	p_win_menuitem item;
@@ -584,16 +584,16 @@ extern dword fs_zip_to_menu(const char *zipfile, p_win_menuitem * mitem,
 	return cur_count;
 }
 
-extern dword fs_rar_to_menu(const char *rarfile, p_win_menuitem * mitem,
-							dword icolor, dword selicolor, dword selrcolor,
-							dword selbcolor)
+extern u32 fs_rar_to_menu(const char *rarfile, p_win_menuitem * mitem,
+							u32 icolor, u32 selicolor, u32 selrcolor,
+							u32 selbcolor)
 {
-	extern dword filecount;
-	dword itemcount;
+	extern u32 filecount;
+	u32 itemcount;
 	int fid;
 	p_win_menuitem item = NULL;
 	struct RAROpenArchiveData arcdata;
-	dword cur_count = 1;
+	u32 cur_count = 1;
 	struct RARHeaderDataEx header;
 	int ret;
 	HANDLE hrar;
@@ -672,11 +672,11 @@ extern dword fs_rar_to_menu(const char *rarfile, p_win_menuitem * mitem,
 		item[cur_count].data = (void *) ft;
 		if (header.Flags & 0x200) {
 			char str[1024];
-			const byte *uni;
+			const u8 *uni;
 
 			memset(str, 0, 1024);
-			uni = (byte *) header.FileNameW;
-			charsets_utf32_conv(uni, sizeof(header.FileNameW), (byte *) str,
+			uni = (u8 *) header.FileNameW;
+			charsets_utf32_conv(uni, sizeof(header.FileNameW), (u8 *) str,
 								sizeof(str));
 			buffer_copy_string_len(item[cur_count].compname, header.FileName,
 								   256);
@@ -707,8 +707,8 @@ extern dword fs_rar_to_menu(const char *rarfile, p_win_menuitem * mitem,
 	return cur_count;
 }
 
-p_win_menuitem fs_empty_dir(dword * filecount, dword icolor,
-							dword selicolor, dword selrcolor, dword selbcolor)
+p_win_menuitem fs_empty_dir(u32 * filecount, u32 icolor,
+							u32 selicolor, u32 selrcolor, u32 selbcolor)
 {
 	p_win_menuitem p;
 
@@ -736,21 +736,21 @@ p_win_menuitem fs_empty_dir(dword * filecount, dword icolor,
 typedef struct
 {
 	p_win_menuitem *mitem;
-	dword cur_count;
-	dword icolor;
-	dword selicolor;
-	dword selrcolor;
-	dword selbcolor;
+	u32 cur_count;
+	u32 icolor;
+	u32 selicolor;
+	u32 selrcolor;
+	u32 selbcolor;
 } t_fs_chm_enum, *p_fs_chm_enum;
 
-static dword *chm_itemcount = NULL;
+static u32 *chm_itemcount = NULL;
 
 static int chmEnum(struct chmFile *h, struct chmUnitInfo *ui, void *context)
 {
 	p_win_menuitem *mitem = ((p_fs_chm_enum) context)->mitem;
 	p_win_menuitem item = *mitem;
 	t_fs_filetype ft;
-	dword cur_count;
+	u32 cur_count;
 	char fname[PATH_MAX] = "";
 	char t[20];
 
@@ -803,12 +803,12 @@ static int chmEnum(struct chmFile *h, struct chmUnitInfo *ui, void *context)
 	return CHM_ENUMERATOR_CONTINUE;
 }
 
-extern dword fs_chm_to_menu(const char *chmfile, p_win_menuitem * mitem,
-							dword icolor, dword selicolor, dword selrcolor,
-							dword selbcolor)
+extern u32 fs_chm_to_menu(const char *chmfile, p_win_menuitem * mitem,
+							u32 icolor, u32 selicolor, u32 selrcolor,
+							u32 selbcolor)
 {
-	extern dword filecount;
-	dword itemcount;
+	extern u32 filecount;
+	u32 itemcount;
 	int fid;
 	p_win_menuitem item = NULL;
 	struct chmFile *chm;
@@ -859,15 +859,15 @@ extern dword fs_chm_to_menu(const char *chmfile, p_win_menuitem * mitem,
 	return cenum.cur_count;
 }
 
-extern dword fs_umd_to_menu(const char *umdfile, p_win_menuitem * mitem,
-							dword icolor, dword selicolor, dword selrcolor,
-							dword selbcolor)
+extern u32 fs_umd_to_menu(const char *umdfile, p_win_menuitem * mitem,
+							u32 icolor, u32 selicolor, u32 selrcolor,
+							u32 selbcolor)
 {
 	buffer *pbuf = NULL;
-	extern dword filecount;
+	extern u32 filecount;
 	p_win_menuitem item = NULL;
-	dword cur_count = 1;
-	dword itemcount;
+	u32 cur_count = 1;
+	u32 itemcount;
 	int fid;
 
 	win_item_destroy(mitem, &filecount);
@@ -934,8 +934,8 @@ extern dword fs_umd_to_menu(const char *umdfile, p_win_menuitem * mitem,
 			for (i = 1; i < cur_count; i++) {
 				stlen = p[i - 1].name->used - 1;
 				stlen =
-					charsets_ucs_conv((const byte *) p[i - 1].name->ptr, stlen,
-									  (byte *) pbuf->ptr, pbuf->size);
+					charsets_ucs_conv((const u8 *) p[i - 1].name->ptr, stlen,
+									  (u8 *) pbuf->ptr, pbuf->size);
 				SPRINTF_S(pos, "%d", p[i - 1].length);
 				buffer_copy_string_len(item[i].shortname, pos, 20);
 				buffer_copy_string_len(item[i].compname, pbuf->ptr,

@@ -37,9 +37,9 @@
 static pixel *bg_start =
 	(pixel *) (0x44000000 +
 			   PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES * 2);
-static dword imgwidth, imgheight;
+static u32 imgwidth, imgheight;
 
-static void bg_set_color(pixel * bg_addr, dword bgcolor)
+static void bg_set_color(pixel * bg_addr, u32 bgcolor)
 {
 	pixel *bg_buf, *bg_end;
 
@@ -49,12 +49,12 @@ static void bg_set_color(pixel * bg_addr, dword bgcolor)
 }
 
 /// mix image and bgcolor to bg buffer
-static void bg_set_image_grayscale(pixel * img_buf, dword top, dword left,
-								   dword width, dword height,
-								   dword bgcolor, dword grayscale)
+static void bg_set_image_grayscale(pixel * img_buf, u32 top, u32 left,
+								   u32 width, u32 height,
+								   u32 bgcolor, u32 grayscale)
 {
 	pixel *bg_buf, *bg_end, *bg_line, *bg_lineend;
-	dword r = RGB_R(bgcolor), g = RGB_G(bgcolor), b = RGB_B(bgcolor);
+	u32 r = RGB_R(bgcolor), g = RGB_G(bgcolor), b = RGB_B(bgcolor);
 
 	for (bg_buf = bg_start + top * PSP_SCREEN_SCANLINE + left, bg_end =
 		 bg_buf + height * PSP_SCREEN_SCANLINE; bg_buf < bg_end;
@@ -67,10 +67,10 @@ static void bg_set_image_grayscale(pixel * img_buf, dword top, dword left,
 }
 
 extern void bg_load(const char *filename, const char *archname, pixel bgcolor,
-					t_fs_filetype ft, dword grayscale, int where)
+					t_fs_filetype ft, u32 grayscale, int where)
 {
 	pixel *imgdata, *imgshow = NULL, *img_buf;
-	dword width, height, w2, h2, left, top;
+	u32 width, height, w2, h2, left, top;
 	pixel bgc;
 	int result;
 
@@ -151,7 +151,7 @@ extern void bg_cancel(void)
 	config.have_bg = false;
 }
 
-static byte *_cache = NULL;
+static u8 *_cache = NULL;
 
 extern void bg_cache(void)
 {

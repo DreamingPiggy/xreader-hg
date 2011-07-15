@@ -188,7 +188,7 @@ static int tta_audiocallback(void *buf, unsigned int reqn, void *pdata)
 				__end();
 				return -1;
 			}
-			ret = get_samples((byte *) g_buff);
+			ret = get_samples((u8 *) g_buff);
 			if (ret <= 0) {
 				__end();
 				return -1;

@@ -25,7 +25,7 @@
 typedef struct
 {
 	int idx, size;
-	byte *buf;
+	u8 *buf;
 } t_image_rar, *p_image_rar;
 
 extern void extract_archive_file_into_buffer(buffer ** buf,

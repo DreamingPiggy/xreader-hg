@@ -61,7 +61,7 @@ struct MP3Info
 	int sample_freq;
 	double duration;
 	double average_bitrate;
-	dword *frameoff;
+	u32 *frameoff;
 	bool lame_encoded;
 	short lame_mode;
 	short lame_vbr_quality;
