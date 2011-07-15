@@ -33,7 +33,6 @@
 #include "display.h"
 #include "ttfont.h"
 #include "charsets.h"
-#include "pspscreen.h"
 #include "conf.h"
 #include "dbg.h"
 #include "scene.h"

@@ -31,7 +31,6 @@
 #include "display.h"
 #include "ctrl.h"
 #include "win.h"
-#include "pspscreen.h"
 #include <stdio.h>
 #include "dbg.h"
 #include "conf.h"

@@ -42,7 +42,7 @@
 #include "image.h"
 #include "archive.h"
 #include "freq_lock.h"
-#include "musicdrv.h"
+#include "audiocore/musicdrv.h"
 #include "dbg.h"
 #ifdef DMALLOC
 #include "dmalloc.h"

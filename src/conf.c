@@ -25,7 +25,6 @@
 #include <pspkernel.h>
 #include <pspctrl.h>
 #include "common/utils.h"
-#include "pspscreen.h"
 #include "scene.h"
 #include "display.h"
 #include "version.h"
@@ -35,7 +34,7 @@
 #include "dbg.h"
 #include "kubridge.h"
 #include "passwdmgr.h"
-#include "buffered_reader.h"
+#include "audiocore/buffered_reader.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif

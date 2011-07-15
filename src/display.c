@@ -29,7 +29,6 @@
 #include "conf.h"
 #include "ttfont.h"
 #include "display.h"
-#include "pspscreen.h"
 #include "iniparser.h"
 #include "strsafe.h"
 #include "fs.h"

@@ -27,7 +27,6 @@
 #include "display.h"
 #include "image.h"
 #include "bg.h"
-#include "pspscreen.h"
 #include "config.h"
 #include "scene.h"
 #ifdef DMALLOC

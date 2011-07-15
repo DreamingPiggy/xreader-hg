@@ -27,7 +27,6 @@
 #include <psputility_osk.h>
 #include <pspgu.h>
 #include "display.h"
-#include "pspscreen.h"
 #include "strsafe.h"
 #include "common/datatype.h"
 #include "conf.h"
