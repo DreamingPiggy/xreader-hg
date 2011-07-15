@@ -163,15 +163,21 @@ bool utils_is_file_exists(const char *filename)
 
 void *safe_realloc(void *ptr, size_t size)
 {
-	void *p = realloc(ptr, size);
+	void *p;
 
-	if (size == 0) {
+	if(ptr != NULL && size == 0) {
+		free(ptr);
+
 		return NULL;
 	}
 
+	p = realloc(ptr, size);
+
 	if (p == NULL) {
-		if (ptr)
+		if (ptr) {
 			free(ptr);
+		}
+
 		ptr = NULL;
 	}
 
