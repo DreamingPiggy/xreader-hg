@@ -808,6 +808,7 @@ void scene_ioptions_predraw(p_win_menuitem item, u32 index, u32 topindex,
 	char number[20];
 	char infomsg[80];
 
+#ifdef ENABLE_NLS
 	if (strcmp(simple_textdomain(NULL), "zh_CN") == 0 ||
 		strcmp(simple_textdomain(NULL), "zh_TW") == 0)
 		default_predraw(&g_predraw, _("看图选项"), max_height, &left,
@@ -815,6 +816,10 @@ void scene_ioptions_predraw(p_win_menuitem item, u32 index, u32 topindex,
 	else
 		default_predraw(&g_predraw, _("看图选项"), max_height, &left,
 						&right, &upper, &bottom, 6 * DISP_FONTSIZE + 4);
+#else
+	default_predraw(&g_predraw, _("看图选项"), max_height, &left,
+			&right, &upper, &bottom, 4 * DISP_FONTSIZE + 4);
+#endif
 
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
 				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
@@ -1254,11 +1259,15 @@ void scene_color_predraw(p_win_menuitem item, u32 index, u32 topindex,
 		pad = 6 * (12 - config.fontsize);
 	}
 
+#ifdef ENABLE_NLS
 	if (strcmp(simple_textdomain(NULL), "zh_CN") == 0 ||
 		strcmp(simple_textdomain(NULL), "zh_TW") == 0)
 		npad = 35;
 	else
 		npad = 0;
+#else
+	npad = 35;
+#endif
 
 	default_predraw(&g_predraw, _("颜色选项"), max_height, &left, &right,
 					&upper, &bottom, pad + npad);
@@ -2595,6 +2604,7 @@ int langid = 0;
 
 static void set_language(void)
 {
+#ifdef ENABLE_NLS
 	char msgpath[PATH_MAX];
 
 	SPRINTF_S(msgpath, "%smsg", scene_appdir());
@@ -2605,6 +2615,7 @@ static void set_language(void)
 		simple_bindtextdomain("zh_CN", msgpath);
 		simple_textdomain("zh_CN");
 	}
+#endif
 }
 
 extern void get_language(void)
@@ -4083,6 +4094,7 @@ static void scene_fileops_menu_draw(int selcount, p_win_menuitem item,
 
 	disp_duptocachealpha(50);
 
+#ifdef ENABLE_NLS
 	if (strcmp(simple_textdomain(NULL), "zh_CN") == 0 ||
 		strcmp(simple_textdomain(NULL), "zh_TW") == 0) {
 		left = 240 - DISP_FONTSIZE * 3 - 1;
@@ -4091,6 +4103,10 @@ static void scene_fileops_menu_draw(int selcount, p_win_menuitem item,
 		left = 240 - DISP_FONTSIZE * 3 - 1;
 		right = 240 + DISP_FONTSIZE * 12 + 1;
 	}
+#else
+	left = 240 - DISP_FONTSIZE * 3 - 1;
+	right = 240 + DISP_FONTSIZE * 3 + 1;
+#endif
 
 	disp_rectangle(left, 136 - DISP_FONTSIZE * 3 - 1,
 				   right, 136 + DISP_FONTSIZE * 5, COLOR_WHITE);
@@ -5128,12 +5144,6 @@ static void scene_enter_archive(u32 * idx, enum ArchiveType type)
 #ifdef ENABLE_IMAGE
 static void scene_open_image(u32 * idx)
 {
-#ifdef DMALLOC
-	unsigned mark;
-
-	mark = dmalloc_mark();
-#endif
-
 #ifdef ENABLE_USB
 	usb_deactivate();
 #endif
@@ -5149,12 +5159,6 @@ static void scene_open_image(u32 * idx)
 		usb_activate();
 	else
 		usb_deactivate();
-#endif
-
-#ifdef DMALLOC
-	dmalloc_log_changed(mark, 1, 0, 1);
-	dmalloc_log_stats();
-//  dmalloc_log_unfreed();
 #endif
 }
 #endif
@@ -5509,6 +5513,10 @@ int load_rdriver(void)
 	return mod;
 }
 
+#ifdef DMALLOC
+unsigned dmark;
+#endif
+
 extern void scene_init(void)
 {
 	char logfile[PATH_MAX];
@@ -5522,25 +5530,12 @@ extern void scene_init(void)
 	int _fsize;
 
 #ifdef DMALLOC
-//	unsigned mark;
 	void *p;
 
 	(void)p;
 	dmalloc_debug_setup("log-stats,check-fence,check-heap,check-funcs,check-blank,print-messages,inter=100");
 
-#if 0
-	dmalloc_debug_setup
-		("log-stats,log-non-free,check-fence,check-funcs,check-blank,print-messages");
-	mark = dmalloc_mark();
-	p = malloc(4096);
-	dmalloc_log_changed(mark, 1, 0, 1);
-	dmalloc_log_stats();
-	dmalloc_log_unfreed();
-
-	if (p == NULL) {
-		dbg_printf(d, "cannot malloc 4096 bytes yet");
-	}
-#endif
+	dmark = dmalloc_mark();
 #endif
 
 	getcwd(appdir, PATH_MAX);

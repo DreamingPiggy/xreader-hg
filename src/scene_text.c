@@ -861,9 +861,6 @@ int scene_book_reload(PBookViewData pView, u32 selidx)
 		win_msg(_("文件打开失败"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 		dbg_printf(d, _("scene_book_reload: 文件%s打开失败 where=%d"),
 				   pView->filename, where);
-		dbg_printf(d, _("scene_book_reload: %s %s %s"), filelist[selidx].name,
-				   filelist[selidx].shortname->ptr,
-				   filelist[selidx].compname->ptr, where);
 		freq_leave(fid);
 
 		if (g_bm != NULL) {
