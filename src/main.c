@@ -150,3 +150,20 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
+
+/* call @XREADER:dlmalloc,0xBAD2E938@ */
+void debug_malloc(void)
+{
+#ifdef DMALLOC
+#else
+	struct mallinfo info;
+
+	info = mallinfo();
+
+	printf("number of free chunks: %d\n", info.ordblks);
+	printf("total free space: %d\n", info.fordblks);
+	printf("maximum total allocated space: %d\n", info.usmblks);
+	printf("total allocated space: %d\n", info.uordblks);
+	printf("keep cost: %d\n", info.keepcost);
+#endif
+}
