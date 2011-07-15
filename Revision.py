@@ -16,7 +16,7 @@ def update_revision(data):
 	fp.close()
 
 def main():
-	output = subprocess.Popen("hg tip", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
+	output = subprocess.Popen("hg summary", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0]
 	sio = StringIO.StringIO(output)
 	rev_id = "Unknown"
 
@@ -25,7 +25,7 @@ def main():
 		if len(line) <= 0:
 			break
 
-		m = re.search("Changeset:[ \t]*(\d+)", line, re.I)
+		m = re.search("parent:[ \t]*(\d+)", line, re.I)
 
 		if m:
 			rev_id = m.group(1)

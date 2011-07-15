@@ -73,6 +73,7 @@ static int g_ins_kbps;
 #endif
 
 static volatile int secticks = 0;
+static u32 enable_exit_menu = 0;
 
 static u64 start, end;
 
@@ -663,6 +664,10 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 	static dword oldkey;
 #endif
 
+	if(!(key & PSP_CTRL_START)) {
+		enable_exit_menu = 1;
+	}
+
 	sceRtcGetCurrentTick(&end);
 	interval = pspDiffTime(&end, &start);
 
@@ -793,25 +798,27 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 #endif
 			break;
 		case PSP_CTRL_START:
-			ctrl_waitrelease();
-			if (*saveimage != NULL) {
-				disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT,
-							  0, 0, *saveimage);
-				disp_flip();
-				disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT,
-							  0, 0, *saveimage);
-				free(*saveimage);
-				*saveimage = NULL;
-			} else {
-				disp_waitv();
+			if(enable_exit_menu) {
+				ctrl_waitrelease();
+				if (*saveimage != NULL) {
+					disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT,
+							0, 0, *saveimage);
+					disp_flip();
+					disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT,
+							0, 0, *saveimage);
+					free(*saveimage);
+					*saveimage = NULL;
+				} else {
+					disp_waitv();
 #ifdef ENABLE_BG
-				if (!bg_display())
+					if (!bg_display())
 #endif
-					disp_fillvram(0);
-				disp_flip();
-				disp_duptocache();
+						disp_fillvram(0);
+					disp_flip();
+					disp_duptocache();
+				}
+				return 1;
 			}
-			return 1;
 	}
 
 #ifdef ENABLE_MUSIC
@@ -826,7 +833,6 @@ static int scene_mp3bar_handle_input(dword key, pixel ** saveimage)
 
 		sceRtcGetCurrentTick(&start);
 	}
-
 	oldkey = key;
 #endif
 
@@ -846,6 +852,8 @@ void scene_mp3bar(void)
 	sceRtcGetCurrentTick(&start);
 	sceRtcGetCurrentTick(&end);
 	sceRtcGetCurrentTick(&timer_start);
+
+	enable_exit_menu = 0;
 
 	while (1) {
 		dword key;
