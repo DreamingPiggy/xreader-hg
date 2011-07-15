@@ -206,7 +206,6 @@ typedef struct
 	int imgbrightness;
 	bool dis_scrsave;
 	int autosleep;
-	bool load_exif;
 	int launchtype;
 	bool infobar_use_ttf_mode;
 	bool img_no_repeat;
