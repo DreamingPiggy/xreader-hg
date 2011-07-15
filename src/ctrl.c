@@ -25,9 +25,9 @@
 #include "display.h"
 #include "conf.h"
 #ifdef ENABLE_MUSIC
-#include "musicmgr.h"
+#include "audiocore/musicmgr.h"
 #ifdef ENABLE_LYRIC
-#include "lyric.h"
+#include "audiocore/lyric.h"
 #endif
 #endif
 #include "ctrl.h"

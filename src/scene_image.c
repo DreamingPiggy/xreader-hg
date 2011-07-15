@@ -49,7 +49,6 @@
 #include "common/qsort.h"
 #include "common/utils.h"
 #include "scene_impl.h"
-#include "pspscreen.h"
 #include "simple_gettext.h"
 #include "math.h"
 #include "freq_lock.h"

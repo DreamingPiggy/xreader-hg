@@ -92,8 +92,6 @@ xReader_elf_SOURCES = \
 	common/qsort.h \
 	common/utils.c \
 	common/utils.h \
-	apetaglib/APETag.c \
-	apetaglib/APETag.h \
 	simple_gettext.h \
 	osk.c \
 	osk.h \
@@ -134,110 +132,112 @@ xr_RDLib.o: $(top_builddir)/xr_rdriver/xr_RDLib.S
 
 if MUSIC
 xReader_elf_SOURCES += \
-	musicdrv.c \
-	musicdrv.h \
-	musicmgr.c \
-	musicmgr.h \
-	xaudiolib.c \
-	xaudiolib.h \
-	genericplayer.c \
-	genericplayer.h \
-	buffered_reader.c \
-	buffered_reader.h \
-	mp3info.h \
-	mp3info.c \
-	mp3info_buffered.c \
-	lyric.c \
-	lyric.h \
-	clock.c \
-	musicinfo.c \
-	musicinfo.h \
-	mediaengine.c \
-	medaiengine.h \
-	scevaudio.S
+	audiocore/musicdrv.c \
+	audiocore/musicdrv.h \
+	audiocore/musicmgr.c \
+	audiocore/musicmgr.h \
+	audiocore/xaudiolib.c \
+	audiocore/xaudiolib.h \
+	audiocore/genericplayer.c \
+	audiocore/genericplayer.h \
+	audiocore/buffered_reader.c \
+	audiocore/buffered_reader.h \
+	audiocore/mp3info.h \
+	audiocore/mp3info.c \
+	audiocore/mp3info_buffered.c \
+	audiocore/musicinfo.c \
+	audiocore/musicinfo.h \
+	audiocore/mediaengine.c \
+	audiocore/medaiengine.h \
+	audiocore/scevaudio.S \
+	audiocore/lyric.c \
+	audiocore/lyric.h \
+	audiocore/apetaglib/APETag.c \
+	audiocore/apetaglib/APETag.h \
+	clock.c
 
 if MP3
 xReader_elf_SOURCES += \
-	mp3player.c \
-	mp3player.h
+	audiocore/mp3player.c \
+	audiocore/mp3player.h
 endif
 
 if MPC
 xReader_elf_SOURCES += \
-	mpcplayer.c \
-	mpcplayer.h
+	audiocore/mpcplayer.c \
+	audiocore/mpcplayer.h
 endif
 
 if OGG
 xReader_elf_SOURCES += \
-	oggplayer.c \
-	oggplayer.h
+	audiocore/oggplayer.c \
+	audiocore/oggplayer.h
 endif
 
 if WMA
 xReader_elf_SOURCES += \
-	wmaplayer.c \
-	wmaplayer.h \
+	audiocore/wmaplayer.c \
+	audiocore/wmaplayer.h \
 	$(top_builddir)/cooleyesBridge/cooleyesBridge.S
 LIBS += -lpspasfparser
 endif
 
 if WAV
 xReader_elf_SOURCES += \
-	wavplayer.c \
-	wavplayer.h
+	audiocore/wavplayer.c \
+	audiocore/wavplayer.h
 endif
 
 if FLAC
 xReader_elf_SOURCES += \
-	flacplayer.c \
-	flacplayer.h
+	audiocore/flacplayer.c \
+	audiocore/flacplayer.h
 endif
 
 if TTA
 xReader_elf_SOURCES += \
-	ttaplayer.c \
-	ttaplayer.h \
-	tta/filter.h \
-	tta/ttadec.h \
-	tta/ttadec.c \
-	tta/ttalib.h
+	audiocore/ttaplayer.c \
+	audiocore/ttaplayer.h \
+	audiocore/tta/filter.h \
+	audiocore/tta/ttadec.h \
+	audiocore/tta/ttadec.c \
+	audiocore/tta/ttalib.h
 endif
 
 if WAVPACK
 xReader_elf_SOURCES += \
-	wvplayer.c \
-	wvplayer.h
+	audiocore/wvplayer.c \
+	audiocore/wvplayer.h
 endif
 
 if APE
 xReader_elf_SOURCES += \
-	apeplayer.cpp \
-	apeplayer.h
+	audiocore/apeplayer.cpp \
+	audiocore/apeplayer.h
 endif
 
 if AT3 
 xReader_elf_SOURCES += \
-	at3player.c \
-	at3player.h
+	audiocore/at3player.c \
+	audiocore/at3player.h
 endif
 
 if AA3 
 xReader_elf_SOURCES += \
-	aa3player.c \
-	aa3player.h
+	audiocore/aa3player.c \
+	audiocore/aa3player.h
 endif
 
 if M4A
 xReader_elf_SOURCES += \
-	m4aplayer.c \
-	m4aplayer.h
+	audiocore/m4aplayer.c \
+	audiocore/m4aplayer.h
 endif
 
 if AAC
 xReader_elf_SOURCES += \
-	aacplayer.c \
-	aacplayer.h
+	audiocore/aacplayer.c \
+	audiocore/aacplayer.h
 endif
 
 endif

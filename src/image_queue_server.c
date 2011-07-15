@@ -37,7 +37,6 @@
 #include "image.h"
 #include "scene.h"
 #include "image_queue.h"
-#include "pspscreen.h"
 #include "ctrl.h"
 #include "kubridge.h"
 #include "common/utils.h"

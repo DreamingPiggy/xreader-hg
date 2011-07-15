@@ -27,7 +27,7 @@
 #include "common/utils.h"
 #include "power.h"
 #include "conf.h"
-#include "musicmgr.h"
+#include "audiocore/musicmgr.h"
 #include "dbg.h"
 #include "thread_lock.h"
 #ifdef DMALLOC

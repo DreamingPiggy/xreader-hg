@@ -44,10 +44,10 @@
 #include "charsets.h"
 #include "location.h"
 #ifdef ENABLE_MUSIC
-#include "musicmgr.h"
-#include "musicdrv.h"
+#include "audiocore/musicmgr.h"
+#include "audiocore/musicdrv.h"
 #ifdef ENABLE_LYRIC
-#include "lyric.h"
+#include "audiocore/lyric.h"
 #endif
 #endif
 #include "text.h"
@@ -56,12 +56,11 @@
 #include "common/qsort.h"
 #include "common/utils.h"
 #include "scene_impl.h"
-#include "pspscreen.h"
 #include "simple_gettext.h"
 #include "charsets.h"
 #include "dbg.h"
 #include "image_queue.h"
-#include "xaudiolib.h"
+#include "audiocore/xaudiolib.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif

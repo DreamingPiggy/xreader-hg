@@ -41,7 +41,7 @@
 #include <string.h>
 #include <pspkernel.h>
 
-#include "buffered_reader.h"
+#include "../buffered_reader.h"
 #include "ttalib.h"
 #include "ttadec.h"
 #include "filter.h"

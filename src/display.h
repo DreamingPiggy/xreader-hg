@@ -32,6 +32,10 @@ typedef u32 pixel;
 extern int DISP_FONTSIZE, DISP_BOOK_FONTSIZE, HRR, WRR;
 extern u8 disp_ewidth[0x80];
 
+#define PSP_SCREEN_WIDTH 480
+#define PSP_SCREEN_HEIGHT 272
+#define PSP_SCREEN_SCANLINE 512
+
 // R,G,B color to u16 value color
 
 #define PIXEL_BYTES 4

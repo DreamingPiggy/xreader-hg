@@ -48,9 +48,9 @@
 #include "fat.h"
 #include "location.h"
 #ifdef ENABLE_MUSIC
-#include "musicmgr.h"
+#include "audiocore/musicmgr.h"
 #ifdef ENABLE_LYRIC
-#include "lyric.h"
+#include "audiocore/lyric.h"
 #endif
 #endif
 #include "text.h"
@@ -60,7 +60,6 @@
 #include "common/qsort.h"
 #include "common/utils.h"
 #include "scene_impl.h"
-#include "pspscreen.h"
 #include "freq_lock.h"
 #include "dbg.h"
 #include "simple_gettext.h"
@@ -70,11 +69,11 @@
 #include "xr_rdriver/xr_rdriver.h"
 #include "kubridge.h"
 #include "clock.h"
-#include "musicdrv.h"
+#include "audiocore/musicdrv.h"
 #include "image_queue.h"
 #include "conf_cmdline.h"
 #include "pspvaudio.h"
-#include "xaudiolib.h"
+#include "audiocore/xaudiolib.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif

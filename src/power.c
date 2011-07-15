@@ -28,7 +28,7 @@
 #include "power.h"
 #include "simple_gettext.h"
 #include "conf.h"
-#include "musicmgr.h"
+#include "audiocore/musicmgr.h"
 #include "fat.h"
 #include "display.h"
 #include "scene.h"
