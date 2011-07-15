@@ -230,7 +230,6 @@ static void conf_default(p_conf conf)
 	conf->imgbrightness = 100;
 	conf->dis_scrsave = false;
 	conf->autosleep = 0;
-	conf->load_exif = true;
 	conf->prev_autopage = 2;
 	conf->launchtype = 2;
 
@@ -1087,8 +1086,6 @@ extern bool ini_conf_load(const char *inifilename, p_conf conf)
 		iniparser_getboolean(dict, "Global:dis_scrsave", conf->dis_scrsave);
 	conf->autosleep =
 		iniparser_getint(dict, "Global:autosleep", conf->autosleep);
-	conf->load_exif =
-		iniparser_getboolean(dict, "Image:load_exif", conf->load_exif);
 	conf->launchtype =
 		iniparser_getint(dict, "Global:launchtype", conf->launchtype);
 	conf->infobar_use_ttf_mode =
@@ -1396,8 +1393,6 @@ extern bool ini_conf_save(p_conf conf)
 						booleanToString(buf, sizeof(buf), conf->dis_scrsave));
 	iniparser_setstring(dict, "Global:autosleep",
 						intToString(buf, sizeof(buf), conf->autosleep));
-	iniparser_setstring(dict, "Image:load_exif",
-						booleanToString(buf, sizeof(buf), conf->load_exif));
 	iniparser_setstring(dict, "Global:launchtype",
 						intToString(buf, sizeof(buf), conf->launchtype));
 	iniparser_setstring(dict, "Text:infobar_use_ttf_mode",

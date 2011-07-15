@@ -27,6 +27,7 @@
 #include <pspinit.h>
 #include <string.h>
 #include "config.h"
+#include "systemctrl.h"
 #include "xrPrx.h"
 
 typedef unsigned short bool;

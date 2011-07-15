@@ -154,7 +154,7 @@ static float calc_percent(dword current, dword total)
 	if (total == 0)
 		percent = 0.0;
 	else
-		percent = 100.0 * MIN(current + 1, total) / total;
+		percent = 100.0 * min(current + 1, total) / total;
 	return percent;
 }
 
