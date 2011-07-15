@@ -85,7 +85,7 @@ typedef struct
 	unsigned int FILESIZE;		// compressed size
 	unsigned short NCH;			// number of channels
 	unsigned short BPS;			// bits per sample
-	unsigned short BSIZE;		// byte size
+	unsigned short BSIZE;		// u8 size
 	unsigned short FORMAT;		// audio format
 	unsigned int SAMPLERATE;	// samplerate (sps)
 	unsigned int DATALENGTH;	// data length in samples

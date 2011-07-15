@@ -61,12 +61,12 @@
 
 #ifdef ENABLE_IMAGE
 
-dword width, height, width_rotated = 0;
-dword height_rotated = 0, thumb_width = 0, thumb_height = 0;
-dword paintleft = 0, painttop = 0;
+u32 width, height, width_rotated = 0;
+u32 height_rotated = 0, thumb_width = 0, thumb_height = 0;
+u32 paintleft = 0, painttop = 0;
 pixel *imgdata = NULL, *imgshow = NULL;
 pixel bgcolor = 0, thumbimg[128 * 128];
-dword oldangle = 0;
+u32 oldangle = 0;
 char filename[PATH_MAX];
 int curtop = 0, curleft = 0, xpos = 0, ypos = 0;
 bool img_needrf = true, img_needrc = true, img_needrp = true;
@@ -84,7 +84,7 @@ static int destx = 0, desty = 0, srcx = 0, srcy = 0;
 static bool in_move_z_mode = false;
 static int z_mode_cnt = 0;
 
-static int open_image(dword selidx)
+static int open_image(u32 selidx)
 {
 	bool shareimg;
 	int result;
@@ -193,7 +193,7 @@ static void recalc_brightness(void)
 
 static int cache_wait_avail()
 {
-	dword key;
+	u32 key;
 
 	while (ccacher.caches_size == 0) {
 		key = ctrl_read();
@@ -211,7 +211,7 @@ static int cache_wait_avail()
 static int cache_wait_loaded()
 {
 	cache_image_t *img = &ccacher.caches[0];
-	dword key;
+	u32 key;
 
 	while (img->status == CACHE_INIT) {
 //      dbg_printf(d, "CLIENT: Wait image %u %s load finish", (unsigned) selidx, filename);
@@ -227,7 +227,7 @@ static int cache_wait_loaded()
 	return 0;
 }
 
-static int cache_get_image(dword selidx)
+static int cache_get_image(u32 selidx)
 {
 	cache_image_t *img;
 	u64 start, now;
@@ -275,7 +275,7 @@ static int cache_get_image(dword selidx)
 	return ret;
 }
 
-static int scene_reloadimage(dword selidx)
+static int scene_reloadimage(u32 selidx)
 {
 	int result;
 
@@ -313,12 +313,12 @@ static int scene_reloadimage(dword selidx)
 	return 0;
 }
 
-static dword scene_rotateimage(void)
+static u32 scene_rotateimage(void)
 {
 	int ret;
 
 	ret = image_rotate(imgdata, &width, &height, oldangle,
-					   (dword) config.rotate * 90);
+					   (u32) config.rotate * 90);
 
 	if (ret < 0) {
 		win_msg("内存不足无法完成旋转!", COLOR_WHITE, COLOR_WHITE,
@@ -326,7 +326,7 @@ static dword scene_rotateimage(void)
 		config.rotate = conf_rotate_0;
 	}
 
-	oldangle = (dword) config.rotate * 90;
+	oldangle = (u32) config.rotate * 90;
 
 	if (config.fit > 0
 		&& (config.fit != conf_fit_custom || config.scale != 100)) {
@@ -484,18 +484,18 @@ static void scene_show_info(int selidx)
 		disp_fillrect(0, PSP_SCREEN_HEIGHT - DISP_FONTSIZE, 479, 271, 0);
 		disp_putnstring(0, PSP_SCREEN_HEIGHT - DISP_FONTSIZE,
 						COLOR_WHITE,
-						(const byte *) filelist[selidx].name,
+						(const u8 *) filelist[selidx].name,
 						960 / DISP_FONTSIZE - ilen - 1, 0, 0, DISP_FONTSIZE, 0);
 		disp_putnstring(PSP_SCREEN_WIDTH -
 						DISP_FONTSIZE / 2 * ilen,
 						PSP_SCREEN_HEIGHT - DISP_FONTSIZE,
-						COLOR_WHITE, (const byte *) infostr,
+						COLOR_WHITE, (const u8 *) infostr,
 						ilen, 0, 0, DISP_FONTSIZE, 0);
 	} else {
 		disp_fillrect(11, 11, 10 + DISP_FONTSIZE / 2 * ilen,
 					  10 + DISP_FONTSIZE, 0);
 		disp_putnstring(11, 11, COLOR_WHITE,
-						(const byte *) infostr, ilen, 0, 0, DISP_FONTSIZE, 0);
+						(const u8 *) infostr, ilen, 0, 0, DISP_FONTSIZE, 0);
 	}
 }
 
@@ -556,7 +556,7 @@ static void image_right(void)
 	}
 }
 
-static void image_move(dword key)
+static void image_move(u32 key)
 {
 	// cancel z mode
 	in_move_z_mode = false;
@@ -1248,9 +1248,9 @@ static bool image_paging(bool is_forward, t_conf_imgpaging type)
 	return false;
 }
 
-static void next_image(dword * selidx, bool * should_exit)
+static void next_image(u32 * selidx, bool * should_exit)
 {
-	dword orgidx = *selidx;
+	u32 orgidx = *selidx;
 
 	if (config.use_image_queue) {
 		cache_set_forward(true);
@@ -1282,9 +1282,9 @@ static void next_image(dword * selidx, bool * should_exit)
 	}
 }
 
-static void prev_image(dword * selidx)
+static void prev_image(u32 * selidx)
 {
-	dword orgidx = *selidx;
+	u32 orgidx = *selidx;
 
 	if (config.use_image_queue) {
 		cache_set_forward(false);
@@ -1312,7 +1312,7 @@ static void prev_image(dword * selidx)
 
 static bool slideshow_move = false;
 
-static int image_handle_input(dword * selidx, dword key)
+static int image_handle_input(u32 * selidx, u32 key)
 {
 	slideshow_move = false;
 
@@ -1529,7 +1529,7 @@ static void scene_image_delay_action(void)
 		scePowerTick(0);
 }
 
-static int scene_slideshow_forward(dword * selidx)
+static int scene_slideshow_forward(u32 * selidx)
 {
 	bool should_exit = false;
 
@@ -1551,7 +1551,7 @@ static int scene_slideshow_forward(dword * selidx)
 	return -1;
 }
 
-dword scene_readimage(dword selidx)
+u32 scene_readimage(u32 selidx)
 {
 	u64 timer_start, timer_end;
 	u64 slide_start, slide_end;
@@ -1582,12 +1582,12 @@ dword scene_readimage(dword selidx)
 
 	while (1) {
 		u64 dbgnow, dbglasttick;
-		dword key = 0;
+		u32 key = 0;
 		int ret;
 
 		if (img_needrf) {
 			int fid;
-			dword ret;
+			u32 ret;
 
 			fid = freq_enter_hotzone();
 			sceRtcGetCurrentTick(&dbglasttick);
@@ -1715,11 +1715,11 @@ dword scene_readimage(dword selidx)
 	return selidx;
 }
 
-static t_win_menu_op scene_imgkey_menucb(dword key, p_win_menuitem item,
-										 dword * count, dword max_height,
-										 dword * topindex, dword * index)
+static t_win_menu_op scene_imgkey_menucb(u32 key, p_win_menuitem item,
+										 u32 * count, u32 max_height,
+										 u32 * topindex, u32 * index)
 {
-	dword key1, key2;
+	u32 key1, key2;
 	SceCtrlData ctl;
 	int i;
 
@@ -1780,12 +1780,12 @@ static t_win_menu_op scene_imgkey_menucb(dword key, p_win_menuitem item,
 	return win_menu_defcb(key, item, count, max_height, topindex, index);
 }
 
-static void scene_imgkey_predraw(p_win_menuitem item, dword index,
-								 dword topindex, dword max_height)
+static void scene_imgkey_predraw(p_win_menuitem item, u32 index,
+								 u32 topindex, u32 max_height)
 {
 	char keyname[256];
 	int left, right, upper, bottom, lines = 0;
-	dword i;
+	u32 i;
 
 	default_predraw(&g_predraw, _("按键设置   △ 删除"), max_height, &left,
 					&right, &upper, &bottom, 8 * DISP_FONTSIZE + 4);
@@ -1803,16 +1803,16 @@ static void scene_imgkey_predraw(p_win_menuitem item, dword index,
 					   upper + 2 + (lines + 1 +
 									g_predraw.linespace) * (1 +
 															DISP_FONTSIZE),
-					   COLOR_WHITE, (const byte *) keyname);
+					   COLOR_WHITE, (const u8 *) keyname);
 		lines++;
 	}
 }
 
-dword scene_imgkey(dword * selidx)
+u32 scene_imgkey(u32 * selidx)
 {
 	win_menu_predraw_data prev;
 	t_win_menuitem item[16];
-	dword i, index;
+	u32 i, index;
 
 	memcpy(&prev, &g_predraw, sizeof(win_menu_predraw_data));
 

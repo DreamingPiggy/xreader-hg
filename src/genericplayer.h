@@ -74,7 +74,7 @@ extern "C"
 /**
  *  按快进退键计数
  */
-	extern volatile dword g_seek_count;
+	extern volatile u32 g_seek_count;
 
 /**
  * 当前播放音乐文件信息

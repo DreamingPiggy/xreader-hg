@@ -314,13 +314,13 @@ extern void image_zoom_bilinear(pixel * src, int srcwidth, int srcheight,
 	}
 }
 
-extern int image_rotate(pixel * imgdata, dword * pwidth, dword * pheight,
-						dword organgle, dword newangle)
+extern int image_rotate(pixel * imgdata, u32 * pwidth, u32 * pheight,
+						u32 organgle, u32 newangle)
 {
-	dword ca;
+	u32 ca;
 	int temp;
 	pixel *newdata;
-	dword i, j;
+	u32 i, j;
 
 	if (newangle < organgle) {
 		ca = newangle + 360 - organgle;
@@ -415,7 +415,7 @@ static unsigned image_zip_fread(void *buf, unsigned r, unsigned n, void *stream)
 static int image_zip_fseek(void *stream, long offset, int origin)
 {
 	int size;
-	byte *buf;
+	u8 *buf;
 
 	if (origin != SEEK_SET)
 		return 0;
@@ -521,15 +521,15 @@ static long image_rar_ftell(void *stream)
 /* return value = 0 for success, 1 for bad sig/hdr, 4 for no mem
 display_exponent == LUT_exponent * CRT_exponent */
 
-static int image_readpng2(void *infile, dword * pwidth, dword * pheight,
+static int image_readpng2(void *infile, u32 * pwidth, u32 * pheight,
 						  pixel ** image_data, pixel * bgcolor,
 						  png_rw_ptr read_fn)
 {
 	png_structp png_ptr = NULL;
 	png_infop info_ptr = NULL;
-	dword x, y;
-	byte r = 0, g = 0, b = 0;
-	byte sig[8];
+	u32 x, y;
+	u8 r = 0, g = 0, b = 0;
+	u8 sig[8];
 	png_byte **prowtable;
 	pixel *imgdata;
 
@@ -688,7 +688,7 @@ static void image_png_rar_read(png_structp png, png_bytep buf, png_size_t size)
 		png_error(png, "Read Error");
 }
 
-extern int image_readpng(const char *filename, dword * pwidth, dword * pheight,
+extern int image_readpng(const char *filename, u32 * pwidth, u32 * pheight,
 						 pixel ** image_data, pixel * bgcolor)
 {
 	FILE *fp = fopen(filename, "rb");
@@ -816,7 +816,7 @@ static unzFile open_zip_file(const char *zipfile, const char *filename)
 }
 
 extern int image_readpng_in_zip(const char *zipfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	unzFile unzf = open_zip_file(zipfile, filename);
@@ -835,7 +835,7 @@ extern int image_readpng_in_zip(const char *zipfile, const char *filename,
 }
 
 extern int image_readpng_in_chm(const char *chmfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	t_image_chm chm;
@@ -858,7 +858,7 @@ extern int image_readpng_in_chm(const char *chmfile, const char *filename,
 }
 
 extern int image_readpng_in_rar(const char *rarfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	t_image_rar rar;
@@ -879,7 +879,7 @@ extern int image_readpng_in_rar(const char *rarfile, const char *filename,
 	return result;
 }
 
-static int image_readgif2(void *handle, dword * pwidth, dword * pheight,
+static int image_readgif2(void *handle, u32 * pwidth, u32 * pheight,
 						  pixel ** image_data, pixel * bgcolor,
 						  InputFunc readFunc)
 {
@@ -890,7 +890,7 @@ static int image_readgif2(void *handle, dword * pwidth, dword * pheight,
 	GifFileType *GifFileIn = NULL;
 	ColorMapObject *palette;
 	int ExtCode;
-	dword i, j;
+	u32 i, j;
 	int trans_num = -1;
 
 	if ((GifFileIn = DGifOpen(handle, readFunc)) == NULL)
@@ -1024,7 +1024,7 @@ static int image_gif_rar_read(GifFileType * ft, GifByteType * buf, int size)
 	return image_rar_fread(buf, 1, size, (FILE *) ft->UserData);
 }
 
-extern int image_readgif(const char *filename, dword * pwidth, dword * pheight,
+extern int image_readgif(const char *filename, u32 * pwidth, u32 * pheight,
 						 pixel ** image_data, pixel * bgcolor)
 {
 	FILE *fp = fopen(filename, "rb");
@@ -1040,7 +1040,7 @@ extern int image_readgif(const char *filename, dword * pwidth, dword * pheight,
 }
 
 extern int image_readgif_in_zip(const char *zipfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	unzFile unzf = open_zip_file(zipfile, filename);
@@ -1059,7 +1059,7 @@ extern int image_readgif_in_zip(const char *zipfile, const char *filename,
 }
 
 extern int image_readgif_in_chm(const char *chmfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	t_image_chm chm;
@@ -1082,7 +1082,7 @@ extern int image_readgif_in_chm(const char *chmfile, const char *filename,
 }
 
 extern int image_readgif_in_umd(const char *umdfile, size_t file_pos,
-								size_t length, dword * pwidth, dword * pheight,
+								size_t length, u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	FILE *fp = NULL;
@@ -1098,7 +1098,7 @@ extern int image_readgif_in_umd(const char *umdfile, size_t file_pos,
 }
 
 extern int image_readgif_in_rar(const char *rarfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	t_image_rar rar;
@@ -1130,7 +1130,7 @@ static void output_no_message(j_common_ptr cinfo)
 {
 }
 
-static int image_readjpg2(FILE * infile, dword * pwidth, dword * pheight,
+static int image_readjpg2(FILE * infile, u32 * pwidth, u32 * pheight,
 						  pixel ** image_data, pixel * bgcolor,
 						  jpeg_fread jfread)
 {
@@ -1203,7 +1203,7 @@ static int image_readjpg2(FILE * infile, dword * pwidth, dword * pheight,
 	return 0;
 }
 
-extern int image_readjpg(const char *filename, dword * pwidth, dword * pheight,
+extern int image_readjpg(const char *filename, u32 * pwidth, u32 * pheight,
 						 pixel ** image_data, pixel * bgcolor)
 {
 	FILE *fp = fopen(filename, "rb");
@@ -1219,7 +1219,7 @@ extern int image_readjpg(const char *filename, dword * pwidth, dword * pheight,
 }
 
 extern int image_readjpg_in_zip(const char *zipfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	unzFile unzf = open_zip_file(zipfile, filename);
@@ -1239,7 +1239,7 @@ extern int image_readjpg_in_zip(const char *zipfile, const char *filename,
 }
 
 extern int image_readjpg_in_chm(const char *chmfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	t_image_chm chm;
@@ -1264,7 +1264,7 @@ extern int image_readjpg_in_chm(const char *chmfile, const char *filename,
 }
 
 extern int image_readjpg_in_umd(const char *umdfile, size_t file_pos,
-								size_t length, dword * pwidth, dword * pheight,
+								size_t length, u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	FILE *fp = NULL, *fpp;
@@ -1283,7 +1283,7 @@ extern int image_readjpg_in_umd(const char *umdfile, size_t file_pos,
 }
 
 extern int image_readjpg_in_rar(const char *rarfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	u64 dbglasttick, dbgnow;
@@ -1310,7 +1310,7 @@ extern int image_readjpg_in_rar(const char *rarfile, const char *filename,
 	return result;
 }
 
-static int image_bmp_to_32color(DIB dib, dword * width, dword * height,
+static int image_bmp_to_32color(DIB dib, u32 * width, u32 * height,
 								pixel ** imgdata)
 {
 	BITMAPINFOHEADER *bi;
@@ -1417,7 +1417,7 @@ static int image_bmp_to_32color(DIB dib, dword * width, dword * height,
 	return 0;
 }
 
-static int image_readbmp2(void *handle, dword * pwidth, dword * pheight,
+static int image_readbmp2(void *handle, u32 * pwidth, u32 * pheight,
 						  pixel ** image_data, pixel * bgcolor,
 						  t_bmp_fread readfn)
 {
@@ -1436,7 +1436,7 @@ static int image_readbmp2(void *handle, dword * pwidth, dword * pheight,
 	return result;
 }
 
-extern int image_readbmp(const char *filename, dword * pwidth, dword * pheight,
+extern int image_readbmp(const char *filename, u32 * pwidth, u32 * pheight,
 						 pixel ** image_data, pixel * bgcolor)
 {
 	FILE *fp = fopen(filename, "rb");
@@ -1452,7 +1452,7 @@ extern int image_readbmp(const char *filename, dword * pwidth, dword * pheight,
 }
 
 extern int image_readbmp_in_zip(const char *zipfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	unzFile unzf = open_zip_file(zipfile, filename);
@@ -1471,7 +1471,7 @@ extern int image_readbmp_in_zip(const char *zipfile, const char *filename,
 }
 
 extern int image_readbmp_in_chm(const char *chmfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	t_image_chm chm;
@@ -1497,7 +1497,7 @@ extern int image_readbmp_in_chm(const char *chmfile, const char *filename,
 }
 
 extern int image_readbmp_in_umd(const char *umdfile, size_t file_pos,
-								size_t length, dword * pwidth, dword * pheight,
+								size_t length, u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	FILE *fp = NULL;
@@ -1513,7 +1513,7 @@ extern int image_readbmp_in_umd(const char *umdfile, size_t file_pos,
 }
 
 extern int image_readbmp_in_rar(const char *rarfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	t_image_rar rar;
@@ -1545,13 +1545,13 @@ static void image_freetgadata(TGAData * data)
 	free(data);
 }
 
-static int image_readtga2(void *handle, dword * pwidth, dword * pheight,
+static int image_readtga2(void *handle, u32 * pwidth, u32 * pheight,
 						  pixel ** image_data, pixel * bgcolor, TGAfread nfread,
 						  TGAfseek nfseek, TGAftell nftell)
 {
 	TGA *in;
 	TGAData *data;
-	byte *srcdata;
+	u8 *srcdata;
 	pixel *imgdata;
 	int i, j;
 
@@ -1626,7 +1626,7 @@ static int image_readtga2(void *handle, dword * pwidth, dword * pheight,
 	return 0;
 }
 
-extern int image_readtga(const char *filename, dword * pwidth, dword * pheight,
+extern int image_readtga(const char *filename, u32 * pwidth, u32 * pheight,
 						 pixel ** image_data, pixel * bgcolor)
 {
 	FILE *fp = fopen(filename, "rb");
@@ -1644,7 +1644,7 @@ extern int image_readtga(const char *filename, dword * pwidth, dword * pheight,
 }
 
 extern int image_readtga_in_zip(const char *zipfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	unzFile unzf = open_zip_file(zipfile, filename);
@@ -1663,7 +1663,7 @@ extern int image_readtga_in_zip(const char *zipfile, const char *filename,
 }
 
 extern int image_readtga_in_chm(const char *chmfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	t_image_chm chm;
@@ -1687,7 +1687,7 @@ extern int image_readtga_in_chm(const char *chmfile, const char *filename,
 }
 
 extern int image_readtga_in_rar(const char *rarfile, const char *filename,
-								dword * pwidth, dword * pheight,
+								u32 * pwidth, u32 * pheight,
 								pixel ** image_data, pixel * bgcolor)
 {
 	t_image_rar rar;
@@ -1723,8 +1723,8 @@ extern int image_readtga_in_rar(const char *rarfile, const char *filename,
  * - !=0 失败
  * - =0 成功
  */
-int image_open_normal(const char *filename, t_fs_filetype ft, dword * pWidth,
-					  dword * pHeight, pixel ** ppImageData, pixel * pBgColor)
+int image_open_normal(const char *filename, t_fs_filetype ft, u32 * pWidth,
+					  u32 * pHeight, pixel ** ppImageData, pixel * pBgColor)
 {
 	int result;
 
@@ -1779,7 +1779,7 @@ int image_open_normal(const char *filename, t_fs_filetype ft, dword * pWidth,
  * @note 如果文件为a.zip中的b.jpg，则filename为b.jpg, archname为a.zip
  */
 int image_open_archive(const char *filename, const char *archname,
-					   t_fs_filetype ft, dword * pWidth, dword * pHeight,
+					   t_fs_filetype ft, u32 * pWidth, u32 * pHeight,
 					   pixel ** ppImageData, pixel * pBgColor, int where)
 {
 	int result = -1;
@@ -1918,7 +1918,7 @@ int image_open_archive(const char *filename, const char *archname,
  */
 extern int image_open_umd(const char *chaptername, const char *umdfile,
 						  t_fs_filetype ft, size_t file_pos, size_t length,
-						  dword * pWidth, dword * pHeight, pixel ** ppImageData,
+						  u32 * pWidth, u32 * pHeight, pixel ** ppImageData,
 						  pixel * pBgColor)
 {
 	int result = -1;

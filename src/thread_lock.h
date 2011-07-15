@@ -22,7 +22,7 @@
 #define THREAD_LOCK_H
 
 struct psp_mutex_t {
-	volatile unsigned long l;
+	volatile u32 l;
 	int c;
 	int thread_id;
 };

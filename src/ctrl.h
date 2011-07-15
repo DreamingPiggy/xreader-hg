@@ -40,21 +40,21 @@ extern void ctrl_destroy(void);
 #ifdef ENABLE_ANALOG
 extern bool ctrl_analog(int *x, int *y);
 #endif
-extern dword ctrl_read_cont(void);
-extern dword ctrl_read(void);
+extern u32 ctrl_read_cont(void);
+extern u32 ctrl_read(void);
 extern void ctrl_waitreleaseintime(int i);
 extern void ctrl_waitrelease(void);
-extern dword ctrl_waitany(void);
-extern dword ctrl_waitkey(dword keymask);
-extern dword ctrl_waitmask(dword keymask);
-extern dword ctrl_waitlyric(void);
-extern int ctrl_waitreleasekey(dword key);
+extern u32 ctrl_waitany(void);
+extern u32 ctrl_waitkey(u32 keymask);
+extern u32 ctrl_waitmask(u32 keymask);
+extern u32 ctrl_waitlyric(void);
+extern int ctrl_waitreleasekey(u32 key);
 
 #ifdef ENABLE_HPRM
-extern dword ctrl_hprm(void);
-extern dword ctrl_hprm_raw(void);
+extern u32 ctrl_hprm(void);
+extern u32 ctrl_hprm_raw(void);
 #endif
-extern dword ctrl_waittime(dword t);
+extern u32 ctrl_waittime(u32 t);
 
 #ifdef ENABLE_HPRM
 extern void ctrl_enablehprm(bool enable);

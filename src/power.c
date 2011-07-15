@@ -35,7 +35,7 @@
 #include "display.h"
 #include "ttfont.h"
 
-extern void power_set_clock(dword cpu, dword bus)
+extern void power_set_clock(u32 cpu, u32 bus)
 {
 	if (cpu > 222 || bus > 111)
 		scePowerSetClockFrequency(cpu, cpu, bus);
@@ -46,7 +46,7 @@ extern void power_set_clock(dword cpu, dword bus)
 	}
 }
 
-extern void power_get_clock(dword * cpu, dword * bus)
+extern void power_get_clock(u32 * cpu, u32 * bus)
 {
 	*cpu = scePowerGetCpuClockFrequency();
 	*bus = scePowerGetBusClockFrequency();

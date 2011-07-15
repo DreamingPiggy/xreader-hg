@@ -359,7 +359,7 @@ static void extract_chm_file_into_buffer(buffer * buf, const char *archname,
 
 	buf->ptr[ui.length] = '\0';
 
-	buf->used = chm_retrieve_object(chm, &ui, (byte *) buf->ptr, 0, ui.length);
+	buf->used = chm_retrieve_object(chm, &ui, (u8 *) buf->ptr, 0, ui.length);
 	chm_close(chm);
 }
 

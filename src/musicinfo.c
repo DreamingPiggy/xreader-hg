@@ -149,7 +149,7 @@ static void id3v2_read_ttag(SceUID fd, int taglen, char *dst, int dstlen,
 	if (taglen < 1)
 		return;
 
-	taglen--;					/* account for encoding type byte */
+	taglen--;					/* account for encoding type u8 */
 	dstlen--;					/* Leave space for zero terminator */
 
 	if (sceIoRead(fd, &b, sizeof(b)) != sizeof(b)) {
@@ -203,7 +203,7 @@ static void id3v2_read_ttag(SceUID fd, int taglen, char *dst, int dstlen,
 				len = min(taglen - 2, dstlen - 1);
 				memcpy(dst, buf + 2, len);
 				dst[len] = 0;
-				charsets_ucs_conv((const byte *) dst, len, (byte *) dst, len);
+				charsets_ucs_conv((const u8 *) dst, len, (u8 *) dst, len);
 				free(buf);
 				break;
 			}
@@ -229,7 +229,7 @@ static void id3v2_read_ttag(SceUID fd, int taglen, char *dst, int dstlen,
 				len = min(taglen, dstlen - 1);
 				memcpy(dst, buf, len);
 				dst[len] = 0;
-				charsets_ucs_conv((const byte *) dst, len, (byte *) dst, len);
+				charsets_ucs_conv((const u8 *) dst, len, (u8 *) dst, len);
 				free(buf);
 				break;
 			}
@@ -401,7 +401,7 @@ static void id3v2_parse(MusicInfoInternalTag * tag_info, SceUID fd,
 					sceIoLseek(fd, 1, PSP_SEEK_CUR);
 					desc[0] = '\0';
 
-					// Acount for text encoding byte
+					// Acount for text encoding u8
 					tlen--;
 
 					while (sceIoRead(fd, &ch, 1) == 1 &&

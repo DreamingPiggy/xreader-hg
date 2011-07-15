@@ -21,17 +21,7 @@
 #ifndef _DATATYPE_H_
 #define _DATATYPE_H_
 
-#ifndef byte
-typedef unsigned char byte;
-#endif
-
-#ifndef word
-typedef unsigned short word;
-#endif
-
-#ifndef dword
-typedef unsigned long dword;
-#endif
+#include <psptypes.h>
 
 #ifndef bool
 #ifndef __cplusplus
@@ -72,7 +62,7 @@ typedef unsigned char bool;
 #endif
 
 #ifndef INVALID
-#define INVALID ((dword)-1)
+#define INVALID ((u32)-1)
 #endif
 
 #define PATH_MAX 1024

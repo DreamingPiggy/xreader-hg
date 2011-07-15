@@ -31,7 +31,7 @@
 #include "dmalloc.h"
 #endif
 
-extern dword utils_dword2string(dword dw, char *dest, dword width)
+extern u32 utils_dword2string(u32 dw, char *dest, u32 width)
 {
 	dest[width] = 0;
 	if (dw == 0) {
@@ -45,7 +45,7 @@ extern dword utils_dword2string(dword dw, char *dest, dword width)
 	return width;
 }
 
-extern bool utils_string2dword(const char *src, dword * dw)
+extern bool utils_string2dword(const char *src, u32 * dw)
 {
 	*dw = 0;
 	while (*src >= '0' && *src <= '9') {
@@ -82,7 +82,7 @@ extern bool utils_string2double(const char *src, double *db)
 
 extern const char *utils_fileext(const char *filename)
 {
-	dword len = strlen(filename);
+	u32 len = strlen(filename);
 	const char *p = filename + len;
 
 	while (p > filename && *p != '.' && *p != '/')
@@ -113,9 +113,9 @@ extern bool utils_del_file(const char *file)
 	return true;
 }
 
-extern dword utils_del_dir(const char *dir)
+extern u32 utils_del_dir(const char *dir)
 {
-	dword count = 0;
+	u32 count = 0;
 	int dl = sceIoDopen(dir);
 	SceIoDirent sid;
 

@@ -25,7 +25,7 @@
 
 __inline void swap_data(void *data1, void *data2, int datasize)
 {
-	byte temp[datasize];
+	u8 temp[datasize];
 
 	memcpy(temp, data1, datasize);
 	memcpy(data1, data2, datasize);
@@ -36,12 +36,12 @@ void _quicksort(void *data, int left, int right, int datasize,
 				qsort_compare compare)
 {
 	int i, last;
-	byte(*qdata)[datasize];
+	u8(*qdata)[datasize];
 
 	if (left >= right)
 		return;
 
-	qdata = (byte(*)[datasize]) data;
+	qdata = (u8(*)[datasize]) data;
 	if (right - left > 1)
 		swap_data(&qdata[left], &qdata[(left + right) / 2], datasize);
 	last = left;

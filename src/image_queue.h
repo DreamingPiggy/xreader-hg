@@ -36,11 +36,11 @@ typedef struct _cache_image_t
 	int status;
 	pixel *data;
 	pixel bgc;
-	dword width;
-	dword height;
+	u32 width;
+	u32 height;
 	int result;
-	dword selidx;
-	dword filesize;
+	u32 selidx;
+	u32 filesize;
 	buffer_array *exif_array;
 } cache_image_t;
 
@@ -49,7 +49,7 @@ typedef struct _cacher_context
 	bool on;
 	bool first_run;
 	bool isforward;
-	dword memory_usage;
+	u32 memory_usage;
 	bool selidx_moved;
 
 	cache_image_t *caches;
@@ -57,7 +57,7 @@ typedef struct _cacher_context
 } cacher_context;
 
 int cache_init(void);
-int cache_setup(unsigned max_cache_img, dword * c_selidx);
+int cache_setup(unsigned max_cache_img, u32 * c_selidx);
 void cache_free(void);
 void dbg_dump_cache(void);
 int cache_get_size();

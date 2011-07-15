@@ -53,7 +53,7 @@ extern "C"
 
 	typedef struct
 	{
-		dword filesize;
+		u32 filesize;
 		int sample_freq;
 		int channels;
 		int samples;

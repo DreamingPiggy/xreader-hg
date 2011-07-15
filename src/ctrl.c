@@ -89,7 +89,7 @@ extern bool ctrl_analog(int *x, int *y)
 }
 #endif
 
-extern dword ctrl_read_cont(void)
+extern u32 ctrl_read_cont(void)
 {
 	SceCtrlData ctl;
 
@@ -133,7 +133,7 @@ extern dword ctrl_read_cont(void)
 	return last_btn;
 }
 
-extern dword ctrl_read(void)
+extern u32 ctrl_read(void)
 {
 	SceCtrlData ctl;
 
@@ -194,7 +194,7 @@ extern void ctrl_waitrelease(void)
 	return ctrl_waitreleaseintime(20000);
 }
 
-extern int ctrl_waitreleasekey(dword key)
+extern int ctrl_waitreleasekey(u32 key)
 {
 	SceCtrlData pad;
 
@@ -207,9 +207,9 @@ extern int ctrl_waitreleasekey(dword key)
 	return 0;
 }
 
-extern dword ctrl_waitany(void)
+extern u32 ctrl_waitany(void)
 {
-	dword key;
+	u32 key;
 
 	while ((key = ctrl_read()) == 0) {
 		sceKernelDelayThread(50000);
@@ -217,9 +217,9 @@ extern dword ctrl_waitany(void)
 	return key;
 }
 
-extern dword ctrl_waitkey(dword keymask)
+extern u32 ctrl_waitkey(u32 keymask)
 {
-	dword key;
+	u32 key;
 
 	while ((key = ctrl_read()) != key) {
 		sceKernelDelayThread(50000);
@@ -227,9 +227,9 @@ extern dword ctrl_waitkey(dword keymask)
 	return key;
 }
 
-extern dword ctrl_waitmask(dword keymask)
+extern u32 ctrl_waitmask(u32 keymask)
 {
-	dword key;
+	u32 key;
 
 	while (((key = ctrl_read()) & keymask) == 0) {
 		sceKernelDelayThread(50000);
@@ -238,9 +238,9 @@ extern dword ctrl_waitmask(dword keymask)
 }
 
 #if defined(ENABLE_MUSIC) && defined(ENABLE_LYRIC)
-extern dword ctrl_waitlyric(void)
+extern u32 ctrl_waitlyric(void)
 {
-	dword key;
+	u32 key;
 
 	while ((key = ctrl_read()) == 0) {
 		sceKernelDelayThread(50000);
@@ -252,7 +252,7 @@ extern dword ctrl_waitlyric(void)
 #endif
 
 #ifdef ENABLE_HPRM
-extern dword ctrl_hprm(void)
+extern u32 ctrl_hprm(void)
 {
 	u32 key = ctrl_hprm_raw();
 
@@ -260,10 +260,10 @@ extern dword ctrl_hprm(void)
 		return 0;
 
 	lasthprmkey = key;
-	return (dword) key;
+	return (u32) key;
 }
 
-extern dword ctrl_hprm_raw(void)
+extern u32 ctrl_hprm_raw(void)
 {
 	u32 key = 0;
 
@@ -277,13 +277,13 @@ extern dword ctrl_hprm_raw(void)
 		xr_unlock(&hprm_l);
 	}
 
-	return (dword) key;
+	return (u32) key;
 }
 #endif
 
-extern dword ctrl_waittime(dword t)
+extern u32 ctrl_waittime(u32 t)
 {
-	dword key;
+	u32 key;
 	time_t t1 = time(NULL);
 
 	while ((key = ctrl_read()) == 0) {

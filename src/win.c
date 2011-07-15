@@ -43,9 +43,9 @@
 
 static volatile int secticks = 0;
 
-extern t_win_menu_op win_menu_defcb(dword key, p_win_menuitem item,
-									dword * count, dword max_height,
-									dword * topindex, dword * index)
+extern t_win_menu_op win_menu_defcb(u32 key, p_win_menuitem item,
+									u32 * count, u32 max_height,
+									u32 * topindex, u32 * index)
 {
 	switch (key) {
 		case PSP_CTRL_UP:
@@ -94,13 +94,13 @@ static void win_menu_delay_action(void)
 		scePowerTick(0);
 }
 
-extern dword win_menu(dword x, dword y, dword max_width, dword max_height,
-					  p_win_menuitem item, dword count, dword initindex,
-					  dword linespace, pixel bgcolor, bool redraw,
+extern u32 win_menu(u32 x, u32 y, u32 max_width, u32 max_height,
+					  p_win_menuitem item, u32 count, u32 initindex,
+					  u32 linespace, pixel bgcolor, bool redraw,
 					  t_win_menu_draw predraw, t_win_menu_draw postdraw,
 					  t_win_menu_callback cb)
 {
-	dword i, index = initindex, topindex, botindex, lastsel = index;
+	u32 i, index = initindex, topindex, botindex, lastsel = index;
 	bool needrp = true;
 	bool firstdup = true;
 	pixel *saveimage = NULL;
@@ -129,7 +129,7 @@ extern dword win_menu(dword x, dword y, dword max_width, dword max_height,
 	sceRtcGetCurrentTick(&timer_start);
 	while (1) {
 		t_win_menu_op op;
-		dword key;
+		u32 key;
 
 		disp_waitv();
 		if (predraw != NULL)
@@ -149,9 +149,9 @@ extern dword win_menu(dword x, dword y, dword max_width, dword max_height,
 								   (DISP_FONTSIZE + 1 +
 									linespace),
 								   item[i].selected ? item[i].selicolor :
-								   item[i].icolor, (const byte *) item[i].name);
+								   item[i].icolor, (const u8 *) item[i].name);
 			if (max_height < count) {
-				dword sbh =
+				u32 sbh =
 					2 + DISP_FONTSIZE + (max_height - 1) * (1 +
 															DISP_FONTSIZE
 															+ linespace);
@@ -192,7 +192,7 @@ extern dword win_menu(dword x, dword y, dword max_width, dword max_height,
 												 linespace),
 						   item[lastsel].selected ? item[lastsel].
 						   selicolor : item[lastsel].icolor,
-						   (const byte *) item[lastsel].name);
+						   (const u8 *) item[lastsel].name);
 		}
 		if (item[index].selrcolor != bgcolor)
 			disp_rectangle(x,
@@ -219,7 +219,7 @@ extern dword win_menu(dword x, dword y, dword max_width, dword max_height,
 													 linespace),
 					   item[index].selected ? item[index].
 					   selicolor : item[index].icolor,
-					   (const byte *) item[index].name);
+					   (const u8 *) item[index].name);
 		if (postdraw != NULL)
 			postdraw(item, index, topindex, max_height);
 		disp_flip();
@@ -309,8 +309,8 @@ extern bool win_msgbox(const char *prompt, const char *yesstr,
 					   const char *nostr, pixel fontcolor, pixel bordercolor,
 					   pixel bgcolor)
 {
-	dword width = strlen(prompt) * DISP_FONTSIZE / 4;
-	dword yeswidth = strlen(yesstr) * (DISP_FONTSIZE / 2);
+	u32 width = strlen(prompt) * DISP_FONTSIZE / 4;
+	u32 yeswidth = strlen(yesstr) * (DISP_FONTSIZE / 2);
 	pixel *saveimage = (pixel *) memalign(16,
 										  PSP_SCREEN_WIDTH *
 										  PSP_SCREEN_HEIGHT * sizeof(pixel));
@@ -321,11 +321,11 @@ extern bool win_msgbox(const char *prompt, const char *yesstr,
 	disp_duptocachealpha(50);
 	disp_rectangle(219 - width, 99, 260 + width, 173, bordercolor);
 	disp_fillrect(220 - width, 100, 259 + width, 172, bgcolor);
-	disp_putstring(240 - width, 115, fontcolor, (const byte *) prompt);
-	disp_putstring(214 - yeswidth, 141, fontcolor, (const byte *) "¡ð");
-	disp_putstring(230 - yeswidth, 141, fontcolor, (const byte *) yesstr);
-	disp_putstring(250, 141, fontcolor, (const byte *) "¡Á");
-	disp_putstring(266, 141, fontcolor, (const byte *) nostr);
+	disp_putstring(240 - width, 115, fontcolor, (const u8 *) prompt);
+	disp_putstring(214 - yeswidth, 141, fontcolor, (const u8 *) "¡ð");
+	disp_putstring(230 - yeswidth, 141, fontcolor, (const u8 *) yesstr);
+	disp_putstring(250, 141, fontcolor, (const u8 *) "¡Á");
+	disp_putstring(266, 141, fontcolor, (const u8 *) nostr);
 	disp_flip();
 	disp_duptocache();
 	disp_rectduptocachealpha(219 - width, 99, 260 + width, 173, 50);
@@ -345,7 +345,7 @@ extern bool win_msgbox(const char *prompt, const char *yesstr,
 extern void win_msg(const char *prompt, pixel fontcolor, pixel bordercolor,
 					pixel bgcolor)
 {
-	dword width = strlen(prompt) * DISP_FONTSIZE / 4;
+	u32 width = strlen(prompt) * DISP_FONTSIZE / 4;
 	pixel *saveimage = (pixel *) memalign(16,
 										  PSP_SCREEN_WIDTH *
 										  PSP_SCREEN_HEIGHT * sizeof(pixel));
@@ -354,7 +354,7 @@ extern void win_msg(const char *prompt, pixel fontcolor, pixel bordercolor,
 	disp_duptocachealpha(50);
 	disp_rectangle(219 - width, 118, 260 + width, 154, bordercolor);
 	disp_fillrect(220 - width, 119, 259 + width, 153, bgcolor);
-	disp_putstring(240 - width, 132, fontcolor, (const byte *) prompt);
+	disp_putstring(240 - width, 132, fontcolor, (const u8 *) prompt);
 	disp_flip();
 	disp_duptocache();
 	disp_rectduptocachealpha(219 - width, 118, 260 + width, 154, 50);
@@ -409,7 +409,7 @@ extern p_win_menuitem win_realloc_items(p_win_menuitem item, int orgsize,
 	return item;
 }
 
-extern void win_item_destroy(p_win_menuitem * item, dword * size)
+extern void win_item_destroy(p_win_menuitem * item, u32 * size)
 {
 	int i;
 	p_win_menuitem p = *item;
@@ -481,7 +481,7 @@ extern int win_get_max_pixel_width(const p_win_menuitem pItem, int size)
 
 	for (i = 0; i < size; ++i) {
 		const char *str = pItem[i].name;
-		int t = text_get_string_width_sys((const byte *) str, strlen(str),
+		int t = text_get_string_width_sys((const u8 *) str, strlen(str),
 										  1);
 
 		max = max > t ? max : t;

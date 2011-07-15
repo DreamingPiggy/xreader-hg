@@ -32,7 +32,7 @@ extern "C"
 	extern void scene_exit(void);
 	extern const char *scene_appdir(void);
 
-	extern dword get_bgcolor_by_time(void);
+	extern u32 get_bgcolor_by_time(void);
 
 	enum SceneWhere
 	{

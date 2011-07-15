@@ -500,7 +500,7 @@ int ReadAdditionalSession(char **pSe, buffer ** buf, p_umd_chapter * pchapter,
 					struct t_chapter *p = (*pchapter)->pchapters;
 
 					for (i = 0; i < stlen; i++) {
-						chapter_len = *(byte *) (*pSe);
+						chapter_len = *(u8 *) (*pSe);
 						(*pSe) += 1;
 						buffer_copy_string_len(p[i].name, *pSe,
 											   (chapter_len >
@@ -1115,7 +1115,7 @@ int parse_umd_chapters(const char *umdfile, p_umd_chapter * pchapter)
 
 				if (0 < stChapterCount) {
 					for (i = 0; i < stChapterCount; i++) {
-						stlen = *(byte *) p;
+						stlen = *(u8 *) p;
 						p += 1;
 						buffer_copy_string_len(pchap[i].name, p, stlen);
 						////dbg_printf(d,"%dth chapter name:%s\n",i,pchap[i].name->ptr);

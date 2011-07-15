@@ -23,11 +23,11 @@
 #include "scene.h"
 
 extern char appdir[PATH_MAX], copydir[PATH_MAX], cutdir[PATH_MAX];
-extern dword drperpage, rowsperpage, pixelsperrow;
+extern u32 drperpage, rowsperpage, pixelsperrow;
 extern p_bookmark g_bm;
 extern p_text fs;
 extern p_win_menuitem filelist, copylist, cutlist;
-extern dword filecount, copycount, cutcount;
+extern u32 filecount, copycount, cutcount;
 
 #ifdef ENABLE_BG
 extern bool repaintbg;
@@ -42,12 +42,12 @@ extern void scene_init(void);
 extern void scene_exit(void);
 extern void scene_power_save(bool save);
 extern const char *scene_appdir(void);
-dword scene_readbook(dword selidx);
-dword scene_readbook_raw(const char *title, const unsigned char *data,
+u32 scene_readbook(u32 selidx);
+u32 scene_readbook_raw(const char *title, const unsigned char *data,
 						 size_t size, t_fs_filetype ft);
-extern void scene_mountrbkey(dword * ctlkey, dword * ctlkey2, dword * ku,
-							 dword * kd, dword * kl, dword * kr);
-extern dword scene_options(dword * selidx);
+extern void scene_mountrbkey(u32 * ctlkey, u32 * ctlkey2, u32 * ku,
+							 u32 * kd, u32 * kl, u32 * kr);
+extern u32 scene_options(u32 * selidx);
 extern void scene_mp3bar(void);
 extern int scene_get_infobar_height(void);
 extern int default_predraw(const win_menu_predraw_data * pData, const char *str,
@@ -60,16 +60,16 @@ extern int get_center_pos(int left, int right, const char *str);
 extern const char *get_sfx_mode_str(int effect_type);
 #endif
 
-dword scene_txtkey(dword * selidx);
+u32 scene_txtkey(u32 * selidx);
 
 #ifdef ENABLE_IMAGE
-dword scene_readimage(dword selidx);
-dword scene_imgkey(dword * selidx);
+u32 scene_readimage(u32 selidx);
+u32 scene_imgkey(u32 * selidx);
 #endif
-extern dword scene_readbook(dword selidx);
+extern u32 scene_readbook(u32 selidx);
 
 #ifdef ENABLE_IMAGE
-extern dword scene_readimage(dword selidx);
+extern u32 scene_readimage(u32 selidx);
 #endif
 
 typedef struct _BookViewData
@@ -77,7 +77,7 @@ typedef struct _BookViewData
 	int rowtop;
 	bool text_needrf, text_needrp, text_needrb;
 	char filename[PATH_MAX], bookmarkname[PATH_MAX], archname[PATH_MAX];
-	dword rrow;
+	u32 rrow;
 } BookViewData, *PBookViewData;
 
 extern BookViewData cur_book_view, prev_book_view;

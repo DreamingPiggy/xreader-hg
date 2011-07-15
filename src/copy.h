@@ -32,11 +32,11 @@ extern bool extract_archive_file(const char *archname, const char *archpath,
 								 t_copy_overwritecb ocb, void *data);
 extern bool copy_file(const char *src, const char *dest, t_copy_cb cb,
 					  t_copy_overwritecb ocb, void *data);
-extern dword copy_dir(const char *src, const char *dest, t_copy_cb cb,
+extern u32 copy_dir(const char *src, const char *dest, t_copy_cb cb,
 					  t_copy_overwritecb ocb, void *data);
 extern bool move_file(const char *src, const char *dest, t_copy_cb cb,
 					  t_copy_overwritecb ocb, void *data);
-extern dword move_dir(const char *src, const char *dest, t_copy_cb cb,
+extern u32 move_dir(const char *src, const char *dest, t_copy_cb cb,
 					  t_copy_overwritecb ocb, void *data);
 
 #endif

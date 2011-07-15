@@ -732,8 +732,8 @@ static int musicdrv_has_stop(void)
 
 static int music_thread(SceSize arg, void *argp)
 {
-	dword key = 0;
-	dword oldkey = 0;
+	u32 key = 0;
+	u32 oldkey = 0;
 	u64 start, end;
 	double interval = 0;
 
@@ -1063,7 +1063,7 @@ int music_next(void)
 int music_add_dir(const char *spath, const char *lpath)
 {
 	p_fat_info info;
-	dword i, count;
+	u32 i, count;
 
 	if (spath == NULL || lpath == NULL)
 		return -EINVAL;
@@ -1203,7 +1203,7 @@ int music_list_load(const char *path)
 	fid = freq_enter_hotzone();
 
 	while (fgets(fname, PATH_MAX, fp) != NULL) {
-		dword len1, len2;
+		u32 len1, len2;
 
 		if (fgets(lfname, PATH_MAX, fp) == NULL)
 			break;

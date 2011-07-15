@@ -90,23 +90,23 @@ static int new_arg(int *cnt, char **argv[])
 
 int build_args(const char *str, int *argc, char ***argv)
 {
-	bool quote, backslash, endword;
+	bool quote, backslash, enu32;
 	const char *p;
 	bool empty;
 
 	quote = false;
 	empty = true;
 	backslash = false;
-	endword = true;
+	enu32 = true;
 	*argc = 0;
 	*argv = NULL;
 
 	for (p = str; *p != '\0'; ++p) {
 		if (*p == '\\') {
 			if (backslash) {
-				if (endword) {
+				if (enu32) {
 					new_arg(argc, argv);
-					endword = false;
+					enu32 = false;
 				}
 				append_str('\\', &(*argv)[*argc - 1]);
 				empty = false;
@@ -116,15 +116,15 @@ int build_args(const char *str, int *argc, char ***argv)
 			}
 		} else if (*p == '\"') {
 			if (backslash) {
-				if (endword) {
+				if (enu32) {
 					new_arg(argc, argv);
-					endword = false;
+					enu32 = false;
 				}
 				append_str('\"', &(*argv)[*argc - 1]);
 				empty = false;
 				backslash = false;
 			} else {
-				endword = true;
+				enu32 = true;
 
 				if (quote) {
 					if (empty) {
@@ -140,9 +140,9 @@ int build_args(const char *str, int *argc, char ***argv)
 			}
 		} else if (isspace(*p)) {
 			if (backslash) {
-				if (endword) {
+				if (enu32) {
 					new_arg(argc, argv);
-					endword = false;
+					enu32 = false;
 				}
 
 				append_str(*p, &(*argv)[*argc - 1]);
@@ -150,20 +150,20 @@ int build_args(const char *str, int *argc, char ***argv)
 				backslash = false;
 			} else {
 				if (quote) {
-					if (endword) {
+					if (enu32) {
 						new_arg(argc, argv);
-						endword = false;
+						enu32 = false;
 					}
 					append_str(*p, &(*argv)[*argc - 1]);
 					empty = false;
 				} else {
-					endword = true;
+					enu32 = true;
 				}
 			}
 		} else {
-			if (endword) {
+			if (enu32) {
 				new_arg(argc, argv);
-				endword = false;
+				enu32 = false;
 			}
 			append_str(*p, &(*argv)[*argc - 1]);
 			empty = false;

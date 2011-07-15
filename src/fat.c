@@ -310,10 +310,10 @@ static void fat_free_table(void)
 	}
 }
 
-static byte fat_calc_chksum(p_fat_entry info)
+static u8 fat_calc_chksum(p_fat_entry info)
 {
-	byte *n = (byte *) & info->norm.filename[0];
-	byte chksum = 0;
+	u8 *n = (u8 *) & info->norm.filename[0];
+	u8 chksum = 0;
 
 	// Fix upset warning in psp-gcc 4.3.3
 #if 0
@@ -429,8 +429,8 @@ static bool fat_get_longname(p_fat_entry entrys, u32 cur, char *longnamestr)
 		return false;
 	longname[255] = 0;
 	memset(longnamestr, 0, 256);
-	charsets_ucs_conv((const byte *) longname, sizeof(longname),
-					  (byte *) longnamestr, 256);
+	charsets_ucs_conv((const u8 *) longname, sizeof(longname),
+					  (u8 *) longnamestr, 256);
 	return true;
 }
 
@@ -475,7 +475,7 @@ static void fat_get_shortname(p_fat_entry entry, char *shortnamestr)
 	*shortnamestr = 0;
 }
 
-extern bool fat_locate(const char *name, char *sname, dword clus,
+extern bool fat_locate(const char *name, char *sname, u32 clus,
 					   p_fat_entry info)
 {
 	u32 count;
@@ -620,7 +620,7 @@ static u32 fat_dir_clus(const char *dir, char *shortdir)
 	return clus;
 }
 
-extern dword fat_readdir(const char *dir, char *sdir, p_fat_info * info)
+extern u32 fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 {
 	u32 clus;
 	SceUID dl = 0;
@@ -752,12 +752,12 @@ extern dword fat_readdir(const char *dir, char *sdir, p_fat_info * info)
  * @note ²Î¿¼: http://support.microsoft.com/kb/142982/zh-cn
  */
 extern bool fat_longnametoshortname(char *shortname, const char *longname,
-									dword size)
+									u32 size)
 {
 	p_fat_info info = NULL;
 	char dirname[PATH_MAX], spath[PATH_MAX], longfilename[PATH_MAX];
 	char *p = NULL;
-	dword i, count;
+	u32 i, count;
 
 	STRCPY_S(dirname, longname);
 	if ((p = strrchr(dirname, '/')) != NULL) {
