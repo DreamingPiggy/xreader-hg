@@ -83,7 +83,6 @@ static int g_current_spd = 0;
 static int destx = 0, desty = 0, srcx = 0, srcy = 0;
 static bool in_move_z_mode = false;
 static int z_mode_cnt = 0;
-static buffer_array *exif_array = 0;
 
 static int open_image(dword selidx)
 {
@@ -98,13 +97,12 @@ static int open_image(dword selidx)
 		pos += filelist[selidx].data2[0];
 		result = image_open_umd(filename, config.shortpath,
 								(t_fs_filetype) filelist[selidx].data, pos, 0,
-								&width, &height, &imgdata, &bgcolor,
-								&exif_array);
+								&width, &height, &imgdata, &bgcolor);
 	} else {
 		result =
 			image_open_archive(filename, config.shortpath,
 							   (t_fs_filetype) filelist[selidx].data, &width,
-							   &height, &imgdata, &bgcolor, where, &exif_array);
+							   &height, &imgdata, &bgcolor, where);
 	}
 
 	if (imgdata == NULL && shareimg) {
@@ -273,7 +271,6 @@ static int cache_get_image(dword selidx)
 
 	width = img->width;
 	height = img->height;
-	exif_array = img->exif_array;
 
 	return ret;
 }
@@ -465,29 +462,6 @@ static dword scene_rotateimage(void)
 	return 0;
 }
 
-static int exif_max_width(void)
-{
-	int i, max_h, height, line_num;
-
-	if (exif_array == NULL)
-		return 0;
-
-	max_h = 0;
-
-	height = PSP_SCREEN_HEIGHT / DISP_FONTSIZE - 1;
-	line_num = exif_array->used <= height ? exif_array->used : height;
-
-	for (i = 0; i < line_num; ++i) {
-		int len = text_get_string_width_sys((const unsigned char *)
-											exif_array->ptr[i]->ptr,
-											strlen(exif_array->ptr[i]->ptr), 1);
-
-		max_h = max(max_h, len);
-	}
-
-	return max_h;
-}
-
 static void scene_show_info(int selidx)
 {
 	char infostr[64];
@@ -507,42 +481,6 @@ static void scene_show_info(int selidx)
 	ilen = strlen(infostr);
 
 	if (config.imginfobar) {
-		if (config.load_exif && exif_array && exif_array->used > 0) {
-			int width = exif_max_width();
-			int height, line_num, top, left, right;
-			int i;
-
-			width =
-				width > PSP_SCREEN_WIDTH - 10 ? PSP_SCREEN_WIDTH - 10 : width;
-			height = PSP_SCREEN_HEIGHT / DISP_FONTSIZE - 1;
-			line_num = exif_array->used <= height ? exif_array->used : height;
-			top =
-				(PSP_SCREEN_HEIGHT -
-				 (1 + height) * DISP_FONTSIZE) / 2 >
-				1 ? (PSP_SCREEN_HEIGHT - (1 + height) * DISP_FONTSIZE) / 2 : 1;
-			left =
-				(PSP_SCREEN_WIDTH - width) / 4 - 10 <
-				1 ? 1 : (PSP_SCREEN_WIDTH - width) / 4 - 10;
-			right =
-				(PSP_SCREEN_WIDTH + 3 * width) / 4 >=
-				PSP_SCREEN_WIDTH - 1 ? PSP_SCREEN_WIDTH -
-				2 : (PSP_SCREEN_WIDTH + 3 * width) / 4;
-			disp_fillrect(left, top, right, top + DISP_FONTSIZE * line_num, 0);
-			disp_rectangle(left - 1, top - 1, right + 1,
-						   top + DISP_FONTSIZE * line_num + 1, COLOR_WHITE);
-
-			for (i = 0; i < line_num; ++i) {
-				const char *teststr = exif_array->ptr[i]->ptr;
-
-				disp_putnstring((PSP_SCREEN_WIDTH -
-								 width) / 4,
-								top + i * DISP_FONTSIZE,
-								COLOR_WHITE,
-								(const byte *) teststr,
-								strlen(teststr), 0, 0, DISP_FONTSIZE, 0);
-			}
-		}
-
 		disp_fillrect(0, PSP_SCREEN_HEIGHT - DISP_FONTSIZE, 479, 271, 0);
 		disp_putnstring(0, PSP_SCREEN_HEIGHT - DISP_FONTSIZE,
 						COLOR_WHITE,
@@ -561,44 +499,6 @@ static void scene_show_info(int selidx)
 	}
 }
 
-static void scene_show_exif(void)
-{
-	if (!config.imginfobar
-		|| !(config.load_exif && exif_array && exif_array->used > 0)) {
-		short b;
-
-		dword top =
-			(PSP_SCREEN_HEIGHT - thumb_height) / 2, bottom = top + thumb_height;
-		dword thumbl = 0, thumbr = 0, thumbt = 0, thumbb = 0;
-
-		if (paintleft > 0) {
-			thumbl = 0;
-			thumbr = thumb_width - 1;
-		} else {
-			thumbl = curleft * thumb_width / width_rotated;
-			thumbr =
-				(curleft + PSP_SCREEN_WIDTH - 1) * thumb_width / width_rotated;
-		}
-
-		if (painttop > 0) {
-			thumbt = 0;
-			thumbb = thumbb - 1;
-		} else {
-			thumbt = curtop * thumb_height / height_rotated;
-			thumbb = (curtop + imgh - 1) * thumb_height / height_rotated;
-		}
-
-		disp_putimage(32, top, thumb_width, thumb_height, 0, 0, thumbimg);
-		disp_line(34, bottom, 32 + thumb_width, bottom, 0);
-		disp_line(32 + thumb_width, top + 2, 32 + thumb_width, bottom - 1, 0);
-		disp_rectangle(33 + thumbl, top + thumbt + 1,
-					   33 + thumbr, top + thumbb + 1, 0);
-		b = 75 - config.imgbrightness > 0 ? 75 - config.imgbrightness : 0;
-		disp_rectangle(32 + thumbl, top + thumbt, 32 + thumbr,
-					   top + thumbb, disp_grayscale(COLOR_WHITE, 0, 0, 0, b));
-	}
-}
-
 static int scene_printimage(int selidx)
 {
 	disp_waitv();
@@ -608,10 +508,6 @@ static int scene_printimage(int selidx)
 
 	if (config.imginfobar || showinfo) {
 		scene_show_info(selidx);
-	}
-
-	if ((config.thumb == conf_thumb_always || thumb)) {
-		scene_show_exif();
 	}
 
 	disp_flip();
@@ -695,7 +591,7 @@ static void image_move(dword key)
 static bool image_paging_movedown(void)
 {
 	if (curtop + imgh < height_rotated) {
-		curtop += MAX(imgh - (int) config.imgpagereserve, 0);
+		curtop += max(imgh - (int) config.imgpagereserve, 0);
 
 		if (curtop + imgh > height_rotated)
 			curtop = height_rotated - imgh;
@@ -711,7 +607,7 @@ static bool image_paging_movedown(void)
 static bool image_paging_moveup(void)
 {
 	if (curtop > 0) {
-		curtop -= MAX(imgh - (int) config.imgpagereserve, 0);
+		curtop -= max(imgh - (int) config.imgpagereserve, 0);
 
 		if (curtop < 0)
 			curtop = 0;
@@ -1076,7 +972,7 @@ static bool splashz(void)
 
 static bool z_mode_up(void)
 {
-	desty = curtop + MAX(imgh - (int) config.imgpagereserve, 0);
+	desty = curtop + max(imgh - (int) config.imgpagereserve, 0);
 
 	if (desty + imgh > height_rotated)
 		desty = height_rotated - imgh;
@@ -1095,7 +991,7 @@ static bool z_mode_up(void)
 
 static bool z_mode_down(void)
 {
-	desty = curtop - MAX(imgh - (int) config.imgpagereserve, 0);
+	desty = curtop - max(imgh - (int) config.imgpagereserve, 0);
 
 	if (desty < 0)
 		desty = 0;
@@ -1114,7 +1010,7 @@ static bool z_mode_down(void)
 
 static bool z_mode_left(void)
 {
-	destx = curleft - MAX(PSP_SCREEN_WIDTH - (int) config.imgpagereserve, 0);
+	destx = curleft - max(PSP_SCREEN_WIDTH - (int) config.imgpagereserve, 0);
 
 	if (destx < 0) {
 		destx = 0;
@@ -1134,7 +1030,7 @@ static bool z_mode_left(void)
 
 static bool z_mode_right(void)
 {
-	destx = curleft + MAX(PSP_SCREEN_WIDTH - (int) config.imgpagereserve, 0);
+	destx = curleft + max(PSP_SCREEN_WIDTH - (int) config.imgpagereserve, 0);
 
 	if (destx + PSP_SCREEN_WIDTH > width_rotated) {
 		destx = width_rotated - PSP_SCREEN_WIDTH;
@@ -1813,16 +1709,6 @@ dword scene_readimage(dword selidx)
 		if (imgdata != NULL) {
 			free(imgdata);
 			imgdata = NULL;
-		}
-	}
-
-	if (config.use_image_queue) {
-		// let cacher delete exif data
-		exif_array = NULL;
-	} else {
-		if (exif_array) {
-			buffer_array_free(exif_array);
-			exif_array = NULL;
 		}
 	}
 

@@ -102,7 +102,6 @@ t_fonts fonts[5], bookfonts[21];
 static int fontcount = 0, fontindex = 0, bookfontcount = 0, bookfontindex =
 	0, ttfsize = 0;
 bool g_force_text_view_mode = false;
-static buffer_array *exif_array = NULL;
 
 char prev_path[PATH_MAX], prev_shortpath[PATH_MAX];
 char prev_lastfile[PATH_MAX];
@@ -661,10 +660,6 @@ t_win_menu_op scene_ioptions_menucb(dword key, p_win_menuitem item,
 					config.img_enable_analog = !config.img_enable_analog;
 #endif
 					break;
-				case 9:
-					config.load_exif = !config.load_exif;
-					img_needrp = true;
-					break;
 				case 10:
 					if (config.imgpaging_spd == 1)
 						config.imgpaging_spd = 200;
@@ -735,10 +730,6 @@ t_win_menu_op scene_ioptions_menucb(dword key, p_win_menuitem item,
 #ifdef ENABLE_ANALOG
 					config.img_enable_analog = !config.img_enable_analog;
 #endif
-					break;
-				case 9:
-					config.load_exif = !config.load_exif;
-					img_needrp = true;
 					break;
 				case 10:
 					if (config.imgpaging_spd == 200)
@@ -892,13 +883,6 @@ void scene_ioptions_predraw(p_win_menuitem item, dword index, dword topindex,
 				   COLOR_WHITE, (const byte *) _("已关闭"));
 #endif
 	lines++;
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   config.load_exif ? (const byte *) _("是") : (const byte *)
-				   _("否"));
-	lines++;
 	SPRINTF_S(number, "%d", config.imgpaging_spd);
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
 				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
@@ -923,7 +907,7 @@ dword scene_ioptions(dword * selidx)
 {
 	win_menu_predraw_data prev;
 	dword orgimgbrightness = config.imgbrightness;
-	t_win_menuitem item[13];
+	t_win_menuitem item[12];
 	dword i, index;
 
 	memcpy(&prev, &g_predraw, sizeof(win_menu_predraw_data));
@@ -937,10 +921,9 @@ dword scene_ioptions(dword * selidx)
 	STRCPY_S(item[6].name, _("  缩略图查看"));
 	STRCPY_S(item[7].name, _("    图像亮度"));
 	STRCPY_S(item[8].name, _("  启用类比键"));
-	STRCPY_S(item[9].name, _("查看EXIF信息"));
-	STRCPY_S(item[10].name, _("翻页滚动速度"));
-	STRCPY_S(item[11].name, _("翻页滚动间隔"));
-	STRCPY_S(item[12].name, _("翻页滚动时长"));
+	STRCPY_S(item[9].name, _("翻页滚动速度"));
+	STRCPY_S(item[10].name, _("翻页滚动间隔"));
+	STRCPY_S(item[11].name, _("翻页滚动时长"));
 
 	g_predraw.max_item_len = win_get_max_length(item, NELEMS(item));
 
@@ -4079,12 +4062,6 @@ int scene_single_file_ops_draw(p_win_menuitem item, dword selidx)
 						   136 - DISP_FONTSIZE, COLOR_WHITE,
 						   (const byte *) _("□  设为背景"));
 #endif
-			if (config.load_exif
-				&& (t_fs_filetype) item[selidx].data == fs_filetype_jpg) {
-				disp_putstring(240 - DISP_FONTSIZE * 3,
-							   136 + 4 * DISP_FONTSIZE, COLOR_WHITE,
-							   (const byte *) _("SELECT EXIF"));
-			}
 			break;
 #endif
 		default:
@@ -4590,95 +4567,6 @@ static t_win_menu_op scene_fileops_handle_input(dword key, bool * inop,
 				if (cutcount > 0 && cutlist != NULL) {
 					win_item_destroy(&cutlist, &cutcount);
 				}
-			}
-			break;
-		case PSP_CTRL_SELECT:
-			{
-				int result;
-				dword width, height;
-				pixel *imgdata = NULL;
-				pixel bgcolor = 0;
-				char filename[PATH_MAX];
-
-				if (((t_fs_filetype) filelist[selidx].data) != fs_filetype_jpg)
-					break;
-
-				if (where == scene_in_zip || where == scene_in_chm
-					|| where == scene_in_rar)
-					STRCPY_S(filename, filelist[selidx].compname->ptr);
-				else {
-					STRCPY_S(filename, config.shortpath);
-					STRCAT_S(filename, filelist[selidx].shortname->ptr);
-				}
-
-				switch (where) {
-					case scene_in_zip:
-						result =
-							exif_readjpg_in_zip(config.shortpath,
-												filename, &width,
-												&height, &imgdata, &bgcolor,
-												&exif_array);
-						break;
-					case scene_in_chm:
-						result =
-							exif_readjpg_in_chm(config.shortpath,
-												filename, &width,
-												&height, &imgdata, &bgcolor,
-												&exif_array);
-						break;
-						/*case scene_in_umd:
-						   result =
-						   exif_readjpg_in_umd(config.shortpath,
-						   filename, &width,
-						   &height, &imgdata, &bgcolor);
-						 */
-					case scene_in_rar:
-						result =
-							exif_readjpg_in_rar(config.shortpath,
-												filename, &width,
-												&height, &imgdata, &bgcolor,
-												&exif_array);
-						break;
-					default:
-						{
-							result =
-								exif_readjpg(filename, &width,
-											 &height, &imgdata, &bgcolor,
-											 &exif_array);
-						}
-						break;
-				}
-
-				*inop = false;
-				if (exif_array && exif_array->used) {
-					char infotitle[256];
-					buffer *b = buffer_init();
-					int i;
-
-					if (strrchr(filename, '/') != NULL) {
-						SPRINTF_S(infotitle, _("%s的EXIF信息"),
-								  strrchr(filename, '/') + 1);
-					} else
-						SPRINTF_S(infotitle, _("%s的EXIF信息"), filename);
-
-					infotitle[255] = '\0';
-
-					for (i = 0; i < exif_array->used - 1; ++i) {
-						buffer_append_string(b, exif_array->ptr[i]->ptr);
-						buffer_append_string(b, "\r\n");
-					}
-
-					buffer_append_string(b, exif_array->ptr[i]->ptr);
-					scene_readbook_raw(infotitle,
-									   (const unsigned char *) b->ptr, b->used,
-									   fs_filetype_txt);
-					g_force_text_view_mode = false;
-					buffer_free(b);
-					buffer_array_free(exif_array);
-					exif_array = NULL;
-				} else
-					win_msg(_("无EXIF信息"), COLOR_WHITE,
-							COLOR_WHITE, config.msgbcolor);
 			}
 			break;
 	}

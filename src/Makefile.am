@@ -311,7 +311,6 @@ LIBS += \
 	$(libdir)/libtga.a \
 	$(libdir)/libz.a \
 	$(libdir)/libfreetype.a \
-	-lexif \
 	-lm \
 	-lpspkubridge \
 	-lpspsystemctrl_user \

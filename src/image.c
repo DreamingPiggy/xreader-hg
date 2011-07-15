@@ -50,8 +50,6 @@
 #include "dmalloc.h"
 #endif
 
-static ExifData *exif_data = NULL;
-
 /* 
 #define PB  (1.0f/3.0f)
 #define PC  (1.0f/3.0f)
@@ -1205,23 +1203,8 @@ static int image_readjpg2(FILE * infile, dword * pwidth, dword * pheight,
 	return 0;
 }
 
-extern int exif_readjpg(const char *filename, dword * pwidth, dword * pheight,
-						pixel ** image_data, pixel * bgcolor,
-						buffer_array ** exif_array)
-{
-	if (!config.load_exif) {
-		return -1;
-	}
-
-	exif_data = exif_data_new_from_file(filename);
-	exif_viewer(exif_data, exif_array);
-
-	return 0;
-}
-
 extern int image_readjpg(const char *filename, dword * pwidth, dword * pheight,
-						 pixel ** image_data, pixel * bgcolor,
-						 buffer_array ** exif_array)
+						 pixel ** image_data, pixel * bgcolor)
 {
 	FILE *fp = fopen(filename, "rb");
 	int result;
@@ -1232,41 +1215,12 @@ extern int image_readjpg(const char *filename, dword * pwidth, dword * pheight,
 	result = image_readjpg2(fp, pwidth, pheight, image_data, bgcolor, NULL);
 	fclose(fp);
 
-	if (config.load_exif) {
-		exif_data = exif_data_new_from_file(filename);
-		exif_viewer(exif_data, exif_array);
-	}
-
 	return result;
-}
-
-extern int exif_readjpg_in_zip(const char *zipfile, const char *filename,
-							   dword * pwidth, dword * pheight,
-							   pixel ** image_data, pixel * bgcolor,
-							   buffer_array ** exif_array)
-{
-	unzFile unzf;
-
-	if (!config.load_exif)
-		return -1;
-
-	unzf = open_zip_file(zipfile, filename);
-
-	if (unzf == NULL)
-		return -1;
-
-	exif_data = exif_data_new_from_stream(image_zip_fread, unzf);
-	exif_viewer(exif_data, exif_array);
-	unzCloseCurrentFile(unzf);
-	unzClose(unzf);
-
-	return 0;
 }
 
 extern int image_readjpg_in_zip(const char *zipfile, const char *filename,
 								dword * pwidth, dword * pheight,
-								pixel ** image_data, pixel * bgcolor,
-								buffer_array ** exif_array)
+								pixel ** image_data, pixel * bgcolor)
 {
 	unzFile unzf = open_zip_file(zipfile, filename);
 	int result;
@@ -1278,50 +1232,15 @@ extern int image_readjpg_in_zip(const char *zipfile, const char *filename,
 		image_readjpg2((FILE *) unzf, pwidth, pheight, image_data, bgcolor,
 					   image_zip_fread);
 
-	if (config.load_exif) {
-		exif_data = exif_data_new_from_stream(image_zip_fread, unzf);
-		exif_viewer(exif_data, exif_array);
-	}
-
 	unzCloseCurrentFile(unzf);
 	unzClose(unzf);
 
 	return result;
 }
 
-extern int exif_readjpg_in_chm(const char *chmfile, const char *filename,
-							   dword * pwidth, dword * pheight,
-							   pixel ** image_data, pixel * bgcolor,
-							   buffer_array ** exif_array)
-{
-	t_image_chm chm;
-
-	if (!config.load_exif) {
-		return -1;
-	}
-
-	chm.chm = chm_open(chmfile);
-
-	if (chm.chm == NULL)
-		return -1;
-
-	if (chm_resolve_object(chm.chm, filename, &chm.ui) != CHM_RESOLVE_SUCCESS) {
-		chm_close(chm.chm);
-		return -1;
-	}
-
-	chm.readpos = 0;
-	exif_data = exif_data_new_from_stream(image_chm_fread, &chm);
-	exif_viewer(exif_data, exif_array);
-	chm_close(chm.chm);
-
-	return 0;
-}
-
 extern int image_readjpg_in_chm(const char *chmfile, const char *filename,
 								dword * pwidth, dword * pheight,
-								pixel ** image_data, pixel * bgcolor,
-								buffer_array ** exif_array)
+								pixel ** image_data, pixel * bgcolor)
 {
 	t_image_chm chm;
 	int result;
@@ -1339,29 +1258,14 @@ extern int image_readjpg_in_chm(const char *chmfile, const char *filename,
 		image_readjpg2((FILE *) & chm, pwidth, pheight, image_data, bgcolor,
 					   image_chm_fread);
 
-	if (config.load_exif) {
-		chm.readpos = 0;
-		exif_data = exif_data_new_from_stream(image_chm_fread, &chm);
-		exif_viewer(exif_data, exif_array);
-	}
-
 	chm_close(chm.chm);
 
 	return result;
 }
 
-extern int exif_readjpg_in_umd(const char *umdfile, size_t file_pos,
-							   size_t length, dword * pwidth, dword * pheight,
-							   pixel ** image_data, pixel * bgcolor,
-							   buffer_array ** exif_array)
-{
-	return -1;
-}
-
 extern int image_readjpg_in_umd(const char *umdfile, size_t file_pos,
 								size_t length, dword * pwidth, dword * pheight,
-								pixel ** image_data, pixel * bgcolor,
-								buffer_array ** exif_array)
+								pixel ** image_data, pixel * bgcolor)
 {
 	FILE *fp = NULL, *fpp;
 	int result = locate_umd_img(umdfile, file_pos, &fp);
@@ -1378,39 +1282,9 @@ extern int image_readjpg_in_umd(const char *umdfile, size_t file_pos,
 	return result;
 }
 
-extern int exif_readjpg_in_rar(const char *rarfile, const char *filename,
-							   dword * pwidth, dword * pheight,
-							   pixel ** image_data, pixel * bgcolor,
-							   buffer_array ** exif_array)
-{
-	u64 dbglasttick, dbgnow;
-	t_image_rar rar;
-
-	if (!config.load_exif) {
-		return -1;
-	}
-
-	extract_rar_file_into_image(&rar, rarfile, filename);
-
-	if (rar.buf == NULL) {
-		return 6;
-	}
-
-	rar.idx = 0;
-	sceRtcGetCurrentTick(&dbgnow);
-	dbg_printf(d, "找到RAR中JPG文件耗时%.2f秒",
-			   pspDiffTime(&dbgnow, &dbglasttick));
-	exif_data = exif_data_new_from_data(rar.buf, rar.size);
-	exif_viewer(exif_data, exif_array);
-	free(rar.buf);
-
-	return 0;
-}
-
 extern int image_readjpg_in_rar(const char *rarfile, const char *filename,
 								dword * pwidth, dword * pheight,
-								pixel ** image_data, pixel * bgcolor,
-								buffer_array ** exif_array)
+								pixel ** image_data, pixel * bgcolor)
 {
 	u64 dbglasttick, dbgnow;
 	t_image_rar rar;
@@ -1430,11 +1304,6 @@ extern int image_readjpg_in_rar(const char *rarfile, const char *filename,
 	result = image_readjpg2((FILE *) & rar, pwidth, pheight,
 								image_data,
 								bgcolor, image_rar_fread);
-
-	if (config.load_exif) {
-		exif_data = exif_data_new_from_data(rar.buf, rar.size);
-		exif_viewer(exif_data, exif_array);
-	}
 
 	free(rar.buf);
 
@@ -1841,67 +1710,6 @@ extern int image_readtga_in_rar(const char *rarfile, const char *filename,
 	return result;
 }
 
-void exif_entry_viewer(ExifEntry * pentry, void *user_data)
-{
-	char exif_str[512];
-	char msg[512];
-	ExifIfd ifd;
-	buffer_array *exif_array;
-	buffer *b;
-
-	if (pentry == 0)
-		return;
-
-	exif_entry_get_value(pentry, exif_str, 512);
-	exif_str[511] = '\0';
-
-	if (exif_str[0] == '\0')
-		return;
-
-	ifd = exif_entry_get_ifd(pentry);
-
-	STRCPY_S(msg, exif_tag_get_title_in_ifd(pentry->tag, ifd));
-	STRCAT_S(msg, ": ");
-	STRCAT_S(msg, exif_str);
-
-	exif_array = (buffer_array *) user_data;
-	b = buffer_array_append_get_buffer(exif_array);
-	buffer_copy_string(b, msg);
-}
-
-void exif_context_viewer(ExifContent * pcontext, void *user_data)
-{
-	if (pcontext == NULL)
-		return;
-
-	exif_content_foreach_entry(pcontext, exif_entry_viewer, user_data);
-}
-
-void exif_viewer(ExifData * data, buffer_array ** exif_array)
-{
-	if (!data) {
-		return;
-	}
-
-	if (exif_array == NULL) {
-		return;
-	}
-
-	if (*exif_array) {
-		buffer_array_free(*exif_array);
-		*exif_array = NULL;
-	}
-
-	*exif_array = buffer_array_init();
-
-	if (*exif_array == NULL) {
-		return;
-	}
-	// 打印所有EXIF数据
-	exif_data_foreach_content(data, exif_context_viewer, *exif_array);
-	exif_data_free(data);
-}
-
 /**
  * 解压图像文件，普通文件版本
  * @param filename 文件路径
@@ -1916,8 +1724,7 @@ void exif_viewer(ExifData * data, buffer_array ** exif_array)
  * - =0 成功
  */
 int image_open_normal(const char *filename, t_fs_filetype ft, dword * pWidth,
-					  dword * pHeight, pixel ** ppImageData, pixel * pBgColor,
-					  buffer_array ** exif_array)
+					  dword * pHeight, pixel ** ppImageData, pixel * pBgColor)
 {
 	int result;
 
@@ -1938,8 +1745,7 @@ int image_open_normal(const char *filename, t_fs_filetype ft, dword * pWidth,
 			break;
 		case fs_filetype_jpg:
 			result =
-				image_readjpg(filename, pWidth, pHeight, ppImageData, pBgColor,
-							  exif_array);
+				image_readjpg(filename, pWidth, pHeight, ppImageData, pBgColor);
 			break;
 		case fs_filetype_tga:
 			result =
@@ -1974,8 +1780,7 @@ int image_open_normal(const char *filename, t_fs_filetype ft, dword * pWidth,
  */
 int image_open_archive(const char *filename, const char *archname,
 					   t_fs_filetype ft, dword * pWidth, dword * pHeight,
-					   pixel ** ppImageData, pixel * pBgColor, int where,
-					   buffer_array ** exif_array)
+					   pixel ** ppImageData, pixel * pBgColor, int where)
 {
 	int result = -1;
 
@@ -1988,7 +1793,7 @@ int image_open_archive(const char *filename, const char *archname,
 
 	if (where == scene_in_dir) {
 		return image_open_normal(filename, ft, pWidth, pHeight,
-								 ppImageData, pBgColor, exif_array);
+								 ppImageData, pBgColor);
 	}
 
 	switch (ft) {
@@ -2035,20 +1840,17 @@ int image_open_archive(const char *filename, const char *archname,
 				case scene_in_zip:
 					result =
 						image_readjpg_in_zip(archname, filename, pWidth,
-											 pHeight, ppImageData, pBgColor,
-											 exif_array);
+											 pHeight, ppImageData, pBgColor);
 					break;
 				case scene_in_chm:
 					result =
 						image_readjpg_in_chm(archname, filename, pWidth,
-											 pHeight, ppImageData, pBgColor,
-											 exif_array);
+											 pHeight, ppImageData, pBgColor);
 					break;
 				case scene_in_rar:
 					result =
 						image_readjpg_in_rar(archname, filename, pWidth,
-											 pHeight, ppImageData, pBgColor,
-											 exif_array);
+											 pHeight, ppImageData, pBgColor);
 					break;
 			}
 			break;
@@ -2117,7 +1919,7 @@ int image_open_archive(const char *filename, const char *archname,
 extern int image_open_umd(const char *chaptername, const char *umdfile,
 						  t_fs_filetype ft, size_t file_pos, size_t length,
 						  dword * pWidth, dword * pHeight, pixel ** ppImageData,
-						  pixel * pBgColor, buffer_array ** exif_array)
+						  pixel * pBgColor)
 {
 	int result = -1;
 
@@ -2137,8 +1939,7 @@ extern int image_open_umd(const char *chaptername, const char *umdfile,
 		case fs_filetype_jpg:
 			result =
 				image_readjpg_in_umd(umdfile, file_pos, length, pWidth,
-									 pHeight, ppImageData, pBgColor,
-									 exif_array);
+									 pHeight, ppImageData, pBgColor);
 			break;
 		case fs_filetype_bmp:
 			result =

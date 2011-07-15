@@ -124,11 +124,6 @@ static void cache_clear(void)
 			ccacher.caches[i].data = NULL;
 		}
 
-		if (ccacher.caches[i].exif_array) {
-			buffer_array_free(ccacher.caches[i].exif_array);
-			ccacher.caches[i].exif_array = NULL;
-		}
-
 		if (ccacher.caches[i].status == CACHE_OK) {
 			ccacher.memory_usage -=
 				ccacher.caches[i].width * ccacher.caches[i].height *
@@ -168,11 +163,6 @@ static int cache_delete(size_t pos)
 		dbg_printf(d, "%s: data 0x%08x", __func__, (unsigned) p->data);
 		free(p->data);
 		p->data = NULL;
-	}
-
-	if (p->exif_array) {
-		buffer_array_free(p->exif_array);
-		p->exif_array = NULL;
 	}
 
 	if (p->status == CACHE_OK) {
@@ -309,11 +299,6 @@ static void free_cache_image(cache_image_t * p)
 		free(p->data);
 		p->data = NULL;
 	}
-
-	if (p->exif_array != NULL) {
-		buffer_array_free(p->exif_array);
-		p->exif_array = NULL;
-	}
 }
 
 int start_cache_next_image(void)
@@ -365,13 +350,11 @@ int start_cache_next_image(void)
 		STRCAT_S(fullpath, tmp.filename);
 		tmp.result =
 			image_open_archive(fullpath, tmp.archname, ft, &tmp.width,
-							   &tmp.height, &tmp.data, &tmp.bgc, tmp.where,
-							   &tmp.exif_array);
+							   &tmp.height, &tmp.data, &tmp.bgc, tmp.where);
 	} else {
 		tmp.result =
 			image_open_archive(tmp.filename, tmp.archname, ft, &tmp.width,
-							   &tmp.height, &tmp.data, &tmp.bgc, tmp.where,
-							   &tmp.exif_array);
+							   &tmp.height, &tmp.data, &tmp.bgc, tmp.where);
 	}
 
 	if (tmp.result == 0 && tmp.data != NULL && config.imgbrightness != 100) {
@@ -414,7 +397,6 @@ int start_cache_next_image(void)
 		tmp.status = CACHE_OK;
 		copy_cache_image(p, &tmp);
 		tmp.data = NULL;
-		tmp.exif_array = NULL;
 		free_cache_image(&tmp);
 		curr_times = avoid_times = 0;
 	} else if ((tmp.result == 4 || tmp.result == 5)
@@ -428,7 +410,6 @@ int start_cache_next_image(void)
 			tmp.status = CACHE_FAILED;
 			copy_cache_image(p, &tmp);
 			p->data = NULL;
-			p->exif_array = NULL;
 		} else {
 			// retry later
 //          dbg_printf(d, "SERVER: Image %u finished failed(%u), retring", (unsigned)tmp.selidx, tmp.result);
@@ -449,7 +430,6 @@ int start_cache_next_image(void)
 		tmp.status = CACHE_FAILED;
 		copy_cache_image(p, &tmp);
 		p->data = NULL;
-		p->exif_array = NULL;
 		free_cache_image(&tmp);
 	}
 
