@@ -5525,18 +5525,22 @@ extern void scene_init(void)
 //	unsigned mark;
 	void *p;
 
+	(void)p;
 	dmalloc_debug_setup("log-stats,check-fence,check-heap,check-funcs,check-blank,print-messages,inter=100");
-//	dmalloc_debug_setup
-//		("log-stats,log-non-free,check-fence,check-funcs,check-blank,print-messages");
-//	mark = dmalloc_mark();
-//	p = malloc(4096);
-//	dmalloc_log_changed(mark, 1, 0, 1);
-//	dmalloc_log_stats();
-//  dmalloc_log_unfreed();
+
+#if 0
+	dmalloc_debug_setup
+		("log-stats,log-non-free,check-fence,check-funcs,check-blank,print-messages");
+	mark = dmalloc_mark();
+	p = malloc(4096);
+	dmalloc_log_changed(mark, 1, 0, 1);
+	dmalloc_log_stats();
+	dmalloc_log_unfreed();
 
 	if (p == NULL) {
 		dbg_printf(d, "cannot malloc 4096 bytes yet");
 	}
+#endif
 #endif
 
 	getcwd(appdir, PATH_MAX);
