@@ -68,5 +68,5 @@ do
 done
 
 cd "$ROOTDIR"
-rar a -r -m5 -v1500k xReader.rar *
+rar a -r -m5 xReader.rar *
 
