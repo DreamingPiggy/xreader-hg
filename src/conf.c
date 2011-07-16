@@ -24,6 +24,7 @@
 #include <string.h>
 #include <pspkernel.h>
 #include <pspctrl.h>
+#include <psputility_sysparam.h>
 #include "common/utils.h"
 #include "scene.h"
 #include "display.h"
@@ -117,6 +118,24 @@ extern void conf_get_keyname(u32 key, char *res)
 		else
 			strcat_s(res, 256, "START");
 	}
+}
+
+static char *get_system_language(void)
+{
+	int result;
+
+	sceUtilityGetSystemParamInt(PSP_SYSTEMPARAM_ID_INT_LANGUAGE, &result);
+
+	switch(result) {
+		case PSP_SYSTEMPARAM_LANGUAGE_ENGLISH:
+			return "en_US";
+		case PSP_SYSTEMPARAM_LANGUAGE_CHINESE_TRADITIONAL:
+			return "zh_TW";
+		case PSP_SYSTEMPARAM_LANGUAGE_CHINESE_SIMPLIFIED:
+			return "zh_CN";
+	}
+
+	return "zh_CN";
 }
 
 static void conf_default(p_conf conf)
@@ -258,7 +277,7 @@ static void conf_default(p_conf conf)
 	conf->hide_flash = true;
 	conf->tabstop = 4;
 	conf->apetagorder = true;
-	STRCPY_S(conf->language, "zh_CN");
+	STRCPY_S(conf->language, get_system_language());
 	conf->filelistwidth = 160;
 	if (psp_model == PSP_MODEL_STANDARD) {
 		conf->ttf_load_to_memory = false;
