@@ -83,34 +83,6 @@ static int destx = 0, desty = 0, srcx = 0, srcy = 0;
 static bool in_move_z_mode = false;
 static int z_mode_cnt = 0;
 
-static int open_image(u32 selidx)
-{
-	bool shareimg;
-	int result;
-
-	shareimg = (imgshow == imgdata) ? true : false;
-
-	if (scene_in_umd == where) {
-		size_t pos = g_menu->root[selidx].data2[1] << 16;
-
-		pos += g_menu->root[selidx].data2[0];
-		result = image_open_umd(filename, config.shortpath,
-								(t_fs_filetype) g_menu->root[selidx].data, pos, 0,
-								&width, &height, &imgdata, &bgcolor);
-	} else {
-		result =
-			image_open_archive(filename, config.shortpath,
-							   (t_fs_filetype) g_menu->root[selidx].data, &width,
-							   &height, &imgdata, &bgcolor, where);
-	}
-
-	if (imgdata == NULL && shareimg) {
-		imgshow = NULL;
-	}
-
-	return result;
-}
-
 static inline void reset_image_show_ptr(void)
 {
 	if (imgshow != imgdata && imgshow != NULL) {
@@ -120,24 +92,9 @@ static inline void reset_image_show_ptr(void)
 	imgshow = NULL;
 }
 
-static inline void reset_image_data_ptr(void)
-{
-	if (config.use_image_queue) {
-	} else {
-		if (imgdata != NULL) {
-			if (imgshow == imgdata)
-				imgshow = NULL;
-
-			free(imgdata);
-			imgdata = NULL;
-		}
-	}
-}
-
 static void reset_image_ptr(void)
 {
 	reset_image_show_ptr();
-	reset_image_data_ptr();
 }
 
 static void report_image_error(int status)
@@ -172,22 +129,6 @@ static void report_image_error(int status)
 			   errstr, where, config.path, filename);
 	imgreading = false;
 	reset_image_ptr();
-}
-
-// TODO: use GU to improve speed...
-static void recalc_brightness(void)
-{
-	int i;
-
-	if (imgdata) {
-		pixel *t = imgdata;
-		short b = 100 - config.imgbrightness;
-
-		for (i = 0; i < height * width; i++) {
-			*t = disp_grayscale(*t, 0, 0, 0, b);
-			t++;
-		}
-	}
 }
 
 static int cache_wait_avail()
@@ -287,19 +228,11 @@ static int scene_reloadimage(u32 selidx)
 		STRCAT_S(filename, g_menu->root[selidx].shortname->ptr);
 	}
 
-	if (config.use_image_queue) {
-		result = cache_get_image(selidx);
-	} else {
-		result = open_image(selidx);
-	}
+	result = cache_get_image(selidx);
 
 	if (result != 0) {
 		report_image_error(result);
 		return -1;
-	}
-	// already calc brightness in cacher
-	if (!config.use_image_queue && config.imgbrightness != 100) {
-		recalc_brightness();
 	}
 
 	STRCPY_S(config.lastfile, g_menu->root[selidx].compname->ptr);
@@ -1251,10 +1184,8 @@ static void next_image(u32 * selidx, bool * should_exit)
 {
 	u32 orgidx = *selidx;
 
-	if (config.use_image_queue) {
-		cache_set_forward(true);
-		ctrl_waitrelease();
-	}
+	cache_set_forward(true);
+	ctrl_waitrelease();
 
 	do {
 		if (*selidx < g_menu->size - 1)
@@ -1275,20 +1206,16 @@ static void next_image(u32 * selidx, bool * should_exit)
 	in_move_z_mode = false;
 	z_mode_cnt = 0;
 
-	if (config.use_image_queue) {
-		cache_next_image();
-		cache_delete_first();
-	}
+	cache_next_image();
+	cache_delete_first();
 }
 
 static void prev_image(u32 * selidx)
 {
 	u32 orgidx = *selidx;
 
-	if (config.use_image_queue) {
-		cache_set_forward(false);
-		ctrl_waitrelease();
-	}
+	cache_set_forward(false);
+	ctrl_waitrelease();
 
 	do {
 		if (*selidx > 0)
@@ -1303,10 +1230,8 @@ static void prev_image(u32 * selidx)
 	in_move_z_mode = false;
 	z_mode_cnt = 0;
 
-	if (config.use_image_queue) {
-		cache_next_image();
-		cache_delete_first();
-	}
+	cache_next_image();
+	cache_delete_first();
 }
 
 static bool slideshow_move = false;
@@ -1571,11 +1496,9 @@ u32 scene_readimage(u32 selidx)
 	else
 		imgh = PSP_SCREEN_HEIGHT;
 
-	if (config.use_image_queue) {
-		cache_setup(config.max_cache_img, &selidx);
-		cache_set_forward(true);
-		cache_on(true);
-	}
+	cache_setup(config.max_cache_img, &selidx);
+	cache_set_forward(true);
+	cache_on(true);
 
 	sceRtcGetCurrentTick(&timer_start);
 
@@ -1697,19 +1620,8 @@ u32 scene_readimage(u32 selidx)
 
 	reset_image_show_ptr();
 
-	if (config.use_image_queue) {
-		cache_on(false);
-	}
-
+	cache_on(false);
 	imgreading = false;
-
-	if (config.use_image_queue) {
-	} else {
-		if (imgdata != NULL) {
-			free(imgdata);
-			imgdata = NULL;
-		}
-	}
 
 	return selidx;
 }

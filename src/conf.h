@@ -234,7 +234,6 @@ typedef struct
 	t_conf_align infobar_align;
 	char musicdrv_opts[PATH_MAX];
 	bool magnetic_scrolling;
-	bool use_image_queue;
 	unsigned max_cache_img;
 	bool show_encoder_msg;
 	int sfx_mode;
