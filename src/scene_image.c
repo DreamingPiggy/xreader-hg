@@ -431,12 +431,51 @@ static void scene_show_info(int selidx)
 	}
 }
 
+static void scene_show_thumb(void)
+{
+	short b;
+	u32 top = (PSP_SCREEN_HEIGHT - thumb_height) / 2, bottom = top + thumb_height;
+	u32 thumbl = 0, thumbr = 0, thumbt = 0, thumbb = 0;
+	
+	if(config.imginfobar) {
+		return;
+	}
+
+	if (paintleft > 0) {
+		thumbl = 0;
+		thumbr = thumb_width - 1;
+	} else {
+		thumbl = curleft * thumb_width / width_rotated;
+		thumbr =
+			(curleft + PSP_SCREEN_WIDTH - 1) * thumb_width / width_rotated;
+	}
+
+	if (painttop > 0) {
+		thumbt = 0;
+		thumbb = thumbb - 1;
+	} else {
+		thumbt = curtop * thumb_height / height_rotated;
+		thumbb = (curtop + imgh - 1) * thumb_height / height_rotated;
+	}
+
+	disp_putimage(32, top, thumb_width, thumb_height, 0, 0, thumbimg);
+	disp_line(34, bottom, 32 + thumb_width, bottom, 0);
+	disp_line(32 + thumb_width, top + 2, 32 + thumb_width, bottom - 1, 0);
+	disp_rectangle(33 + thumbl, top + thumbt + 1, 33 + thumbr, top + thumbb + 1, 0);
+	b = 75 - config.imgbrightness > 0 ? 75 - config.imgbrightness : 0;
+	disp_rectangle(32 + thumbl, top + thumbt, 32 + thumbr, top + thumbb, disp_grayscale(COLOR_WHITE, 0, 0, 0, b));
+}
+
 static int scene_printimage(int selidx)
 {
 	disp_waitv();
 	disp_fillvram(bgcolor);
 	disp_putimage(paintleft, painttop, width_rotated, height_rotated,
 				  curleft, curtop, imgshow);
+
+	if ((config.thumb == conf_thumb_always || thumb)) {
+		scene_show_thumb();
+	}
 
 	if (config.imginfobar || showinfo) {
 		scene_show_info(selidx);
