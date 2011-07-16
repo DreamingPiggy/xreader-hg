@@ -507,6 +507,10 @@ p_win_menu win_menu_new(void)
 
 int win_menu_add(p_win_menu menu, p_win_menuitem item)
 {
+	if(menu == NULL || item == NULL) {
+		return -1;
+	}
+
 	if(menu->size >= menu->cap) {
 		p_win_menuitem newmenu;
 
@@ -529,6 +533,10 @@ int win_menu_add(p_win_menu menu, p_win_menuitem item)
 int win_menu_add_copy(p_win_menu menu, p_win_menuitem item)
 {
 	t_win_menuitem newitem;
+
+	if(menu == NULL || item == NULL) {
+		return -1;
+	}
 
 	win_menuitem_new(&newitem);
 	win_copy_item(&newitem, item);
