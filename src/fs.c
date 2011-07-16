@@ -175,21 +175,26 @@ void filename_to_itemname(p_win_menuitem item, const char *filename)
 	}
 }
 
+static p_win_menu menu_renew(p_win_menu *menu)
+{
+	if(*menu != NULL) {
+		win_menu_destroy(*menu);
+		*menu = NULL;
+	}
+
+	*menu = win_menu_new();
+
+	return *menu;
+}
+
 extern u32 fs_list_device(const char *dir, const char *sdir, u32 icolor,
 							u32 selicolor, u32 selrcolor, u32 selbcolor)
 {
 	t_win_menuitem item;
 
-	if(g_menu != NULL) {
-		win_menu_destroy(g_menu);
-		g_menu = NULL;
-	}
-
 	strcpy_s((char *) sdir, 256, dir);
 
-	g_menu = win_menu_new();
-
-	if(g_menu == NULL) {
+	if(menu_renew(&g_menu) == NULL) {
 		return 0;
 	}
 
@@ -268,14 +273,7 @@ extern u32 fs_flashdir_to_menu(const char *dir, const char *sdir, u32 icolor,
 	int fd;
 	t_win_menuitem item;
 
-	if(g_menu != NULL) {
-		win_menu_destroy(g_menu);
-		g_menu = NULL;
-	}
-
-	g_menu = win_menu_new();
-
-	if(g_menu == NULL) {
+	if(menu_renew(&g_menu) == NULL) {
 		return 0;
 	}
 
@@ -372,14 +370,7 @@ extern u32 fs_dir_to_menu(const char *dir, char *sdir,
 	u32 i;
 	t_win_menuitem item;
 
-	if(g_menu != NULL) {
-		win_menu_destroy(g_menu);
-		g_menu = NULL;
-	}
-
-	g_menu = win_menu_new();
-
-	if(g_menu == NULL) {
+	if(menu_renew(&g_menu) == NULL) {
 		return 0;
 	}
 
@@ -472,14 +463,7 @@ extern u32 fs_zip_to_menu(const char *zipfile,
 	unzFile unzf;
 	t_win_menuitem item;
 
-	if(g_menu != NULL) {
-		win_menu_destroy(g_menu);
-		g_menu = NULL;
-	}
-
-	g_menu = win_menu_new();
-
-	if(g_menu == NULL) {
+	if(menu_renew(&g_menu) == NULL) {
 		return 0;
 	}
 
@@ -553,14 +537,7 @@ extern u32 fs_rar_to_menu(const char *rarfile,
 	t_fs_filetype ft;
 	t_win_menuitem item;
 
-	if(g_menu != NULL) {
-		win_menu_destroy(g_menu);
-		g_menu = NULL;
-	}
-
-	g_menu = win_menu_new();
-
-	if(g_menu == NULL) {
+	if(menu_renew(&g_menu) == NULL) {
 		return 0;
 	}
 
@@ -640,17 +617,10 @@ extern u32 fs_rar_to_menu(const char *rarfile,
 
 u32 fs_empty_dir(u32 icolor, u32 selicolor, u32 selrcolor, u32 selbcolor)
 {
-	if(g_menu != NULL) {
-		win_menu_destroy(g_menu);
-		g_menu = NULL;
-	}
-
-	g_menu = win_menu_new();
-
-	if(g_menu == NULL) {
+	if(menu_renew(&g_menu) == NULL) {
 		return 0;
 	}
-	
+
 	add_parent_to_menu(g_menu, icolor, selicolor, selrcolor, selbcolor);
 
 	return g_menu->size;
@@ -716,14 +686,7 @@ extern u32 fs_chm_to_menu(const char *chmfile,
 	struct chmFile *chm;
 	t_fs_chm_enum cenum;
 
-	if(g_menu != NULL) {
-		win_menu_destroy(g_menu);
-		g_menu = NULL;
-	}
-	
-	g_menu = win_menu_new();
-
-	if(g_menu == NULL) {
+	if(menu_renew(&g_menu) == NULL) {
 		return 0;
 	}
 
@@ -758,14 +721,7 @@ extern u32 fs_umd_to_menu(const char *umdfile,
 	int fid;
 	t_win_menuitem item;
 
-	if(g_menu != NULL) {
-		win_menu_destroy(g_menu);
-		g_menu = NULL;
-	}
-	
-	g_menu = win_menu_new();
-
-	if(g_menu == NULL) {
+	if(menu_renew(&g_menu) == NULL) {
 		return 0;
 	}
 
