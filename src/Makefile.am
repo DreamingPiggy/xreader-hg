@@ -33,8 +33,6 @@ CCASFLAGS = $(CFLAGS) $(INCLUDES)
 noinst_PROGRAMS = xReader.elf
 
 xReader_elf_SOURCES = \
-	array.c \
-	array.h \
 	bg.c \
 	bg.h \
 	bookmark.c \
