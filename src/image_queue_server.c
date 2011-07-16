@@ -244,9 +244,9 @@ void dbg_dump_cache(void)
 	u32 c;
 
 	cache_lock();
-	p = ccacher.caches;
+	p = ccacher.head->next;
 
-	for (c = 0; p != ccacher.caches + ccacher.caches_size; ++p) {
+	for (c = 0; p != NULL; p = p->next) {
 		if (p->status == CACHE_OK || p->status == CACHE_FAILED)
 			c++;
 	}
@@ -255,8 +255,8 @@ void dbg_dump_cache(void)
 			   ccacher.caches_size, (unsigned) ccacher.memory_usage / 1024,
 			   (unsigned) get_free_mem() / 1024, (unsigned) c);
 
-	for (p = ccacher.caches; p != ccacher.caches + ccacher.caches_size; ++p) {
-		dbg_printf(d, "%d: %u st %u res %d mem %lukb", p - ccacher.caches,
+	for (p = ccacher.head->next, c=0; p != NULL; p = p->next) {
+		dbg_printf(d, "%d: %u st %u res %d mem %lukb", ++c,
 				   (unsigned) p->selidx, p->status, p->result,
 				   p->width * p->height * sizeof(pixel) / 1024L);
 	}
@@ -596,7 +596,7 @@ int cache_get_loaded_size()
 	cache_image_t *p = ccacher.head->next;
 	int c;
 
-	for (c = 0; p != NULL; ++p) {
+	for (c = 0; p != NULL; p = p->next) {
 		if (p->status == CACHE_OK)
 			c++;
 	}
