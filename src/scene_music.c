@@ -604,7 +604,7 @@ static void scene_draw_mp3bar(bool * firstdup)
 			  get_week_str(pos), tm.hour, tm.minutes, tm.seconds, (int) cpu,
 			  (int) bus);
 
-	if (config.use_image_queue) {
+	{
 		char temp[80];
 
 		if (cache_get_loaded_size() != 0 || ccacher.memory_usage != 0) {

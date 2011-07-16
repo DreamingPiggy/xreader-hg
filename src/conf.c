@@ -290,7 +290,6 @@ static void conf_default(p_conf conf)
 			  BUFFERED_READER_BUFFER_SIZE, BUFFERED_READER_BUFFER_SIZE,
 			  BUFFERED_READER_BUFFER_SIZE);
 	conf->magnetic_scrolling = true;
-	conf->use_image_queue = true;
 	conf->max_cache_img = 10;
 }
 
@@ -1153,10 +1152,6 @@ extern bool ini_conf_load(const char *inifilename, p_conf conf)
 		iniparser_getboolean(dict, "Image:magnetic_scrolling",
 							 conf->magnetic_scrolling);
 
-	conf->use_image_queue =
-		iniparser_getboolean(dict, "Image:use_image_queue",
-							 conf->use_image_queue);
-
 	conf->max_cache_img =
 		iniparser_getunsigned(dict, "Image:max_cache_img", conf->max_cache_img);
 
@@ -1172,7 +1167,7 @@ extern bool ini_conf_load(const char *inifilename, p_conf conf)
 							 conf->use_vaudio);
 
 	if (conf->max_cache_img == 0) {
-		conf->use_image_queue = false;
+		conf->max_cache_img = 10;
 	}
 
 	dictionary_del(dict);
@@ -1456,10 +1451,6 @@ extern bool ini_conf_save(p_conf conf)
 	iniparser_setstring(dict, "Image:magnetic_scrolling",
 						booleanToString(buf, sizeof(buf),
 										conf->magnetic_scrolling));
-
-	iniparser_setstring(dict, "Image:use_image_queue",
-						booleanToString(buf, sizeof(buf),
-										conf->use_image_queue));
 
 	iniparser_setstring(dict, "Image:max_cache_img",
 						dwordToString(buf, sizeof(buf), conf->max_cache_img));
