@@ -842,9 +842,13 @@ void scene_mp3bar(void)
 {
 	bool firstdup = true;
 	u64 timer_start, timer_end;
-	pixel *saveimage = (pixel *) memalign(16,
-										  PSP_SCREEN_WIDTH *
-										  PSP_SCREEN_HEIGHT * sizeof(pixel));
+	pixel *saveimage;
+
+	debug_malloc();
+
+	saveimage = (pixel *) memalign(16,
+								   PSP_SCREEN_WIDTH *
+								   PSP_SCREEN_HEIGHT * sizeof(pixel));
 	if (saveimage != NULL)
 		disp_getimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, saveimage);
 

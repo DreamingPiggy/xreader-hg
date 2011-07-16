@@ -3116,52 +3116,46 @@ static void scene_open_dir_or_archive(u32 * idx)
 
 	if (plen > 0 && config.path[plen - 1] == '/')
 		if (strnicmp(config.path, "ms0:/", 5) == 0) {
-			g_menu->size =
-				fs_dir_to_menu(config.path, config.shortpath,
-							   config.menutextcolor, config.selicolor,
-							   config.menubcolor, config.selbcolor,
-							   config.showhidden, config.showunknown);
+			fs_dir_to_menu(config.path, config.shortpath,
+						   config.menutextcolor, config.selicolor,
+						   config.menubcolor, config.selbcolor,
+						   config.showhidden, config.showunknown);
 		}
 		else
-			g_menu->size =
-				fs_flashdir_to_menu(config.path,
-									config.shortpath,
-									config.menutextcolor,
-									config.selicolor,
-									config.menubcolor, config.selbcolor);
+			fs_flashdir_to_menu(config.path,
+								config.shortpath,
+								config.menutextcolor,
+								config.selicolor,
+								config.menubcolor, config.selbcolor);
 	else
 		switch (fs_file_get_type(config.path)) {
 			case fs_filetype_zip:
 				where = scene_in_zip;
-				g_menu->size =
-					fs_zip_to_menu(config.shortpath,
-								   config.menutextcolor,
-								   config.selicolor,
-								   config.menubcolor, config.selbcolor);
+				fs_zip_to_menu(config.shortpath,
+							   config.menutextcolor,
+							   config.selicolor,
+							   config.menubcolor, config.selbcolor);
 				break;
 			case fs_filetype_chm:
 				where = scene_in_chm;
-				g_menu->size =
-					fs_chm_to_menu(config.shortpath,
-								   config.menutextcolor,
-								   config.selicolor,
-								   config.menubcolor, config.selbcolor);
+				fs_chm_to_menu(config.shortpath,
+							   config.menutextcolor,
+							   config.selicolor,
+							   config.menubcolor, config.selbcolor);
 				break;
 			case fs_filetype_umd:
 				where = scene_in_umd;
-				g_menu->size =
-					fs_umd_to_menu(config.shortpath,
-								   config.menutextcolor,
-								   config.selicolor,
-								   config.menubcolor, config.selbcolor);
+				fs_umd_to_menu(config.shortpath,
+							   config.menutextcolor,
+							   config.selicolor,
+							   config.menubcolor, config.selbcolor);
 				break;
 			case fs_filetype_rar:
 				where = scene_in_rar;
-				g_menu->size =
-					fs_rar_to_menu(config.shortpath,
-								   config.menutextcolor,
-								   config.selicolor,
-								   config.menubcolor, config.selbcolor);
+				fs_rar_to_menu(config.shortpath,
+							   config.menutextcolor,
+							   config.selicolor,
+							   config.menubcolor, config.selbcolor);
 				break;
 			default:
 				win_menu_destroy(g_menu);
@@ -3169,15 +3163,15 @@ static void scene_open_dir_or_archive(u32 * idx)
 				break;
 		}
 
-	if (g_menu == NULL || g_menu->size == 0) {
+	if (g_menu == NULL || g_menu->root == NULL || g_menu->size == 0) {
 		STRCPY_S(config.path, "ms0:/");
 		STRCPY_S(config.shortpath, "ms0:/");
-		g_menu->size =
-			fs_dir_to_menu(config.path, config.shortpath,
-						   config.menutextcolor, config.selicolor,
-						   config.menubcolor, config.selbcolor,
-						   config.showhidden, config.showunknown);
+		fs_dir_to_menu(config.path, config.shortpath,
+					   config.menutextcolor, config.selicolor,
+					   config.menubcolor, config.selbcolor,
+					   config.showhidden, config.showunknown);
 	}
+
 	quicksort(g_menu->root,
 			  (g_menu->size > 0
 			   && g_menu->root[0].compname->ptr[0] == '.') ? 1 : 0,
@@ -5035,24 +5029,21 @@ static void scene_enter_dir(u32 * idx)
 		STRCAT_S(config.shortpath, "/");
 	}
 	if (config.path[0] == 0) {
-		g_menu->size =
-			fs_list_device(config.path, config.shortpath,
-						   config.menutextcolor,
-						   config.selicolor,
-						   config.menubcolor, config.selbcolor);
+		fs_list_device(config.path, config.shortpath,
+					   config.menutextcolor,
+					   config.selicolor,
+					   config.menubcolor, config.selbcolor);
 	} else if (strnicmp(config.path, "ms0:/", 5) == 0) {
-		g_menu->size =
-			fs_dir_to_menu(config.path, config.shortpath,
-						   config.menutextcolor,
-						   config.selicolor,
-						   config.menubcolor, config.selbcolor,
-						   config.showhidden, config.showunknown);
+		fs_dir_to_menu(config.path, config.shortpath,
+					   config.menutextcolor,
+					   config.selicolor,
+					   config.menubcolor, config.selbcolor,
+					   config.showhidden, config.showunknown);
 	} else
-		g_menu->size =
-			fs_flashdir_to_menu(config.path, config.shortpath,
-								config.menutextcolor,
-								config.selicolor,
-								config.menubcolor, config.selbcolor);
+		fs_flashdir_to_menu(config.path, config.shortpath,
+							config.menutextcolor,
+							config.selicolor,
+							config.menubcolor, config.selbcolor);
 	quicksort(g_menu->root,
 			  (g_menu->size > 0
 			   && g_menu->root[0].compname->ptr[0] == '.') ? 1 : 0,
@@ -5093,28 +5084,24 @@ static void scene_enter_archive(u32 * idx, enum ArchiveType type)
 	*idx = 0;
 	switch (type) {
 		case ZIP:
-			g_menu->size =
-				fs_zip_to_menu(config.shortpath,
-							   config.menutextcolor, config.selicolor,
-							   config.menubcolor, config.selbcolor);
+			fs_zip_to_menu(config.shortpath,
+						   config.menutextcolor, config.selicolor,
+						   config.menubcolor, config.selbcolor);
 			break;
 		case RAR:
-			g_menu->size =
-				fs_rar_to_menu(config.shortpath,
-							   config.menutextcolor, config.selicolor,
-							   config.menubcolor, config.selbcolor);
+			fs_rar_to_menu(config.shortpath,
+						   config.menutextcolor, config.selicolor,
+						   config.menubcolor, config.selbcolor);
 			break;
 		case CHM:
-			g_menu->size =
-				fs_chm_to_menu(config.shortpath,
-							   config.menutextcolor, config.selicolor,
-							   config.menubcolor, config.selbcolor);
+			fs_chm_to_menu(config.shortpath,
+						   config.menutextcolor, config.selicolor,
+						   config.menubcolor, config.selbcolor);
 			break;
 		case UMD:
-			g_menu->size =
-				fs_umd_to_menu(config.shortpath,
-							   config.menutextcolor, config.selicolor,
-							   config.menubcolor, config.selbcolor);
+			fs_umd_to_menu(config.shortpath,
+						   config.menutextcolor, config.selicolor,
+						   config.menubcolor, config.selbcolor);
 			break;
 	}
 	if (UMD != type)
@@ -5265,13 +5252,12 @@ void scene_filelist(void)
 		p_umdchapter = NULL;
 	while (1) {
 		if (!config.isreading && !locreading) {
-			if (g_menu->root == 0 || g_menu->size == 0) {
+			if (g_menu == NULL || g_menu->root == 0 || g_menu->size == 0) {
 				// empty directory ?
 				if (where == scene_in_dir) {
-					g_menu->size =
-						fs_empty_dir(config.menutextcolor,
-									 config.selicolor,
-									 config.menubcolor, config.selbcolor);
+					fs_empty_dir(config.menutextcolor,
+								 config.selicolor,
+								 config.menubcolor, config.selbcolor);
 					idx = 0;
 					idx =
 						win_menu(240 - WRR * DISP_FONTSIZE,
@@ -5322,62 +5308,55 @@ void scene_filelist(void)
 		if (idx == INVALID) {
 			switch (where) {
 				case scene_in_umd:
-					g_menu->size =
-						fs_umd_to_menu(config.shortpath,
-									   config.menutextcolor,
-									   config.selicolor,
-									   config.menubcolor, config.selbcolor);
+					fs_umd_to_menu(config.shortpath,
+								   config.menutextcolor,
+								   config.selicolor,
+								   config.menubcolor, config.selbcolor);
 					break;
 				case scene_in_zip:
-					g_menu->size =
-						fs_zip_to_menu(config.shortpath,
-									   config.menutextcolor,
-									   config.selicolor,
-									   config.menubcolor, config.selbcolor);
+					fs_zip_to_menu(config.shortpath,
+								   config.menutextcolor,
+								   config.selicolor,
+								   config.menubcolor, config.selbcolor);
 					break;
 				case scene_in_chm:
-					g_menu->size =
-						fs_chm_to_menu(config.shortpath,
-									   config.menutextcolor,
-									   config.selicolor,
-									   config.menubcolor, config.selbcolor);
+					fs_chm_to_menu(config.shortpath,
+								   config.menutextcolor,
+								   config.selicolor,
+								   config.menubcolor, config.selbcolor);
 					break;
 				case scene_in_rar:
-					g_menu->size =
-						fs_rar_to_menu(config.shortpath,
-									   config.menutextcolor,
-									   config.selicolor,
-									   config.menubcolor, config.selbcolor);
+					fs_rar_to_menu(config.shortpath,
+								   config.menutextcolor,
+								   config.selicolor,
+								   config.menubcolor, config.selbcolor);
 					break;
 				default:
 					if (config.path[0] == '\0') {
-						g_menu->size =
-							fs_list_device(config.path, config.shortpath,
-										   config.menutextcolor,
-										   config.selicolor,
-										   config.menubcolor, config.selbcolor);
+						fs_list_device(config.path, config.shortpath,
+									   config.menutextcolor,
+									   config.selicolor,
+									   config.menubcolor, config.selbcolor);
 					} else {
-						g_menu->size =
-							fs_dir_to_menu(config.path,
-										   config.shortpath,
-										   config.menutextcolor,
-										   config.selicolor,
-										   config.menubcolor, config.selbcolor,
-										   config.showhidden,
-										   config.showunknown);
+						fs_dir_to_menu(config.path,
+									   config.shortpath,
+									   config.menutextcolor,
+									   config.selicolor,
+									   config.menubcolor, config.selbcolor,
+									   config.showhidden,
+									   config.showunknown);
 					}
 			}
 
 			if (g_menu == NULL || g_menu->root == 0) {
 				STRCPY_S(config.path, "ms0:/");
 				STRCPY_S(config.shortpath, "ms0:/");
-				g_menu->size =
-					fs_dir_to_menu(config.path,
-								   config.shortpath,
-								   config.menutextcolor,
-								   config.selicolor,
-								   config.menubcolor, config.selbcolor,
-								   config.showhidden, config.showunknown);
+				fs_dir_to_menu(config.path,
+							   config.shortpath,
+							   config.menutextcolor,
+							   config.selicolor,
+							   config.menubcolor, config.selbcolor,
+							   config.showhidden, config.showunknown);
 			}
 			quicksort(g_menu->root,
 					  (g_menu->size > 0
@@ -5521,6 +5500,7 @@ extern void scene_init(void)
 	char fontzipfile[PATH_MAX], efontfile[PATH_MAX], cfontfile[PATH_MAX],
 		conffile[PATH_MAX], locconf[PATH_MAX], bmfile[PATH_MAX];
 	int _fsize;
+//	bool testing = true;
 
 #ifdef DMALLOC
 //	unsigned mark;
@@ -5788,6 +5768,36 @@ extern void scene_init(void)
 	freq_init();
 
 	xreader_scene_inited = true;
+
+#if 0
+	while (testing) {
+		config.path[0] = config.shortpath[0] = '\0';
+
+		fs_list_device(config.path, config.shortpath,
+				config.menutextcolor,
+				config.selicolor,
+				config.menubcolor, config.selbcolor);
+
+		STRCPY_S(config.path, "ms0:/");
+		STRCPY_S(config.shortpath, "ms0:/");
+
+		fs_dir_to_menu(config.path, config.shortpath,
+					   config.menutextcolor, config.selicolor,
+					   config.menubcolor, config.selbcolor,
+					   config.showhidden, config.showunknown);
+
+		STRCPY_S(config.path, "ms0:/TEST.ZIP");
+		STRCPY_S(config.shortpath, "ms0:/TEST.ZIP");
+
+		fs_zip_to_menu(config.shortpath,
+					   config.menutextcolor,
+					   config.selicolor,
+					   config.menubcolor, config.selbcolor);
+
+		sceKernelDelayThread(1000000);
+		debug_malloc();
+	}
+#endif
 
 	scene_filelist();
 }

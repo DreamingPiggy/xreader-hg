@@ -154,8 +154,7 @@ t_fs_specfiletype_entry ft_spec_table[] = {
 
 int MAX_ITEM_NAME_LEN = 40;
 p_umd_chapter p_umdchapter = NULL;
-
-p_win_menu g_menu;
+p_win_menu g_menu = NULL;
 
 void filename_to_itemname(p_win_menuitem item, const char *filename)
 {
