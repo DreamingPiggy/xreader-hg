@@ -4479,6 +4479,10 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 
 			copylist = win_menu_new();
 
+			if(copylist == NULL) {
+				break;
+			}
+
 			if (selcount < 1) {
 				win_menu_add_copy(copylist, &g_menu->root[selidx]);
 			} else {
@@ -4503,6 +4507,11 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 			}
 
 			cutlist = win_menu_new();
+
+			if(cutlist == NULL) {
+				break;
+			}
+
 			STRCPY_S(cutdir, config.shortpath);
 
 			if (selcount < 1) {
