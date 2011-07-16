@@ -526,6 +526,16 @@ int win_menu_add(p_win_menu menu, p_win_menuitem item)
 	return 0;
 }
 
+int win_menu_add_copy(p_win_menu menu, p_win_menuitem item)
+{
+	t_win_menuitem newitem;
+
+	win_menuitem_new(&newitem);
+	win_copy_item(&newitem, item);
+
+	return win_menu_add(menu, &newitem);
+}
+
 void win_menuitem_destory(p_win_menuitem item)
 {
 	buffer_free(item->compname);
