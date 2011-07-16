@@ -55,6 +55,7 @@ extern "C"
 
 	extern int psp_model;
 	extern int psp_fw_version;
+	void debug_malloc(void);
 
 #ifdef __cplusplus
 }
