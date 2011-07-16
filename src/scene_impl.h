@@ -26,8 +26,7 @@ extern char appdir[PATH_MAX], copydir[PATH_MAX], cutdir[PATH_MAX];
 extern u32 drperpage, rowsperpage, pixelsperrow;
 extern p_bookmark g_bm;
 extern p_text fs;
-extern p_win_menuitem copylist, cutlist;
-extern u32 copycount, cutcount;
+extern p_win_menu copylist, cutlist;
 
 extern p_win_menu g_menu;
 

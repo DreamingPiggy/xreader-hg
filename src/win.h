@@ -108,6 +108,7 @@ extern int win_get_max_pixel_width(const p_win_menuitem pItem, int size);
 
 p_win_menu win_menu_new(void);
 int win_menu_add(p_win_menu menu, p_win_menuitem item);
+int win_menu_add_copy(p_win_menu menu, p_win_menuitem item);
 void win_menuitem_destory(p_win_menuitem menu);
 void win_menu_destroy(p_win_menu menu);
 void win_menuitem_new(p_win_menuitem p);

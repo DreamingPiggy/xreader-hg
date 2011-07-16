@@ -85,8 +85,7 @@ u32 drperpage, rowsperpage, pixelsperrow;
 p_bookmark g_bm = NULL;
 p_text fs = NULL;
 t_conf config;
-p_win_menuitem copylist = NULL, cutlist = NULL;
-u32 copycount = 0, cutcount = 0;
+p_win_menu copylist = NULL, cutlist = NULL;
 #ifdef ENABLE_MUSIC
 char musiclst_path[PATH_MAX];
 #endif
@@ -3927,11 +3926,11 @@ static void scene_copy_files(int sidx)
 			// CHM Compname is UTF8 encoding.
 			char fname[PATH_MAX];
 
-			charsets_utf8_conv((u8 *) copylist[sidx].compname->ptr, -1,
+			charsets_utf8_conv((u8 *) copylist->root[sidx].compname->ptr, -1,
 							   (u8 *) fname, sizeof(fname));
 			STRCPY_S(temp, fname);
 		} else
-			STRCPY_S(temp, copylist[sidx].compname->ptr);
+			STRCPY_S(temp, copylist->root[sidx].compname->ptr);
 		if (strrchr(temp, '/') != NULL) {
 			char t[PATH_MAX];
 
@@ -3941,7 +3940,7 @@ static void scene_copy_files(int sidx)
 		if (is_contain_hanzi_str(temp) == true) {
 			remove_hanzi(temp, temp, NELEMS(temp));
 			if (strrchr(temp, '.') == NULL) {
-				STRCAT_S(temp, copylist[sidx].shortname->ptr);
+				STRCAT_S(temp, copylist->root[sidx].shortname->ptr);
 			} else {
 				char basename[PATH_MAX];
 
@@ -3951,17 +3950,17 @@ static void scene_copy_files(int sidx)
 								  "_", strrchr(temp, '.') - temp);
 				}
 				insert_string(temp, NELEMS(temp),
-							  copylist[sidx].shortname->ptr,
+							  copylist->root[sidx].shortname->ptr,
 							  strrchr(temp, '.') - temp);
 			}
 		}
 		STRCAT_S(copydest, temp);
 
-		if ((t_fs_filetype) copylist[sidx].data != fs_filetype_dir) {
+		if ((t_fs_filetype) copylist->root[sidx].data != fs_filetype_dir) {
 			u32 result;
 
 			result = extract_archive_file(archname,
-										  copylist[sidx].compname->ptr,
+										  copylist->root[sidx].compname->ptr,
 										  copydest, NULL, confirm_overwrite,
 										  NULL);
 			if (result == (u32) false) {
@@ -3974,10 +3973,10 @@ static void scene_copy_files(int sidx)
 		u32 result;
 
 		STRCPY_S(copysrc, copydir);
-		STRCAT_S(copysrc, copylist[sidx].shortname->ptr);
+		STRCAT_S(copysrc, copylist->root[sidx].shortname->ptr);
 		STRCPY_S(copydest, config.shortpath);
-		STRCAT_S(copydest, copylist[sidx].compname->ptr);
-		if ((t_fs_filetype) copylist[sidx].data == fs_filetype_dir)
+		STRCAT_S(copydest, copylist->root[sidx].compname->ptr);
+		if ((t_fs_filetype) copylist->root[sidx].data == fs_filetype_dir)
 			result = copy_dir(copysrc, copydest, NULL, confirm_overwrite, NULL);
 		else
 			result =
@@ -4135,8 +4134,8 @@ static void scene_fileops_menu_draw(int selcount, p_win_menuitem item,
 							   (const u8 *) _(" L    复制"));
 		}
 		if (strnicmp(config.path, "ms0:/", 5) == 0
-			&& ((copycount > 0 && stricmp(copydir, config.shortpath) != 0)
-				|| (cutcount > 0 && stricmp(cutdir, config.shortpath) != 0)))
+			&& ((copylist != NULL && copylist->size > 0 && stricmp(copydir, config.shortpath) != 0)
+				|| (cutlist != NULL && cutlist->size > 0 && stricmp(cutdir, config.shortpath) != 0)))
 			disp_putstring(240 - DISP_FONTSIZE * 3,
 						   136 + DISP_FONTSIZE * 3, COLOR_WHITE,
 						   (const u8 *) _("START 粘贴"));
@@ -4459,12 +4458,16 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 			*inop = false;
 			break;
 		case PSP_CTRL_LTRIGGER:
-			if (copycount > 0 && copylist != NULL) {
-				win_item_destroy(&copylist, &copycount);
+			if(copylist != NULL) {
+				win_menu_destroy(copylist);
+				copylist = NULL;
 			}
-			if (cutcount > 0 && cutlist != NULL) {
-				win_item_destroy(&cutlist, &cutcount);
+
+			if(cutlist != NULL) {
+				win_menu_destroy(cutlist);
+				cutlist = NULL;
 			}
+			
 			if (where == scene_in_dir) {
 				copy_archmode = false;
 				STRCPY_S(copydir, config.shortpath);
@@ -4473,44 +4476,42 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 				copy_where = where;
 				STRCPY_S(copydir, config.shortpath);
 			}
-			copylist =
-				win_realloc_items(NULL, 0, (selcount > 0 ? selcount : 1));
+
+			copylist = win_menu_new();
+
 			if (selcount < 1) {
-				copycount = 1;
-				win_copy_item(&copylist[0], &g_menu->root[selidx]);
+				win_menu_add_copy(copylist, &g_menu->root[selidx]);
 			} else {
-				u32 sidx = 0;
-
-				copycount = selcount;
-
-				for (selidx = 0; selidx < g_menu->size; selidx++)
-					if (item[selidx].selected)
-						win_copy_item(&copylist[sidx++], &g_menu->root[selidx]);
+				for (selidx = 0; selidx < selcount; selidx++)
+					if (item[selidx].selected) {
+						win_menu_add_copy(copylist, &g_menu->root[selidx]);
+					}
 			}
 			*inop = false;
 			break;
 		case PSP_CTRL_RTRIGGER:
 			if (where != scene_in_dir || strnicmp(config.path, "ms0:/", 5) != 0)
 				break;
-			if (copycount > 0 && copylist != NULL) {
-				win_item_destroy(&copylist, &copycount);
+			if(copylist != NULL) {
+				win_menu_destroy(copylist);
+				copylist = NULL;
 			}
-			if (cutcount > 0 && cutlist != NULL) {
-				win_item_destroy(&cutlist, &cutcount);
+
+			if(cutlist != NULL) {
+				win_menu_destroy(cutlist);
+				cutlist = NULL;
 			}
+
+			cutlist = win_menu_new();
 			STRCPY_S(cutdir, config.shortpath);
-			cutlist = win_realloc_items(NULL, 0, (selcount > 0 ? selcount : 1));
+
 			if (selcount < 1) {
-				cutcount = 1;
-				win_copy_item(&cutlist[0], &g_menu->root[selidx]);
+				win_menu_add_copy(cutlist, &g_menu->root[selidx]);
 			} else {
-				u32 sidx = 0;
-
-				cutcount = selcount;
-
 				for (selidx = 0; selidx < g_menu->size; selidx++)
-					if (item[selidx].selected)
-						win_copy_item(&cutlist[sidx++], &g_menu->root[selidx]);
+					if (item[selidx].selected) {
+						win_menu_add_copy(cutlist, &g_menu->root[selidx]);
+					}
 			}
 			*inop = false;
 			break;
@@ -4520,28 +4521,29 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 //                  if (where != scene_in_dir
 //                      || strnicmp(config.path, "ms0:/", 5) != 0)
 //                      break;
-			if (copycount > 0) {
+			if (copylist != NULL && copylist->size > 0) {
 				u32 sidx;
 
-				for (sidx = 0; sidx < copycount; sidx++) {
+				for (sidx = 0; sidx < copylist->size; sidx++) {
 					scene_copy_files(sidx);
 				}
+
 				STRCPY_S(config.lastfile, item[*index].compname->ptr);
 				*retop = win_menu_op_cancel;
 				*inop = false;
-			} else if (cutcount > 0) {
+			} else if (cutlist != NULL && cutlist->size > 0) {
 				u32 sidx;
 
-				for (sidx = 0; sidx < cutcount; sidx++) {
+				for (sidx = 0; sidx < cutlist->size; sidx++) {
 					u32 result;
 					char cutsrc[PATH_MAX], cutdest[PATH_MAX];
 
 					STRCPY_S(cutsrc, cutdir);
-					STRCAT_S(cutsrc, cutlist[sidx].shortname->ptr);
+					STRCAT_S(cutsrc, cutlist->root[sidx].shortname->ptr);
 					STRCPY_S(cutdest, config.shortpath);
-					STRCAT_S(cutdest, cutlist[sidx].compname->ptr);
+					STRCAT_S(cutdest, cutlist->root[sidx].compname->ptr);
 
-					if ((t_fs_filetype) cutlist[sidx].data == fs_filetype_dir)
+					if ((t_fs_filetype) cutlist->root[sidx].data == fs_filetype_dir)
 						result =
 							(u32) move_dir(cutsrc, cutdest,
 											 NULL, confirm_overwrite, NULL);
@@ -4549,16 +4551,20 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 						result =
 							move_file(cutsrc, cutdest, NULL,
 									  confirm_overwrite, NULL);
+
 					if (result == (u32) false) {
 						win_msg(_("文件/目录移动失败!"),
 								COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 					}
 				}
+
 				STRCPY_S(config.lastfile, item[*index].compname->ptr);
 				*retop = win_menu_op_cancel;
 				*inop = false;
-				if (cutcount > 0 && cutlist != NULL) {
-					win_item_destroy(&cutlist, &cutcount);
+
+				if(cutlist != NULL) {
+					win_menu_destroy(cutlist);
+					cutlist = NULL;
 				}
 			}
 			break;
@@ -4597,7 +4603,7 @@ static t_win_menu_op scene_fileops(p_win_menuitem item, u32 * index)
 	if (selcount == 0)
 		selidx = *index;
 	if (selcount <= 1 && strcmp(item[selidx].compname->ptr, "..") == 0
-		&& cutcount + copycount <= 0)
+		&& cutlist != NULL && copylist != NULL && cutlist->size + copylist->size <= 0)
 		return win_menu_op_continue;
 	if (selcount == 0)
 		item[selidx].selected = true;
