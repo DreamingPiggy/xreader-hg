@@ -58,30 +58,27 @@ typedef enum
 #endif
 } t_fs_filetype;
 extern p_umd_chapter p_umdchapter;
-extern u32 fs_list_device(const char *dir, const char *sdir,
-							p_win_menuitem * mitem, u32 icolor,
+extern u32 fs_list_device(const char *dir, const char *sdir, u32 icolor,
 							u32 selicolor, u32 selrcolor, u32 selbcolor);
-extern u32 fs_flashdir_to_menu(const char *dir, const char *sdir,
-								 p_win_menuitem * mitem, u32 icolor,
+extern u32 fs_flashdir_to_menu(const char *dir, const char *sdir, u32 icolor,
 								 u32 selicolor, u32 selrcolor,
 								 u32 selbcolor);
-extern u32 fs_dir_to_menu(const char *dir, char *sdir, p_win_menuitem * mitem,
+extern u32 fs_dir_to_menu(const char *dir, char *sdir,
 							u32 icolor, u32 selicolor, u32 selrcolor,
 							u32 selbcolor, bool showhidden, bool showunknown);
-extern u32 fs_zip_to_menu(const char *zipfile, p_win_menuitem * mitem,
+extern u32 fs_zip_to_menu(const char *zipfile,
 							u32 icolor, u32 selicolor, u32 selrcolor,
 							u32 selbcolor);
-extern u32 fs_rar_to_menu(const char *rarfile, p_win_menuitem * mitem,
+extern u32 fs_rar_to_menu(const char *rarfile,
 							u32 icolor, u32 selicolor, u32 selrcolor,
 							u32 selbcolor);
-extern u32 fs_chm_to_menu(const char *chmfile, p_win_menuitem * mitem,
+extern u32 fs_chm_to_menu(const char *chmfile,
 							u32 icolor, u32 selicolor, u32 selrcolor,
 							u32 selbcolor);
-extern u32 fs_umd_to_menu(const char *umdfile, p_win_menuitem * mitem,
+extern u32 fs_umd_to_menu(const char *umdfile,
 							u32 icolor, u32 selicolor, u32 selrcolor,
 							u32 selbcolor);
-p_win_menuitem fs_empty_dir(u32 * filecount, u32 icolor,
-							u32 selicolor, u32 selrcolor, u32 selbcolor);
+extern u32 fs_empty_dir(u32 icolor, u32 selicolor, u32 selrcolor, u32 selbcolor);
 extern t_fs_filetype fs_file_get_type(const char *filename);
 extern bool fs_is_image(t_fs_filetype ft);
 extern bool fs_is_txtbook(t_fs_filetype ft);

@@ -368,7 +368,7 @@ static void get_infobar_string(u32 selidx, char *dest, int size)
 											  1 ? "UCS " :
 											  conf_get_encodename
 											  (config.encode)),
-				  filelist[selidx].name, calc_gi(), autopageinfo, u);
+				  g_menu->root[selidx].name, calc_gi(), autopageinfo, u);
 		if (config.linenum_style) {
 			SPRINTF_S(cr, "%u/%u  %s", fs->crow + 1, fs->row_count, t);
 		} else {
@@ -406,7 +406,7 @@ static void get_infobar_string(u32 selidx, char *dest, int size)
 											  1 ? "UCS " :
 											  conf_get_encodename
 											  (config.encode)),
-				  filelist[selidx].compname->ptr, calc_gi(), autopageinfo, u);
+				  g_menu->root[selidx].compname->ptr, calc_gi(), autopageinfo, u);
 		if (config.linenum_style) {
 			SPRINTF_S(cr, "%u/%u  %s", fs->crow + 1, fs->row_count, t);
 		} else {
@@ -773,7 +773,7 @@ int scene_book_reload(PBookViewData pView, u32 selidx)
 
 	if (where == scene_in_zip || where == scene_in_chm || where == scene_in_umd
 		|| where == scene_in_rar) {
-		STRCPY_S(pView->filename, filelist[selidx].compname->ptr);
+		STRCPY_S(pView->filename, g_menu->root[selidx].compname->ptr);
 		STRCPY_S(pView->archname, config.shortpath);
 		if (psp_fw_version <= 0x03070110) {
 			STRCPY_S(pView->bookmarkname, config.shortpath);
@@ -786,9 +786,9 @@ int scene_book_reload(PBookViewData pView, u32 selidx)
 		STRCAT_S(pView->bookmarkname, pView->filename);
 	} else {
 		STRCPY_S(pView->filename, config.path);
-		STRCAT_S(pView->filename, filelist[selidx].compname->ptr);
+		STRCAT_S(pView->filename, g_menu->root[selidx].compname->ptr);
 		STRCPY_S(pView->archname, config.shortpath);
-		STRCAT_S(pView->archname, filelist[selidx].shortname->ptr);
+		STRCAT_S(pView->archname, g_menu->root[selidx].shortname->ptr);
 		if (psp_fw_version <= 0x03070110) {
 			STRCPY_S(pView->bookmarkname, pView->archname);
 		} else {
@@ -807,7 +807,7 @@ int scene_book_reload(PBookViewData pView, u32 selidx)
 
 	if (pView->rrow == INVALID) {
 		if (!config.autobm
-			|| (t_fs_filetype) filelist[selidx].data == fs_filetype_unknown) {
+			|| (t_fs_filetype) g_menu->root[selidx].data == fs_filetype_unknown) {
 			// disable binary file type text's bookmark
 			pView->rrow = 0;
 		} else {
@@ -834,7 +834,7 @@ int scene_book_reload(PBookViewData pView, u32 selidx)
 									 config.encode, config.reordertxt);
 		} else {
 			fs = text_open_archive(pView->filename, pView->archname,
-								   (t_fs_filetype) filelist[selidx].data,
+								   (t_fs_filetype) g_menu->root[selidx].data,
 								   pixelsperrow, config.wordspace,
 								   config.encode, config.reordertxt, where,
 								   config.vertread);
@@ -861,9 +861,9 @@ int scene_book_reload(PBookViewData pView, u32 selidx)
 		win_msg(_("文件打开失败"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 		dbg_printf(d, _("scene_book_reload: 文件%s打开失败 where=%d"),
 				   pView->filename, where);
-		dbg_printf(d, _("scene_book_reload: %s %s %s"), filelist[selidx].name,
-				   filelist[selidx].shortname->ptr,
-				   filelist[selidx].compname->ptr, where);
+		dbg_printf(d, _("scene_book_reload: %s %s %s"), g_menu->root[selidx].name,
+				   g_menu->root[selidx].shortname->ptr,
+				   g_menu->root[selidx].compname->ptr, where);
 		freq_leave(fid);
 
 		if (g_bm != NULL) {
@@ -886,7 +886,7 @@ int scene_book_reload(PBookViewData pView, u32 selidx)
 		pView->text_needrb = true;
 	}
 	if (pView->text_needrb
-		&& (t_fs_filetype) filelist[selidx].data != fs_filetype_unknown) {
+		&& (t_fs_filetype) g_menu->root[selidx].data != fs_filetype_unknown) {
 		pView->rowtop = 0;
 		fs->crow = 1;
 		while (fs->crow < fs->row_count
@@ -901,10 +901,10 @@ int scene_book_reload(PBookViewData pView, u32 selidx)
 	if (fs->crow >= fs->row_count)
 		fs->crow = (fs->row_count > 0) ? fs->row_count - 1 : 0;
 
-	STRCPY_S(config.lastfile, filelist[selidx].compname->ptr);
+	STRCPY_S(config.lastfile, g_menu->root[selidx].compname->ptr);
 	STRCPY_S(prev_path, config.path);
 	STRCPY_S(prev_shortpath, config.shortpath);
-	STRCPY_S(prev_lastfile, filelist[selidx].compname->ptr);
+	STRCPY_S(prev_lastfile, g_menu->root[selidx].compname->ptr);
 	prev_where = where;
 	freq_leave(fid);
 	return 0;
@@ -1328,15 +1328,15 @@ int move_page_up(PBookViewData pView, u32 key, u32 * selidx)
 	pView->rowtop = 0;
 	if (fs->crow == 0) {
 		if (config.pagetonext && key != kl
-			&& fs_is_txtbook((t_fs_filetype) filelist[*selidx].data)) {
+			&& fs_is_txtbook((t_fs_filetype) g_menu->root[*selidx].data)) {
 			u32 orgidx = *selidx;
 
 			do {
 				if (*selidx > 0)
 					(*selidx)--;
 				else
-					*selidx = filecount - 1;
-			} while (!fs_is_txtbook((t_fs_filetype) filelist[*selidx].data));
+					*selidx = g_menu->size - 1;
+			} while (!fs_is_txtbook((t_fs_filetype) g_menu->root[*selidx].data));
 			if (*selidx != orgidx) {
 				if (config.autobm)
 					update_auto_bookmark();
@@ -1360,15 +1360,15 @@ int move_page_down(PBookViewData pView, u32 key, u32 * selidx)
 	pView->rowtop = 0;
 	if (fs->crow >= fs->row_count - 1) {
 		if (config.pagetonext
-			&& fs_is_txtbook((t_fs_filetype) filelist[*selidx].data)) {
+			&& fs_is_txtbook((t_fs_filetype) g_menu->root[*selidx].data)) {
 			u32 orgidx = *selidx;
 
 			do {
-				if (*selidx < filecount - 1)
+				if (*selidx < g_menu->size - 1)
 					(*selidx)++;
 				else
 					*selidx = 0;
-			} while (!fs_is_txtbook((t_fs_filetype) filelist[*selidx].data));
+			} while (!fs_is_txtbook((t_fs_filetype) g_menu->root[*selidx].data));
 			if (*selidx != orgidx) {
 				if (config.autobm)
 					update_auto_bookmark();
@@ -1763,8 +1763,8 @@ int book_handle_input(PBookViewData pView, u32 * selidx, u32 key)
 			if (*selidx > 0)
 				(*selidx)--;
 			else
-				*selidx = filecount - 1;
-		} while (!fs_is_txtbook((t_fs_filetype) filelist[*selidx].data));
+				*selidx = g_menu->size - 1;
+		} while (!fs_is_txtbook((t_fs_filetype) g_menu->root[*selidx].data));
 		if (*selidx != orgidx) {
 			if (config.autobm)
 				update_auto_bookmark();
@@ -1776,11 +1776,11 @@ int book_handle_input(PBookViewData pView, u32 * selidx, u32 key)
 		u32 orgidx = *selidx;
 
 		do {
-			if (*selidx < filecount - 1)
+			if (*selidx < g_menu->size - 1)
 				(*selidx)++;
 			else
 				*selidx = 0;
-		} while (!fs_is_txtbook((t_fs_filetype) filelist[*selidx].data));
+		} while (!fs_is_txtbook((t_fs_filetype) g_menu->root[*selidx].data));
 		if (*selidx != orgidx) {
 			if (config.autobm)
 				update_auto_bookmark();

@@ -153,95 +153,108 @@ t_fs_specfiletype_entry ft_spec_table[] = {
 };
 
 int MAX_ITEM_NAME_LEN = 40;
-int DIR_INC_SIZE = 256;
 p_umd_chapter p_umdchapter = NULL;
 
-void filename_to_itemname(p_win_menuitem item, int cur_count,
-						  const char *filename)
+p_win_menu g_menu;
+
+void filename_to_itemname(p_win_menuitem item, const char *filename)
 {
-	if ((item[cur_count].width = strlen(filename)) > MAX_ITEM_NAME_LEN) {
-		mbcsncpy_s(((unsigned char *) item[cur_count].name),
+	if ((item->width = strlen(filename)) > MAX_ITEM_NAME_LEN) {
+		mbcsncpy_s(((unsigned char *) item->name),
 				   MAX_ITEM_NAME_LEN - 2,
 				   ((const unsigned char *) filename), -1);
-		if (strlen(item[cur_count].name) < MAX_ITEM_NAME_LEN - 3) {
-			mbcsncpy_s(((unsigned char *) item[cur_count].name),
+		if (strlen(item->name) < MAX_ITEM_NAME_LEN - 3) {
+			mbcsncpy_s(((unsigned char *) item->name),
 					   MAX_ITEM_NAME_LEN,
 					   ((const unsigned char *) filename), -1);
-			STRCAT_S(item[cur_count].name, "..");
+			STRCAT_S(item->name, "..");
 		} else
-			STRCAT_S(item[cur_count].name, "...");
-		item[cur_count].width = MAX_ITEM_NAME_LEN;
+			STRCAT_S(item->name, "...");
+		item->width = MAX_ITEM_NAME_LEN;
 	} else {
-		STRCPY_S(item[cur_count].name, filename);
+		STRCPY_S(item->name, filename);
 	}
 }
 
-extern u32 fs_list_device(const char *dir, const char *sdir,
-							p_win_menuitem * mitem, u32 icolor,
+extern u32 fs_list_device(const char *dir, const char *sdir, u32 icolor,
 							u32 selicolor, u32 selrcolor, u32 selbcolor)
 {
-	extern u32 filecount;
-	u32 cur_count = 0;
-	p_win_menuitem item = NULL;
+	t_win_menuitem item;
 
-	win_item_destroy(mitem, &filecount);
+	if(g_menu != NULL) {
+		win_menu_destroy(g_menu);
+		g_menu = NULL;
+	}
 
 	strcpy_s((char *) sdir, 256, dir);
 
-	cur_count = config.hide_flash ? 1 : 3;
-	*mitem = win_realloc_items(NULL, 0, cur_count);
-	if (*mitem == NULL)
-		return 0;
-	item = *mitem;
-	STRCPY_S(item[0].name, "<MemoryStick>");
-	buffer_copy_string(item[0].compname, "ms0:");
-	buffer_copy_string(item[0].shortname, "ms0:");
-	item[0].data = (void *) fs_filetype_dir;
-	item[0].width = 13;
-	item[0].selected = false;
-	item[0].icolor = icolor;
-	item[0].selicolor = selicolor;
-	item[0].selrcolor = selrcolor;
-	item[0].selbcolor = selbcolor;
+	g_menu = win_menu_new();
 
-	if (config.hide_flash == false) {
-		STRCPY_S(item[1].name, "<NandFlash 0>");
-		buffer_copy_string(item[1].compname, "flash0:");
-		item[1].data = (void *) fs_filetype_dir;
-		item[1].width = 13;
-		item[1].selected = false;
-		item[1].icolor = icolor;
-		item[1].selicolor = selicolor;
-		item[1].selrcolor = selrcolor;
-		item[1].selbcolor = selbcolor;
-		STRCPY_S(item[2].name, "<NandFlash 1>");
-		buffer_copy_string(item[2].compname, "flash1:");
-		item[2].data = (void *) fs_filetype_dir;
-		item[2].width = 13;
-		item[2].selected = false;
-		item[2].icolor = icolor;
-		item[2].selicolor = selicolor;
-		item[2].selrcolor = selrcolor;
-		item[2].selbcolor = selbcolor;
+	if(g_menu == NULL) {
+		return 0;
 	}
 
-	return cur_count;
+	win_menuitem_new(&item);
+	STRCPY_S(item.name, "<MemoryStick>");
+	buffer_copy_string(item.compname, "ms0:");
+	buffer_copy_string(item.shortname, "ms0:");
+	item.data = (void *) fs_filetype_dir;
+	item.width = 13;
+	item.selected = false;
+	item.icolor = icolor;
+	item.selicolor = selicolor;
+	item.selrcolor = selrcolor;
+	item.selbcolor = selbcolor;
+	win_menu_add(g_menu, &item);
+
+	if (config.hide_flash == false) {
+		win_menuitem_new(&item);
+		STRCPY_S(item.name, "<NandFlash 0>");
+		buffer_copy_string(item.compname, "flash0:");
+		item.data = (void *) fs_filetype_dir;
+		item.width = 13;
+		item.selected = false;
+		item.icolor = icolor;
+		item.selicolor = selicolor;
+		item.selrcolor = selrcolor;
+		item.selbcolor = selbcolor;
+		win_menu_add(g_menu, &item);
+
+		win_menuitem_new(&item);
+		STRCPY_S(item.name, "<NandFlash 1>");
+		buffer_copy_string(item.compname, "flash1:");
+		item.data = (void *) fs_filetype_dir;
+		item.width = 13;
+		item.selected = false;
+		item.icolor = icolor;
+		item.selicolor = selicolor;
+		item.selrcolor = selrcolor;
+		item.selbcolor = selbcolor;
+		win_menu_add(g_menu, &item);
+	}
+
+	return g_menu->size;
 }
 
-extern u32 fs_flashdir_to_menu(const char *dir, const char *sdir,
-								 p_win_menuitem * mitem, u32 icolor,
+extern u32 fs_flashdir_to_menu(const char *dir, const char *sdir, u32 icolor,
 								 u32 selicolor, u32 selrcolor,
 								 u32 selbcolor)
 {
-	extern u32 filecount;
 	int fid;
-	u32 itemcount;
 	SceIoDirent info;
-	u32 cur_count = 0;
-	p_win_menuitem item = NULL;
 	int fd;
+	t_win_menuitem item;
 
-	win_item_destroy(mitem, &filecount);
+	if(g_menu != NULL) {
+		win_menu_destroy(g_menu);
+		g_menu = NULL;
+	}
+
+	g_menu = win_menu_new();
+
+	if(g_menu == NULL) {
+		return 0;
+	}
 
 	fid = freq_enter_hotzone();
 	strcpy_s((char *) sdir, 256, dir);
@@ -251,131 +264,115 @@ extern u32 fs_flashdir_to_menu(const char *dir, const char *sdir,
 		freq_leave(fid);
 		return 0;
 	}
-	//  if(stricmp(dir, "ms0:/") == 0)
+
 	{
-		itemcount = DIR_INC_SIZE;
-		*mitem = win_realloc_items(NULL, 0, itemcount);
-		if (*mitem == NULL) {
-			sceIoDclose(fd);
-			freq_leave(fid);
-			return 0;
-		}
-		cur_count = 1;
-		item = *mitem;
-		STRCPY_S(item[0].name, "<..>");
-		buffer_copy_string(item[0].compname, "..");
-		buffer_copy_string(item[0].shortname, "..");
-		item[0].data = (void *) fs_filetype_dir;
-		item[0].width = 4;
-		item[0].selected = false;
-		item[0].icolor = icolor;
-		item[0].selicolor = selicolor;
-		item[0].selrcolor = selrcolor;
-		item[0].selbcolor = selbcolor;
+		win_menuitem_new(&item);
+		STRCPY_S(item.name, "<..>");
+		buffer_copy_string(item.compname, "..");
+		buffer_copy_string(item.shortname, "..");
+		item.data = (void *) fs_filetype_dir;
+		item.width = 4;
+		item.selected = false;
+		item.icolor = icolor;
+		item.selicolor = selicolor;
+		item.selrcolor = selrcolor;
+		item.selbcolor = selbcolor;
+		win_menu_add(g_menu, &item);
 	}
 
 	memset(&info, 0, sizeof(SceIoDirent));
 
 	while (sceIoDread(fd, &info) > 0) {
+		win_menuitem_new(&item);
+
 		if ((info.d_stat.st_mode & FIO_S_IFMT) == FIO_S_IFDIR) {
-			if (info.d_name[0] == '.' && info.d_name[1] == 0)
+			if (info.d_name[0] == '.' && info.d_name[1] == 0) {
+				win_menuitem_free(&item);
 				continue;
-			if (strcmp(info.d_name, "..") == 0)
-				continue;
-			if (cur_count % DIR_INC_SIZE == 0) {
-				itemcount = cur_count + DIR_INC_SIZE;
-
-				*mitem = win_realloc_items(*mitem, cur_count, itemcount);
-
-				if (*mitem == NULL) {
-					freq_leave(fid);
-					return 0;
-				}
-
-				item = *mitem;
 			}
-			item[cur_count].data = (void *) fs_filetype_dir;
-			buffer_copy_string(item[cur_count].compname, info.d_name);
-			item[cur_count].name[0] = '<';
-			if ((item[cur_count].width =
-				 strlen(info.d_name) + 2) > MAX_ITEM_NAME_LEN) {
-				mbcsncpy_s((unsigned char *) &item[cur_count].name[1],
+
+			if (strcmp(info.d_name, "..") == 0) {
+				win_menuitem_free(&item);
+				continue;
+			}
+
+			item.data = (void *) fs_filetype_dir;
+			buffer_copy_string(item.compname, info.d_name);
+			item.name[0] = '<';
+
+			if ((item.width = strlen(info.d_name) + 2) > MAX_ITEM_NAME_LEN) {
+				mbcsncpy_s((unsigned char *) &item.name[1],
 						   MAX_ITEM_NAME_LEN - 4,
 						   (const unsigned char *) info.d_name, -1);
-				STRCAT_S(item[cur_count].name, "...>");
-				item[cur_count].width = MAX_ITEM_NAME_LEN;
+				STRCAT_S(item.name, "...>");
+				item.width = MAX_ITEM_NAME_LEN;
 			} else {
-				mbcsncpy_s((unsigned char *) &item[cur_count].name[1],
+				mbcsncpy_s((unsigned char *) &item.name[1],
 						   MAX_ITEM_NAME_LEN - 1,
 						   (const unsigned char *) info.d_name, -1);
-				STRCAT_S(item[cur_count].name, ">");
+				STRCAT_S(item.name, ">");
 			}
 		} else {
 			t_fs_filetype ft = fs_file_get_type(info.d_name);
 
-			if (cur_count % DIR_INC_SIZE == 0) {
-				itemcount = cur_count + DIR_INC_SIZE;
-
-				*mitem = win_realloc_items(*mitem, cur_count, itemcount);
-
-				if (*mitem == NULL) {
-					freq_leave(fid);
-					return 0;
-				}
-
-				item = *mitem;
-			}
-			item[cur_count].data = (void *) ft;
-			buffer_copy_string(item[cur_count].compname, info.d_name);
-			buffer_copy_string(item[cur_count].shortname, info.d_name);
-			filename_to_itemname(item, cur_count, info.d_name);
+			item.data = (void *) ft;
+			buffer_copy_string(item.compname, info.d_name);
+			buffer_copy_string(item.shortname, info.d_name);
+			filename_to_itemname(&item, info.d_name);
 		}
-		item[cur_count].icolor = icolor;
-		item[cur_count].selicolor = selicolor;
-		item[cur_count].selrcolor = selrcolor;
-		item[cur_count].selbcolor = selbcolor;
-		item[cur_count].selected = false;
-		item[cur_count].data2[0] =
+
+		item.icolor = icolor;
+		item.selicolor = selicolor;
+		item.selrcolor = selrcolor;
+		item.selbcolor = selbcolor;
+		item.selected = false;
+		item.data2[0] =
 			((info.d_stat.st_ctime.year - 1980) << 9) +
 			(info.d_stat.st_ctime.month << 5) + info.d_stat.st_ctime.day;
-		item[cur_count].data2[1] =
+		item.data2[1] =
 			(info.d_stat.st_ctime.hour << 11) +
 			(info.d_stat.st_ctime.minute << 5) +
 			info.d_stat.st_ctime.second / 2;
-		item[cur_count].data2[2] =
+		item.data2[2] =
 			((info.d_stat.st_mtime.year - 1980) << 9) +
 			(info.d_stat.st_mtime.month << 5) + info.d_stat.st_mtime.day;
-		item[cur_count].data2[3] =
+		item.data2[3] =
 			(info.d_stat.st_mtime.hour << 11) +
 			(info.d_stat.st_mtime.minute << 5) +
 			info.d_stat.st_mtime.second / 2;
-		item[cur_count].data3 = info.d_stat.st_size;
-		cur_count++;
+		item.data3 = info.d_stat.st_size;
+
+		win_menu_add(g_menu, &item);
 	}
 
 	sceIoDclose(fd);
 	freq_leave(fid);
 
-	// Remove unused item
-	*mitem = win_realloc_items(*mitem, itemcount, cur_count);
-
-	return cur_count;
+	return g_menu->size;
 }
 
 // New style fat system custom reading
-extern u32 fs_dir_to_menu(const char *dir, char *sdir, p_win_menuitem * mitem,
+extern u32 fs_dir_to_menu(const char *dir, char *sdir,
 							u32 icolor, u32 selicolor, u32 selrcolor,
 							u32 selbcolor, bool showhidden, bool showunknown)
 {
-	extern u32 filecount;
 	int fid;
-	p_win_menuitem item = NULL;
 	p_fat_info info;
-	u32 itemcount = 0;
 	u32 count;
-	u32 i, cur_count = 0;
+	u32 i;
+	t_win_menuitem item;
 
-	win_item_destroy(mitem, &filecount);
+	if(g_menu != NULL) {
+		win_menu_destroy(g_menu);
+		g_menu = NULL;
+	}
+
+	g_menu = win_menu_new();
+
+	if(g_menu == NULL) {
+		return 0;
+	}
+
 	fid = freq_enter_hotzone();
 	count = fat_readdir(dir, sdir, &info);
 
@@ -384,152 +381,135 @@ extern u32 fs_dir_to_menu(const char *dir, char *sdir, p_win_menuitem * mitem,
 		return 0;
 	}
 
-	itemcount = DIR_INC_SIZE;
-	*mitem = win_realloc_items(NULL, 0, itemcount);
-
-	if (*mitem == NULL) {
-		free(info);
-		freq_leave(fid);
-		return 0;
-	}
-
-	cur_count = 1;
-	item = *mitem;
-	STRCPY_S(item[0].name, "<..>");
-	buffer_copy_string(item[0].compname, "..");
-	buffer_copy_string(item[0].shortname, "..");
-	item[0].data = (void *) fs_filetype_dir;
-	item[0].width = 4;
-	item[0].selected = false;
-	item[0].icolor = icolor;
-	item[0].selicolor = selicolor;
-	item[0].selrcolor = selrcolor;
-	item[0].selbcolor = selbcolor;
+	win_menuitem_new(&item);
+	STRCPY_S(item.name, "<..>");
+	buffer_copy_string(item.compname, "..");
+	buffer_copy_string(item.shortname, "..");
+	item.data = (void *) fs_filetype_dir;
+	item.width = 4;
+	item.selected = false;
+	item.icolor = icolor;
+	item.selicolor = selicolor;
+	item.selrcolor = selrcolor;
+	item.selbcolor = selbcolor;
+	win_menu_add(g_menu, &item);
 
 	for (i = 0; i < count; i++) {
-		if (!showhidden && (info[i].attr & FAT_FILEATTR_HIDDEN) > 0)
+		win_menuitem_new(&item);
+		
+		if (!showhidden && (info[i].attr & FAT_FILEATTR_HIDDEN) > 0) {
+			win_menuitem_free(&item);
 			continue;
-		if (cur_count % DIR_INC_SIZE == 0) {
-			itemcount = cur_count + DIR_INC_SIZE;
-
-			*mitem = win_realloc_items(*mitem, cur_count, itemcount);
-
-			if (*mitem == NULL) {
-				free(info);
-				freq_leave(fid);
-				return 0;
-			}
-
-			item = *mitem;
 		}
+
 		if (info[i].attr & FAT_FILEATTR_DIRECTORY) {
-			item[cur_count].data = (void *) fs_filetype_dir;
-			buffer_copy_string(item[cur_count].shortname, info[i].filename);
-			buffer_copy_string(item[cur_count].compname, info[i].longname);
-			item[cur_count].name[0] = '<';
-			if ((item[cur_count].width =
+			item.data = (void *) fs_filetype_dir;
+			buffer_copy_string(item.shortname, info[i].filename);
+			buffer_copy_string(item.compname, info[i].longname);
+			item.name[0] = '<';
+			if ((item.width =
 				 strlen(info[i].longname) + 2) > MAX_ITEM_NAME_LEN) {
-				strncpy_s(&item[cur_count].name[1],
-						  NELEMS(item[cur_count].name) - 1,
+				strncpy_s(&item.name[1],
+						  NELEMS(item.name) - 1,
 						  info[i].longname, MAX_ITEM_NAME_LEN - 5);
-				item[cur_count].name[MAX_ITEM_NAME_LEN - 4] =
-					item[cur_count].name[MAX_ITEM_NAME_LEN -
+				item.name[MAX_ITEM_NAME_LEN - 4] =
+					item.name[MAX_ITEM_NAME_LEN -
 										 3] =
-					item[cur_count].name[MAX_ITEM_NAME_LEN - 2] = '.';
-				item[cur_count].name[MAX_ITEM_NAME_LEN - 1] = '>';
-				item[cur_count].name[MAX_ITEM_NAME_LEN] = 0;
-				item[cur_count].width = MAX_ITEM_NAME_LEN;
+					item.name[MAX_ITEM_NAME_LEN - 2] = '.';
+				item.name[MAX_ITEM_NAME_LEN - 1] = '>';
+				item.name[MAX_ITEM_NAME_LEN] = 0;
+				item.width = MAX_ITEM_NAME_LEN;
 			} else {
-				strncpy_s(&item[cur_count].name[1],
-						  NELEMS(item[cur_count].name) - 1,
+				strncpy_s(&item.name[1],
+						  NELEMS(item.name) - 1,
 						  info[i].longname, MAX_ITEM_NAME_LEN);
-				item[cur_count].name[item[cur_count].width - 1] = '>';
-				item[cur_count].name[item[cur_count].width] = 0;
+				item.name[item.width - 1] = '>';
+				item.name[item.width] = 0;
 			}
 		} else {
 			t_fs_filetype ft;
 
-			if (info[i].filesize == 0)
+			if (info[i].filesize == 0) {
+				win_menuitem_free(&item);
 				continue;
+			}
 
 			ft = fs_file_get_type(info[i].longname);
 
-			if (!showunknown && ft == fs_filetype_unknown)
+			if (!showunknown && ft == fs_filetype_unknown) {
+				win_menuitem_free(&item);
 				continue;
-			item[cur_count].data = (void *) ft;
-			buffer_copy_string(item[cur_count].shortname, info[i].filename);
-			buffer_copy_string(item[cur_count].compname, info[i].longname);
-			filename_to_itemname(item, cur_count, info[i].longname);
+			}
+
+			item.data = (void *) ft;
+			buffer_copy_string(item.shortname, info[i].filename);
+			buffer_copy_string(item.compname, info[i].longname);
+			filename_to_itemname(&item, info[i].longname);
 		}
-		item[cur_count].icolor = icolor;
-		item[cur_count].selicolor = selicolor;
-		item[cur_count].selrcolor = selrcolor;
-		item[cur_count].selbcolor = selbcolor;
-		item[cur_count].selected = false;
-		item[cur_count].data2[0] = info[i].cdate;
-		item[cur_count].data2[1] = info[i].ctime;
-		item[cur_count].data2[2] = info[i].mdate;
-		item[cur_count].data2[3] = info[i].mtime;
-		item[cur_count].data3 = info[i].filesize;
-		cur_count++;
+		item.icolor = icolor;
+		item.selicolor = selicolor;
+		item.selrcolor = selrcolor;
+		item.selbcolor = selbcolor;
+		item.selected = false;
+		item.data2[0] = info[i].cdate;
+		item.data2[1] = info[i].ctime;
+		item.data2[2] = info[i].mdate;
+		item.data2[3] = info[i].mtime;
+		item.data3 = info[i].filesize;
+		win_menu_add(g_menu, &item);
 	}
+
 	free(info);
 	freq_leave(fid);
 
-	// Remove unused item
-	*mitem = win_realloc_items(*mitem, itemcount, cur_count);
-
-	return cur_count;
+	return g_menu->size;
 }
 
-extern u32 fs_zip_to_menu(const char *zipfile, p_win_menuitem * mitem,
+extern u32 fs_zip_to_menu(const char *zipfile,
 							u32 icolor, u32 selicolor, u32 selrcolor,
 							u32 selbcolor)
 {
-	extern u32 filecount;
-	u32 itemcount;
-	u32 cur_count = 1;
 	int fid;
 	unzFile unzf;
-	p_win_menuitem item;
+	t_win_menuitem item;
 
-	win_item_destroy(mitem, &filecount);
+	if(g_menu != NULL) {
+		win_menu_destroy(g_menu);
+		g_menu = NULL;
+	}
+
+	g_menu = win_menu_new();
+
+	if(g_menu == NULL) {
+		return 0;
+	}
 
 	fid = freq_enter_hotzone();
 	unzf = unzOpen(zipfile);
-	item = NULL;
 
 	if (unzf == NULL) {
 		freq_leave(fid);
 		return 0;
 	}
 
-	itemcount = DIR_INC_SIZE;
-	*mitem = win_realloc_items(NULL, 0, itemcount);
-
-	if (*mitem == NULL) {
-		unzClose(unzf);
-		freq_leave(fid);
-		return 0;
-	}
-
-	item = *mitem;
-	STRCPY_S(item[0].name, "<..>");
-	buffer_copy_string(item[0].compname, "..");
-	buffer_copy_string(item[0].shortname, "..");
-	item[0].data = (void *) fs_filetype_dir;
-	item[0].width = 4;
-	item[0].selected = false;
-	item[0].icolor = icolor;
-	item[0].selicolor = selicolor;
-	item[0].selrcolor = selrcolor;
-	item[0].selbcolor = selbcolor;
+	win_menuitem_new(&item);
+	STRCPY_S(item.name, "<..>");
+	buffer_copy_string(item.compname, "..");
+	buffer_copy_string(item.shortname, "..");
+	item.data = (void *) fs_filetype_dir;
+	item.width = 4;
+	item.selected = false;
+	item.icolor = icolor;
+	item.selicolor = selicolor;
+	item.selrcolor = selrcolor;
+	item.selbcolor = selbcolor;
+	win_menu_add(g_menu, &item);
 
 	if (unzGoToFirstFile(unzf) != UNZ_OK) {
 		unzClose(unzf);
 		freq_leave(fid);
-		*mitem = win_realloc_items(*mitem, itemcount, cur_count);
-		return cur_count;
+
+		return g_menu->size;
 	}
 
 	do {
@@ -538,9 +518,9 @@ extern u32 fs_zip_to_menu(const char *zipfile, p_win_menuitem * mitem,
 		t_fs_filetype ft;
 		char t[20];
 
-		if (unzGetCurrentFileInfo
-			(unzf, &file_info, fname, PATH_MAX, NULL, 0, NULL, 0) != UNZ_OK)
+		if (unzGetCurrentFileInfo(unzf, &file_info, fname, PATH_MAX, NULL, 0, NULL, 0) != UNZ_OK)
 			break;
+
 		if (file_info.uncompressed_size == 0)
 			continue;
 
@@ -549,57 +529,52 @@ extern u32 fs_zip_to_menu(const char *zipfile, p_win_menuitem * mitem,
 		if (ft == fs_filetype_chm || ft == fs_filetype_zip
 			|| ft == fs_filetype_rar)
 			continue;
-		if (cur_count % DIR_INC_SIZE == 0) {
-			itemcount = cur_count + DIR_INC_SIZE;
 
-			*mitem = win_realloc_items(*mitem, cur_count, itemcount);
-
-			if (*mitem == NULL) {
-				unzClose(unzf);
-				freq_leave(fid);
-				return 0;
-			}
-
-			item = *mitem;
-		}
-		item[cur_count].data = (void *) ft;
-		buffer_copy_string(item[cur_count].compname, fname);
+		win_menuitem_new(&item);
+		
+		item.data = (void *) ft;
+		buffer_copy_string(item.compname, fname);
 
 		SPRINTF_S(t, "%u", (unsigned int) file_info.uncompressed_size);
-		buffer_copy_string(item[cur_count].shortname, t);
-		filename_to_itemname(item, cur_count, fname);
-		item[cur_count].selected = false;
-		item[cur_count].icolor = icolor;
-		item[cur_count].selicolor = selicolor;
-		item[cur_count].selrcolor = selrcolor;
-		item[cur_count].selbcolor = selbcolor;
-		item[cur_count].data3 = file_info.uncompressed_size;
-		cur_count++;
+		buffer_copy_string(item.shortname, t);
+		filename_to_itemname(&item, fname);
+		item.selected = false;
+		item.icolor = icolor;
+		item.selicolor = selicolor;
+		item.selrcolor = selrcolor;
+		item.selbcolor = selbcolor;
+		item.data3 = file_info.uncompressed_size;
+		win_menu_add(g_menu, &item);
 	} while (unzGoToNextFile(unzf) == UNZ_OK);
+
 	unzClose(unzf);
 	freq_leave(fid);
 
-	*mitem = win_realloc_items(*mitem, itemcount, cur_count);
-
-	return cur_count;
+	return g_menu->size;
 }
 
-extern u32 fs_rar_to_menu(const char *rarfile, p_win_menuitem * mitem,
+extern u32 fs_rar_to_menu(const char *rarfile,
 							u32 icolor, u32 selicolor, u32 selrcolor,
 							u32 selbcolor)
 {
-	extern u32 filecount;
-	u32 itemcount;
 	int fid;
-	p_win_menuitem item = NULL;
 	struct RAROpenArchiveData arcdata;
-	u32 cur_count = 1;
 	struct RARHeaderDataEx header;
 	int ret;
 	HANDLE hrar;
 	t_fs_filetype ft;
+	t_win_menuitem item;
 
-	win_item_destroy(mitem, &filecount);
+	if(g_menu != NULL) {
+		win_menu_destroy(g_menu);
+		g_menu = NULL;
+	}
+
+	g_menu = win_menu_new();
+
+	if(g_menu == NULL) {
+		return 0;
+	}
 
 	fid = freq_enter_hotzone();
 
@@ -615,26 +590,19 @@ extern u32 fs_rar_to_menu(const char *rarfile, p_win_menuitem * mitem,
 		return 0;
 	}
 
-	itemcount = DIR_INC_SIZE;
-	*mitem = win_realloc_items(NULL, 0, itemcount);
-	if (*mitem == NULL) {
-		RARCloseArchive(hrar);
-		freq_leave(fid);
-		return 0;
-	}
-
-	item = *mitem;
-	STRCPY_S(item[0].name, "<..>");
-	buffer_copy_string(item[0].compname, "..");
-	buffer_copy_string(item[0].shortname, "..");
-	item[0].data = (void *) fs_filetype_dir;
-	item[0].width = 4;
-	item[0].selected = false;
-	item[0].selected = false;
-	item[0].icolor = icolor;
-	item[0].selicolor = selicolor;
-	item[0].selrcolor = selrcolor;
-	item[0].selbcolor = selbcolor;
+	win_menuitem_new(&item);
+	STRCPY_S(item.name, "<..>");
+	buffer_copy_string(item.compname, "..");
+	buffer_copy_string(item.shortname, "..");
+	item.data = (void *) fs_filetype_dir;
+	item.width = 4;
+	item.selected = false;
+	item.selected = false;
+	item.icolor = icolor;
+	item.selicolor = selicolor;
+	item.selrcolor = selrcolor;
+	item.selbcolor = selbcolor;
+	win_menu_add(g_menu, &item);
 
 	do {
 		char t[20];
@@ -656,20 +624,10 @@ extern u32 fs_rar_to_menu(const char *rarfile, p_win_menuitem * mitem,
 		if (ft == fs_filetype_chm || ft == fs_filetype_zip
 			|| ft == fs_filetype_rar)
 			continue;
-		if (cur_count % DIR_INC_SIZE == 0) {
-			itemcount = cur_count + DIR_INC_SIZE;
 
-			*mitem = win_realloc_items(*mitem, cur_count, itemcount);
+		win_menuitem_new(&item);
+		item.data = (void *) ft;
 
-			if (*mitem == NULL) {
-				RARCloseArchive(hrar);
-				freq_leave(fid);
-				return 0;
-			}
-
-			item = *mitem;
-		}
-		item[cur_count].data = (void *) ft;
 		if (header.Flags & 0x200) {
 			char str[1024];
 			const u8 *uni;
@@ -678,79 +636,75 @@ extern u32 fs_rar_to_menu(const char *rarfile, p_win_menuitem * mitem,
 			uni = (u8 *) header.FileNameW;
 			charsets_utf32_conv(uni, sizeof(header.FileNameW), (u8 *) str,
 								sizeof(str));
-			buffer_copy_string_len(item[cur_count].compname, header.FileName,
+			buffer_copy_string_len(item.compname, header.FileName,
 								   256);
-			filename_to_itemname(item, cur_count, str);
+			filename_to_itemname(&item, str);
 		} else {
-			buffer_copy_string_len(item[cur_count].compname,
+			buffer_copy_string_len(item.compname,
 								   header.FileName, 256);
-			filename_to_itemname(item, cur_count, header.FileName);
+			filename_to_itemname(&item, header.FileName);
 		}
 
 		SPRINTF_S(t, "%u", (unsigned int) header.UnpSize);
-		buffer_copy_string(item[cur_count].shortname, t);
-		item[cur_count].selected = false;
-		item[cur_count].icolor = icolor;
-		item[cur_count].selicolor = selicolor;
-		item[cur_count].selrcolor = selrcolor;
-		item[cur_count].selbcolor = selbcolor;
-		item[cur_count].data3 = header.UnpSize;
-		cur_count++;
+		buffer_copy_string(item.shortname, t);
+		item.selected = false;
+		item.icolor = icolor;
+		item.selicolor = selicolor;
+		item.selrcolor = selrcolor;
+		item.selbcolor = selbcolor;
+		item.data3 = header.UnpSize;
+		win_menu_add(g_menu, &item);
 	} while (RARProcessFile(hrar, RAR_SKIP, NULL, NULL) == 0);
 
 	RARCloseArchive(hrar);
 	freq_leave(fid);
 
-	// Remove unused item
-	*mitem = win_realloc_items(*mitem, itemcount, cur_count);
-
-	return cur_count;
+	return g_menu->size;
 }
 
-p_win_menuitem fs_empty_dir(u32 * filecount, u32 icolor,
-							u32 selicolor, u32 selrcolor, u32 selbcolor)
+u32 fs_empty_dir(u32 icolor, u32 selicolor, u32 selrcolor, u32 selbcolor)
 {
-	p_win_menuitem p;
+	t_win_menuitem item;
 
-	p = win_realloc_items(NULL, 0, 1);
-
-	if (p == NULL) {
-		return NULL;
+	if(g_menu != NULL) {
+		win_menu_destroy(g_menu);
+		g_menu = NULL;
 	}
 
-	STRCPY_S(p->name, "<..>");
-	buffer_copy_string(p->compname, "..");
-	buffer_copy_string(p->shortname, "..");
-	p->data = (void *) fs_filetype_dir;
-	p->width = 4;
-	p->selected = false;
-	p->icolor = icolor;
-	p->selicolor = selicolor;
-	p->selrcolor = selrcolor;
-	p->selbcolor = selbcolor;
+	g_menu = win_menu_new();
 
-	*filecount = 1;
-	return p;
+	if(g_menu == NULL) {
+		return 0;
+	}
+	
+	win_menuitem_new(&item);
+	STRCPY_S(item.name, "<..>");
+	buffer_copy_string(item.compname, "..");
+	buffer_copy_string(item.shortname, "..");
+	item.data = (void *) fs_filetype_dir;
+	item.width = 4;
+	item.selected = false;
+	item.icolor = icolor;
+	item.selicolor = selicolor;
+	item.selrcolor = selrcolor;
+	item.selbcolor = selbcolor;
+	win_menu_add(g_menu, &item);
+
+	return g_menu->size;
 }
 
 typedef struct
 {
-	p_win_menuitem *mitem;
-	u32 cur_count;
 	u32 icolor;
 	u32 selicolor;
 	u32 selrcolor;
 	u32 selbcolor;
 } t_fs_chm_enum, *p_fs_chm_enum;
 
-static u32 *chm_itemcount = NULL;
-
 static int chmEnum(struct chmFile *h, struct chmUnitInfo *ui, void *context)
 {
-	p_win_menuitem *mitem = ((p_fs_chm_enum) context)->mitem;
-	p_win_menuitem item = *mitem;
+	t_win_menuitem item;
 	t_fs_filetype ft;
-	u32 cur_count;
 	char fname[PATH_MAX] = "";
 	char t[20];
 
@@ -765,23 +719,10 @@ static int chmEnum(struct chmFile *h, struct chmUnitInfo *ui, void *context)
 		|| ft == fs_filetype_umd || ft == fs_filetype_pdb)
 		return CHM_ENUMERATOR_CONTINUE;
 
-	cur_count = ((p_fs_chm_enum) context)->cur_count;
-
-	if (cur_count % DIR_INC_SIZE == 0) {
-		*chm_itemcount = cur_count + DIR_INC_SIZE;
-		*mitem = win_realloc_items(*mitem, cur_count, *chm_itemcount);
-
-		if (*mitem == NULL) {
-			((p_fs_chm_enum) context)->cur_count = 0;
-			return CHM_ENUMERATOR_FAILURE;
-		}
-
-		item = *mitem;
-	}
-
-	buffer_copy_string(item[cur_count].compname, ui->path);
+	win_menuitem_new(&item);
+	buffer_copy_string(item.compname, ui->path);
 	SPRINTF_S(t, "%u", (unsigned int) ui->length);
-	buffer_copy_string(item[cur_count].shortname, t);
+	buffer_copy_string(item.shortname, t);
 	if (ui->path[0] == '/') {
 		strncpy_s(fname, NELEMS(fname), ui->path + 1, 256);
 	} else {
@@ -791,30 +732,39 @@ static int chmEnum(struct chmFile *h, struct chmUnitInfo *ui, void *context)
 	charsets_utf8_conv((unsigned char *) fname, sizeof(fname),
 					   (unsigned char *) fname, sizeof(fname));
 
-	item[cur_count].data = (void *) ft;
-	filename_to_itemname(item, cur_count, fname);
-	item[cur_count].selected = false;
-	item[cur_count].icolor = ((p_fs_chm_enum) context)->icolor;
-	item[cur_count].selicolor = ((p_fs_chm_enum) context)->selicolor;
-	item[cur_count].selrcolor = ((p_fs_chm_enum) context)->selrcolor;
-	item[cur_count].selbcolor = ((p_fs_chm_enum) context)->selbcolor;
-	item[cur_count].data3 = ui->length;
-	((p_fs_chm_enum) context)->cur_count++;
+	item.data = (void *) ft;
+	filename_to_itemname(&item, fname);
+	item.selected = false;
+	item.icolor = ((p_fs_chm_enum) context)->icolor;
+	item.selicolor = ((p_fs_chm_enum) context)->selicolor;
+	item.selrcolor = ((p_fs_chm_enum) context)->selrcolor;
+	item.selbcolor = ((p_fs_chm_enum) context)->selbcolor;
+	item.data3 = ui->length;
+	win_menu_add(g_menu, &item);
+
 	return CHM_ENUMERATOR_CONTINUE;
 }
 
-extern u32 fs_chm_to_menu(const char *chmfile, p_win_menuitem * mitem,
+extern u32 fs_chm_to_menu(const char *chmfile,
 							u32 icolor, u32 selicolor, u32 selrcolor,
 							u32 selbcolor)
 {
-	extern u32 filecount;
-	u32 itemcount;
 	int fid;
-	p_win_menuitem item = NULL;
+	t_win_menuitem item;
 	struct chmFile *chm;
 	t_fs_chm_enum cenum;
 
-	win_item_destroy(mitem, &filecount);
+	if(g_menu != NULL) {
+		win_menu_destroy(g_menu);
+		g_menu = NULL;
+	}
+	
+	g_menu = win_menu_new();
+
+	if(g_menu == NULL) {
+		return 0;
+	}
+
 	fid = freq_enter_hotzone();
 	chm = chm_open(chmfile);
 
@@ -823,77 +773,65 @@ extern u32 fs_chm_to_menu(const char *chmfile, p_win_menuitem * mitem,
 		return 0;
 	}
 
-	itemcount = DIR_INC_SIZE;
-	*mitem = win_realloc_items(NULL, 0, itemcount);
+	win_menuitem_new(&item);
+	STRCPY_S(item.name, "<..>");
+	buffer_copy_string(item.compname, "..");
+	buffer_copy_string(item.shortname, "..");
+	item.data = (void *) fs_filetype_dir;
+	item.width = 4;
+	item.selected = false;
+	item.icolor = icolor;
+	item.selicolor = selicolor;
+	item.selrcolor = selrcolor;
+	item.selbcolor = selbcolor;
+	win_menu_add(g_menu, &item);
 
-	if (*mitem == NULL) {
-		chm_close(chm);
-		freq_leave(fid);
-		return 0;
-	}
-
-	item = *mitem;
-	STRCPY_S(item[0].name, "<..>");
-	buffer_copy_string(item[0].compname, "..");
-	buffer_copy_string(item[0].shortname, "..");
-	item[0].data = (void *) fs_filetype_dir;
-	item[0].width = 4;
-	item[0].selected = false;
-	item[0].icolor = icolor;
-	item[0].selicolor = selicolor;
-	item[0].selrcolor = selrcolor;
-	item[0].selbcolor = selbcolor;
-	cenum.mitem = mitem;
-	cenum.cur_count = 1;
 	cenum.icolor = icolor;
 	cenum.selicolor = selicolor;
 	cenum.selrcolor = selrcolor;
 	cenum.selbcolor = selbcolor;
-	chm_itemcount = &itemcount;
 	chm_enumerate(chm, CHM_ENUMERATE_NORMAL | CHM_ENUMERATE_FILES, chmEnum,
 				  (void *) &cenum);
 	chm_close(chm);
 	freq_leave(fid);
-	*mitem = win_realloc_items(*mitem, itemcount, cenum.cur_count);
 
-	return cenum.cur_count;
+	return g_menu->size;
 }
 
-extern u32 fs_umd_to_menu(const char *umdfile, p_win_menuitem * mitem,
+extern u32 fs_umd_to_menu(const char *umdfile,
 							u32 icolor, u32 selicolor, u32 selrcolor,
 							u32 selbcolor)
 {
 	buffer *pbuf = NULL;
-	extern u32 filecount;
-	p_win_menuitem item = NULL;
 	u32 cur_count = 1;
-	u32 itemcount;
 	int fid;
+	t_win_menuitem item;
 
-	win_item_destroy(mitem, &filecount);
+	if(g_menu != NULL) {
+		win_menu_destroy(g_menu);
+		g_menu = NULL;
+	}
+	
+	g_menu = win_menu_new();
 
-	fid = freq_enter_hotzone();
-
-	itemcount = DIR_INC_SIZE;
-	*mitem = win_realloc_items(NULL, 0, itemcount);
-
-	if (*mitem == NULL) {
-		freq_leave(fid);
+	if(g_menu == NULL) {
 		return 0;
 	}
 
-	item = *mitem;
+	fid = freq_enter_hotzone();
 
-	STRCPY_S(item[0].name, "<..>");
-	buffer_copy_string(item[0].compname, "..");
-	buffer_copy_string(item[0].shortname, "..");
-	item[0].data = (void *) fs_filetype_dir;
-	item[0].width = 4;
-	item[0].selected = false;
-	item[0].icolor = icolor;
-	item[0].selicolor = selicolor;
-	item[0].selrcolor = selrcolor;
-	item[0].selbcolor = selbcolor;
+	win_menuitem_new(&item);
+	STRCPY_S(item.name, "<..>");
+	buffer_copy_string(item.compname, "..");
+	buffer_copy_string(item.shortname, "..");
+	item.data = (void *) fs_filetype_dir;
+	item.width = 4;
+	item.selected = false;
+	item.icolor = icolor;
+	item.selicolor = selicolor;
+	item.selrcolor = selrcolor;
+	item.selbcolor = selbcolor;
+	win_menu_add(g_menu, &item);
 
 	do {
 		size_t stlen = 0;
@@ -915,16 +853,6 @@ extern u32 fs_umd_to_menu(const char *umdfile, p_win_menuitem * mitem,
 			cur_count = p_umdchapter->chapter_count + 1;
 
 		if (cur_count > 1) {
-			if (cur_count > DIR_INC_SIZE) {
-				itemcount = cur_count;
-				*mitem = win_realloc_items(*mitem, DIR_INC_SIZE, itemcount);
-
-				if (*mitem == NULL)
-					break;
-
-				item = *mitem;
-			}
-
 			p = p_umdchapter->pchapters;
 			pbuf = buffer_init();
 
@@ -937,35 +865,37 @@ extern u32 fs_umd_to_menu(const char *umdfile, p_win_menuitem * mitem,
 					charsets_ucs_conv((const u8 *) p[i - 1].name->ptr, stlen,
 									  (u8 *) pbuf->ptr, pbuf->size);
 				SPRINTF_S(pos, "%d", p[i - 1].length);
-				buffer_copy_string_len(item[i].shortname, pos, 20);
-				buffer_copy_string_len(item[i].compname, pbuf->ptr,
+				win_menuitem_new(&item);
+				buffer_copy_string_len(item.shortname, pos, 20);
+				buffer_copy_string_len(item.compname, pbuf->ptr,
 									   (stlen > 256) ? 256 : stlen);
-				filename_to_itemname(item, i, item[i].compname->ptr);
+				filename_to_itemname(&item, item.compname->ptr);
 				if (1 != p_umdchapter->umd_type) {
 					if (0 == p_umdchapter->umd_mode)
-						item[i].data = (void *) fs_filetype_bmp;
+						item.data = (void *) fs_filetype_bmp;
 					else if (1 == p_umdchapter->umd_mode)
-						item[i].data = (void *) fs_filetype_jpg;
+						item.data = (void *) fs_filetype_jpg;
 					else
-						item[i].data = (void *) fs_filetype_gif;
+						item.data = (void *) fs_filetype_gif;
 				} else
-					item[i].data = (void *) fs_filetype_txt;
-				item[i].data2[0] = p[i - 1].chunk_pos & 0xFFFF;
-				item[i].data2[1] = (p[i - 1].chunk_pos >> 16) & 0xFFFF;
-				item[i].data2[2] = p[i - 1].chunk_offset & 0xFFFF;
-				item[i].data2[3] = (p[i - 1].chunk_offset >> 16) & 0xFFFF;
-				item[i].data3 = p[i - 1].length;
+					item.data = (void *) fs_filetype_txt;
+				item.data2[0] = p[i - 1].chunk_pos & 0xFFFF;
+				item.data2[1] = (p[i - 1].chunk_pos >> 16) & 0xFFFF;
+				item.data2[2] = p[i - 1].chunk_offset & 0xFFFF;
+				item.data2[3] = (p[i - 1].chunk_offset >> 16) & 0xFFFF;
+				item.data3 = p[i - 1].length;
 #if 0
 				printf("%d pos:%d,%d,%d-%d,%d\n", i, p[i - 1].chunk_pos,
-					   item[i].data2[0], item[i].data2[1], item[i].data2[2],
-					   item[i].data2[3]);
+					   item.data2[0], item.data2[1], item.data2[2],
+					   item.data2[3]);
 #endif
-				item[i].selected = false;
-				item[i].icolor = icolor;
-				item[i].selicolor = selicolor;
-				item[i].selrcolor = selrcolor;
-				item[i].selbcolor = selbcolor;
+				item.selected = false;
+				item.icolor = icolor;
+				item.selicolor = selicolor;
+				item.selrcolor = selrcolor;
+				item.selbcolor = selbcolor;
 				//buffer_free(p[i - 1].name);
+				win_menu_add(g_menu, &item);
 			}
 #if 0
 			printf("%s umd file:%s type:%d,mode:%d,chapter count:%ld\n",
@@ -979,11 +909,8 @@ extern u32 fs_umd_to_menu(const char *umdfile, p_win_menuitem * mitem,
 		buffer_free(pbuf);
 
 	freq_leave(fid);
-#define MAX_CHAP_LEN 500
-	cur_count = (cur_count > 1 && cur_count < MAX_CHAP_LEN) ? cur_count : 1;
-	*mitem = win_realloc_items(*mitem, itemcount, cur_count);
 
-	return cur_count;
+	return g_menu->size;
 }
 
 extern t_fs_filetype fs_file_get_type(const char *filename)
