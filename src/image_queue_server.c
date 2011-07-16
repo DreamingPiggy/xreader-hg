@@ -132,6 +132,7 @@ static void cache_clear(void)
 
 	ccacher.caches_size = 0;
 	cacher_cleared = true;
+	malloc_trim(0);
 	cache_unlock();
 }
 
