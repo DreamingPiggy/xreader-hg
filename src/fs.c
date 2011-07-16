@@ -235,6 +235,30 @@ extern u32 fs_list_device(const char *dir, const char *sdir, u32 icolor,
 	return g_menu->size;
 }
 
+static int add_parent_to_menu(p_win_menu menu, u32 icolor, u32 selicolor, u32 selrcolor, u32 selbcolor)
+{
+	t_win_menuitem item;
+
+	if(menu == NULL) {
+		return -1;
+	}
+
+	win_menuitem_new(&item);
+	STRCPY_S(item.name, "<..>");
+	buffer_copy_string(item.compname, "..");
+	buffer_copy_string(item.shortname, "..");
+	item.data = (void *) fs_filetype_dir;
+	item.width = 4;
+	item.selected = false;
+	item.icolor = icolor;
+	item.selicolor = selicolor;
+	item.selrcolor = selrcolor;
+	item.selbcolor = selbcolor;
+	win_menu_add(menu, &item);
+
+	return 0;
+}
+
 extern u32 fs_flashdir_to_menu(const char *dir, const char *sdir, u32 icolor,
 								 u32 selicolor, u32 selrcolor,
 								 u32 selbcolor)
@@ -264,20 +288,7 @@ extern u32 fs_flashdir_to_menu(const char *dir, const char *sdir, u32 icolor,
 		return 0;
 	}
 
-	{
-		win_menuitem_new(&item);
-		STRCPY_S(item.name, "<..>");
-		buffer_copy_string(item.compname, "..");
-		buffer_copy_string(item.shortname, "..");
-		item.data = (void *) fs_filetype_dir;
-		item.width = 4;
-		item.selected = false;
-		item.icolor = icolor;
-		item.selicolor = selicolor;
-		item.selrcolor = selrcolor;
-		item.selbcolor = selbcolor;
-		win_menu_add(g_menu, &item);
-	}
+	add_parent_to_menu(g_menu, icolor, selicolor, selrcolor, selbcolor);
 
 	memset(&info, 0, sizeof(SceIoDirent));
 
@@ -380,18 +391,7 @@ extern u32 fs_dir_to_menu(const char *dir, char *sdir,
 		return 0;
 	}
 
-	win_menuitem_new(&item);
-	STRCPY_S(item.name, "<..>");
-	buffer_copy_string(item.compname, "..");
-	buffer_copy_string(item.shortname, "..");
-	item.data = (void *) fs_filetype_dir;
-	item.width = 4;
-	item.selected = false;
-	item.icolor = icolor;
-	item.selicolor = selicolor;
-	item.selrcolor = selrcolor;
-	item.selbcolor = selbcolor;
-	win_menu_add(g_menu, &item);
+	add_parent_to_menu(g_menu, icolor, selicolor, selrcolor, selbcolor);
 
 	for (i = 0; i < count; i++) {
 		win_menuitem_new(&item);
@@ -491,18 +491,7 @@ extern u32 fs_zip_to_menu(const char *zipfile,
 		return 0;
 	}
 
-	win_menuitem_new(&item);
-	STRCPY_S(item.name, "<..>");
-	buffer_copy_string(item.compname, "..");
-	buffer_copy_string(item.shortname, "..");
-	item.data = (void *) fs_filetype_dir;
-	item.width = 4;
-	item.selected = false;
-	item.icolor = icolor;
-	item.selicolor = selicolor;
-	item.selrcolor = selrcolor;
-	item.selbcolor = selbcolor;
-	win_menu_add(g_menu, &item);
+	add_parent_to_menu(g_menu, icolor, selicolor, selrcolor, selbcolor);
 
 	if (unzGoToFirstFile(unzf) != UNZ_OK) {
 		unzClose(unzf);
@@ -589,19 +578,7 @@ extern u32 fs_rar_to_menu(const char *rarfile,
 		return 0;
 	}
 
-	win_menuitem_new(&item);
-	STRCPY_S(item.name, "<..>");
-	buffer_copy_string(item.compname, "..");
-	buffer_copy_string(item.shortname, "..");
-	item.data = (void *) fs_filetype_dir;
-	item.width = 4;
-	item.selected = false;
-	item.selected = false;
-	item.icolor = icolor;
-	item.selicolor = selicolor;
-	item.selrcolor = selrcolor;
-	item.selbcolor = selbcolor;
-	win_menu_add(g_menu, &item);
+	add_parent_to_menu(g_menu, icolor, selicolor, selrcolor, selbcolor);
 
 	do {
 		char t[20];
@@ -663,8 +640,6 @@ extern u32 fs_rar_to_menu(const char *rarfile,
 
 u32 fs_empty_dir(u32 icolor, u32 selicolor, u32 selrcolor, u32 selbcolor)
 {
-	t_win_menuitem item;
-
 	if(g_menu != NULL) {
 		win_menu_destroy(g_menu);
 		g_menu = NULL;
@@ -676,18 +651,7 @@ u32 fs_empty_dir(u32 icolor, u32 selicolor, u32 selrcolor, u32 selbcolor)
 		return 0;
 	}
 	
-	win_menuitem_new(&item);
-	STRCPY_S(item.name, "<..>");
-	buffer_copy_string(item.compname, "..");
-	buffer_copy_string(item.shortname, "..");
-	item.data = (void *) fs_filetype_dir;
-	item.width = 4;
-	item.selected = false;
-	item.icolor = icolor;
-	item.selicolor = selicolor;
-	item.selrcolor = selrcolor;
-	item.selbcolor = selbcolor;
-	win_menu_add(g_menu, &item);
+	add_parent_to_menu(g_menu, icolor, selicolor, selrcolor, selbcolor);
 
 	return g_menu->size;
 }
@@ -749,7 +713,6 @@ extern u32 fs_chm_to_menu(const char *chmfile,
 							u32 selbcolor)
 {
 	int fid;
-	t_win_menuitem item;
 	struct chmFile *chm;
 	t_fs_chm_enum cenum;
 
@@ -772,18 +735,7 @@ extern u32 fs_chm_to_menu(const char *chmfile,
 		return 0;
 	}
 
-	win_menuitem_new(&item);
-	STRCPY_S(item.name, "<..>");
-	buffer_copy_string(item.compname, "..");
-	buffer_copy_string(item.shortname, "..");
-	item.data = (void *) fs_filetype_dir;
-	item.width = 4;
-	item.selected = false;
-	item.icolor = icolor;
-	item.selicolor = selicolor;
-	item.selrcolor = selrcolor;
-	item.selbcolor = selbcolor;
-	win_menu_add(g_menu, &item);
+	add_parent_to_menu(g_menu, icolor, selicolor, selrcolor, selbcolor);
 
 	cenum.icolor = icolor;
 	cenum.selicolor = selicolor;
@@ -819,18 +771,7 @@ extern u32 fs_umd_to_menu(const char *umdfile,
 
 	fid = freq_enter_hotzone();
 
-	win_menuitem_new(&item);
-	STRCPY_S(item.name, "<..>");
-	buffer_copy_string(item.compname, "..");
-	buffer_copy_string(item.shortname, "..");
-	item.data = (void *) fs_filetype_dir;
-	item.width = 4;
-	item.selected = false;
-	item.icolor = icolor;
-	item.selicolor = selicolor;
-	item.selrcolor = selrcolor;
-	item.selbcolor = selbcolor;
-	win_menu_add(g_menu, &item);
+	add_parent_to_menu(g_menu, icolor, selicolor, selrcolor, selbcolor);
 
 	do {
 		size_t stlen = 0;
