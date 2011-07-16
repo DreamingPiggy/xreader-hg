@@ -150,7 +150,7 @@ static int cache_wait_avail()
 
 static int cache_wait_loaded()
 {
-	cache_image_t *img = &ccacher.caches[0];
+	cache_image_t *img = ccacher.head->next;
 	u32 key;
 
 	while (img->status == CACHE_INIT) {
@@ -179,7 +179,7 @@ static int cache_get_image(u32 selidx)
 		return -1;
 	}
 
-	img = &ccacher.caches[0];
+	img = ccacher.head->next;
 
 	DBG_ASSERT(d, "CLIENT: img->selidx == selidx", img->selidx == selidx);
 

@@ -42,6 +42,7 @@ typedef struct _cache_image_t
 	u32 selidx;
 	u32 filesize;
 	buffer_array *exif_array;
+	struct _cache_image_t *next;
 } cache_image_t;
 
 typedef struct _cacher_context
@@ -52,7 +53,7 @@ typedef struct _cacher_context
 	u32 memory_usage;
 	bool selidx_moved;
 
-	cache_image_t *caches;
+	cache_image_t *head, *tail;
 	size_t caches_cap, caches_size;
 } cacher_context;
 
@@ -71,6 +72,6 @@ void cache_reload_all(void);
 
 int image_queue_test(void);
 
-extern volatile cacher_context ccacher;
+extern cacher_context ccacher;
 
 #endif
