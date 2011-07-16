@@ -5500,7 +5500,6 @@ extern void scene_init(void)
 	char fontzipfile[PATH_MAX], efontfile[PATH_MAX], cfontfile[PATH_MAX],
 		conffile[PATH_MAX], locconf[PATH_MAX], bmfile[PATH_MAX];
 	int _fsize;
-//	bool testing = true;
 
 #ifdef DMALLOC
 //	unsigned mark;
@@ -5768,36 +5767,6 @@ extern void scene_init(void)
 	freq_init();
 
 	xreader_scene_inited = true;
-
-#if 0
-	while (testing) {
-		config.path[0] = config.shortpath[0] = '\0';
-
-		fs_list_device(config.path, config.shortpath,
-				config.menutextcolor,
-				config.selicolor,
-				config.menubcolor, config.selbcolor);
-
-		STRCPY_S(config.path, "ms0:/");
-		STRCPY_S(config.shortpath, "ms0:/");
-
-		fs_dir_to_menu(config.path, config.shortpath,
-					   config.menutextcolor, config.selicolor,
-					   config.menubcolor, config.selbcolor,
-					   config.showhidden, config.showunknown);
-
-		STRCPY_S(config.path, "ms0:/TEST.ZIP");
-		STRCPY_S(config.shortpath, "ms0:/TEST.ZIP");
-
-		fs_zip_to_menu(config.shortpath,
-					   config.menutextcolor,
-					   config.selicolor,
-					   config.menubcolor, config.selbcolor);
-
-		sceKernelDelayThread(1000000);
-		debug_malloc();
-	}
-#endif
 
 	scene_filelist();
 }
