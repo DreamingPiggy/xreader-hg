@@ -243,6 +243,7 @@ AC_CONFIG_FILES([Makefile
                  cooleyesBridge/Makefile
                  src/Makefile
                  xrPrx/Makefile
+                 audioplugin/dummy/Makefile
                  xr_rdriver/Makefile
                  testsuite/Makefile
                  conf_cmdline.h
