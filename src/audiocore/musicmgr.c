@@ -841,12 +841,20 @@ static int music_thread(SceSize arg, void *argp)
 
 int music_init(void)
 {
-	pspTime tm;
+	u32 seed;
 
 	cache_init();
 
-	sceRtcGetCurrentClockLocalTime(&tm);
-	srand(tm.microseconds);
+	seed = sctrlKernelRand();
+
+	if(seed == 0x8002013A) {
+		pspTime tm;
+		
+		sceRtcGetCurrentClockLocalTime(&tm);
+		seed = tm.microseconds;
+	}
+
+	srand(seed);
 	xr_lock_init(&music_l);
 
 #ifdef ENABLE_MPC
