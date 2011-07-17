@@ -29,7 +29,6 @@
 #include "musicdrv.h"
 #include "mp3info.h"
 #include "common/utils.h"
-#include "crc16.h"
 #include "charsets.h"
 #include "dbg.h"
 #include "config.h"
@@ -355,26 +354,6 @@ static int check_bc_combination(int bitrate, uint8_t channel_mode)
 	return -1;
 }
 
-static int calc_crc(int fd, size_t nbytes, uint16_t * crc_value)
-{
-	uint8_t *bytes;
-
-	bytes = malloc(nbytes);
-
-	if (bytes == NULL)
-		return -1;
-
-	if (sceIoRead(fd, bytes, nbytes) != nbytes) {
-		free(bytes);
-		return -1;
-	}
-
-	crc16(bytes, nbytes, crc_value);
-	free(bytes);
-
-	return 0;
-}
-
 static bool check_next_frame_header(mp3_reader_data * data, uint8_t * buf,
 									uint32_t bufpos, uint32_t bufsize,
 									uint32_t this_frame, uint32_t next_frame)
@@ -421,7 +400,6 @@ static inline int parse_frame(uint8_t * buf, size_t bufpos, size_t bufsize,
 	uint8_t *h = buf + bufpos;
 	uint8_t mp3_version, mp3_level;
 	uint8_t layer;
-	uint8_t crc;
 	uint8_t bitrate_bit;
 	uint8_t pad;
 	uint8_t channel_mode;
@@ -431,7 +409,6 @@ static inline int parse_frame(uint8_t * buf, size_t bufpos, size_t bufsize,
 	uint16_t mp3_samples_per_frames[9] =
 		{ 384, 1152, 1152, 384, 1152, 576, 384, 1152, 576 };
 	uint16_t spf;
-	bool have_crc = false;
 
 	if (h[0] != 0xff)
 		return -1;
@@ -466,7 +443,6 @@ static inline int parse_frame(uint8_t * buf, size_t bufpos, size_t bufsize,
 	if (layer < 1 || layer > 3)
 		return -1;
 
-	crc = !(h[1] & 1);
 	bitrate_bit = (h[2] >> 4) & 0xf;
 	bitrate = _bitrate[mp3_version * 3 + mp3_level][bitrate_bit];
 
@@ -484,65 +460,6 @@ static inline int parse_frame(uint8_t * buf, size_t bufpos, size_t bufsize,
 
 	if (layer == 2 && check_bc_combination(bitrate, channel_mode) != 0)
 		return -1;
-
-	if (info->check_crc && crc) {
-		uint16_t crc_value, crc_frame;
-		offset_t offset;
-
-		crc_value = 0xffff;
-		offset = sceIoLseek(data->fd, 0, PSP_SEEK_CUR);
-		sceIoLseek(data->fd, start, PSP_SEEK_SET);
-		crc16((uint8_t *) & h[2], 2, &crc_value);
-		sceIoLseek(data->fd, 4, PSP_SEEK_CUR);
-
-		if (sceIoRead(data->fd, &crc_frame, sizeof(crc_frame)) !=
-			sizeof(crc_frame)) {
-			sceIoLseek(data->fd, offset, PSP_SEEK_SET);
-			return -1;
-		}
-
-		crc_frame = crc_frame >> 8 | crc_frame << 8;
-
-		switch (layer) {
-			case 1:
-				if (channel_mode == 3) {
-					if (calc_crc(data->fd, 128 / 8, &crc_value) < 0) {
-						goto failed;
-					}
-				} else {
-					if (calc_crc(data->fd, 256 / 8, &crc_value) < 0) {
-						goto failed;
-					}
-				}
-				break;
-			case 2:
-				// TODO
-				goto failed;
-				break;
-			case 3:
-				if (channel_mode == 3) {
-					if (calc_crc(data->fd, 136 / 8, &crc_value) < 0) {
-						goto failed;
-					}
-				} else {
-					if (calc_crc(data->fd, 256 / 8, &crc_value) < 0) {
-						goto failed;
-					}
-				}
-				break;
-		}
-
-		if (crc_value != crc_frame) {
-			dbg_printf(d, "Checking crc failed: 0x%04x 0x%04x", crc_value,
-					   crc_frame);
-		  failed:
-			sceIoLseek(data->fd, offset, PSP_SEEK_SET);
-			return -1;
-		}
-
-		sceIoLseek(data->fd, offset, PSP_SEEK_SET);
-		have_crc = true;
-	}
 
 	if (*lv == 0)
 		*lv = layer;
@@ -572,8 +489,6 @@ static inline int parse_frame(uint8_t * buf, size_t bufpos, size_t bufsize,
 	if (info->spf == 0) {
 		info->spf = spf;
 	}
-
-	info->have_crc = have_crc;
 
 	return framelenbyte;
 }

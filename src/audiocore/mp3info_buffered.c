@@ -29,7 +29,6 @@
 #include "musicdrv.h"
 #include "mp3info.h"
 #include "common/utils.h"
-#include "crc16.h"
 #include "charsets.h"
 #include "dbg.h"
 #include "config.h"
@@ -93,34 +92,12 @@ static int check_bc_combination(int bitrate, uint8_t channel_mode)
 	return -1;
 }
 
-static int calc_crc(buffered_reader_t * reader, size_t nbytes,
-					uint16_t * crc_value)
-{
-	uint8_t *bytes;
-
-	bytes = malloc(nbytes);
-
-	if (bytes == NULL)
-		return -1;
-
-	if (buffered_reader_read(reader, bytes, nbytes) != nbytes) {
-		free(bytes);
-		return -1;
-	}
-
-	crc16(bytes, nbytes, crc_value);
-	free(bytes);
-
-	return 0;
-}
-
 static inline int parse_frame(uint8_t * h, int *lv, int *br,
 							  struct MP3Info *info, mp3_reader_data * data,
 							  offset_t start)
 {
 	uint8_t mp3_version, mp3_level;
 	uint8_t layer;
-	uint8_t crc;
 	uint8_t bitrate_bit;
 	uint8_t pad;
 	uint8_t channel_mode;
@@ -159,7 +136,6 @@ static inline int parse_frame(uint8_t * h, int *lv, int *br,
 	if (layer < 1 || layer > 3)
 		return -1;
 
-	crc = !(h[1] & 1);
 	bitrate_bit = (h[2] >> 4) & 0xf;
 	bitrate = _bitrate[mp3_version * 3 + mp3_level][bitrate_bit];
 
@@ -177,65 +153,6 @@ static inline int parse_frame(uint8_t * h, int *lv, int *br,
 
 	if (layer == 2 && check_bc_combination(bitrate, channel_mode) != 0)
 		return -1;
-
-	if (info->check_crc && crc) {
-		uint16_t crc_value, crc_frame;
-		offset_t offset;
-
-		crc_value = 0xffff;
-		offset = buffered_reader_position(data->r);
-		buffered_reader_seek(data->r, start);
-		crc16((uint8_t *) & h[2], 2, &crc_value);
-		buffered_reader_seek(data->r, 4 + buffered_reader_position(data->r));
-
-		if (buffered_reader_read(data->r, &crc_frame, sizeof(crc_frame)) !=
-			sizeof(crc_frame)) {
-			buffered_reader_seek(data->r, offset);
-			return -1;
-		}
-
-		crc_frame = crc_frame >> 8 | crc_frame << 8;
-
-		switch (layer) {
-			case 1:
-				if (channel_mode == 3) {
-					if (calc_crc(data->r, 128 / 8, &crc_value) < 0) {
-						goto failed;
-					}
-				} else {
-					if (calc_crc(data->r, 256 / 8, &crc_value) < 0) {
-						goto failed;
-					}
-				}
-				break;
-			case 2:
-				// TODO
-				goto failed;
-				break;
-			case 3:
-				if (channel_mode == 3) {
-					if (calc_crc(data->r, 136 / 8, &crc_value) < 0) {
-						goto failed;
-					}
-				} else {
-					if (calc_crc(data->r, 256 / 8, &crc_value) < 0) {
-						goto failed;
-					}
-				}
-				break;
-		}
-
-		if (crc_value != crc_frame) {
-			dbg_printf(d, "Checking crc failed: 0x%04x 0x%04x", crc_value,
-					   crc_frame);
-		  failed:
-			buffered_reader_seek(data->r, offset);
-			return -1;
-		}
-
-		buffered_reader_seek(data->r, offset);
-		info->have_crc = true;
-	}
 
 	if (*lv == 0)
 		*lv = layer;
