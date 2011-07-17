@@ -159,7 +159,7 @@ bool load_passwords(void)
 
 	STRCPY_S(path, scene_appdir());
 	STRCAT_S(path, "password.lst");
-	rc4_prepare_key(CRYPT_KEY, sizeof(CRYPT_KEY) - 1, &key);
+	rc4_prepare_key((u8*)CRYPT_KEY, sizeof(CRYPT_KEY) - 1, &key);
 
 	fd = sceIoOpen(path, PSP_O_RDONLY, 0);
 
@@ -213,7 +213,7 @@ bool save_passwords(void)
 	STRCPY_S(path, scene_appdir());
 	STRCAT_S(path, "password.lst");
 
-	rc4_prepare_key(CRYPT_KEY, sizeof(CRYPT_KEY) - 1, &key);
+	rc4_prepare_key((u8*)CRYPT_KEY, sizeof(CRYPT_KEY) - 1, &key);
 	
 	fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
 

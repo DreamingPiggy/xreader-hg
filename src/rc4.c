@@ -1,4 +1,6 @@
 #include <psptypes.h>
+#include <stdio.h>
+#include "rc4.h"
 
 static void rc4_swap(u8 *a, u8 *b)
 {
