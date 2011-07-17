@@ -457,15 +457,11 @@ static int mp3_seek_seconds(double npt)
 static int handle_seek(void)
 {
 	if (g_status == ST_FFORWARD) {
-		generic_lock();
-		g_status = ST_PLAYING;
-		generic_unlock();
+		generic_set_status(ST_PLAYING);
 		generic_set_playback(true);
 		mp3_seek_seconds(g_play_time + g_seek_seconds);
 	} else if (g_status == ST_FBACKWARD) {
-		generic_lock();
-		g_status = ST_PLAYING;
-		generic_unlock();
+		generic_set_status(ST_PLAYING);
 		generic_set_playback(true);
 		mp3_seek_seconds(g_play_time - g_seek_seconds);
 	}
@@ -750,9 +746,7 @@ static int __init(void)
 {
 	generic_init();
 
-	generic_lock();
-	g_status = ST_UNKNOWN;
-	generic_unlock();
+	generic_set_status(ST_UNKNOWN);
 
 	memset(&g_inst_br, 0, sizeof(g_inst_br));
 	memset(g_input_buff, 0, sizeof(g_input_buff));
@@ -851,7 +845,7 @@ static int mp3_load(const char *spath, const char *lpath)
 	__init();
 
 	dbg_printf(d, "%s: loading %s", __func__, spath);
-	g_status = ST_UNKNOWN;
+	generic_set_status(ST_UNKNOWN);
 
 	mp3_data.use_buffer = true;
 
@@ -982,9 +976,7 @@ static int mp3_load(const char *spath, const char *lpath)
 	else
 		xAudioSetChannelCallback(0, mp3_audiocallback, NULL);
 
-	generic_lock();
-	g_status = ST_LOADED;
-	generic_unlock();
+	generic_set_status(ST_LOADED);
 
 	return 0;
 }
@@ -1127,7 +1119,7 @@ static int mp3_end(void)
 
 	xAudioEnd();
 
-	g_status = ST_STOPPED;
+	generic_set_status(ST_STOPPED);
 
 	mad_stream_finish(&stream);
 	mad_synth_finish(&synth);
@@ -1275,7 +1267,7 @@ static int __end(void)
 
 	g_play_time = 0.;
 	generic_lock();
-	g_status = ST_STOPPED;
+	generic_set_status(ST_STOPPED);
 	generic_unlock();
 
 	return 0;

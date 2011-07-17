@@ -357,7 +357,7 @@ static int handle_seek(void)
 					return -1;
 				}
 
-				g_status = ST_PLAYING;
+				generic_set_status(ST_PLAYING);
 
 				generic_unlock();
 				sceKernelDelayThread(100000);
@@ -398,7 +398,7 @@ static int handle_seek(void)
 					return -1;
 				}
 
-				g_status = ST_PLAYING;
+				generic_set_status(ST_PLAYING);
 
 				generic_unlock();
 				sceKernelDelayThread(100000);
@@ -516,9 +516,7 @@ static int flac_audiocallback(void *buf, unsigned int reqn, void *pdata)
 static int __init(void)
 {
 	generic_init();
-	generic_lock();
-	g_status = ST_UNKNOWN;
-	generic_unlock();
+	generic_set_status(ST_UNKNOWN);
 
 	g_buff_frame_size = g_buff_frame_start = 0;
 	g_seek_seconds = 0;
@@ -662,9 +660,7 @@ static int flac_load(const char *spath, const char *lpath)
 		return -1;
 	}
 
-	generic_lock();
-	g_status = ST_LOADED;
-	generic_unlock();
+	generic_set_status(ST_LOADED);
 
 	dbg_printf(d,
 			   "[%d channel(s), %d Hz, %.2f kbps, %02d:%02d, encoder: %s, Ratio: %.3f]",
@@ -694,9 +690,7 @@ static int __end(void)
 {
 	xAudioEndPre();
 
-	generic_lock();
-	g_status = ST_STOPPED;
-	generic_unlock();
+	generic_set_status(ST_STOPPED);
 
 	g_play_time = 0.;
 
@@ -721,7 +715,7 @@ static int flac_end(void)
 		g_buff = NULL;
 	}
 
-	g_status = ST_STOPPED;
+	generic_set_status(ST_STOPPED);
 
 	if (g_decoder) {
 		FLAC__stream_decoder_delete(g_decoder);

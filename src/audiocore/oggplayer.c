@@ -190,7 +190,7 @@ static int ogg_audiocallback(void *buf, unsigned int reqn, void *pdata)
 				return -1;
 			}
 			generic_lock();
-			g_status = ST_PLAYING;
+			generic_set_status(ST_PLAYING);
 			generic_set_playback(true);
 			generic_unlock();
 			free_bitrate(&g_inst_br);
@@ -202,7 +202,7 @@ static int ogg_audiocallback(void *buf, unsigned int reqn, void *pdata)
 				g_play_time = 0.;
 			}
 			generic_lock();
-			g_status = ST_PLAYING;
+			generic_set_status(ST_PLAYING);
 			generic_set_playback(true);
 			generic_unlock();
 			free_bitrate(&g_inst_br);
@@ -254,9 +254,7 @@ static int __init(void)
 {
 	generic_init();
 
-	generic_lock();
-	g_status = ST_UNKNOWN;
-	generic_unlock();
+	generic_set_status(ST_UNKNOWN);
 
 	g_buff_frame_size = g_buff_frame_start = 0;
 	g_seek_seconds = 0;
@@ -409,9 +407,7 @@ static int ogg_load(const char *spath, const char *lpath)
 
 	xAudioSetChannelCallback(0, ogg_audiocallback, NULL);
 
-	generic_lock();
-	g_status = ST_LOADED;
-	generic_unlock();
+	generic_set_status(ST_LOADED);
 
 	return 0;
 }
@@ -427,9 +423,7 @@ static int __end(void)
 {
 	xAudioEndPre();
 
-	generic_lock();
-	g_status = ST_STOPPED;
-	generic_unlock();
+	generic_set_status(ST_STOPPED);
 	g_play_time = 0.;
 
 	return 0;
@@ -448,7 +442,7 @@ static int ogg_end(void)
 
 	xAudioEnd();
 
-	g_status = ST_STOPPED;
+	generic_set_status(ST_STOPPED);
 
 	if (decoder != NULL) {
 		ov_clear(decoder);

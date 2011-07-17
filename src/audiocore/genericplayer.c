@@ -150,11 +150,23 @@ void generic_set_playback(bool playing)
 	}
 }
 
+int generic_set_status(int status)
+{
+	int prev;
+
+	generic_lock();
+	prev = g_status;
+	g_status = status;
+	generic_unlock();
+
+	return prev;
+}
+
 int generic_play(void)
 {
 	generic_lock();
 	generic_set_playback(true);
-	g_status = ST_PLAYING;
+	generic_set_status(ST_PLAYING);
 	generic_unlock();
 
 	return 0;
@@ -164,7 +176,7 @@ int generic_pause(void)
 {
 	generic_lock();
 	generic_set_playback(false);
-	g_status = ST_PAUSED;
+	generic_set_status(ST_PAUSED);
 	generic_unlock();
 
 	return 0;
@@ -190,9 +202,10 @@ int generic_get_status(void)
 int generic_fforward(int sec)
 {
 	generic_lock();
-	if (g_status == ST_PLAYING || g_status == ST_PAUSED
-		|| g_status == ST_FBACKWARD)
-		g_status = ST_FFORWARD;
+
+	if (g_status == ST_PLAYING || g_status == ST_PAUSED || g_status == ST_FBACKWARD) {
+		generic_set_status(ST_FFORWARD);
+	}
 
 	g_seek_seconds = sec;
 
@@ -214,9 +227,10 @@ int generic_fforward(int sec)
 int generic_fbackward(int sec)
 {
 	generic_lock();
-	if (g_status == ST_PLAYING || g_status == ST_PAUSED
-		|| g_status == ST_FFORWARD)
-		g_status = ST_FBACKWARD;
+
+	if (g_status == ST_PLAYING || g_status == ST_PAUSED || g_status == ST_FFORWARD) {
+		generic_set_status(ST_FBACKWARD);
+	}
 
 	g_seek_seconds = sec;
 
@@ -251,13 +265,13 @@ int generic_init(void)
 int generic_resume(const char *spath, const char *lpath)
 {
 	generic_lock();
-	g_status = g_suspend_status;
+	generic_set_status(g_suspend_status);
 
 	if (g_status == ST_PLAYING)
 		generic_set_playback(true);
 
 	generic_unlock();
-	g_suspend_status = ST_LOADED;
+	generic_set_status(ST_LOADED);
 
 	return 0;
 }
