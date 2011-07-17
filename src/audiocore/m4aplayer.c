@@ -103,9 +103,7 @@ static int __init(void)
 {
 	generic_init();
 
-	generic_lock();
-	g_status = ST_UNKNOWN;
-	generic_unlock();
+	generic_set_status(ST_UNKNOWN);
 
 	g_seek_seconds = 0;
 	g_play_time = 0.;
@@ -135,9 +133,7 @@ static int __end(void)
 	xAudioEndPre();
 
 	g_play_time = 0.;
-	generic_lock();
-	g_status = ST_STOPPED;
-	generic_unlock();
+	generic_set_status(ST_STOPPED);
 
 	return 0;
 }
@@ -209,7 +205,7 @@ static int m4a_audiocallback(void *buf, unsigned int reqn, void *pdata)
 				return -1;
 			}
 			generic_lock();
-			g_status = ST_PLAYING;
+			generic_set_status(ST_PLAYING);
 			generic_set_playback(true);
 			generic_unlock();
 			m4a_seek_seconds(g_play_time);
@@ -219,7 +215,7 @@ static int m4a_audiocallback(void *buf, unsigned int reqn, void *pdata)
 				g_play_time = 0.;
 			}
 			generic_lock();
-			g_status = ST_PLAYING;
+			generic_set_status(ST_PLAYING);
 			generic_set_playback(true);
 			generic_unlock();
 			m4a_seek_seconds(g_play_time);
@@ -547,7 +543,7 @@ static int m4a_end(void)
 
 	xAudioEnd();
 
-	g_status = ST_STOPPED;
+	generic_set_status(ST_STOPPED);
 	generic_end();
 
 	if (mp4file != NULL) {
