@@ -111,8 +111,6 @@ xReader_elf_SOURCES = \
 	unumd.h \
 	ssv.c \
 	ssv.h \
-	crc16.c \
-	crc16.h \
 	main.c \
 	power.c \
 	power.h \

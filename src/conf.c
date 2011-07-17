@@ -299,7 +299,7 @@ static void conf_default(p_conf conf)
 	conf->alc_mode = 0;
 	conf->use_vaudio = false;
 	SPRINTF_S(conf->musicdrv_opts,
-			  "mp3_brute_mode=off mp3_use_me=on mp3_check_crc=off mp3_buffer_size=%d "
+			  "mp3_brute_mode=off mp3_buffer_size=%d "
 			  "wma_buffer_size=%d aac_buffer_size=%d wav_buffer_size=%d wv_buffer_size=%d "
 			  "aa3_buffer_size=%d at3_buffer_size=%d m4a_buffer_size=%d "
 			  "flac_buffer_size=%d",
