@@ -99,6 +99,8 @@ xReader_elf_SOURCES = \
 	m33boot.h \
 	passwdmgr.c \
 	passwdmgr.h \
+	rc4.c \
+	rc4.h \
 	archive.c \
 	archive.h \
 	xrPrx.S \
