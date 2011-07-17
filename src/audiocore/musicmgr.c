@@ -60,6 +60,7 @@
 #include "image_queue.h"
 #include "thread_lock.h"
 #include "freq_lock.h"
+#include "systemctrl.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
