@@ -29,6 +29,7 @@
 #include "scene.h"
 #include "strsafe.h"
 #include "dbg.h"
+#include "rc4.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -41,8 +42,14 @@ static char g_read_buf[LINEBUF] __attribute__((aligned(64)));
 static char *read_ptr = NULL;
 static int read_cnt = 0;
 
+static rc4_key key;
+
+#define CRYPT_KEY "xReader_rc4_default_key"
+
 static int read_char(SceUID fd, char *c)
 {
+	u8 prg;
+
 	if(read_cnt <= 0) {
 		read_cnt = sceIoRead(fd, g_read_buf, LINEBUF);
 
@@ -58,7 +65,8 @@ static int read_char(SceUID fd, char *c)
 	}
 
 	read_cnt--;
-	*c = *read_ptr++;
+	prg = rc4_prga(&key);
+	*c = *read_ptr++ ^ prg;
 
 	return 1;
 }
@@ -151,6 +159,7 @@ bool load_passwords(void)
 
 	STRCPY_S(path, scene_appdir());
 	STRCAT_S(path, "password.lst");
+	rc4_prepare_key(CRYPT_KEY, sizeof(CRYPT_KEY) - 1, &key);
 
 	fd = sceIoOpen(path, PSP_O_RDONLY, 0);
 
@@ -169,6 +178,32 @@ bool load_passwords(void)
 	return true;
 }
 
+static int write_char(SceUID fd, char c)
+{
+	u8 prg;
+
+	prg = rc4_prga(&key);
+	c ^= prg;
+
+	return sceIoWrite(fd, &c, 1);
+}
+
+static int write_chars(SceUID fd, char *ch, size_t n)
+{
+	int ret;
+	size_t i;
+
+	for(i=0; i<n; ++i) {
+		ret = write_char(fd, *ch++);
+
+		if(ret != 1) {
+			return ret;
+		}
+	}
+
+	return n;
+}
+
 bool save_passwords(void)
 {
 	password *pwd;
@@ -177,6 +212,8 @@ bool save_passwords(void)
 
 	STRCPY_S(path, scene_appdir());
 	STRCAT_S(path, "password.lst");
+
+	rc4_prepare_key(CRYPT_KEY, sizeof(CRYPT_KEY) - 1, &key);
 	
 	fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
 
@@ -185,8 +222,8 @@ bool save_passwords(void)
 	}
 
 	for(pwd = g_pwd_head.next; pwd != NULL; pwd = pwd->next) {
-		sceIoWrite(fd, pwd->b->ptr, strlen(pwd->b->ptr));
-		sceIoWrite(fd, "\r\n", sizeof("\r\n")-1);
+		write_chars(fd, pwd->b->ptr, strlen(pwd->b->ptr));
+		write_chars(fd, "\r\n", sizeof("\r\n")-1);
 	}
 	
 	sceIoClose(fd);
