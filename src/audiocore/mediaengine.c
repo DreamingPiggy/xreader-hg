@@ -54,48 +54,61 @@ static bool b_asfparser_prx_loaded = false;
 static SceUID g_modid = -1;
 static SceUID g_modid2 = -1;
 
+static u32 prev = 0;
+
+enum
+{
+	FW_550 = 0x05050010,
+};
+
+static void start_dirty_fix(void)
+{
+	if (psp_fw_version != FW_550) {
+		return;
+	}
+
+	prev = *((unsigned long *) 0x08fc1000);
+}
+
+static void finish_dirty_fix(void)
+{
+	if (psp_fw_version != FW_550) {
+		return;
+	}
+
+	if (prev != *((unsigned long *) 0x08fc1000)) {
+		fprintf(stderr, "%s: 0x08fc1000 changed\n", __func__);
+	}
+
+	*((unsigned long *) 0x08fc1000) = prev;
+}
+
 int load_me_prx(int mode)
 {
 	int ret;
-	unsigned long prev;
 
 	if (mode & VAUDIO) {
-		prev = *((unsigned long *) 0x08fc1000);
+		start_dirty_fix();
 		ret = sceUtilityLoadModule(0x0305);
-
-		if (prev != *((unsigned long *) 0x08fc1000)) {
-			fprintf(stderr, "vaudio: 0x08fc1000 changed\n");
-		}
-
-		*((unsigned long *) 0x08fc1000) = prev;
+		finish_dirty_fix();
 
 		if (ret == 0)
 			b_vaudio_prx_loaded = true;
 	}
 
 	if (mode & AVCODEC) {
-		prev = *((unsigned long *) 0x08fc1000);
+		start_dirty_fix();
 		ret = sceUtilityLoadAvModule(PSP_AV_MODULE_AVCODEC);
-
-		if (prev != *((unsigned long *) 0x08fc1000)) {
-			fprintf(stderr, "avcodec: 0x08fc1000 changed\n");
-		}
-
-		*((unsigned long *) 0x08fc1000) = prev;
+		finish_dirty_fix();
 
 		if (ret == 0)
 			b_avcodec_prx_loaded = true;
 	}
 
 	if (mode & ATRAC3PLUS) {
-		prev = *((unsigned long *) 0x08fc1000);
+		start_dirty_fix();
 		ret = sceUtilityLoadModule(0x0302);
-
-		if (prev != *((unsigned long *) 0x08fc1000)) {
-			fprintf(stderr, "atrac3p: 0x08fc1000 changed\n");
-		}
-
-		*((unsigned long *) 0x08fc1000) = prev;
+		finish_dirty_fix();
 
 		if (ret == 0)
 			b_at3p_prx_loaded = true;
@@ -104,20 +117,14 @@ int load_me_prx(int mode)
 	if (mode & COOLEYEBRIDGE) {
 		char path[PATH_MAX];
 		int status;
-		unsigned long prev;
 
 		SPRINTF_S(path, "%scooleyesBridge.prx", scene_appdir());
 		g_modid = kuKernelLoadModule(path, 0, NULL);
 
 		if (g_modid >= 0) {
-			prev = *((unsigned long *) 0x08fc1000);
+			start_dirty_fix();
 			ret = sceKernelStartModule(g_modid, 0, 0, &status, NULL);
-
-			if (prev != *((unsigned long *) 0x08fc1000)) {
-				fprintf(stderr, "cooleye_bridge: 0x08fc1000 changed\n");
-			}
-
-			*((unsigned long *) 0x08fc1000) = prev;
+			finish_dirty_fix();
 
 			if (ret >= 0)
 				b_cooleye_bridge_prx_loaded = true;
@@ -126,19 +133,13 @@ int load_me_prx(int mode)
 
 	if (mode & ASFPARSER) {
 		int status;
-		unsigned long prev;
 
 		g_modid2 = kuKernelLoadModule("flash0:/kd/libasfparser.prx", 0, NULL);
 
 		if (g_modid2 >= 0) {
-			prev = *((unsigned long *) 0x08fc1000);
+			start_dirty_fix();
 			ret = sceKernelStartModule(g_modid2, 0, 0, &status, NULL);
-
-			if (prev != *((unsigned long *) 0x08fc1000)) {
-				fprintf(stderr, "asfparser: 0x08fc1000 changed\n");
-			}
-
-			*((unsigned long *) 0x08fc1000) = prev;
+			finish_dirty_fix();
 
 			if (ret >= 0)
 				b_asfparser_prx_loaded = true;
