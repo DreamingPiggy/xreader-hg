@@ -45,29 +45,24 @@ int clean_args(int argc, char **argv)
 
 static int append_str(char ch, char **str)
 {
-	if (*str == NULL) {
-		*str = calloc(sizeof(char), 2);
+	size_t slen;
+	char *p;
 
-		if (*str == NULL)
-			return -1;
-
-		(*str)[0] = ch;
-		(*str)[1] = '\0';
+	if(*str == NULL) {
+		slen = 0;
 	} else {
-		size_t slen;
-		char *p;
-
 		slen = strlen(*str);
-		p = realloc(*str, slen + 1 + 1);
-
-		if (p == NULL) {
-			return -1;
-		}
-
-		*str = p;
-		(*str)[slen] = ch;
-		(*str)[slen + 1] = '\0';
 	}
+
+	p = realloc(*str, slen + 1 + 1);
+
+	if (p == NULL) {
+		return -1;
+	}
+
+	*str = p;
+	(*str)[slen] = ch;
+	(*str)[slen + 1] = '\0';
 
 	return 0;
 }
