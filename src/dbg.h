@@ -97,8 +97,7 @@ extern "C"
 	extern int dbg_hexdump(DBG * d, const unsigned char *data, size_t len);
 
 /** 十六进制转储,ASCII版本 */
-	extern int dbg_hexdump_ascii(DBG * d, const unsigned char *data,
-								 size_t len);
+	extern int dbg_hexdump_ascii(DBG * d, const unsigned char *data, size_t len);
 
 /** 设置输出开关 */
 	extern void dbg_switch(DBG * d, short on);
@@ -106,8 +105,7 @@ extern "C"
 	extern int dbg_open_memorylog(DBG * d);
 	extern const char *dbg_get_memorylog(void);
 
-	void dbg_assert(DBG * d, char *info, int test, const char *func,
-					const char *file, int line);
+	void dbg_assert(DBG * d, char *info, int test, const char *func, const char *file, int line);
 #define DBG_ASSERT(d, info, test) dbg_assert(d, info, test, __FUNCTION__, __FILE__, __LINE__)
 
 	enum

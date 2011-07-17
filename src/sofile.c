@@ -93,8 +93,7 @@ static int convert_c_style_string(char *dest, int destsize, char *src)
 								char number[80];
 								int digit;
 
-								strncpy(number,
-										&src[n + 2], endp - &src[n + 2]);
+								strncpy(number, &src[n + 2], endp - &src[n + 2]);
 								number[endp - &src[n + 2]] = '\0';
 								digit = strtol(number, NULL, 16);
 								*p++ = digit;
@@ -108,8 +107,7 @@ static int convert_c_style_string(char *dest, int destsize, char *src)
 								char number[80];
 								int digit;
 
-								strncpy(number,
-										&src[n + 1], endp - &src[n + 1]);
+								strncpy(number, &src[n + 1], endp - &src[n + 1]);
 								number[endp - &src[n + 1]] = '\0';
 								digit = strtol(number, NULL, 8);
 								*p++ = digit;

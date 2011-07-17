@@ -25,25 +25,18 @@
 
 typedef u32 ucs4_t;
 
-extern u32 charsets_utf32_conv(const u8 * ucs, size_t inputlen, u8 * cjk,
-								 size_t outputlen);
-extern u32 charsets_ucs_conv(const u8 * ucs, size_t inputlen, u8 * cjk,
-							   size_t outputlen);
-extern u32 charsets_big5_conv(const u8 * big5, size_t inputlen, u8 * cjk,
-								size_t outputlen);
+extern u32 charsets_utf32_conv(const u8 * ucs, size_t inputlen, u8 * cjk, size_t outputlen);
+extern u32 charsets_ucs_conv(const u8 * ucs, size_t inputlen, u8 * cjk, size_t outputlen);
+extern u32 charsets_big5_conv(const u8 * big5, size_t inputlen, u8 * cjk, size_t outputlen);
 extern void charsets_sjis_conv(const u8 * jis, u8 ** cjk, u32 * newsize);
-extern u32 charsets_utf8_conv(const u8 * ucs, size_t inputlen, u8 * cjk,
-								size_t outputlen);
-extern u32 charsets_utf16_conv(const u8 * ucs, size_t inputlen, u8 * cjk,
-								 size_t outputlen);
-extern u32 charsets_utf16be_conv(const u8 * ucs, size_t inputlen,
-								   u8 * cjk, size_t outputlen);
+extern u32 charsets_utf8_conv(const u8 * ucs, size_t inputlen, u8 * cjk, size_t outputlen);
+extern u32 charsets_utf16_conv(const u8 * ucs, size_t inputlen, u8 * cjk, size_t outputlen);
+extern u32 charsets_utf16be_conv(const u8 * ucs, size_t inputlen, u8 * cjk, size_t outputlen);
 extern int gbk_mbtowc(ucs4_t * pwc, const u8 * cjk, int n);
 extern int gbk_wctomb(u8 * r, ucs4_t wc, int n);
 extern int utf8_mbtowc(ucs4_t * pwc, const u8 * s, int n);
 
 extern u16 charsets_gbk_to_ucs(const u8 * cjk);
-extern u32 charsets_bg5hk2cjk(const u8 * big5hk, size_t inputlen,
-								u8 * cjk, size_t outputlen);
+extern u32 charsets_bg5hk2cjk(const u8 * big5hk, size_t inputlen, u8 * cjk, size_t outputlen);
 
 #endif

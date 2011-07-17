@@ -318,8 +318,7 @@ void add_bitrate(struct instant_bitrate *inst, int frame_bits, double duration)
 
 	if (get_bitrate_second(inst) <= 1.000) {
 		if (inst->frames == NULL || inst->n >= inst->cap) {
-			struct instant_bitrate_frame *p =
-				realloc(inst->frames, (inst->cap + 10) * sizeof(*inst->frames));
+			struct instant_bitrate_frame *p = realloc(inst->frames, (inst->cap + 10) * sizeof(*inst->frames));
 
 			if (p == NULL)
 				return;
@@ -333,8 +332,7 @@ void add_bitrate(struct instant_bitrate *inst, int frame_bits, double duration)
 
 		inst->n++;
 	} else {
-		memmove(&inst->frames[0], &inst->frames[1],
-				sizeof(*inst->frames) * (inst->n - 1));
+		memmove(&inst->frames[0], &inst->frames[1], sizeof(*inst->frames) * (inst->n - 1));
 		inst->frames[inst->n - 1].framebits = frame_bits;
 		inst->frames[inst->n - 1].duration = duration;
 	}

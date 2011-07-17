@@ -37,8 +37,7 @@
 static void ClearScreen(pixel * saveimage)
 {
 	if (saveimage) {
-		disp_newputimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT,
-						 PSP_SCREEN_WIDTH, 0, 0, 0, 0, saveimage, true);
+		disp_newputimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, PSP_SCREEN_WIDTH, 0, 0, 0, 0, saveimage, true);
 	}
 }
 
@@ -50,8 +49,7 @@ int _get_osk_input(char *buf, int size, unsigned short desc[128])
 	SceUtilityOskData data;
 	SceUtilityOskParams osk;
 	pixel *saveimage = (pixel *) memalign(16,
-										  PSP_SCREEN_WIDTH *
-										  PSP_SCREEN_HEIGHT * sizeof(pixel));
+										  PSP_SCREEN_WIDTH * PSP_SCREEN_HEIGHT * sizeof(pixel));
 	bool done = false;
 	int rc;
 	void *buffer;
@@ -70,7 +68,6 @@ int _get_osk_input(char *buf, int size, unsigned short desc[128])
 		saveimage = t;
 	} else
 		return -1;
-
 
 	memset(&data, 0, sizeof(data));
 
@@ -132,8 +129,7 @@ int _get_osk_input(char *buf, int size, unsigned short desc[128])
 
 		for (i = 0; data.outtext[i]; i++) {
 
-			if (data.outtext[i] != '\0' && data.outtext[i] != '\n'
-				&& data.outtext[i] != '\r') {
+			if (data.outtext[i] != '\0' && data.outtext[i] != '\n' && data.outtext[i] != '\r') {
 				tstr[j] = data.outtext[i];
 				j++;
 			}

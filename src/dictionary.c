@@ -262,8 +262,7 @@ int dictionary_set(dictionary * d, char *key, char *val)
 		/* Reached maximum size: reallocate dictionary */
 		d->val = (char **) mem_double(d->val, d->size * sizeof(char *));
 		d->key = (char **) mem_double(d->key, d->size * sizeof(char *));
-		d->hash =
-			(unsigned int *) mem_double(d->hash, d->size * sizeof(unsigned));
+		d->hash = (unsigned int *) mem_double(d->hash, d->size * sizeof(unsigned));
 		if ((d->val == NULL) || (d->key == NULL) || (d->hash == NULL)) {
 			/* Cannot grow dictionary */
 			return -1;
@@ -359,8 +358,7 @@ void dictionary_dump(dictionary * d, FILE * out)
 	}
 	for (i = 0; i < d->size; i++) {
 		if (d->key[i]) {
-			fprintf(out, "%20s\t[%s]\n",
-					d->key[i], d->val[i] ? d->val[i] : "UNDEF");
+			fprintf(out, "%20s\t[%s]\n", d->key[i], d->val[i] ? d->val[i] : "UNDEF");
 		}
 	}
 	return;

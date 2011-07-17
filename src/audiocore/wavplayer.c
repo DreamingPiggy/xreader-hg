@@ -83,8 +83,7 @@ static uint32_t g_wav_data_offset = 0;
  * @param frames 复制帧数
  * @param channels 声道数
  */
-static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames,
-						   int channels)
+static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames, int channels)
 {
 	int n;
 	signed short *p = (signed short *) buf;
@@ -108,16 +107,9 @@ static int wav_seek_seconds(double seconds)
 	int ret;
 
 	if (data.use_buffer) {
-		ret = buffered_reader_seek(data.r,
-								   g_wav_data_offset +
-								   (uint32_t) (seconds * g_info.sample_freq) *
-								   g_wav_byte_per_frame);
+		ret = buffered_reader_seek(data.r, g_wav_data_offset + (uint32_t) (seconds * g_info.sample_freq) * g_wav_byte_per_frame);
 	} else {
-		ret =
-			sceIoLseek(data.fd,
-					  g_wav_data_offset +
-					  (uint32_t) (seconds * g_info.sample_freq) *
-					  g_wav_byte_per_frame, SEEK_SET);
+		ret = sceIoLseek(data.fd, g_wav_data_offset + (uint32_t) (seconds * g_info.sample_freq) * g_wav_byte_per_frame, SEEK_SET);
 	}
 
 	if (ret >= 0) {
@@ -182,18 +174,14 @@ static int wav_audiocallback(void *buf, unsigned int reqn, void *pdata)
 		avail_frame = g_buff_frame_size - g_buff_frame_start;
 
 		if (avail_frame >= snd_buf_frame_size) {
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * g_info.channels],
-						   snd_buf_frame_size, g_info.channels);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * g_info.channels], snd_buf_frame_size, g_info.channels);
 			g_buff_frame_start += snd_buf_frame_size;
 			audio_buf += snd_buf_frame_size * 2;
 			incr = (double) (snd_buf_frame_size) / g_info.sample_freq;
 			g_play_time += incr;
 			snd_buf_frame_size = 0;
 		} else {
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * g_info.channels],
-						   avail_frame, g_info.channels);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * g_info.channels], avail_frame, g_info.channels);
 			snd_buf_frame_size -= avail_frame;
 			audio_buf += avail_frame * 2;
 
@@ -203,13 +191,9 @@ static int wav_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			}
 
 			if (data.use_buffer) {
-				ret =
-					buffered_reader_read(data.r, g_buff,
-										 WAVE_BUFFER_SIZE * sizeof(*g_buff));
+				ret = buffered_reader_read(data.r, g_buff, WAVE_BUFFER_SIZE * sizeof(*g_buff));
 			} else {
-				ret =
-					sceIoRead(data.fd, g_buff,
-							 WAVE_BUFFER_SIZE * sizeof(*g_buff));
+				ret = sceIoRead(data.fd, g_buff, WAVE_BUFFER_SIZE * sizeof(*g_buff));
 			}
 
 			if (ret <= 0) {
@@ -413,8 +397,7 @@ static int wav_load(const char *spath, const char *lpath)
 		__end();
 		return -1;
 	}
-	if (g_wav_byte_per_frame == 0 || g_info.sample_freq == 0
-		|| g_info.channels == 0) {
+	if (g_wav_byte_per_frame == 0 || g_info.sample_freq == 0 || g_info.channels == 0) {
 		__end();
 		return -1;
 	}
@@ -437,8 +420,7 @@ static int wav_load(const char *spath, const char *lpath)
 	}
 
 	g_info.samples = temp / g_wav_byte_per_frame;
-	g_info.duration =
-		(double) (temp) / g_wav_byte_per_frame / g_info.sample_freq;
+	g_info.duration = (double) (temp) / g_wav_byte_per_frame / g_info.sample_freq;
 
 	generic_readtag(&g_info, spath);
 
@@ -630,10 +612,9 @@ static int wav_set_opt(const char *unused, const char *values)
 		g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE / 2;
 	else
 		g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE;
-	
+
 	for (i = 0; i < argc; ++i) {
-		if (!strncasecmp
-			(argv[i], "wav_buffer_size", sizeof("wav_buffer_size") - 1)) {
+		if (!strncasecmp(argv[i], "wav_buffer_size", sizeof("wav_buffer_size") - 1)) {
 			const char *p = argv[i];
 
 			if ((p = strrchr(p, '=')) != NULL) {

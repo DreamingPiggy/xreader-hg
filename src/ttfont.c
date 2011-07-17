@@ -60,8 +60,7 @@ static struct psp_mutex_t ttf_l;
  * @return 描述TTF的指针
  * - NULL 失败
  */
-static p_ttf ttf_open_file(const char *ttfpath, int pixelSize,
-						   const char *ttfName)
+static p_ttf ttf_open_file(const char *ttfpath, int pixelSize, const char *ttfName)
 {
 	int i;
 	p_ttf ttf;
@@ -112,8 +111,7 @@ static p_ttf ttf_open_file(const char *ttfpath, int pixelSize,
  *
  * @return
  */
-static p_ttf ttf_open_file_to_memory(const char *filename, int size,
-									 const char *ttfname)
+static p_ttf ttf_open_file_to_memory(const char *filename, int size, const char *ttfname)
 {
 	p_ttf ttf;
 	u8 *buf;
@@ -171,8 +169,7 @@ static void update_fontconfig(p_ttf ttf, int pixelSize)
 	}
 }
 
-extern p_ttf ttf_open(const char *filename, int size, bool load2mem,
-					  bool cjkmode)
+extern p_ttf ttf_open(const char *filename, int size, bool load2mem, bool cjkmode)
 {
 	p_ttf ttf;
 
@@ -193,8 +190,7 @@ extern p_ttf ttf_open(const char *filename, int size, bool load2mem,
 	return ttf;
 }
 
-extern p_ttf ttf_open_buffer(void *ttfBuf, size_t ttfLength, int pixelSize,
-							 const char *ttfName, bool cjkmode)
+extern p_ttf ttf_open_buffer(void *ttfBuf, size_t ttfLength, int pixelSize, const char *ttfName, bool cjkmode)
 {
 	int i;
 	p_ttf ttf;
@@ -217,8 +213,7 @@ extern p_ttf ttf_open_buffer(void *ttfBuf, size_t ttfLength, int pixelSize,
 		return NULL;
 	}
 
-	if (FT_New_Memory_Face
-		(ttf->library, ttf->fileBuffer, ttf->fileSize, 0, &ttf->face)
+	if (FT_New_Memory_Face(ttf->library, ttf->fileBuffer, ttf->fileSize, 0, &ttf->face)
 		!= 0) {
 		FT_Done_FreeType(ttf->library);
 		free(ttf);
@@ -319,9 +314,7 @@ extern bool ttf_set_pixel_size(p_ttf ttf, int size)
  * @param xadvance
  * @param yadvance
  */
-static void sbitCacheAdd(p_ttf ttf, unsigned long ucsCode, int glyphIndex,
-						 FT_Bitmap * bitmap, int left, int top, int xadvance,
-						 int yadvance)
+static void sbitCacheAdd(p_ttf ttf, unsigned long ucsCode, int glyphIndex, FT_Bitmap * bitmap, int left, int top, int xadvance, int yadvance)
 {
 	int addIndex = 0;
 	SBit_HashItem *item;
@@ -385,8 +378,7 @@ static SBit_HashItem *sbitCacheFind(p_ttf ttf, unsigned long ucsCode)
 		if ((ttf->sbitHashRoot[i].ucs_code == ucsCode) &&
 			(ttf->sbitHashRoot[i].size == ttf->pixelSize) &&
 			(ttf->sbitHashRoot[i].anti_alias == ttf->config.antialias) &&
-			(ttf->sbitHashRoot[i].cleartype == ttf->config.cleartype) &&
-			(ttf->sbitHashRoot[i].embolden == ttf->config.embolden)
+			(ttf->sbitHashRoot[i].cleartype == ttf->config.cleartype) && (ttf->sbitHashRoot[i].embolden == ttf->config.embolden)
 			)
 			return (&ttf->sbitHashRoot[i]);
 	}
@@ -453,9 +445,7 @@ static inline void MakeAlpha(u8 * wpSrc, u8 * wpDes, u8 wAlpha)
  * @param scr_height 绘图区最大高度
  * @param color 颜色
  */
-static void _drawBitmap_horz(u8 * buffer, int format, int width, int height,
-							 int pitch, FT_Int x, FT_Int y,
-							 int scr_width, int scr_height, pixel color)
+static void _drawBitmap_horz(u8 * buffer, int format, int width, int height, int pitch, FT_Int x, FT_Int y, int scr_width, int scr_height, pixel color)
 {
 	FT_Int i, j;
 	pixel pix, grey;
@@ -469,8 +459,7 @@ static void _drawBitmap_horz(u8 * buffer, int format, int width, int height,
 	if (format == FT_PIXEL_MODE_MONO) {
 		for (j = 0; j < height; j++)
 			for (i = 0; i < width; i++) {
-				if (i + x < 0 || i + x >= scr_width || j + y < 0
-					|| j + y >= scr_height)
+				if (i + x < 0 || i + x >= scr_width || j + y < 0 || j + y >= scr_height)
 					continue;
 				if (buffer[j * pitch + i / 8] & (0x80 >> (i % 8)))
 					*(pixel *) disp_get_vaddr((i + x), (j + y)) = (color);
@@ -478,18 +467,12 @@ static void _drawBitmap_horz(u8 * buffer, int format, int width, int height,
 	} else if (format == FT_PIXEL_MODE_GRAY) {
 		for (j = 0; j < height; j++)
 			for (i = 0; i < width; i++) {
-				if (i + x < 0 || i + x >= scr_width || j + y < 0
-					|| j + y >= scr_height)
+				if (i + x < 0 || i + x >= scr_width || j + y < 0 || j + y >= scr_height)
 					continue;
 				grey = buffer[j * pitch + i];
 
 				if (grey) {
-					pix =
-						disp_grayscale(*disp_get_vaddr
-									   ((i + x), (j + y)),
-									   RGB_R(color),
-									   RGB_G(color),
-									   RGB_B(color), grey * 100 / 255);
+					pix = disp_grayscale(*disp_get_vaddr((i + x), (j + y)), RGB_R(color), RGB_G(color), RGB_B(color), grey * 100 / 255);
 					*(pixel *) disp_get_vaddr((i + x), (j + y)) = (pix);
 				}
 			}
@@ -498,8 +481,7 @@ static void _drawBitmap_horz(u8 * buffer, int format, int width, int height,
 			for (i = 0; i < width / 3; i++) {
 				pixel origcolor;
 
-				if (i + x < 0 || i + x >= scr_width || j + y < 0
-					|| j + y >= scr_height)
+				if (i + x < 0 || i + x >= scr_width || j + y < 0 || j + y >= scr_height)
 					continue;
 				// RGB or BGR ?
 				origcolor = *disp_get_vaddr((i + x), (j + y));
@@ -527,8 +509,7 @@ static void _drawBitmap_horz(u8 * buffer, int format, int width, int height,
 			for (i = 0; i < width; i++) {
 				pixel origcolor;
 
-				if (i + x < 0 || i + x >= scr_width || j + y < 0
-					|| j + y >= scr_height)
+				if (i + x < 0 || i + x >= scr_width || j + y < 0 || j + y >= scr_height)
 					continue;
 				// RGB or BGR ?
 				origcolor = *disp_get_vaddr((i + x), (j + y));
@@ -566,11 +547,9 @@ static void _drawBitmap_horz(u8 * buffer, int format, int width, int height,
  * @param height 最大高度
  * @param color 颜色
  */
-static void drawCachedBitmap_horz(Cache_Bitmap * sbt, FT_Int x, FT_Int y,
-								  int width, int height, pixel color)
+static void drawCachedBitmap_horz(Cache_Bitmap * sbt, FT_Int x, FT_Int y, int width, int height, pixel color)
 {
-	_drawBitmap_horz(sbt->buffer, sbt->format, sbt->width, sbt->height,
-					 sbt->pitch, x, y, width, height, color);
+	_drawBitmap_horz(sbt->buffer, sbt->format, sbt->width, sbt->height, sbt->pitch, x, y, width, height, color);
 }
 
 /** 
@@ -585,14 +564,12 @@ static void drawCachedBitmap_horz(Cache_Bitmap * sbt, FT_Int x, FT_Int y,
  * @param height 最大高度
  * @param color 颜色
  */
-static void drawBitmap_horz(FT_Bitmap * bitmap, FT_Int x, FT_Int y,
-							int width, int height, pixel color)
+static void drawBitmap_horz(FT_Bitmap * bitmap, FT_Int x, FT_Int y, int width, int height, pixel color)
 {
 	if (!bitmap->buffer)
 		return;
 
-	_drawBitmap_horz(bitmap->buffer, bitmap->pixel_mode, bitmap->width,
-					 bitmap->rows, bitmap->pitch, x, y, width, height, color);
+	_drawBitmap_horz(bitmap->buffer, bitmap->pixel_mode, bitmap->width, bitmap->rows, bitmap->pitch, x, y, width, height, color);
 }
 
 static FT_Int32 get_fontconfig_flag(p_ttf ttf, bool is_vertical)
@@ -651,8 +628,7 @@ static FT_Error ttf_load_glyph(p_ttf ttf, FT_UInt glyphIndex, bool is_vertical)
 		 * missing the glyph
 		 */
 		if (flag & FT_LOAD_NO_BITMAP) {
-			error =
-				FT_Load_Glyph(ttf->face, glyphIndex, flag & ~FT_LOAD_NO_BITMAP);
+			error = FT_Load_Glyph(ttf->face, glyphIndex, flag & ~FT_LOAD_NO_BITMAP);
 		}
 	}
 
@@ -680,9 +656,7 @@ static FT_Error ttf_load_glyph(p_ttf ttf, FT_UInt glyphIndex, bool is_vertical)
  * @param is_hanzi 是否为汉字
  */
 static void ttf_disp_putnstring_horz(p_ttf ttf, int *x, int *y, pixel color,
-									 const u8 ** str, int *count,
-									 u32 wordspace, int top, int height,
-									 int bot, FT_UInt * previous, bool is_hanzi)
+									 const u8 ** str, int *count, u32 wordspace, int top, int height, int bot, FT_UInt * previous, bool is_hanzi)
 {
 	FT_Error error;
 	FT_GlyphSlot slot;
@@ -699,16 +673,12 @@ static void ttf_disp_putnstring_horz(p_ttf ttf, int *x, int *y, pixel color,
 		if (useKerning && *previous && cache->glyph_index) {
 			FT_Vector delta;
 
-			FT_Get_Kerning(ttf->face, *previous, cache->glyph_index,
-						   FT_KERNING_DEFAULT, &delta);
+			FT_Get_Kerning(ttf->face, *previous, cache->glyph_index, FT_KERNING_DEFAULT, &delta);
 			*x += delta.x >> 6;
 		}
 		drawCachedBitmap_horz(&cache->bitmap, *x + cache->bitmap.left,
 							  bot ? *y + DISP_BOOK_FONTSIZE -
-							  cache->bitmap.top : *y + height -
-							  cache->bitmap.top,
-							  PSP_SCREEN_WIDTH,
-							  bot ? bot : PSP_SCREEN_HEIGHT, color);
+							  cache->bitmap.top : *y + height - cache->bitmap.top, PSP_SCREEN_WIDTH, bot ? bot : PSP_SCREEN_HEIGHT, color);
 		*x += cache->xadvance >> 6;
 		*previous = cache->glyph_index;
 	} else {
@@ -720,8 +690,7 @@ static void ttf_disp_putnstring_horz(p_ttf ttf, int *x, int *y, pixel color,
 		}
 
 		if (ttf->face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
-			error =
-				FT_Render_Glyph(ttf->face->glyph, get_render_mode(ttf, false));
+			error = FT_Render_Glyph(ttf->face->glyph, get_render_mode(ttf, false));
 			if (error) {
 				return;
 			}
@@ -734,21 +703,16 @@ static void ttf_disp_putnstring_horz(p_ttf ttf, int *x, int *y, pixel color,
 		if (useKerning && *previous && glyphIndex) {
 			FT_Vector delta;
 
-			FT_Get_Kerning(ttf->face, *previous, glyphIndex,
-						   FT_KERNING_DEFAULT, &delta);
+			FT_Get_Kerning(ttf->face, *previous, glyphIndex, FT_KERNING_DEFAULT, &delta);
 			*x += delta.x >> 6;
 		}
 		drawBitmap_horz(&slot->bitmap, *x + slot->bitmap_left,
 						bot ? *y + DISP_BOOK_FONTSIZE -
-						slot->bitmap_top : *y + height -
-						slot->bitmap_top, PSP_SCREEN_WIDTH,
-						bot ? bot : PSP_SCREEN_HEIGHT, color);
+						slot->bitmap_top : *y + height - slot->bitmap_top, PSP_SCREEN_WIDTH, bot ? bot : PSP_SCREEN_HEIGHT, color);
 		*x += slot->advance.x >> 6;
 		*previous = glyphIndex;
 
-		sbitCacheAdd(ttf, ucs, glyphIndex,
-					 &slot->bitmap, slot->bitmap_left, slot->bitmap_top,
-					 slot->advance.x, slot->advance.y);
+		sbitCacheAdd(ttf, ucs, glyphIndex, &slot->bitmap, slot->bitmap_left, slot->bitmap_top, slot->advance.x, slot->advance.y);
 	}
 	if (is_hanzi) {
 		(*str) += 2;
@@ -761,8 +725,7 @@ static void ttf_disp_putnstring_horz(p_ttf ttf, int *x, int *y, pixel color,
 	}
 }
 
-extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const u8 * str,
-									 u32 maxpixels, u32 wordspace)
+extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const u8 * str, u32 maxpixels, u32 wordspace)
 {
 	FT_Error error;
 	FT_GlyphSlot slot;
@@ -787,9 +750,7 @@ extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const u8 * str,
 				if (useKerning && cprevious && cache->glyph_index) {
 					FT_Vector delta;
 
-					FT_Get_Kerning(cttf->face, cprevious,
-								   cache->glyph_index,
-								   FT_KERNING_DEFAULT, &delta);
+					FT_Get_Kerning(cttf->face, cprevious, cache->glyph_index, FT_KERNING_DEFAULT, &delta);
 					x += delta.x >> 6;
 					if (x > maxpixels)
 						break;
@@ -807,9 +768,7 @@ extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const u8 * str,
 				}
 
 				if (cttf->face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
-					error =
-						FT_Render_Glyph(cttf->face->glyph,
-										get_render_mode(cttf, false));
+					error = FT_Render_Glyph(cttf->face->glyph, get_render_mode(cttf, false));
 
 					if (error) {
 						return count;
@@ -823,8 +782,7 @@ extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const u8 * str,
 				if (useKerning && cprevious && glyphIndex) {
 					FT_Vector delta;
 
-					FT_Get_Kerning(cttf->face, cprevious,
-								   glyphIndex, FT_KERNING_DEFAULT, &delta);
+					FT_Get_Kerning(cttf->face, cprevious, glyphIndex, FT_KERNING_DEFAULT, &delta);
 					x += delta.x >> 6;
 					if (x > maxpixels)
 						break;
@@ -834,10 +792,7 @@ extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const u8 * str,
 					break;
 				cprevious = glyphIndex;
 
-				sbitCacheAdd(cttf, ucs, glyphIndex,
-							 &slot->bitmap, slot->bitmap_left,
-							 slot->bitmap_top, slot->advance.x,
-							 slot->advance.y);
+				sbitCacheAdd(cttf, ucs, glyphIndex, &slot->bitmap, slot->bitmap_left, slot->bitmap_top, slot->advance.x, slot->advance.y);
 			}
 			if (x > maxpixels)
 				break;
@@ -856,9 +811,7 @@ extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const u8 * str,
 				if (useKerning && eprevious && cache->glyph_index) {
 					FT_Vector delta;
 
-					FT_Get_Kerning(ettf->face, eprevious,
-								   cache->glyph_index,
-								   FT_KERNING_DEFAULT, &delta);
+					FT_Get_Kerning(ettf->face, eprevious, cache->glyph_index, FT_KERNING_DEFAULT, &delta);
 					x += delta.x >> 6;
 					if (x > maxpixels)
 						break;
@@ -876,9 +829,7 @@ extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const u8 * str,
 				}
 
 				if (ettf->face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
-					error =
-						FT_Render_Glyph(ettf->face->glyph,
-										get_render_mode(ettf, false));
+					error = FT_Render_Glyph(ettf->face->glyph, get_render_mode(ettf, false));
 
 					if (error) {
 						return count;
@@ -892,8 +843,7 @@ extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const u8 * str,
 				if (useKerning && eprevious && glyphIndex) {
 					FT_Vector delta;
 
-					FT_Get_Kerning(ettf->face, eprevious,
-								   glyphIndex, FT_KERNING_DEFAULT, &delta);
+					FT_Get_Kerning(ettf->face, eprevious, glyphIndex, FT_KERNING_DEFAULT, &delta);
 					x += delta.x >> 6;
 					if (x > maxpixels)
 						break;
@@ -903,10 +853,7 @@ extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const u8 * str,
 					break;
 				eprevious = glyphIndex;
 
-				sbitCacheAdd(ettf, ucs, glyphIndex,
-							 &slot->bitmap, slot->bitmap_left,
-							 slot->bitmap_top, slot->advance.x,
-							 slot->advance.y);
+				sbitCacheAdd(ettf, ucs, glyphIndex, &slot->bitmap, slot->bitmap_left, slot->bitmap_top, slot->advance.x, slot->advance.y);
 			}
 			if (x > maxpixels)
 				break;
@@ -959,8 +906,7 @@ static int ttf_get_char_width(p_ttf cttf, const u8 * str)
 		return x;
 
 	if (cttf->face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
-		error =
-			FT_Render_Glyph(cttf->face->glyph, get_render_mode(cttf, false));
+		error = FT_Render_Glyph(cttf->face->glyph, get_render_mode(cttf, false));
 
 		if (error) {
 			return x;
@@ -976,9 +922,7 @@ static int ttf_get_char_width(p_ttf cttf, const u8 * str)
 	return x;
 }
 
-extern int ttf_get_string_width_english(p_ttf cttf, p_ttf ettf,
-										const u8 * str, u32 maxpixels,
-										u32 maxbytes, u32 wordspace)
+extern int ttf_get_string_width_english(p_ttf cttf, p_ttf ettf, const u8 * str, u32 maxpixels, u32 maxbytes, u32 wordspace)
 {
 	u32 width = 0;
 	const u8 *ostr = str;
@@ -992,8 +936,7 @@ extern int ttf_get_string_width_english(p_ttf cttf, p_ttf ettf,
 	}
 
 	word_start = word_end = NULL;
-	while (*str != 0 && width <= maxpixels && bytes < maxbytes
-		   && bytetable[*str] != 1) {
+	while (*str != 0 && width <= maxpixels && bytes < maxbytes && bytetable[*str] != 1) {
 		if (*str > 0x80) {
 			width += hanzi_len;
 			if (width > maxpixels)
@@ -1016,8 +959,7 @@ extern int ttf_get_string_width_english(p_ttf cttf, p_ttf ettf,
 					// search for next English u16
 					word_end = word_start = str;
 					ret = 0;
-					while (word_end <= ostr + maxbytes
-						   && is_untruncateable_chars(*word_end)) {
+					while (word_end <= ostr + maxbytes && is_untruncateable_chars(*word_end)) {
 						ret += disp_ewidth[*word_end];
 						ret += wordspace;
 						word_end++;
@@ -1047,9 +989,7 @@ extern int ttf_get_string_width_english(p_ttf cttf, p_ttf ettf,
 	return str - ostr;
 }
 
-extern int ttf_get_string_width(p_ttf cttf, p_ttf ettf, const u8 * str,
-								u32 maxpixels, u32 maxbytes,
-								u32 wordspace, u32 * pwidth)
+extern int ttf_get_string_width(p_ttf cttf, p_ttf ettf, const u8 * str, u32 maxpixels, u32 maxbytes, u32 wordspace, u32 * pwidth)
 {
 	u32 width = 0;
 	const u8 *ostr = str;
@@ -1061,8 +1001,7 @@ extern int ttf_get_string_width(p_ttf cttf, p_ttf ettf, const u8 * str,
 		hanzi_size = DISP_BOOK_FONTSIZE;
 	}
 
-	while (*str != 0 && width <= maxpixels && bytes < maxbytes
-		   && bytetable[*str] != 1) {
+	while (*str != 0 && width <= maxpixels && bytes < maxbytes && bytetable[*str] != 1) {
 		if (*str > 0x80) {
 			width += hanzi_len;
 			if (width > maxpixels)
@@ -1098,15 +1037,12 @@ extern int ttf_get_string_width(p_ttf cttf, p_ttf ettf, const u8 * str,
 }
 
 extern void disp_putnstring_horz_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
-										  pixel color, const u8 * str,
-										  int count, u32 wordspace, int top,
-										  int height, int bot)
+										  pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot)
 {
 	FT_UInt cprevious, eprevious;
 	u32 cpu, bus;
 	int fid = -1;
 
-	
 	if (cttf == NULL || ettf == NULL)
 		return;
 
@@ -1128,13 +1064,9 @@ extern void disp_putnstring_horz_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
 			return;
 		}
 		if (*str > 0x80) {
-			ttf_disp_putnstring_horz(cttf, &x, &y, color, &str,
-									 &count, wordspace, top, height,
-									 bot, &cprevious, true);
+			ttf_disp_putnstring_horz(cttf, &x, &y, color, &str, &count, wordspace, top, height, bot, &cprevious, true);
 		} else if (*str > 0x1F && *str != 0x20) {
-			ttf_disp_putnstring_horz(ettf, &x, &y, color, &str,
-									 &count, wordspace, top, height,
-									 bot, &eprevious, false);
+			ttf_disp_putnstring_horz(ettf, &x, &y, color, &str, &count, wordspace, top, height, bot, &eprevious, false);
 		} else {
 			int j;
 
@@ -1177,8 +1109,7 @@ extern void ttf_load_ewidth(p_ttf ttf, u8 * ewidth, int size)
 		}
 
 		if (ttf->face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
-			error =
-				FT_Render_Glyph(ttf->face->glyph, get_render_mode(ttf, false));
+			error = FT_Render_Glyph(ttf->face->glyph, get_render_mode(ttf, false));
 
 			if (error) {
 				return;
@@ -1192,8 +1123,7 @@ extern void ttf_load_ewidth(p_ttf ttf, u8 * ewidth, int size)
 		if (useKerning && eprevious && glyphIndex) {
 			FT_Vector delta;
 
-			FT_Get_Kerning(ttf->face, eprevious, glyphIndex,
-						   FT_KERNING_DEFAULT, &delta);
+			FT_Get_Kerning(ttf->face, eprevious, glyphIndex, FT_KERNING_DEFAULT, &delta);
 			width += delta.x >> 6;
 		}
 		width += slot->advance.x >> 6;
@@ -1203,8 +1133,7 @@ extern void ttf_load_ewidth(p_ttf ttf, u8 * ewidth, int size)
 		ewidth[ucs] = width;
 	}
 
-	dbg_printf(d, "%s: OK. 'i' width is %d, 'M' width is %d", __func__,
-			   ewidth['i'], ewidth['M']);
+	dbg_printf(d, "%s: OK. 'i' width is %d, 'M' width is %d", __func__, ewidth['i'], ewidth['M']);
 }
 
 /** 
@@ -1223,9 +1152,7 @@ extern void ttf_load_ewidth(p_ttf ttf, u8 * ewidth, int size)
  * @param scr_height 绘图区最大高度
  * @param color 颜色
  */
-static void _drawBitmap_reversal(u8 * buffer, int format, int width,
-								 int height, int pitch, FT_Int x, FT_Int y,
-								 int scr_width, int scr_height, pixel color)
+static void _drawBitmap_reversal(u8 * buffer, int format, int width, int height, int pitch, FT_Int x, FT_Int y, int scr_width, int scr_height, pixel color)
 {
 	FT_Int i, j;
 	pixel pix, grey;
@@ -1238,9 +1165,7 @@ static void _drawBitmap_reversal(u8 * buffer, int format, int width,
 	if (format == FT_PIXEL_MODE_MONO) {
 		for (j = 0; j < height; j++)
 			for (i = 0; i < width; i++) {
-				if (x - i < 0 || x - i >= scr_width
-					|| y - j < PSP_SCREEN_HEIGHT - scr_height
-					|| y - j >= PSP_SCREEN_HEIGHT)
+				if (x - i < 0 || x - i >= scr_width || y - j < PSP_SCREEN_HEIGHT - scr_height || y - j >= PSP_SCREEN_HEIGHT)
 					continue;
 				if (buffer[j * pitch + i / 8] & (0x80 >> (i % 8)))
 					*(pixel *) disp_get_vaddr((x - i), (y - j)) = (color);
@@ -1248,19 +1173,12 @@ static void _drawBitmap_reversal(u8 * buffer, int format, int width,
 	} else if (format == FT_PIXEL_MODE_GRAY) {
 		for (j = 0; j < height; j++)
 			for (i = 0; i < width; i++) {
-				if (x - i < 0 || x - i >= scr_width
-					|| y - j < PSP_SCREEN_HEIGHT - scr_height
-					|| y - j >= PSP_SCREEN_HEIGHT)
+				if (x - i < 0 || x - i >= scr_width || y - j < PSP_SCREEN_HEIGHT - scr_height || y - j >= PSP_SCREEN_HEIGHT)
 					continue;
 				grey = buffer[j * pitch + i];
 
 				if (grey) {
-					pix =
-						disp_grayscale(*disp_get_vaddr
-									   ((x - i), (y - j)),
-									   RGB_R(color),
-									   RGB_G(color),
-									   RGB_B(color), grey * 100 / 255);
+					pix = disp_grayscale(*disp_get_vaddr((x - i), (y - j)), RGB_R(color), RGB_G(color), RGB_B(color), grey * 100 / 255);
 					*(pixel *) disp_get_vaddr((x - i), (y - j)) = (pix);
 				}
 			}
@@ -1270,9 +1188,7 @@ static void _drawBitmap_reversal(u8 * buffer, int format, int width,
 			for (i = 0; i < width / 3; i++) {
 				pixel origcolor;
 
-				if (x - i < 0 || x - i >= scr_width
-					|| y - j < PSP_SCREEN_HEIGHT - scr_height
-					|| y - j >= PSP_SCREEN_HEIGHT)
+				if (x - i < 0 || x - i >= scr_width || y - j < PSP_SCREEN_HEIGHT - scr_height || y - j >= PSP_SCREEN_HEIGHT)
 					continue;
 
 				// RGB or BGR ?
@@ -1301,9 +1217,7 @@ static void _drawBitmap_reversal(u8 * buffer, int format, int width,
 			for (i = 0; i < width; i++) {
 				pixel origcolor;
 
-				if (x - i < 0 || x - i >= scr_width
-					|| y - j < PSP_SCREEN_HEIGHT - scr_height
-					|| y - j >= PSP_SCREEN_HEIGHT)
+				if (x - i < 0 || x - i >= scr_width || y - j < PSP_SCREEN_HEIGHT - scr_height || y - j >= PSP_SCREEN_HEIGHT)
 					continue;
 
 				// RGB or BGR ?
@@ -1342,11 +1256,9 @@ static void _drawBitmap_reversal(u8 * buffer, int format, int width,
  * @param height 最大高度
  * @param color 颜色
  */
-static void drawCachedBitmap_reversal(Cache_Bitmap * sbt, FT_Int x, FT_Int y,
-									  int width, int height, pixel color)
+static void drawCachedBitmap_reversal(Cache_Bitmap * sbt, FT_Int x, FT_Int y, int width, int height, pixel color)
 {
-	_drawBitmap_reversal(sbt->buffer, sbt->format, sbt->width, sbt->height,
-						 sbt->pitch, x, y, width, height, color);
+	_drawBitmap_reversal(sbt->buffer, sbt->format, sbt->width, sbt->height, sbt->pitch, x, y, width, height, color);
 }
 
 /** 
@@ -1361,15 +1273,12 @@ static void drawCachedBitmap_reversal(Cache_Bitmap * sbt, FT_Int x, FT_Int y,
  * @param height 最大高度
  * @param color 颜色
  */
-static void drawBitmap_reversal(FT_Bitmap * bitmap, FT_Int x, FT_Int y,
-								int width, int height, pixel color)
+static void drawBitmap_reversal(FT_Bitmap * bitmap, FT_Int x, FT_Int y, int width, int height, pixel color)
 {
 	if (!bitmap->buffer)
 		return;
 
-	_drawBitmap_reversal(bitmap->buffer, bitmap->pixel_mode, bitmap->width,
-						 bitmap->rows, bitmap->pitch, x, y, width, height,
-						 color);
+	_drawBitmap_reversal(bitmap->buffer, bitmap->pixel_mode, bitmap->width, bitmap->rows, bitmap->pitch, x, y, width, height, color);
 }
 
 /**
@@ -1393,10 +1302,7 @@ static void drawBitmap_reversal(FT_Bitmap * bitmap, FT_Int x, FT_Int y,
  * @param is_hanzi 是否为汉字
  */
 static void ttf_disp_putnstring_reversal(p_ttf ttf, int *x, int *y, pixel color,
-										 const u8 ** str, int *count,
-										 u32 wordspace, int top, int height,
-										 int bot, FT_UInt * previous,
-										 bool is_hanzi)
+										 const u8 ** str, int *count, u32 wordspace, int top, int height, int bot, FT_UInt * previous, bool is_hanzi)
 {
 	FT_Error error;
 	FT_GlyphSlot slot;
@@ -1413,16 +1319,13 @@ static void ttf_disp_putnstring_reversal(p_ttf ttf, int *x, int *y, pixel color,
 		if (useKerning && *previous && cache->glyph_index) {
 			FT_Vector delta;
 
-			FT_Get_Kerning(ttf->face, *previous, cache->glyph_index,
-						   FT_KERNING_DEFAULT, &delta);
+			FT_Get_Kerning(ttf->face, *previous, cache->glyph_index, FT_KERNING_DEFAULT, &delta);
 			*x -= delta.x >> 6;
 		}
 		drawCachedBitmap_reversal(&cache->bitmap,
 								  *x - cache->bitmap.left,
 								  bot ? *y - DISP_BOOK_FONTSIZE +
-								  cache->bitmap.top : *y - height +
-								  cache->bitmap.top, PSP_SCREEN_WIDTH,
-								  bot ? bot : PSP_SCREEN_HEIGHT, color);
+								  cache->bitmap.top : *y - height + cache->bitmap.top, PSP_SCREEN_WIDTH, bot ? bot : PSP_SCREEN_HEIGHT, color);
 		*x -= cache->xadvance >> 6;
 		*previous = cache->glyph_index;
 	} else {
@@ -1434,8 +1337,7 @@ static void ttf_disp_putnstring_reversal(p_ttf ttf, int *x, int *y, pixel color,
 		}
 
 		if (ttf->face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
-			error =
-				FT_Render_Glyph(ttf->face->glyph, get_render_mode(ttf, false));
+			error = FT_Render_Glyph(ttf->face->glyph, get_render_mode(ttf, false));
 			if (error) {
 				return;
 			}
@@ -1448,21 +1350,16 @@ static void ttf_disp_putnstring_reversal(p_ttf ttf, int *x, int *y, pixel color,
 		if (useKerning && *previous && glyphIndex) {
 			FT_Vector delta;
 
-			FT_Get_Kerning(ttf->face, *previous, glyphIndex,
-						   FT_KERNING_DEFAULT, &delta);
+			FT_Get_Kerning(ttf->face, *previous, glyphIndex, FT_KERNING_DEFAULT, &delta);
 			*x -= delta.x >> 6;
 		}
 		drawBitmap_reversal(&slot->bitmap, *x - slot->bitmap_left,
 							bot ? *y - DISP_BOOK_FONTSIZE +
-							slot->bitmap_top : *y - height +
-							slot->bitmap_top, PSP_SCREEN_WIDTH,
-							bot ? bot : PSP_SCREEN_HEIGHT, color);
+							slot->bitmap_top : *y - height + slot->bitmap_top, PSP_SCREEN_WIDTH, bot ? bot : PSP_SCREEN_HEIGHT, color);
 		*x -= slot->advance.x >> 6;
 		*previous = glyphIndex;
 
-		sbitCacheAdd(ttf, ucs, glyphIndex,
-					 &slot->bitmap, slot->bitmap_left, slot->bitmap_top,
-					 slot->advance.x, slot->advance.y);
+		sbitCacheAdd(ttf, ucs, glyphIndex, &slot->bitmap, slot->bitmap_left, slot->bitmap_top, slot->advance.x, slot->advance.y);
 	}
 	if (is_hanzi) {
 		(*str) += 2;
@@ -1476,10 +1373,7 @@ static void ttf_disp_putnstring_reversal(p_ttf ttf, int *x, int *y, pixel color,
 }
 
 extern void disp_putnstring_reversal_truetype(p_ttf cttf, p_ttf ettf, int x,
-											  int y, pixel color,
-											  const u8 * str, int count,
-											  u32 wordspace, int top,
-											  int height, int bot)
+											  int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot)
 {
 	FT_UInt cprevious, eprevious;
 	u32 cpu, bus;
@@ -1509,13 +1403,9 @@ extern void disp_putnstring_reversal_truetype(p_ttf cttf, p_ttf ettf, int x,
 		if (x < 0)
 			break;
 		if (*str > 0x80) {
-			ttf_disp_putnstring_reversal(cttf, &x, &y, color, &str,
-										 &count, wordspace, top,
-										 height, bot, &cprevious, true);
+			ttf_disp_putnstring_reversal(cttf, &x, &y, color, &str, &count, wordspace, top, height, bot, &cprevious, true);
 		} else if (*str > 0x1F && *str != 0x20) {
-			ttf_disp_putnstring_reversal(ettf, &x, &y, color, &str,
-										 &count, wordspace, top,
-										 height, bot, &eprevious, false);
+			ttf_disp_putnstring_reversal(ettf, &x, &y, color, &str, &count, wordspace, top, height, bot, &eprevious, false);
 		} else {
 			int j;
 
@@ -1549,9 +1439,7 @@ extern void disp_putnstring_reversal_truetype(p_ttf cttf, p_ttf ettf, int x,
  * @param scr_height 绘图区最大高度
  * @param color 颜色
  */
-static void _drawBitmap_lvert(u8 * buffer, int format, int width, int height,
-							  int pitch, FT_Int x, FT_Int y, int scr_width,
-							  int scr_height, pixel color)
+static void _drawBitmap_lvert(u8 * buffer, int format, int width, int height, int pitch, FT_Int x, FT_Int y, int scr_width, int scr_height, pixel color)
 {
 	FT_Int i, j;
 	pixel pix, grey;
@@ -1564,8 +1452,7 @@ static void _drawBitmap_lvert(u8 * buffer, int format, int width, int height,
 	if (format == FT_PIXEL_MODE_MONO) {
 		for (j = 0; j < height; j++)
 			for (i = 0; i < width; i++) {
-				if (y - i < 0 || y - i >= scr_height
-					|| x + j < 0 || x + j >= scr_width)
+				if (y - i < 0 || y - i >= scr_height || x + j < 0 || x + j >= scr_width)
 					continue;
 				if (buffer[j * pitch + i / 8] & (0x80 >> (i % 8)))
 					*(pixel *) disp_get_vaddr((x + j), (y - i)) = (color);
@@ -1573,18 +1460,12 @@ static void _drawBitmap_lvert(u8 * buffer, int format, int width, int height,
 	} else if (format == FT_PIXEL_MODE_GRAY) {
 		for (j = 0; j < height; j++)
 			for (i = 0; i < width; i++) {
-				if (y - i < 0 || y - i >= scr_height
-					|| x + j < 0 || x + j >= scr_width)
+				if (y - i < 0 || y - i >= scr_height || x + j < 0 || x + j >= scr_width)
 					continue;
 				grey = buffer[j * pitch + i];
 
 				if (grey) {
-					pix =
-						disp_grayscale(*disp_get_vaddr
-									   ((x + j), (y - i)),
-									   RGB_R(color),
-									   RGB_G(color),
-									   RGB_B(color), grey * 100 / 255);
+					pix = disp_grayscale(*disp_get_vaddr((x + j), (y - i)), RGB_R(color), RGB_G(color), RGB_B(color), grey * 100 / 255);
 					*(pixel *) disp_get_vaddr((x + j), (y - i)) = (pix);
 				}
 			}
@@ -1594,8 +1475,7 @@ static void _drawBitmap_lvert(u8 * buffer, int format, int width, int height,
 			for (i = 0; i < width / 3; i++) {
 				pixel origcolor;
 
-				if (y - i < 0 || y - i >= scr_height
-					|| x + j < 0 || x + j >= scr_width)
+				if (y - i < 0 || y - i >= scr_height || x + j < 0 || x + j >= scr_width)
 					continue;
 
 				// RGB or BGR ?
@@ -1624,8 +1504,7 @@ static void _drawBitmap_lvert(u8 * buffer, int format, int width, int height,
 			for (i = 0; i < width; i++) {
 				pixel origcolor;
 
-				if (y - i < 0 || y - i >= scr_height
-					|| x + j < 0 || x + j >= scr_width)
+				if (y - i < 0 || y - i >= scr_height || x + j < 0 || x + j >= scr_width)
 					continue;
 
 				// RGB or BGR ?
@@ -1664,12 +1543,9 @@ static void _drawBitmap_lvert(u8 * buffer, int format, int width, int height,
  * @param height 最大高度
  * @param color 颜色
  */
-static inline void drawCachedBitmap_lvert(Cache_Bitmap * sbt, FT_Int x,
-										  FT_Int y, int width, int height,
-										  pixel color)
+static inline void drawCachedBitmap_lvert(Cache_Bitmap * sbt, FT_Int x, FT_Int y, int width, int height, pixel color)
 {
-	_drawBitmap_lvert(sbt->buffer, sbt->format, sbt->width, sbt->height,
-					  sbt->pitch, x, y, width, height, color);
+	_drawBitmap_lvert(sbt->buffer, sbt->format, sbt->width, sbt->height, sbt->pitch, x, y, width, height, color);
 }
 
 /** 
@@ -1684,11 +1560,9 @@ static inline void drawCachedBitmap_lvert(Cache_Bitmap * sbt, FT_Int x,
  * @param height 最大高度
  * @param color 颜色
  */
-static inline void drawBitmap_lvert(FT_Bitmap * bitmap, FT_Int x, FT_Int y,
-									int width, int height, pixel color)
+static inline void drawBitmap_lvert(FT_Bitmap * bitmap, FT_Int x, FT_Int y, int width, int height, pixel color)
 {
-	_drawBitmap_lvert(bitmap->buffer, bitmap->pixel_mode, bitmap->width,
-					  bitmap->rows, bitmap->pitch, x, y, width, height, color);
+	_drawBitmap_lvert(bitmap->buffer, bitmap->pixel_mode, bitmap->width, bitmap->rows, bitmap->pitch, x, y, width, height, color);
 }
 
 /**
@@ -1712,10 +1586,7 @@ static inline void drawBitmap_lvert(FT_Bitmap * bitmap, FT_Int x, FT_Int y,
  * @param is_hanzi 是否为汉字
  */
 static void ttf_disp_putnstring_lvert(p_ttf ttf, int *x, int *y, pixel color,
-									  const u8 ** str, int *count,
-									  u32 wordspace, int top, int height,
-									  int bot, FT_UInt * previous,
-									  bool is_hanzi)
+									  const u8 ** str, int *count, u32 wordspace, int top, int height, int bot, FT_UInt * previous, bool is_hanzi)
 {
 	FT_Error error;
 	FT_GlyphSlot slot;
@@ -1732,17 +1603,13 @@ static void ttf_disp_putnstring_lvert(p_ttf ttf, int *x, int *y, pixel color,
 		if (useKerning && *previous && cache->glyph_index) {
 			FT_Vector delta;
 
-			FT_Get_Kerning(ttf->face, *previous, cache->glyph_index,
-						   FT_KERNING_DEFAULT, &delta);
+			FT_Get_Kerning(ttf->face, *previous, cache->glyph_index, FT_KERNING_DEFAULT, &delta);
 			*y -= delta.x >> 6;
 		}
 		drawCachedBitmap_lvert(&cache->bitmap,
 							   bot ? *x + DISP_BOOK_FONTSIZE -
 							   cache->bitmap.top : *x + height -
-							   cache->bitmap.top,
-							   *y - cache->bitmap.left,
-							   bot ? bot : PSP_SCREEN_WIDTH,
-							   PSP_SCREEN_HEIGHT, color);
+							   cache->bitmap.top, *y - cache->bitmap.left, bot ? bot : PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, color);
 		*y -= cache->xadvance >> 6;
 		*previous = cache->glyph_index;
 	} else {
@@ -1752,8 +1619,7 @@ static void ttf_disp_putnstring_lvert(p_ttf ttf, int *x, int *y, pixel color,
 		if (error)
 			return;
 		if (ttf->face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
-			error =
-				FT_Render_Glyph(ttf->face->glyph, get_render_mode(ttf, true));
+			error = FT_Render_Glyph(ttf->face->glyph, get_render_mode(ttf, true));
 			if (error) {
 				return;
 			}
@@ -1766,22 +1632,16 @@ static void ttf_disp_putnstring_lvert(p_ttf ttf, int *x, int *y, pixel color,
 		if (useKerning && *previous && glyphIndex) {
 			FT_Vector delta;
 
-			FT_Get_Kerning(ttf->face, *previous, glyphIndex,
-						   FT_KERNING_DEFAULT, &delta);
+			FT_Get_Kerning(ttf->face, *previous, glyphIndex, FT_KERNING_DEFAULT, &delta);
 			*y -= delta.x >> 6;
 		}
 		drawBitmap_lvert(&slot->bitmap,
 						 bot ? *x + DISP_BOOK_FONTSIZE -
-						 slot->bitmap_top : *x + height -
-						 slot->bitmap_top, *y - slot->bitmap_left,
-						 bot ? bot : PSP_SCREEN_WIDTH,
-						 PSP_SCREEN_HEIGHT, color);
+						 slot->bitmap_top : *x + height - slot->bitmap_top, *y - slot->bitmap_left, bot ? bot : PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, color);
 		*y -= slot->advance.x >> 6;
 		*previous = glyphIndex;
 
-		sbitCacheAdd(ttf, ucs, glyphIndex,
-					 &slot->bitmap, slot->bitmap_left, slot->bitmap_top,
-					 slot->advance.x, slot->advance.y);
+		sbitCacheAdd(ttf, ucs, glyphIndex, &slot->bitmap, slot->bitmap_left, slot->bitmap_top, slot->advance.x, slot->advance.y);
 	}
 	if (is_hanzi) {
 		(*str) += 2;
@@ -1795,9 +1655,7 @@ static void ttf_disp_putnstring_lvert(p_ttf ttf, int *x, int *y, pixel color,
 }
 
 extern void disp_putnstring_lvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
-										   pixel color, const u8 * str,
-										   int count, u32 wordspace, int top,
-										   int height, int bot)
+										   pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot)
 {
 	FT_UInt cprevious, eprevious;
 	u32 cpu, bus;
@@ -1825,15 +1683,11 @@ extern void disp_putnstring_lvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
 		if (*str > 0x80) {
 			if (y < DISP_RSPAN + DISP_BOOK_FONTSIZE - 1)
 				break;
-			ttf_disp_putnstring_lvert(cttf, &x, &y, color, &str,
-									  &count, wordspace, top,
-									  height, bot, &cprevious, true);
+			ttf_disp_putnstring_lvert(cttf, &x, &y, color, &str, &count, wordspace, top, height, bot, &cprevious, true);
 		} else if (*str > 0x1F && *str != 0x20) {
 			if (y < DISP_RSPAN + disp_ewidth[*str] - 1)
 				break;
-			ttf_disp_putnstring_lvert(ettf, &x, &y, color, &str,
-									  &count, wordspace, top,
-									  height, bot, &eprevious, false);
+			ttf_disp_putnstring_lvert(ettf, &x, &y, color, &str, &count, wordspace, top, height, bot, &eprevious, false);
 		} else {
 			int j;
 
@@ -1867,9 +1721,7 @@ extern void disp_putnstring_lvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
  * @param scr_height 绘图区最大高度
  * @param color 颜色
  */
-static void _drawBitmap_rvert(u8 * buffer, int format, int width, int height,
-							  int pitch, FT_Int x, FT_Int y, int scr_width,
-							  int scr_height, pixel color)
+static void _drawBitmap_rvert(u8 * buffer, int format, int width, int height, int pitch, FT_Int x, FT_Int y, int scr_width, int scr_height, pixel color)
 {
 	FT_Int i, j;
 	pixel pix, grey;
@@ -1882,9 +1734,7 @@ static void _drawBitmap_rvert(u8 * buffer, int format, int width, int height,
 	if (format == FT_PIXEL_MODE_MONO) {
 		for (j = 0; j < height; j++)
 			for (i = 0; i < width; i++) {
-				if (y + i < 0 || y + i >= scr_height
-					|| x - j < PSP_SCREEN_WIDTH - scr_width
-					|| x - j >= PSP_SCREEN_WIDTH)
+				if (y + i < 0 || y + i >= scr_height || x - j < PSP_SCREEN_WIDTH - scr_width || x - j >= PSP_SCREEN_WIDTH)
 					continue;
 				if (buffer[j * pitch + i / 8] & (0x80 >> (i % 8)))
 					*(pixel *) disp_get_vaddr((x - j), (y + i)) = (color);
@@ -1892,19 +1742,12 @@ static void _drawBitmap_rvert(u8 * buffer, int format, int width, int height,
 	} else if (format == FT_PIXEL_MODE_GRAY) {
 		for (j = 0; j < height; j++)
 			for (i = 0; i < width; i++) {
-				if (y + i < 0 || y + i >= scr_height
-					|| x - j < PSP_SCREEN_WIDTH - scr_width
-					|| x - j >= PSP_SCREEN_WIDTH)
+				if (y + i < 0 || y + i >= scr_height || x - j < PSP_SCREEN_WIDTH - scr_width || x - j >= PSP_SCREEN_WIDTH)
 					continue;
 				grey = buffer[j * pitch + i];
 
 				if (grey) {
-					pix =
-						disp_grayscale(*disp_get_vaddr
-									   ((x - j), (y + i)),
-									   RGB_R(color),
-									   RGB_G(color),
-									   RGB_B(color), grey * 100 / 255);
+					pix = disp_grayscale(*disp_get_vaddr((x - j), (y + i)), RGB_R(color), RGB_G(color), RGB_B(color), grey * 100 / 255);
 					*(pixel *) disp_get_vaddr((x - j), (y + i)) = (pix);
 				}
 			}
@@ -1913,9 +1756,7 @@ static void _drawBitmap_rvert(u8 * buffer, int format, int width, int height,
 			for (i = 0; i < width / 3; i++) {
 				pixel origcolor;
 
-				if (y + i < 0 || y + i >= scr_height
-					|| x - j < PSP_SCREEN_WIDTH - scr_width
-					|| x - j >= PSP_SCREEN_WIDTH)
+				if (y + i < 0 || y + i >= scr_height || x - j < PSP_SCREEN_WIDTH - scr_width || x - j >= PSP_SCREEN_WIDTH)
 					continue;
 				// RGB or BGR ?
 				origcolor = *disp_get_vaddr((x - j), (y + i));
@@ -1943,9 +1784,7 @@ static void _drawBitmap_rvert(u8 * buffer, int format, int width, int height,
 			for (i = 0; i < width; i++) {
 				pixel origcolor;
 
-				if (y + i < 0 || y + i >= scr_height
-					|| x - j < PSP_SCREEN_WIDTH - scr_width
-					|| x - j >= PSP_SCREEN_WIDTH)
+				if (y + i < 0 || y + i >= scr_height || x - j < PSP_SCREEN_WIDTH - scr_width || x - j >= PSP_SCREEN_WIDTH)
 					continue;
 
 				// RGB or BGR ?
@@ -1984,12 +1823,9 @@ static void _drawBitmap_rvert(u8 * buffer, int format, int width, int height,
  * @param height 最大高度
  * @param color 颜色
  */
-static inline void drawCachedBitmap_rvert(Cache_Bitmap * sbt, FT_Int x,
-										  FT_Int y, int width, int height,
-										  pixel color)
+static inline void drawCachedBitmap_rvert(Cache_Bitmap * sbt, FT_Int x, FT_Int y, int width, int height, pixel color)
 {
-	_drawBitmap_rvert(sbt->buffer, sbt->format, sbt->width, sbt->height,
-					  sbt->pitch, x, y, width, height, color);
+	_drawBitmap_rvert(sbt->buffer, sbt->format, sbt->width, sbt->height, sbt->pitch, x, y, width, height, color);
 }
 
 /** 
@@ -2004,11 +1840,9 @@ static inline void drawCachedBitmap_rvert(Cache_Bitmap * sbt, FT_Int x,
  * @param height 最大高度
  * @param color 颜色
  */
-static inline void drawBitmap_rvert(FT_Bitmap * bitmap, FT_Int x, FT_Int y,
-									int width, int height, pixel color)
+static inline void drawBitmap_rvert(FT_Bitmap * bitmap, FT_Int x, FT_Int y, int width, int height, pixel color)
 {
-	_drawBitmap_rvert(bitmap->buffer, bitmap->pixel_mode, bitmap->width,
-					  bitmap->rows, bitmap->pitch, x, y, width, height, color);
+	_drawBitmap_rvert(bitmap->buffer, bitmap->pixel_mode, bitmap->width, bitmap->rows, bitmap->pitch, x, y, width, height, color);
 }
 
 /**
@@ -2032,10 +1866,7 @@ static inline void drawBitmap_rvert(FT_Bitmap * bitmap, FT_Int x, FT_Int y,
  * @param is_hanzi 是否为汉字
  */
 static void ttf_disp_putnstring_rvert(p_ttf ttf, int *x, int *y, pixel color,
-									  const u8 ** str, int *count,
-									  u32 wordspace, int top, int height,
-									  int bot, FT_UInt * previous,
-									  bool is_hanzi)
+									  const u8 ** str, int *count, u32 wordspace, int top, int height, int bot, FT_UInt * previous, bool is_hanzi)
 {
 	FT_Error error;
 	FT_GlyphSlot slot;
@@ -2052,18 +1883,13 @@ static void ttf_disp_putnstring_rvert(p_ttf ttf, int *x, int *y, pixel color,
 		if (useKerning && *previous && cache->glyph_index) {
 			FT_Vector delta;
 
-			FT_Get_Kerning(ttf->face, *previous, cache->glyph_index,
-						   FT_KERNING_DEFAULT, &delta);
+			FT_Get_Kerning(ttf->face, *previous, cache->glyph_index, FT_KERNING_DEFAULT, &delta);
 			*y += delta.x >> 6;
 		}
 		drawCachedBitmap_rvert(&cache->bitmap,
 							   bot ? *x - DISP_BOOK_FONTSIZE +
 							   cache->bitmap.top : *x - height +
-							   cache->bitmap.top,
-							   *y + cache->bitmap.left,
-							   bot ? PSP_SCREEN_WIDTH -
-							   bot : PSP_SCREEN_WIDTH,
-							   PSP_SCREEN_HEIGHT, color);
+							   cache->bitmap.top, *y + cache->bitmap.left, bot ? PSP_SCREEN_WIDTH - bot : PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, color);
 		*y += cache->xadvance >> 6;
 		*previous = cache->glyph_index;
 	} else {
@@ -2073,8 +1899,7 @@ static void ttf_disp_putnstring_rvert(p_ttf ttf, int *x, int *y, pixel color,
 		if (error)
 			return;
 		if (ttf->face->glyph->format != FT_GLYPH_FORMAT_BITMAP) {
-			error =
-				FT_Render_Glyph(ttf->face->glyph, get_render_mode(ttf, true));
+			error = FT_Render_Glyph(ttf->face->glyph, get_render_mode(ttf, true));
 			if (error) {
 				return;
 			}
@@ -2087,22 +1912,17 @@ static void ttf_disp_putnstring_rvert(p_ttf ttf, int *x, int *y, pixel color,
 		if (useKerning && *previous && glyphIndex) {
 			FT_Vector delta;
 
-			FT_Get_Kerning(ttf->face, *previous, glyphIndex,
-						   FT_KERNING_DEFAULT, &delta);
+			FT_Get_Kerning(ttf->face, *previous, glyphIndex, FT_KERNING_DEFAULT, &delta);
 			*y += delta.x >> 6;
 		}
 		drawBitmap_rvert(&slot->bitmap,
 						 bot ? *x - DISP_BOOK_FONTSIZE +
 						 slot->bitmap_top : *x - height +
-						 slot->bitmap_top, *y + slot->bitmap_left,
-						 bot ? PSP_SCREEN_WIDTH -
-						 bot : PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, color);
+						 slot->bitmap_top, *y + slot->bitmap_left, bot ? PSP_SCREEN_WIDTH - bot : PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, color);
 		*y += slot->advance.x >> 6;
 		*previous = glyphIndex;
 
-		sbitCacheAdd(ttf, ucs, glyphIndex,
-					 &slot->bitmap, slot->bitmap_left, slot->bitmap_top,
-					 slot->advance.x, slot->advance.y);
+		sbitCacheAdd(ttf, ucs, glyphIndex, &slot->bitmap, slot->bitmap_left, slot->bitmap_top, slot->advance.x, slot->advance.y);
 	}
 	if (is_hanzi) {
 		(*str) += 2;
@@ -2116,9 +1936,7 @@ static void ttf_disp_putnstring_rvert(p_ttf ttf, int *x, int *y, pixel color,
 }
 
 extern void disp_putnstring_rvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
-										   pixel color, const u8 * str,
-										   int count, u32 wordspace, int top,
-										   int height, int bot)
+										   pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot)
 {
 	FT_UInt cprevious, eprevious;
 	u32 cpu, bus;
@@ -2145,15 +1963,11 @@ extern void disp_putnstring_rvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
 		if (*str > 0x80) {
 			if (y > PSP_SCREEN_HEIGHT - DISP_RSPAN - DISP_BOOK_FONTSIZE)
 				break;
-			ttf_disp_putnstring_rvert(cttf, &x, &y, color, &str,
-									  &count, wordspace, top,
-									  height, bot, &cprevious, true);
+			ttf_disp_putnstring_rvert(cttf, &x, &y, color, &str, &count, wordspace, top, height, bot, &cprevious, true);
 		} else if (*str > 0x1F && *str != 0x20) {
 			if (y > PSP_SCREEN_HEIGHT - DISP_RSPAN - disp_ewidth[*str])
 				break;
-			ttf_disp_putnstring_rvert(ettf, &x, &y, color, &str,
-									  &count, wordspace, top,
-									  height, bot, &eprevious, false);
+			ttf_disp_putnstring_rvert(ettf, &x, &y, color, &str, &count, wordspace, top, height, bot, &eprevious, false);
 		} else {
 			if (y > PSP_SCREEN_HEIGHT - DISP_RSPAN - DISP_BOOK_FONTSIZE / 2) {
 				break;

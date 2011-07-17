@@ -144,10 +144,8 @@ void fat_lock(void);
 void fat_unlock(void);
 extern void fat_powerup(void);
 extern void fat_powerdown(void);
-extern bool fat_locate(const char *name, char *sname, u32 clus,
-					   p_fat_entry info);
+extern bool fat_locate(const char *name, char *sname, u32 clus, p_fat_entry info);
 extern u32 fat_readdir(const char *dir, char *sdir, p_fat_info * info);
-extern bool fat_longnametoshortname(char *shortname, const char *longname,
-									u32 size);
+extern bool fat_longnametoshortname(char *shortname, const char *longname, u32 size);
 
 #endif

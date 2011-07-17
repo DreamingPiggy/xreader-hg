@@ -108,8 +108,7 @@ static p_bookmark bookmark_open_hash(u32 hash)
 				bm->index = i * 32 + j;
 				sceIoLseek(fd, j * 10 * sizeof(u32), PSP_SEEK_CUR);
 				cur_pos = sceIoLseek(fd, 0, PSP_SEEK_CUR);
-				dbg_printf(d, "%s: Reading bookmark at 0x%08X", __func__,
-						   cur_pos);
+				dbg_printf(d, "%s: Reading bookmark at 0x%08X", __func__, cur_pos);
 				sceIoRead(fd, &bm->row[0], 10 * sizeof(u32));
 				sceIoClose(fd);
 				return bm;
@@ -185,10 +184,7 @@ extern void bookmark_save(p_bookmark bm)
 		free(temp);
 	}
 	if (bm->index == INVALID) {
-		sceIoLseek(fd,
-				  sizeof(u32) + (count - 1) * (sizeof(t_bm_index) +
-												 32 * 10 *
-												 sizeof(u32)), PSP_SEEK_SET);
+		sceIoLseek(fd, sizeof(u32) + (count - 1) * (sizeof(t_bm_index) + 32 * 10 * sizeof(u32)), PSP_SEEK_SET);
 		sceIoRead(fd, &bi, sizeof(t_bm_index));
 		if (bi.flag != 0xFFFFFFFF) {
 			u32 j;
@@ -200,17 +196,12 @@ extern void bookmark_save(p_bookmark bm)
 					bi.flag |= flagbits[j];
 					bi.hash[j] = bm->hash;
 					bm->index = (count - 1) * 32 + j;
-					sceIoLseek(fd,
-							  sizeof(u32) + (count -
-											   1) *
-							  (sizeof(t_bm_index) +
-							   32 * 10 * sizeof(u32)), PSP_SEEK_SET);
+					sceIoLseek(fd, sizeof(u32) + (count - 1) * (sizeof(t_bm_index) + 32 * 10 * sizeof(u32)), PSP_SEEK_SET);
 					sceIoWrite(fd, &bi, sizeof(t_bm_index));
 					sceIoLseek(fd, j * 10 * sizeof(u32), PSP_SEEK_CUR);
 					cur_pos = sceIoLseek(fd, 0, PSP_SEEK_CUR);
 
-					dbg_printf(d, "%s: Writing bookmark at 0x%08X", __func__,
-							   cur_pos);
+					dbg_printf(d, "%s: Writing bookmark at 0x%08X", __func__, cur_pos);
 					sceIoWrite(fd, &bm->row[0], 10 * sizeof(u32));
 					break;
 				}
@@ -218,10 +209,7 @@ extern void bookmark_save(p_bookmark bm)
 			u32 cur_pos;
 			u32 *temp;
 
-			sceIoLseek(fd,
-					  sizeof(u32) + count * (sizeof(t_bm_index) +
-											   32 * 10 *
-											   sizeof(u32)), PSP_SEEK_SET);
+			sceIoLseek(fd, sizeof(u32) + count * (sizeof(t_bm_index) + 32 * 10 * sizeof(u32)), PSP_SEEK_SET);
 			memset(&bi, 0, sizeof(t_bm_index));
 			bi.flag = 1;
 			bi.hash[0] = bm->hash;
@@ -245,11 +233,8 @@ extern void bookmark_save(p_bookmark bm)
 		int ret;
 
 		sceIoLseek(fd,
-				  sizeof(u32) +
-				  (bm->index / 32) * (sizeof(t_bm_index) +
-									  32 * 10 * sizeof(u32)) +
-				  sizeof(t_bm_index) +
-				  ((bm->index % 32) * 10 * sizeof(u32)), PSP_SEEK_SET);
+				   sizeof(u32) +
+				   (bm->index / 32) * (sizeof(t_bm_index) + 32 * 10 * sizeof(u32)) + sizeof(t_bm_index) + ((bm->index % 32) * 10 * sizeof(u32)), PSP_SEEK_SET);
 
 		cur_pos = sceIoLseek(fd, 0, PSP_SEEK_CUR);
 
@@ -272,19 +257,13 @@ extern void bookmark_delete(p_bookmark bm)
 
 	if (fd < 0)
 		return;
-	sceIoLseek(fd,
-			  sizeof(u32) + (bm->index / 32) * (sizeof(t_bm_index) +
-												  32 * 10 * sizeof(u32)),
-			  PSP_SEEK_SET);
+	sceIoLseek(fd, sizeof(u32) + (bm->index / 32) * (sizeof(t_bm_index) + 32 * 10 * sizeof(u32)), PSP_SEEK_SET);
 
 	memset(&bi, 0, sizeof(t_bm_index));
 	sceIoRead(fd, &bi, sizeof(t_bm_index));
 	bi.flag &= ~flagbits[bm->index % 32];
 	bi.hash[bm->index % 32] = 0;
-	sceIoLseek(fd,
-			  sizeof(u32) + (bm->index / 32) * (sizeof(t_bm_index) +
-												  32 * 10 * sizeof(u32)),
-			  PSP_SEEK_SET);
+	sceIoLseek(fd, sizeof(u32) + (bm->index / 32) * (sizeof(t_bm_index) + 32 * 10 * sizeof(u32)), PSP_SEEK_SET);
 	sceIoWrite(fd, &bi, sizeof(t_bm_index));
 	sceIoClose(fd);
 }

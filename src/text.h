@@ -69,8 +69,7 @@ typedef struct
  *
  * @return 是否成功
  */
-extern bool text_format(p_text txt, u32 max_pixels, u32 wordspace,
-						bool ttf_mode);
+extern bool text_format(p_text txt, u32 max_pixels, u32 wordspace, bool ttf_mode);
 
 /**
  * 打开内存中一段数据做为文本
@@ -89,9 +88,7 @@ extern bool text_format(p_text txt, u32 max_pixels, u32 wordspace,
  * @return 新的电子书结构指针
  */
 extern p_text text_open_in_raw(const char *filename, const unsigned char *data,
-							   size_t size, t_fs_filetype ft, u32 max_pixels,
-							   u32 wordspace, t_conf_encode encode,
-							   bool reorder);
+							   size_t size, t_fs_filetype ft, u32 max_pixels, u32 wordspace, t_conf_encode encode, bool reorder);
 
 /**
  * 打开文本文件，可用于档案文件
@@ -113,15 +110,9 @@ extern p_text text_open_in_raw(const char *filename, const unsigned char *data,
  */
 extern p_text text_open_archive(const char *filename,
 								const char *archname,
-								t_fs_filetype filetype,
-								u32 max_pixels,
-								u32 wordspace,
-								t_conf_encode encode,
-								bool reorder, int where, int vertread);
+								t_fs_filetype filetype, u32 max_pixels, u32 wordspace, t_conf_encode encode, bool reorder, int where, int vertread);
 
-extern p_text chapter_open_in_umd(const char *umdfile, const char *chaptername,
-								  u_int index, u32 rowpixels, u32 wordspace,
-								  t_conf_encode encode, bool reorder);
+extern p_text chapter_open_in_umd(const char *umdfile, const char *chaptername, u_int index, u32 rowpixels, u32 wordspace, t_conf_encode encode, bool reorder);
 
 /**
  * 关闭文本

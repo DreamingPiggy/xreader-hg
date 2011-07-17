@@ -82,8 +82,7 @@ static int shift_signed(MPC_SAMPLE_FORMAT val, int shift)
  * @param frames 复制帧数
  * @param channels 声道数
  */
-static void send_to_sndbuf(void *buf, MPC_SAMPLE_FORMAT * srcbuf, int frames,
-						   int channels)
+static void send_to_sndbuf(void *buf, MPC_SAMPLE_FORMAT * srcbuf, int frames, int channels)
 {
 	unsigned n;
 	unsigned bps = 16;
@@ -172,18 +171,14 @@ static int mpc_audiocallback(void *buf, unsigned int reqn, void *pdata)
 		avail_frame = g_buff_frame_size - g_buff_frame_start;
 
 		if (avail_frame >= snd_buf_frame_size) {
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * g_info.channels],
-						   snd_buf_frame_size, g_info.channels);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * g_info.channels], snd_buf_frame_size, g_info.channels);
 			g_buff_frame_start += snd_buf_frame_size;
 			audio_buf += snd_buf_frame_size * 2;
 			snd_buf_frame_size = 0;
 		} else {
 			mpc_frame_info frame;
 
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * g_info.channels],
-						   avail_frame, g_info.channels);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * g_info.channels], avail_frame, g_info.channels);
 			snd_buf_frame_size -= avail_frame;
 			audio_buf += avail_frame * 2;
 			frame.buffer = (MPC_SAMPLE_FORMAT *) g_buff;
@@ -197,12 +192,9 @@ static int mpc_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			g_buff_frame_size = frame.samples;
 			g_buff_frame_start = 0;
 
-			incr =
-				(double) (MPC_DECODER_BUFFER_LENGTH / 2) / g_info.sample_freq;
+			incr = (double) (MPC_DECODER_BUFFER_LENGTH / 2) / g_info.sample_freq;
 			g_play_time += incr;
-			add_bitrate(&g_inst_br,
-						frame.bits * g_info.sample_freq / MPC_FRAME_LENGTH,
-						incr);
+			add_bitrate(&g_inst_br, frame.bits * g_info.sample_freq / MPC_FRAME_LENGTH, incr);
 		}
 	}
 
@@ -232,16 +224,14 @@ static int __init(void)
 }
 
 /// mpc_reader callback implementations
-static mpc_int32_t
-read_buffered_reader(mpc_reader * p_reader, void *ptr, mpc_int32_t size)
+static mpc_int32_t read_buffered_reader(mpc_reader * p_reader, void *ptr, mpc_int32_t size)
 {
 	buffered_reader_t *p_breader = (buffered_reader_t *) p_reader->data;
 
 	return (mpc_int32_t) buffered_reader_read(p_breader, ptr, size);
 }
 
-static mpc_bool_t
-seek_buffered_reader(mpc_reader * p_reader, mpc_int32_t offset)
+static mpc_bool_t seek_buffered_reader(mpc_reader * p_reader, mpc_int32_t offset)
 {
 	buffered_reader_t *p_breader = (buffered_reader_t *) p_reader->data;
 
@@ -267,8 +257,7 @@ static mpc_bool_t canseek_buffered_reader(mpc_reader * p_reader)
 	return MPC_TRUE;
 }
 
-static mpc_status mpc_reader_init_buffered_reader(mpc_reader * p_reader,
-												  const char *spath)
+static mpc_status mpc_reader_init_buffered_reader(mpc_reader * p_reader, const char *spath)
 {
 	mpc_reader tmp_reader;
 	buffered_reader_t *reader;
@@ -326,8 +315,7 @@ static int mpc_load(const char *spath, const char *lpath)
 	mpc_demux_get_info(demux, &info);
 
 	if (info.average_bitrate != 0) {
-		g_info.duration =
-			(double) info.total_file_length * 8 / info.average_bitrate;
+		g_info.duration = (double) info.total_file_length * 8 / info.average_bitrate;
 	}
 
 	g_info.avg_bps = info.average_bitrate;
@@ -339,11 +327,9 @@ static int mpc_load(const char *spath, const char *lpath)
 	static bool gain_on = true;
 
 	if (gain_on)
-		mpc_set_replay_level(demux, MPC_OLD_GAIN_REF, MPC_TRUE, MPC_TRUE,
-							 MPC_TRUE);
+		mpc_set_replay_level(demux, MPC_OLD_GAIN_REF, MPC_TRUE, MPC_TRUE, MPC_TRUE);
 	else
-		mpc_set_replay_level(demux, MPC_OLD_GAIN_REF, MPC_FALSE, MPC_FALSE,
-							 MPC_FALSE);
+		mpc_set_replay_level(demux, MPC_OLD_GAIN_REF, MPC_FALSE, MPC_FALSE, MPC_FALSE);
 	gain_on = !gain_on;
 #endif
 
@@ -496,10 +482,7 @@ static int mpc_get_info(struct music_info *pinfo)
 	}
 	if (pinfo->type & MD_GET_ENCODEMSG) {
 		if (config.show_encoder_msg) {
-			SPRINTF_S(pinfo->encode_msg,
-					  "SV %lu.%lu, Profile %s (%s)", info.stream_version & 15,
-					  info.stream_version >> 4, info.profile_name,
-					  info.encoder);
+			SPRINTF_S(pinfo->encode_msg, "SV %lu.%lu, Profile %s (%s)", info.stream_version & 15, info.stream_version >> 4, info.profile_name, info.encoder);
 		} else {
 			pinfo->encode_msg[0] = '\0';
 		}
@@ -551,8 +534,7 @@ static int mpc_set_opt(const char *unused, const char *values)
 	build_args(values, &argc, &argv);
 
 	for (i = 0; i < argc; ++i) {
-		if (!strncasecmp
-			(argv[i], "mpc_buffer_size", sizeof("mpc_buffer_size") - 1)) {
+		if (!strncasecmp(argv[i], "mpc_buffer_size", sizeof("mpc_buffer_size") - 1)) {
 			const char *p = argv[i];
 
 			if ((p = strrchr(p, '=')) != NULL) {
@@ -568,7 +550,6 @@ static int mpc_set_opt(const char *unused, const char *values)
 			}
 		}
 	}
-
 
 	clean_args(argc, argv);
 

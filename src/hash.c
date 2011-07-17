@@ -142,9 +142,7 @@ struct hash_control *table;
    Each time we look up a string, we move it to the start of the list
    for its hash code, to take advantage of referential locality.  */
 
-static struct hash_entry *hash_lookup(struct hash_control *,
-									  const char *,
-									  struct hash_entry ***, unsigned long *);
+static struct hash_entry *hash_lookup(struct hash_control *, const char *, struct hash_entry ***, unsigned long *);
 
 static struct hash_entry *hash_lookup(table, key, plist, phash)
 struct hash_control *table;
@@ -466,9 +464,7 @@ int main(void)
 				break;
 			case '?':
 				for (pp = hashtable; pp < hashtable + TABLES; pp++) {
-					printf
-						("address of hash table #%d control block is %xx\n",
-						 pp - hashtable, *pp);
+					printf("address of hash table #%d control block is %xx\n", pp - hashtable, *pp);
 				}
 				break;
 			case 'a':
@@ -480,8 +476,7 @@ int main(void)
 				break;
 			case 'f':
 				p = hash_find(h, name = what("symbol"));
-				printf("value of \"%s\" is \"%s\"\n", name,
-					   p ? p : "NOT-PRESENT");
+				printf("value of \"%s\" is \"%s\"\n", name, p ? p : "NOT-PRESENT");
 				break;
 			case 'h':
 				printf("# show old, select new default hash table number\n");
@@ -499,20 +494,15 @@ int main(void)
 				printf("x delete a symbol from table, report its value\n");
 				break;
 			case 'i':
-				p = hash_insert(h, name = what("symbol"), value =
-								what("value"));
+				p = hash_insert(h, name = what("symbol"), value = what("value"));
 				if (p) {
-					printf
-						("symbol=\"%s\"  value=\"%s\"  error=%s\n",
-						 name, value, p);
+					printf("symbol=\"%s\"  value=\"%s\"  error=%s\n", name, value, p);
 				}
 				break;
 			case 'j':
 				p = hash_jam(h, name = what("symbol"), value = what("value"));
 				if (p) {
-					printf
-						("symbol=\"%s\"  value=\"%s\"  error=%s\n",
-						 name, value, p);
+					printf("symbol=\"%s\"  value=\"%s\"  error=%s\n", name, value, p);
 				}
 				break;
 			case 'n':
@@ -521,8 +511,7 @@ int main(void)
 			case 'q':
 				exit(EXIT_SUCCESS);
 			case 'r':
-				p = hash_replace(h, name = what("symbol"), value =
-								 what("value"));
+				p = hash_replace(h, name = what("symbol"), value = what("value"));
 				printf("old value was \"%s\"\n", p ? p : "{}");
 				break;
 			case 's':
@@ -578,9 +567,7 @@ void whattable(void)
 		if (number >= 0 && number < TABLES) {
 			h = hashtable[number];
 			if (!h) {
-				printf
-					("warning: current hash-table-#%d. has no hash-control\n",
-					 number);
+				printf("warning: current hash-table-#%d. has no hash-control\n", number);
 			}
 			return;
 		} else {

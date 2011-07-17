@@ -44,16 +44,13 @@ extern void scene_exit(void);
 extern void scene_power_save(bool save);
 extern const char *scene_appdir(void);
 u32 scene_readbook(u32 selidx);
-u32 scene_readbook_raw(const char *title, const unsigned char *data,
-						 size_t size, t_fs_filetype ft);
-extern void scene_mountrbkey(u32 * ctlkey, u32 * ctlkey2, u32 * ku,
-							 u32 * kd, u32 * kl, u32 * kr);
+u32 scene_readbook_raw(const char *title, const unsigned char *data, size_t size, t_fs_filetype ft);
+extern void scene_mountrbkey(u32 * ctlkey, u32 * ctlkey2, u32 * ku, u32 * kd, u32 * kl, u32 * kr);
 extern u32 scene_options(u32 * selidx);
 extern void scene_mp3bar(void);
 extern int scene_get_infobar_height(void);
 extern int default_predraw(const win_menu_predraw_data * pData, const char *str,
-						   int max_height, int *left, int *right, int *upper,
-						   int *bottom, int width_fixup);
+						   int max_height, int *left, int *right, int *upper, int *bottom, int width_fixup);
 extern int prompt_press_any_key(void);
 extern int get_center_pos(int left, int right, const char *str);
 

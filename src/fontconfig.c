@@ -79,8 +79,7 @@ static int skip_token(const char *buf, size_t size, const char **p)
 	return *p - buf;
 }
 
-static int get_token(const char *linebuf, size_t size, const char *p, char *buf,
-					 size_t bufsize)
+static int get_token(const char *linebuf, size_t size, const char *p, char *buf, size_t bufsize)
 {
 	size_t pos;
 	const char *q = p;
@@ -169,8 +168,7 @@ static bool is_str_digit(const char *str)
 	return true;
 }
 
-static int add_token_keyword(token ** th, size_t * tsize,
-							 const char *tokenstring)
+static int add_token_keyword(token ** th, size_t * tsize, const char *tokenstring)
 {
 	token t;
 
@@ -321,9 +319,7 @@ void report_tokens(token * t, size_t size)
 				dbg_printf(d, "or");
 				break;
 			case TOKEN_BRACKET:
-				dbg_printf(d, "%s",
-						   ((int) t[i].value) ==
-						   TOKEN_BRACKET_LEFT ? "(" : ")");
+				dbg_printf(d, "%s", ((int) t[i].value) == TOKEN_BRACKET_LEFT ? "(" : ")");
 				break;
 			case TOKEN_NOTEQUAL:
 				dbg_printf(d, "!=");
@@ -416,8 +412,7 @@ static int get_var_as_bool(font_config * cfg, const token * t, bool ** boolean)
 	return 0;
 }
 
-static int get_var_as_string(font_config * cfg, const token * t,
-							 const char **string)
+static int get_var_as_string(font_config * cfg, const token * t, const char **string)
 {
 	const char *p;
 
@@ -454,20 +449,14 @@ static int token_compare(font_config * cfg, token * t, size_t tsize, size_t i)
 #if 0
 		case TOKEN_NUM:
 			if (t[right].type == TOKEN_NUM) {
-				ret =
-					((int) t[left].value ==
-					 (int) t[right].
-					 value) ? TOKEN_COMPARE_TRUE : TOKEN_COMPARE_FALSE;
+				ret = ((int) t[left].value == (int) t[right].value) ? TOKEN_COMPARE_TRUE : TOKEN_COMPARE_FALSE;
 			} else if (t[right].type == TOKEN_VAR) {
 				int *rightvalue;
 
 				ret = get_var_as_int(cfg, &t[right], &rightvalue);
 
 				if (ret == 0) {
-					ret =
-						((int) t[left].value ==
-						 *rightvalue) ? TOKEN_COMPARE_TRUE :
-						TOKEN_COMPARE_FALSE;
+					ret = ((int) t[left].value == *rightvalue) ? TOKEN_COMPARE_TRUE : TOKEN_COMPARE_FALSE;
 				}
 			}
 			break;
@@ -475,20 +464,14 @@ static int token_compare(font_config * cfg, token * t, size_t tsize, size_t i)
 			break;
 		case TOKEN_BOOL:
 			if (t[right].type == TOKEN_BOOL) {
-				ret =
-					((bool) (int) t[left].value ==
-					 (bool) (int) t[right].
-					 value) ? TOKEN_COMPARE_TRUE : TOKEN_COMPARE_FALSE;
+				ret = ((bool) (int) t[left].value == (bool) (int) t[right].value) ? TOKEN_COMPARE_TRUE : TOKEN_COMPARE_FALSE;
 			} else if (t[right].type == TOKEN_VAR) {
 				bool *rightvalue;
 
 				ret = get_var_as_bool(cfg, &t[right], &rightvalue);
 
 				if (ret == 0) {
-					ret =
-						((bool) (int) t[left].value ==
-						 *rightvalue) ? TOKEN_COMPARE_TRUE :
-						TOKEN_COMPARE_FALSE;
+					ret = ((bool) (int) t[left].value == *rightvalue) ? TOKEN_COMPARE_TRUE : TOKEN_COMPARE_FALSE;
 				}
 			}
 			break;
@@ -503,10 +486,7 @@ static int token_compare(font_config * cfg, token * t, size_t tsize, size_t i)
 							ret = get_var_as_int(cfg, &t[left], &leftvalue);
 
 							if (ret == 0) {
-								ret =
-									((int) t[right].value ==
-									 *leftvalue) ? TOKEN_COMPARE_TRUE :
-									TOKEN_COMPARE_FALSE;
+								ret = ((int) t[right].value == *leftvalue) ? TOKEN_COMPARE_TRUE : TOKEN_COMPARE_FALSE;
 							}
 						}
 						break;
@@ -517,10 +497,7 @@ static int token_compare(font_config * cfg, token * t, size_t tsize, size_t i)
 							ret = get_var_as_bool(cfg, &t[left], &leftvalue);
 
 							if (ret == 0) {
-								ret =
-									((bool) (int) t[right].value ==
-									 *leftvalue) ? TOKEN_COMPARE_TRUE :
-									TOKEN_COMPARE_FALSE;
+								ret = ((bool) (int) t[right].value == *leftvalue) ? TOKEN_COMPARE_TRUE : TOKEN_COMPARE_FALSE;
 							}
 						}
 						break;
@@ -531,9 +508,7 @@ static int token_compare(font_config * cfg, token * t, size_t tsize, size_t i)
 							ret = get_var_as_string(cfg, &t[left], &leftvalue);
 
 							if (ret == 0) {
-								if (!strcmp
-									((const char *) t[right].value,
-									 leftvalue)) {
+								if (!strcmp((const char *) t[right].value, leftvalue)) {
 									ret = TOKEN_COMPARE_TRUE;
 								} else {
 									ret = TOKEN_COMPARE_FALSE;
@@ -549,8 +524,7 @@ static int token_compare(font_config * cfg, token * t, size_t tsize, size_t i)
 	return ret;
 }
 
-static int token_notcompare(font_config * cfg, token * t, size_t tsize,
-							size_t i)
+static int token_notcompare(font_config * cfg, token * t, size_t tsize, size_t i)
 {
 	return !token_compare(cfg, t, tsize, i);
 }
@@ -580,11 +554,7 @@ static int token_gt(font_config * cfg, token * t, size_t tsize, size_t i)
 							ret = get_var_as_int(cfg, &t[left], &leftvalue);
 
 							if (ret == 0) {
-								ret =
-									(*leftvalue >
-									 (int) t[right].
-									 value) ? TOKEN_COMPARE_TRUE :
-									TOKEN_COMPARE_FALSE;
+								ret = (*leftvalue > (int) t[right].value) ? TOKEN_COMPARE_TRUE : TOKEN_COMPARE_FALSE;
 							}
 						}
 						break;
@@ -626,11 +596,7 @@ static int token_lt(font_config * cfg, token * t, size_t tsize, size_t i)
 							ret = get_var_as_int(cfg, &t[left], &leftvalue);
 
 							if (ret == 0) {
-								ret =
-									(*leftvalue <
-									 (int) t[right].
-									 value) ? TOKEN_COMPARE_TRUE :
-									TOKEN_COMPARE_FALSE;
+								ret = (*leftvalue < (int) t[right].value) ? TOKEN_COMPARE_TRUE : TOKEN_COMPARE_FALSE;
 							}
 						}
 						break;
@@ -704,27 +670,21 @@ static int token_equal(font_config * cfg, token * t, size_t tsize, size_t i)
 				if (!stricmp((const char *) t[left].value, "hintstyle")) {
 					if (!stricmp((const char *) t[right].value, "hintnone")) {
 						*interge = 0;
-					} else if (!stricmp
-							   ((const char *) t[right].value, "hintslight")) {
+					} else if (!stricmp((const char *) t[right].value, "hintslight")) {
 						*interge = 1;
-					} else if (!stricmp
-							   ((const char *) t[right].value, "hintmedium")) {
+					} else if (!stricmp((const char *) t[right].value, "hintmedium")) {
 						*interge = 2;
-					} else if (!stricmp
-							   ((const char *) t[right].value, "hintfull")) {
+					} else if (!stricmp((const char *) t[right].value, "hintfull")) {
 						*interge = 3;
 					}
 				} else if (!stricmp((const char *) t[left].value, "lcdfilter")) {
 					if (!stricmp((const char *) t[right].value, "lcdnone")) {
 						*interge = 0;
-					} else if (!stricmp
-							   ((const char *) t[right].value, "lcddefault")) {
+					} else if (!stricmp((const char *) t[right].value, "lcddefault")) {
 						*interge = 1;
-					} else if (!stricmp
-							   ((const char *) t[right].value, "lcdlight")) {
+					} else if (!stricmp((const char *) t[right].value, "lcdlight")) {
 						*interge = 2;
-					} else if (!stricmp
-							   ((const char *) t[right].value, "lcdlegacy")) {
+					} else if (!stricmp((const char *) t[right].value, "lcdlegacy")) {
 						*interge = 3;
 					}
 				} else {
@@ -786,15 +746,12 @@ int parse_tokens(font_config * cfg, token * t, size_t tsize, bool boolean_mode)
 					// jump to then
 					{
 						for (j = start; j < tsize; ++j) {
-							if (t[j].type == TOKEN_THEN
-								|| t[j].type == TOKEN_THEN
-								|| t[j].type == TOKEN_END) {
+							if (t[j].type == TOKEN_THEN || t[j].type == TOKEN_THEN || t[j].type == TOKEN_END) {
 								break;
 							}
 						}
 
-						if (j == tsize || t[j].type == TOKEN_IF
-							|| t[j].type == TOKEN_END) {
+						if (j == tsize || t[j].type == TOKEN_IF || t[j].type == TOKEN_END) {
 							dbg_printf(d, "Missing then");
 							return -1;
 						}
@@ -856,21 +813,15 @@ int parse_tokens(font_config * cfg, token * t, size_t tsize, bool boolean_mode)
 
 					if (ret == TOKEN_COMPARE_TRUE) {
 						if (elsepos >= 0) {
-							ret =
-								parse_tokens(cfg, &t[start], elsepos - start,
-											 false);
+							ret = parse_tokens(cfg, &t[start], elsepos - start, false);
 						} else {
-							ret =
-								parse_tokens(cfg, &t[start], end - start + 1,
-											 false);
+							ret = parse_tokens(cfg, &t[start], end - start + 1, false);
 						}
 
 						i = end + 1;
 					} else {
 						if (elsepos >= 0) {
-							ret =
-								parse_tokens(cfg, &t[elsepos + 1],
-											 end - elsepos, false);
+							ret = parse_tokens(cfg, &t[elsepos + 1], end - elsepos, false);
 						}
 
 						i = end + 1;
@@ -962,16 +913,13 @@ fontconfig_mgr *fontconfigmgr_init(void)
 	return font_mgr;
 }
 
-font_config *fontconfigmgr_add_cache(fontconfig_mgr * font_mgr,
-									 font_config * p_cfg)
+font_config *fontconfigmgr_add_cache(fontconfig_mgr * font_mgr, font_config * p_cfg)
 {
 	font_config *p = NULL;
 
 	if (font_mgr->cnt + 1 > font_mgr->caps) {
 		font_mgr->caps += font_mgr->cnt + 16;
-		font_mgr->cache =
-			safe_realloc(font_mgr->cache,
-						 sizeof(font_mgr->cache[0]) * font_mgr->caps);
+		font_mgr->cache = safe_realloc(font_mgr->cache, sizeof(font_mgr->cache[0]) * font_mgr->caps);
 	}
 
 	if (font_mgr->cache == NULL) {
@@ -984,17 +932,14 @@ font_config *fontconfigmgr_add_cache(fontconfig_mgr * font_mgr,
 	return p;
 }
 
-font_config *fontconfigmgr_lookup(fontconfig_mgr * font_mgr,
-								  const char *font_name, int pixelsize,
-								  bool cjkmode)
+font_config *fontconfigmgr_lookup(fontconfig_mgr * font_mgr, const char *font_name, int pixelsize, bool cjkmode)
 {
 	size_t i;
 	font_config my_font_config, *p = NULL;
 
 	for (i = 0; i < font_mgr->cnt; ++i) {
 		if (!strcmp(font_mgr->cache[i].fontname, font_name)) {
-			if (font_mgr->cache[i].pixelsize == pixelsize
-				&& font_mgr->cache[i].cjkmode == cjkmode) {
+			if (font_mgr->cache[i].pixelsize == pixelsize && font_mgr->cache[i].cjkmode == cjkmode) {
 				return &font_mgr->cache[i];
 			}
 		}

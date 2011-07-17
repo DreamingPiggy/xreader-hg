@@ -90,8 +90,7 @@ static inline int calc_gi(void)
 static void update_auto_bookmark(void)
 {
 	if (g_bm != NULL) {
-		g_bm->row[0] =
-			(fs->rows[fs->crow >> 10] + (fs->crow & 0x3FF))->start - fs->buf;
+		g_bm->row[0] = (fs->rows[fs->crow >> 10] + (fs->crow & 0x3FF))->start - fs->buf;
 	}
 }
 
@@ -157,8 +156,7 @@ static float calc_percent(u32 current, u32 total)
 	return percent;
 }
 
-static char *strfloatpad(char *str, int maxsize, float num, int pad,
-						 const char *afterstr)
+static char *strfloatpad(char *str, int maxsize, float num, int pad, const char *afterstr)
 {
 	int d, i;
 
@@ -193,8 +191,7 @@ static inline void MakeAlpha(u8 * wpSrc, u8 * wpDes, u8 wAlpha)
 	*wpDes = result / 255;
 }
 
-static void disp_fillrect_tran(u32 x1, u32 y1, u32 x2, u32 y2,
-							   pixel color, u8 alpha)
+static void disp_fillrect_tran(u32 x1, u32 y1, u32 x2, u32 y2, pixel color, u8 alpha)
 {
 	pixel *vsram, *vsram_end, *vram, *vram_end;
 	u32 wu32s;
@@ -257,24 +254,18 @@ static void draw_infobar_single_line(int vertread)
 {
 	switch (vertread) {
 		case conf_vertread_reversal:
-			disp_line(0, scene_get_infobar_height(), (PSP_SCREEN_WIDTH - 1),
-					  scene_get_infobar_height(), config.forecolor);
+			disp_line(0, scene_get_infobar_height(), (PSP_SCREEN_WIDTH - 1), scene_get_infobar_height(), config.forecolor);
 			break;
 		case conf_vertread_lvert:
 			disp_line((PSP_SCREEN_WIDTH - 1) - scene_get_infobar_height(), 0,
-					  (PSP_SCREEN_WIDTH - 1) - scene_get_infobar_height(),
-					  (PSP_SCREEN_HEIGHT - 1), config.forecolor);
+					  (PSP_SCREEN_WIDTH - 1) - scene_get_infobar_height(), (PSP_SCREEN_HEIGHT - 1), config.forecolor);
 			break;
 		case conf_vertread_rvert:
-			disp_line(scene_get_infobar_height(), 0,
-					  scene_get_infobar_height(), (PSP_SCREEN_HEIGHT - 1),
-					  config.forecolor);
+			disp_line(scene_get_infobar_height(), 0, scene_get_infobar_height(), (PSP_SCREEN_HEIGHT - 1), config.forecolor);
 			break;
 		case conf_vertread_horz:
 			disp_line(0, (PSP_SCREEN_HEIGHT - 1) - scene_get_infobar_height(),
-					  (PSP_SCREEN_WIDTH - 1),
-					  (PSP_SCREEN_HEIGHT - 1) - scene_get_infobar_height(),
-					  config.forecolor);
+					  (PSP_SCREEN_WIDTH - 1), (PSP_SCREEN_HEIGHT - 1) - scene_get_infobar_height(), config.forecolor);
 			break;
 		default:
 			break;
@@ -285,27 +276,19 @@ static void draw_infobar_rect(int vertread)
 {
 	switch (vertread) {
 		case conf_vertread_reversal:
-			disp_fillrect_tran(0, scene_get_infobar_height(),
-							   (PSP_SCREEN_WIDTH - 1), 0, config.forecolor,
-							   bgalpha);
+			disp_fillrect_tran(0, scene_get_infobar_height(), (PSP_SCREEN_WIDTH - 1), 0, config.forecolor, bgalpha);
 			break;
 		case conf_vertread_lvert:
 			disp_fillrect_tran(PSP_SCREEN_WIDTH - scene_get_infobar_height() -
-							   1, 0, (PSP_SCREEN_WIDTH - 1),
-							   (PSP_SCREEN_HEIGHT - 1), config.forecolor,
-							   bgalpha);
+							   1, 0, (PSP_SCREEN_WIDTH - 1), (PSP_SCREEN_HEIGHT - 1), config.forecolor, bgalpha);
 			break;
 		case conf_vertread_rvert:
-			disp_fillrect_tran(0, 0, scene_get_infobar_height(),
-							   (PSP_SCREEN_HEIGHT - 1), config.forecolor,
-							   bgalpha);
+			disp_fillrect_tran(0, 0, scene_get_infobar_height(), (PSP_SCREEN_HEIGHT - 1), config.forecolor, bgalpha);
 			break;
 		case conf_vertread_horz:
 			disp_fillrect_tran(0,
 							   (PSP_SCREEN_HEIGHT - 1) -
-							   (scene_get_infobar_height()),
-							   (PSP_SCREEN_WIDTH - 1), (PSP_SCREEN_HEIGHT - 1),
-							   config.forecolor, bgalpha);
+							   (scene_get_infobar_height()), (PSP_SCREEN_WIDTH - 1), (PSP_SCREEN_HEIGHT - 1), config.forecolor, bgalpha);
 			break;
 		default:
 			break;
@@ -344,8 +327,7 @@ static void get_infobar_string(u32 selidx, char *dest, int size)
 		autopageinfo[0] = 0;
 	else if (config.autopagetype == 1) {
 		if (config.autopage != 0)
-			SPRINTF_S(autopageinfo, _("%s: 时间 %d 速度 %d"),
-					  _("自动滚屏"), config.autolinedelay, config.autopage);
+			SPRINTF_S(autopageinfo, _("%s: 时间 %d 速度 %d"), _("自动滚屏"), config.autolinedelay, config.autopage);
 		else
 			autopageinfo[0] = 0;
 	} else {
@@ -365,15 +347,11 @@ static void get_infobar_string(u32 selidx, char *dest, int size)
 
 		SPRINTF_S(t, "%s %s GI: %d %s %s",
 				  (fs->ucs == 2) ? "UTF-8" : (fs->ucs ==
-											  1 ? "UCS " :
-											  conf_get_encodename
-											  (config.encode)),
-				  g_menu->root[selidx].name, calc_gi(), autopageinfo, u);
+											  1 ? "UCS " : conf_get_encodename(config.encode)), g_menu->root[selidx].name, calc_gi(), autopageinfo, u);
 		if (config.linenum_style) {
 			SPRINTF_S(cr, "%u/%u  %s", fs->crow + 1, fs->row_count, t);
 		} else {
-			strfloatpad(cr, sizeof(cr), calc_percent(fs->crow, fs->row_count),
-						10, t);
+			strfloatpad(cr, sizeof(cr), calc_percent(fs->crow, fs->row_count), 10, t);
 		}
 	} else if (scene_readbook_in_raw_mode == true) {
 		char t[512], u[512];
@@ -383,16 +361,11 @@ static void get_infobar_string(u32 selidx, char *dest, int size)
 		else
 			STRCPY_S(u, "");
 		SPRINTF_S(t, "%s %s GI: %d %s %s",
-				  (fs->ucs == 2) ? "UTF-8" : (fs->ucs ==
-											  1 ? "UCS " :
-											  conf_get_encodename
-											  (config.encode)), g_titlename,
-				  calc_gi(), autopageinfo, u);
+				  (fs->ucs == 2) ? "UTF-8" : (fs->ucs == 1 ? "UCS " : conf_get_encodename(config.encode)), g_titlename, calc_gi(), autopageinfo, u);
 		if (config.linenum_style) {
 			SPRINTF_S(cr, "%u/%u  %s", fs->crow + 1, fs->row_count, t);
 		} else {
-			strfloatpad(cr, sizeof(cr), calc_percent(fs->crow, fs->row_count),
-						10, t);
+			strfloatpad(cr, sizeof(cr), calc_percent(fs->crow, fs->row_count), 10, t);
 		}
 	} else {
 		char t[512], u[512];
@@ -403,15 +376,11 @@ static void get_infobar_string(u32 selidx, char *dest, int size)
 			STRCPY_S(u, "");
 		SPRINTF_S(t, "%s %s GI: %d %s %s",
 				  (fs->ucs == 2) ? "UTF-8" : (fs->ucs ==
-											  1 ? "UCS " :
-											  conf_get_encodename
-											  (config.encode)),
-				  g_menu->root[selidx].compname->ptr, calc_gi(), autopageinfo, u);
+											  1 ? "UCS " : conf_get_encodename(config.encode)), g_menu->root[selidx].compname->ptr, calc_gi(), autopageinfo, u);
 		if (config.linenum_style) {
 			SPRINTF_S(cr, "%u/%u  %s", fs->crow + 1, fs->row_count, t);
 		} else {
-			strfloatpad(cr, sizeof(cr), calc_percent(fs->crow, fs->row_count),
-						10, t);
+			strfloatpad(cr, sizeof(cr), calc_percent(fs->crow, fs->row_count), 10, t);
 		}
 	}
 
@@ -428,15 +397,11 @@ static inline int ttf_get_infobar_alignment(const char *cr, int wordspace)
 			s = 0;
 			break;
 		case conf_align_right:
-			s = PSP_SCREEN_WIDTH -
-				strlen(cr) * (config.infobar_fontsize) / 2 -
-				(mbcslen((unsigned char *) cr) - 1) * wordspace;
+			s = PSP_SCREEN_WIDTH - strlen(cr) * (config.infobar_fontsize) / 2 - (mbcslen((unsigned char *) cr) - 1) * wordspace;
 			s = (s < 0 || s > PSP_SCREEN_WIDTH - 1) ? 0 : s;
 			break;
 		case conf_align_center:
-			s = (PSP_SCREEN_WIDTH -
-				 strlen(cr) * (config.infobar_fontsize) / 2 -
-				 (mbcslen((unsigned char *) cr) - 1) * wordspace) / 2;
+			s = (PSP_SCREEN_WIDTH - strlen(cr) * (config.infobar_fontsize) / 2 - (mbcslen((unsigned char *) cr) - 1) * wordspace) / 2;
 			s = (s < 0 || s > PSP_SCREEN_WIDTH - 1) ? 0 : s;
 			break;
 		default:
@@ -447,8 +412,7 @@ static inline int ttf_get_infobar_alignment(const char *cr, int wordspace)
 	return s;
 }
 
-static void draw_infobar_info_ttf(PBookViewData pView, u32 selidx,
-								  int vertread)
+static void draw_infobar_info_ttf(PBookViewData pView, u32 selidx, int vertread)
 {
 	char cr[512];
 	int wordspace = 0;
@@ -472,10 +436,7 @@ static void draw_infobar_info_ttf(PBookViewData pView, u32 selidx,
 												  PSP_SCREEN_HEIGHT -
 												  scene_get_infobar_height() -
 												  1, config.forecolor,
-												  (const u8 *) cr,
-												  960 / config.infobar_fontsize,
-												  wordspace, 0,
-												  config.infobar_fontsize, 0);
+												  (const u8 *) cr, 960 / config.infobar_fontsize, wordspace, 0, config.infobar_fontsize, 0);
 			}
 			break;
 		case conf_vertread_lvert:
@@ -484,22 +445,14 @@ static void draw_infobar_info_ttf(PBookViewData pView, u32 selidx,
 											   PSP_SCREEN_WIDTH -
 											   scene_get_infobar_height() - 1,
 											   (PSP_SCREEN_HEIGHT - 1),
-											   config.forecolor,
-											   (const u8 *) cr,
-											   544 / config.infobar_fontsize,
-											   wordspace, 0,
-											   config.infobar_fontsize, 0);
+											   config.forecolor, (const u8 *) cr, 544 / config.infobar_fontsize, wordspace, 0, config.infobar_fontsize, 0);
 			}
 			break;
 		case conf_vertread_rvert:
 			{
 				disp_putnstring_rvert_truetype(cttfinfo, ettfinfo,
 											   scene_get_infobar_height(), 0,
-											   config.forecolor,
-											   (const u8 *) cr,
-											   544 / config.infobar_fontsize,
-											   wordspace, 0,
-											   config.infobar_fontsize, 0);
+											   config.forecolor, (const u8 *) cr, 544 / config.infobar_fontsize, wordspace, 0, config.infobar_fontsize, 0);
 			}
 			break;
 		case conf_vertread_horz:
@@ -509,11 +462,7 @@ static void draw_infobar_info_ttf(PBookViewData pView, u32 selidx,
 				disp_putnstring_horz_truetype(cttfinfo, ettfinfo, s,
 											  PSP_SCREEN_HEIGHT -
 											  scene_get_infobar_height() - 1,
-											  config.forecolor,
-											  (const u8 *) cr,
-											  960 / config.infobar_fontsize,
-											  wordspace, 0,
-											  config.infobar_fontsize, 0);
+											  config.forecolor, (const u8 *) cr, 960 / config.infobar_fontsize, wordspace, 0, config.infobar_fontsize, 0);
 			}
 			break;
 		default:
@@ -569,24 +518,17 @@ static void draw_infobar_info(PBookViewData pView, u32 selidx, int vertread)
 				disp_putnstringreversal_sys(s,
 											PSP_SCREEN_HEIGHT -
 											config.infobar_fontsize,
-											config.forecolor, (const u8 *) cr,
-											960 / config.infobar_fontsize,
-											wordspace, 0,
-											config.infobar_fontsize, 0);
+											config.forecolor, (const u8 *) cr, 960 / config.infobar_fontsize, wordspace, 0, config.infobar_fontsize, 0);
 			}
 			break;
 		case conf_vertread_lvert:
 			disp_putnstringlvert_sys(PSP_SCREEN_WIDTH - config.infobar_fontsize,
 									 (PSP_SCREEN_HEIGHT - 1),
-									 config.forecolor, (const u8 *) cr,
-									 544 / config.infobar_fontsize, wordspace,
-									 0, config.infobar_fontsize, 0);
+									 config.forecolor, (const u8 *) cr, 544 / config.infobar_fontsize, wordspace, 0, config.infobar_fontsize, 0);
 			break;
 		case conf_vertread_rvert:
 			disp_putnstringrvert_sys(config.infobar_fontsize - 1, 0,
-									 config.forecolor, (const u8 *) cr,
-									 544 / config.infobar_fontsize, wordspace,
-									 0, config.infobar_fontsize, 0);
+									 config.forecolor, (const u8 *) cr, 544 / config.infobar_fontsize, wordspace, 0, config.infobar_fontsize, 0);
 			break;
 		case conf_vertread_horz:
 			{
@@ -596,10 +538,7 @@ static void draw_infobar_info(PBookViewData pView, u32 selidx, int vertread)
 				disp_putnstringhorz_sys(s,
 										PSP_SCREEN_HEIGHT -
 										config.infobar_fontsize,
-										config.forecolor, (const u8 *) cr,
-										960 / config.infobar_fontsize,
-										wordspace, 0, config.infobar_fontsize,
-										0);
+										config.forecolor, (const u8 *) cr, 960 / config.infobar_fontsize, wordspace, 0, config.infobar_fontsize, 0);
 			}
 			break;
 		default:
@@ -609,8 +548,7 @@ static void draw_infobar_info(PBookViewData pView, u32 selidx, int vertread)
 
 #if defined(ENABLE_MUSIC) && defined(ENABLE_LYRIC)
 #ifdef ENABLE_TTF
-static void draw_infobar_lyric_ttf(PBookViewData pView, u32 selidx,
-								   int vertread)
+static void draw_infobar_lyric_ttf(PBookViewData pView, u32 selidx, int vertread)
 {
 	const char *ls[1];
 	u32 ss[1];
@@ -635,39 +573,26 @@ static void draw_infobar_lyric_ttf(PBookViewData pView, u32 selidx,
 										 ss[0] * config.infobar_fontsize /
 										 4),
 										PSP_SCREEN_HEIGHT -
-										scene_get_infobar_height() - 1,
-										config.forecolor,
-										(const u8 *) t, ss[0],
-										wordspace, 0, config.infobar_fontsize,
-										0);
+										scene_get_infobar_height() - 1, config.forecolor, (const u8 *) t, ss[0], wordspace, 0, config.infobar_fontsize, 0);
 				break;
 			case conf_vertread_lvert:
 				disp_putnstringlvert(PSP_SCREEN_WIDTH -
 									 scene_get_infobar_height() - 1,
 									 (PSP_SCREEN_HEIGHT - 1) - (136 -
 																ss[0] *
-																config.
-																infobar_fontsize
-																/ 4),
-									 config.forecolor, (const u8 *) t, ss[0],
-									 wordspace, 0, config.infobar_fontsize, 0);
+																config.infobar_fontsize
+																/ 4), config.forecolor, (const u8 *) t, ss[0], wordspace, 0, config.infobar_fontsize, 0);
 				break;
 			case conf_vertread_rvert:
 				disp_putnstringrvert(scene_get_infobar_height(),
 									 (136 -
-									  ss[0] * config.infobar_fontsize / 4),
-									 config.forecolor, (const u8 *) t,
-									 ss[0], wordspace, 0,
-									 config.infobar_fontsize, 0);
+									  ss[0] * config.infobar_fontsize / 4), config.forecolor, (const u8 *) t, ss[0], wordspace, 0, config.infobar_fontsize, 0);
 				break;
 			case conf_vertread_horz:
 				disp_putnstringhorz((240 -
 									 ss[0] * config.infobar_fontsize / 4),
 									PSP_SCREEN_HEIGHT -
-									scene_get_infobar_height() - 1,
-									config.forecolor, (const u8 *) t,
-									ss[0], wordspace, 0,
-									config.infobar_fontsize, 0);
+									scene_get_infobar_height() - 1, config.forecolor, (const u8 *) t, ss[0], wordspace, 0, config.infobar_fontsize, 0);
 				break;
 			default:
 				break;
@@ -701,10 +626,7 @@ static void draw_infobar_lyric(PBookViewData pView, u32 selidx, int vertread)
 											 ss[0] * config.infobar_fontsize /
 											 4),
 											PSP_SCREEN_HEIGHT -
-											scene_get_infobar_height(),
-											config.forecolor, (const u8 *) t,
-											ss[0], wordspace, 0,
-											config.infobar_fontsize, 0);
+											scene_get_infobar_height(), config.forecolor, (const u8 *) t, ss[0], wordspace, 0, config.infobar_fontsize, 0);
 				break;
 			case conf_vertread_lvert:
 				disp_putnstringlvert_sys(PSP_SCREEN_WIDTH -
@@ -712,28 +634,19 @@ static void draw_infobar_lyric(PBookViewData pView, u32 selidx, int vertread)
 										 (PSP_SCREEN_HEIGHT - 1) -
 										 (136 -
 										  ss[0] * config.infobar_fontsize / 4),
-										 config.forecolor,
-										 (const u8 *) t, ss[0],
-										 wordspace, 0, config.infobar_fontsize,
-										 0);
+										 config.forecolor, (const u8 *) t, ss[0], wordspace, 0, config.infobar_fontsize, 0);
 				break;
 			case conf_vertread_rvert:
 				disp_putnstringrvert_sys(scene_get_infobar_height() - 1,
 										 (136 -
 										  ss[0] * config.infobar_fontsize / 4),
-										 config.forecolor,
-										 (const u8 *) t, ss[0],
-										 wordspace, 0, config.infobar_fontsize,
-										 0);
+										 config.forecolor, (const u8 *) t, ss[0], wordspace, 0, config.infobar_fontsize, 0);
 				break;
 			case conf_vertread_horz:
 				disp_putnstringhorz_sys((240 -
 										 ss[0] * config.infobar_fontsize / 4),
 										PSP_SCREEN_HEIGHT -
-										scene_get_infobar_height(),
-										config.forecolor, (const u8 *) t,
-										ss[0], wordspace, 0,
-										config.infobar_fontsize, 0);
+										scene_get_infobar_height(), config.forecolor, (const u8 *) t, ss[0], wordspace, 0, config.infobar_fontsize, 0);
 				break;
 			default:
 				break;
@@ -771,8 +684,7 @@ int scene_book_reload(PBookViewData pView, u32 selidx)
 	extern bool g_force_text_view_mode;
 	extern p_umd_chapter p_umdchapter;
 
-	if (where == scene_in_zip || where == scene_in_chm || where == scene_in_umd
-		|| where == scene_in_rar) {
+	if (where == scene_in_zip || where == scene_in_chm || where == scene_in_umd || where == scene_in_rar) {
 		STRCPY_S(pView->filename, g_menu->root[selidx].compname->ptr);
 		STRCPY_S(pView->archname, config.shortpath);
 		if (psp_fw_version <= 0x03070110) {
@@ -780,8 +692,7 @@ int scene_book_reload(PBookViewData pView, u32 selidx)
 		} else {
 			STRCPY_S(pView->bookmarkname, config.path);
 		}
-		if (config.shortpath[strlen(config.shortpath) - 1] != '/' &&
-			pView->filename[0] != '/')
+		if (config.shortpath[strlen(config.shortpath) - 1] != '/' && pView->filename[0] != '/')
 			STRCAT_S(pView->bookmarkname, "/");
 		STRCAT_S(pView->bookmarkname, pView->filename);
 	} else {
@@ -795,8 +706,7 @@ int scene_book_reload(PBookViewData pView, u32 selidx)
 			STRCPY_S(pView->bookmarkname, pView->filename);
 		}
 	}
-	dbg_printf(d, "%s: fn %s bookmarkname %s archname %s", __func__,
-			   pView->filename, pView->bookmarkname, pView->archname);
+	dbg_printf(d, "%s: fn %s bookmarkname %s archname %s", __func__, pView->filename, pView->bookmarkname, pView->archname);
 
 	if (g_bm != NULL) {
 		bookmark_close(g_bm);
@@ -806,8 +716,7 @@ int scene_book_reload(PBookViewData pView, u32 selidx)
 	g_bm = bookmark_open(pView->bookmarkname);
 
 	if (pView->rrow == INVALID) {
-		if (!config.autobm
-			|| (t_fs_filetype) g_menu->root[selidx].data == fs_filetype_unknown) {
+		if (!config.autobm || (t_fs_filetype) g_menu->root[selidx].data == fs_filetype_unknown) {
 			// disable binary file type text's bookmark
 			pView->rrow = 0;
 		} else {
@@ -829,41 +738,29 @@ int scene_book_reload(PBookViewData pView, u32 selidx)
 
 	if (g_force_text_view_mode == false) {
 		if (scene_in_umd == where && p_umdchapter) {
-			fs = chapter_open_in_umd(pView->filename, pView->archname,
-									 selidx, pixelsperrow, config.wordspace,
-									 config.encode, config.reordertxt);
+			fs = chapter_open_in_umd(pView->filename, pView->archname, selidx, pixelsperrow, config.wordspace, config.encode, config.reordertxt);
 		} else {
 			fs = text_open_archive(pView->filename, pView->archname,
 								   (t_fs_filetype) g_menu->root[selidx].data,
-								   pixelsperrow, config.wordspace,
-								   config.encode, config.reordertxt, where,
-								   config.vertread);
+								   pixelsperrow, config.wordspace, config.encode, config.reordertxt, where, config.vertread);
 		}
 	} else {
 		const char *ext = utils_fileext(pView->filename);
 
 		if (ext && !stricmp(ext, "umd")) {
 			fs = text_open_archive(pView->filename, pView->archname,
-								   fs_filetype_umd,
-								   pixelsperrow, config.wordspace,
-								   config.encode, config.reordertxt, where,
-								   config.vertread);
+								   fs_filetype_umd, pixelsperrow, config.wordspace, config.encode, config.reordertxt, where, config.vertread);
 		} else {
 			fs = text_open_archive(pView->filename, pView->archname,
-								   fs_filetype_txt,
-								   pixelsperrow, config.wordspace,
-								   config.encode, config.reordertxt, where,
-								   config.vertread);
+								   fs_filetype_txt, pixelsperrow, config.wordspace, config.encode, config.reordertxt, where, config.vertread);
 		}
 	}
 
 	if (fs == NULL) {
 		win_msg(_("文件打开失败"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
-		dbg_printf(d, _("scene_book_reload: 文件%s打开失败 where=%d"),
-				   pView->filename, where);
+		dbg_printf(d, _("scene_book_reload: 文件%s打开失败 where=%d"), pView->filename, where);
 		dbg_printf(d, _("scene_book_reload: %s %s %s"), g_menu->root[selidx].name,
-				   g_menu->root[selidx].shortname->ptr,
-				   g_menu->root[selidx].compname->ptr, where);
+				   g_menu->root[selidx].shortname->ptr, g_menu->root[selidx].compname->ptr, where);
 		freq_leave(fid);
 
 		if (g_bm != NULL) {
@@ -878,20 +775,16 @@ int scene_book_reload(PBookViewData pView, u32 selidx)
 		p_textrow tr;
 
 		if (fs->row_count != 0)
-			tr = fs->rows[(fs->row_count - 1) >> 10] +
-				((fs->row_count - 1) & 0x3FF);
+			tr = fs->rows[(fs->row_count - 1) >> 10] + ((fs->row_count - 1) & 0x3FF);
 		else
 			tr = fs->rows[0];
 		pView->rrow = tr->start - fs->buf;
 		pView->text_needrb = true;
 	}
-	if (pView->text_needrb
-		&& (t_fs_filetype) g_menu->root[selidx].data != fs_filetype_unknown) {
+	if (pView->text_needrb && (t_fs_filetype) g_menu->root[selidx].data != fs_filetype_unknown) {
 		pView->rowtop = 0;
 		fs->crow = 1;
-		while (fs->crow < fs->row_count
-			   && (fs->rows[fs->crow >> 10] +
-				   (fs->crow & 0x3FF))->start - fs->buf <= pView->rrow)
+		while (fs->crow < fs->row_count && (fs->rows[fs->crow >> 10] + (fs->crow & 0x3FF))->start - fs->buf <= pView->rrow)
 			fs->crow++;
 		fs->crow--;
 		pView->text_needrb = false;
@@ -916,10 +809,7 @@ static void scene_printtext_reversal(PBookViewData pView)
 	p_textrow tr = fs->rows[fs->crow >> 10] + (fs->crow & 0x3FF);
 
 	disp_putnstringreversal(config.borderspace, config.borderspace,
-							config.forecolor, (const u8 *) tr->start,
-							(int) tr->count, config.wordspace,
-							pView->rowtop,
-							DISP_BOOK_FONTSIZE - pView->rowtop, 0);
+							config.forecolor, (const u8 *) tr->start, (int) tr->count, config.wordspace, pView->rowtop, DISP_BOOK_FONTSIZE - pView->rowtop, 0);
 	for (cidx = 1; cidx < drperpage && fs->crow + cidx < fs->row_count; cidx++) {
 		tr = fs->rows[(fs->crow + cidx) >> 10] + ((fs->crow + cidx) & 0x3FF);
 		disp_putnstringreversal(config.borderspace,
@@ -928,9 +818,7 @@ static void scene_printtext_reversal(PBookViewData pView)
 								 config.rowspace) * cidx -
 								pView->rowtop, config.forecolor,
 								(const u8 *) tr->start, (int) tr->count,
-								config.wordspace, 0, DISP_BOOK_FONTSIZE,
-								config.infobar ? PSP_SCREEN_HEIGHT -
-								scene_get_infobar_height() : PSP_SCREEN_HEIGHT);
+								config.wordspace, 0, DISP_BOOK_FONTSIZE, config.infobar ? PSP_SCREEN_HEIGHT - scene_get_infobar_height() : PSP_SCREEN_HEIGHT);
 	}
 }
 
@@ -941,9 +829,7 @@ static void scene_printtext_rvert(PBookViewData pView)
 
 	disp_putnstringrvert((PSP_SCREEN_WIDTH - 1) - config.borderspace,
 						 config.borderspace, config.forecolor,
-						 (const u8 *) tr->start, (int) tr->count,
-						 config.wordspace, pView->rowtop,
-						 DISP_BOOK_FONTSIZE - pView->rowtop, 0);
+						 (const u8 *) tr->start, (int) tr->count, config.wordspace, pView->rowtop, DISP_BOOK_FONTSIZE - pView->rowtop, 0);
 	for (cidx = 1; cidx < drperpage && fs->crow + cidx < fs->row_count; cidx++) {
 		tr = fs->rows[(fs->crow + cidx) >> 10] + ((fs->crow + cidx) & 0x3FF);
 		disp_putnstringrvert((PSP_SCREEN_WIDTH - 1) -
@@ -952,9 +838,7 @@ static void scene_printtext_rvert(PBookViewData pView)
 							 config.borderspace + pView->rowtop,
 							 config.borderspace, config.forecolor,
 							 (const u8 *) tr->start, (int) tr->count,
-							 config.wordspace, 0, DISP_BOOK_FONTSIZE,
-							 config.infobar ? scene_get_infobar_height() +
-							 1 : 1);
+							 config.wordspace, 0, DISP_BOOK_FONTSIZE, config.infobar ? scene_get_infobar_height() + 1 : 1);
 	}
 }
 
@@ -965,9 +849,7 @@ static void scene_printtext_lvert(PBookViewData pView)
 
 	disp_putnstringlvert(config.borderspace,
 						 (PSP_SCREEN_HEIGHT - 1) - config.borderspace,
-						 config.forecolor, (const u8 *) tr->start,
-						 (int) tr->count, config.wordspace,
-						 pView->rowtop, DISP_BOOK_FONTSIZE - pView->rowtop, 0);
+						 config.forecolor, (const u8 *) tr->start, (int) tr->count, config.wordspace, pView->rowtop, DISP_BOOK_FONTSIZE - pView->rowtop, 0);
 	for (cidx = 1; cidx < drperpage && fs->crow + cidx < fs->row_count; cidx++) {
 		tr = fs->rows[(fs->crow + cidx) >> 10] + ((fs->crow + cidx) & 0x3FF);
 		disp_putnstringlvert((DISP_BOOK_FONTSIZE +
@@ -976,9 +858,7 @@ static void scene_printtext_lvert(PBookViewData pView)
 							 (PSP_SCREEN_HEIGHT - 1) -
 							 config.borderspace, config.forecolor,
 							 (const u8 *) tr->start, (int) tr->count,
-							 config.wordspace, 0, DISP_BOOK_FONTSIZE,
-							 config.infobar ? (PSP_SCREEN_WIDTH - 1) -
-							 scene_get_infobar_height() : PSP_SCREEN_WIDTH);
+							 config.wordspace, 0, DISP_BOOK_FONTSIZE, config.infobar ? (PSP_SCREEN_WIDTH - 1) - scene_get_infobar_height() : PSP_SCREEN_WIDTH);
 	}
 
 }
@@ -989,9 +869,7 @@ static void scene_printtext_horz(PBookViewData pView)
 	p_textrow tr = fs->rows[fs->crow >> 10] + (fs->crow & 0x3FF);
 
 	disp_putnstringhorz(config.borderspace, config.borderspace,
-						config.forecolor, (const u8 *) tr->start,
-						(int) tr->count, config.wordspace,
-						pView->rowtop, DISP_BOOK_FONTSIZE - pView->rowtop, 0);
+						config.forecolor, (const u8 *) tr->start, (int) tr->count, config.wordspace, pView->rowtop, DISP_BOOK_FONTSIZE - pView->rowtop, 0);
 	for (cidx = 1; cidx < drperpage && fs->crow + cidx < fs->row_count; cidx++) {
 		tr = fs->rows[(fs->crow + cidx) >> 10] + ((fs->crow + cidx) & 0x3FF);
 		disp_putnstringhorz(config.borderspace,
@@ -999,29 +877,19 @@ static void scene_printtext_horz(PBookViewData pView)
 												  config.rowspace) *
 							cidx - pView->rowtop, config.forecolor,
 							(const u8 *) tr->start, (int) tr->count,
-							config.wordspace, 0, DISP_BOOK_FONTSIZE,
-							config.infobar ? (PSP_SCREEN_HEIGHT - 1) -
-							scene_get_infobar_height() : PSP_SCREEN_HEIGHT);
+							config.wordspace, 0, DISP_BOOK_FONTSIZE, config.infobar ? (PSP_SCREEN_HEIGHT - 1) - scene_get_infobar_height() : PSP_SCREEN_HEIGHT);
 	}
 }
 
 static void scene_draw_scrollbar_reversal(void)
 {
-	u32 slen =
-		config.infobar ? (PSP_SCREEN_HEIGHT - 1 - 1 -
-						  scene_get_infobar_height())
-		: (PSP_SCREEN_HEIGHT - 1), bsize =
-		2 + (slen - 2) * rowsperpage / fs->row_count, startp =
-		slen * fs->crow / fs->row_count, endp;
+	u32 slen = config.infobar ? (PSP_SCREEN_HEIGHT - 1 - 1 - scene_get_infobar_height())
+		: (PSP_SCREEN_HEIGHT - 1), bsize = 2 + (slen - 2) * rowsperpage / fs->row_count, startp = slen * fs->crow / fs->row_count, endp;
 	if (startp + bsize > slen)
 		startp = slen - bsize;
 	endp = startp + bsize;
-	disp_fillrect_tran(0, PSP_SCREEN_HEIGHT - 1,
-					   config.scrollbar_width, PSP_SCREEN_HEIGHT - 1 - slen,
-					   config.forecolor, bgalpha);
-	disp_fillrect_tran(0, PSP_SCREEN_HEIGHT - 1 - endp, config.scrollbar_width,
-					   PSP_SCREEN_HEIGHT - 1 - startp, config.forecolor,
-					   fgalpha);
+	disp_fillrect_tran(0, PSP_SCREEN_HEIGHT - 1, config.scrollbar_width, PSP_SCREEN_HEIGHT - 1 - slen, config.forecolor, bgalpha);
+	disp_fillrect_tran(0, PSP_SCREEN_HEIGHT - 1 - endp, config.scrollbar_width, PSP_SCREEN_HEIGHT - 1 - startp, config.forecolor, fgalpha);
 }
 
 static void scene_draw_scrollbar_lvert(void)
@@ -1029,16 +897,12 @@ static void scene_draw_scrollbar_lvert(void)
 	u32 sright =
 		(PSP_SCREEN_WIDTH - 1) - 1 -
 		(config.infobar ? scene_get_infobar_height() : 0), slen =
-		sright, bsize =
-		2 + (slen - 2) * rowsperpage / fs->row_count, startp =
-		slen * fs->crow / fs->row_count, endp;
+		sright, bsize = 2 + (slen - 2) * rowsperpage / fs->row_count, startp = slen * fs->crow / fs->row_count, endp;
 	if (startp + bsize > slen)
 		startp = slen - bsize;
 	endp = startp + bsize;
-	disp_fillrect_tran(0, 0, sright, config.scrollbar_width,
-					   config.forecolor, bgalpha);
-	disp_fillrect_tran(startp, 0, endp, config.scrollbar_width,
-					   config.forecolor, fgalpha);
+	disp_fillrect_tran(0, 0, sright, config.scrollbar_width, config.forecolor, bgalpha);
+	disp_fillrect_tran(startp, 0, endp, config.scrollbar_width, config.forecolor, fgalpha);
 }
 
 static void scene_draw_scrollbar_rvert(void)
@@ -1046,33 +910,23 @@ static void scene_draw_scrollbar_rvert(void)
 	u32 sleft =
 		(config.infobar ? scene_get_infobar_height() : 0) + 1, slen =
 		(PSP_SCREEN_WIDTH - 1) - sleft, bsize =
-		2 + (slen - 2) * rowsperpage / fs->row_count, endp =
-		(PSP_SCREEN_WIDTH - 1) - slen * fs->crow / fs->row_count, startp;
+		2 + (slen - 2) * rowsperpage / fs->row_count, endp = (PSP_SCREEN_WIDTH - 1) - slen * fs->crow / fs->row_count, startp;
 	if (endp - bsize < sleft)
 		endp = sleft + bsize;
 	startp = endp - bsize;
-	disp_fillrect_tran(sleft, PSP_SCREEN_HEIGHT - config.scrollbar_width,
-					   PSP_SCREEN_WIDTH - 1,
-					   PSP_SCREEN_HEIGHT - 1, config.forecolor, bgalpha);
-	disp_fillrect_tran(startp, PSP_SCREEN_HEIGHT - (config.scrollbar_width + 1),
-					   endp, PSP_SCREEN_HEIGHT - 1, config.forecolor, fgalpha);
+	disp_fillrect_tran(sleft, PSP_SCREEN_HEIGHT - config.scrollbar_width, PSP_SCREEN_WIDTH - 1, PSP_SCREEN_HEIGHT - 1, config.forecolor, bgalpha);
+	disp_fillrect_tran(startp, PSP_SCREEN_HEIGHT - (config.scrollbar_width + 1), endp, PSP_SCREEN_HEIGHT - 1, config.forecolor, fgalpha);
 }
 
 static void scene_draw_scrollbar_horz(void)
 {
-	u32 slen =
-		config.infobar ? (PSP_SCREEN_HEIGHT - 1 - 1 -
-						  scene_get_infobar_height())
-		: (PSP_SCREEN_HEIGHT - 1), bsize =
-		2 + (slen - 2) * rowsperpage / fs->row_count, startp =
-		slen * fs->crow / fs->row_count, endp;
+	u32 slen = config.infobar ? (PSP_SCREEN_HEIGHT - 1 - 1 - scene_get_infobar_height())
+		: (PSP_SCREEN_HEIGHT - 1), bsize = 2 + (slen - 2) * rowsperpage / fs->row_count, startp = slen * fs->crow / fs->row_count, endp;
 	if (startp + bsize > slen)
 		startp = slen - bsize;
 	endp = startp + bsize;
-	disp_fillrect_tran(PSP_SCREEN_WIDTH - config.scrollbar_width - 1, 0,
-					   PSP_SCREEN_WIDTH - 1, slen, config.forecolor, bgalpha);
-	disp_fillrect_tran(PSP_SCREEN_WIDTH - config.scrollbar_width - 1, startp,
-					   PSP_SCREEN_WIDTH - 1, endp, config.forecolor, fgalpha);
+	disp_fillrect_tran(PSP_SCREEN_WIDTH - config.scrollbar_width - 1, 0, PSP_SCREEN_WIDTH - 1, slen, config.forecolor, bgalpha);
+	disp_fillrect_tran(PSP_SCREEN_WIDTH - config.scrollbar_width - 1, startp, PSP_SCREEN_WIDTH - 1, endp, config.forecolor, fgalpha);
 }
 
 static void scene_draw_infobar(PBookViewData pView, u32 selidx)
@@ -1137,41 +991,26 @@ static void save_infobar_image(void)
 	switch (config.vertread) {
 		case conf_vertread_reversal:
 		case conf_vertread_horz:
-			infobar_saveimage =
-				(pixel *) memalign(16,
-								   (scene_get_infobar_height() +
-									1) * PSP_SCREEN_WIDTH * sizeof(pixel));
+			infobar_saveimage = (pixel *) memalign(16, (scene_get_infobar_height() + 1) * PSP_SCREEN_WIDTH * sizeof(pixel));
 			break;
 		case conf_vertread_rvert:
 		case conf_vertread_lvert:
-			infobar_saveimage =
-				(pixel *) memalign(16,
-								   (scene_get_infobar_height() +
-									1) * PSP_SCREEN_HEIGHT * sizeof(pixel));
+			infobar_saveimage = (pixel *) memalign(16, (scene_get_infobar_height() + 1) * PSP_SCREEN_HEIGHT * sizeof(pixel));
 			break;
 	}
 
 	switch (config.vertread) {
 		case conf_vertread_reversal:
-			disp_getimage_draw(0, 0, PSP_SCREEN_WIDTH,
-							   scene_get_infobar_height() + 1,
-							   infobar_saveimage);
+			disp_getimage_draw(0, 0, PSP_SCREEN_WIDTH, scene_get_infobar_height() + 1, infobar_saveimage);
 			break;
 		case conf_vertread_lvert:
-			disp_getimage_draw(PSP_SCREEN_WIDTH - scene_get_infobar_height() -
-							   1, 0, scene_get_infobar_height() + 1,
-							   PSP_SCREEN_HEIGHT, infobar_saveimage);
+			disp_getimage_draw(PSP_SCREEN_WIDTH - scene_get_infobar_height() - 1, 0, scene_get_infobar_height() + 1, PSP_SCREEN_HEIGHT, infobar_saveimage);
 			break;
 		case conf_vertread_rvert:
-			disp_getimage_draw(0, 0, scene_get_infobar_height() + 1,
-							   PSP_SCREEN_HEIGHT, infobar_saveimage);
+			disp_getimage_draw(0, 0, scene_get_infobar_height() + 1, PSP_SCREEN_HEIGHT, infobar_saveimage);
 			break;
 		case conf_vertread_horz:
-			disp_getimage_draw(0,
-							   PSP_SCREEN_HEIGHT - 1 -
-							   scene_get_infobar_height(), PSP_SCREEN_WIDTH,
-							   scene_get_infobar_height() + 1,
-							   infobar_saveimage);
+			disp_getimage_draw(0, PSP_SCREEN_HEIGHT - 1 - scene_get_infobar_height(), PSP_SCREEN_WIDTH, scene_get_infobar_height() + 1, infobar_saveimage);
 			break;
 	}
 }
@@ -1183,23 +1022,16 @@ static void load_infobar_image(void)
 
 	switch (config.vertread) {
 		case conf_vertread_reversal:
-			disp_putimage(0, 0, PSP_SCREEN_WIDTH,
-						  scene_get_infobar_height() + 1, 0, 0,
-						  infobar_saveimage);
+			disp_putimage(0, 0, PSP_SCREEN_WIDTH, scene_get_infobar_height() + 1, 0, 0, infobar_saveimage);
 			break;
 		case conf_vertread_lvert:
-			disp_putimage(PSP_SCREEN_WIDTH - scene_get_infobar_height() - 1, 0,
-						  scene_get_infobar_height() + 1, PSP_SCREEN_HEIGHT, 0,
-						  0, infobar_saveimage);
+			disp_putimage(PSP_SCREEN_WIDTH - scene_get_infobar_height() - 1, 0, scene_get_infobar_height() + 1, PSP_SCREEN_HEIGHT, 0, 0, infobar_saveimage);
 			break;
 		case conf_vertread_rvert:
-			disp_putimage(0, 0, scene_get_infobar_height() + 1,
-						  PSP_SCREEN_HEIGHT, 0, 0, infobar_saveimage);
+			disp_putimage(0, 0, scene_get_infobar_height() + 1, PSP_SCREEN_HEIGHT, 0, 0, infobar_saveimage);
 			break;
 		case conf_vertread_horz:
-			disp_putimage(0, PSP_SCREEN_HEIGHT - 1 - scene_get_infobar_height(),
-						  PSP_SCREEN_WIDTH, scene_get_infobar_height() + 1, 0,
-						  0, infobar_saveimage);
+			disp_putimage(0, PSP_SCREEN_HEIGHT - 1 - scene_get_infobar_height(), PSP_SCREEN_WIDTH, scene_get_infobar_height() + 1, 0, 0, infobar_saveimage);
 			break;
 	}
 }
@@ -1288,8 +1120,7 @@ void move_line_smooth(PBookViewData pView, int inc)
 		if (config.autopagetype == 1 && abs(config.autopage) < 5)
 			pView->rowtop = DISP_BOOK_FONTSIZE + 1;
 	} else if (pView->rowtop >= DISP_BOOK_FONTSIZE + config.rowspace) {
-		while (fs->crow < fs->row_count - 1
-			   && pView->rowtop >= DISP_BOOK_FONTSIZE + config.rowspace) {
+		while (fs->crow < fs->row_count - 1 && pView->rowtop >= DISP_BOOK_FONTSIZE + config.rowspace) {
 			pView->rowtop -= DISP_BOOK_FONTSIZE;
 			fs->crow++;
 		}
@@ -1297,8 +1128,7 @@ void move_line_smooth(PBookViewData pView, int inc)
 		if (config.autopagetype == 1 && abs(config.autopage) < 5)
 			pView->rowtop = 0;
 	}
-	if (pView->rowtop < 0
-		|| pView->rowtop >= DISP_BOOK_FONTSIZE + config.rowspace)
+	if (pView->rowtop < 0 || pView->rowtop >= DISP_BOOK_FONTSIZE + config.rowspace)
 		pView->rowtop = 0;
 	pView->text_needrp = true;
 }
@@ -1327,8 +1157,7 @@ int move_page_up(PBookViewData pView, u32 key, u32 * selidx)
 {
 	pView->rowtop = 0;
 	if (fs->crow == 0) {
-		if (config.pagetonext && key != kl
-			&& fs_is_txtbook((t_fs_filetype) g_menu->root[*selidx].data)) {
+		if (config.pagetonext && key != kl && fs_is_txtbook((t_fs_filetype) g_menu->root[*selidx].data)) {
 			u32 orgidx = *selidx;
 
 			do {
@@ -1359,8 +1188,7 @@ int move_page_down(PBookViewData pView, u32 key, u32 * selidx)
 {
 	pView->rowtop = 0;
 	if (fs->crow >= fs->row_count - 1) {
-		if (config.pagetonext
-			&& fs_is_txtbook((t_fs_filetype) g_menu->root[*selidx].data)) {
+		if (config.pagetonext && fs_is_txtbook((t_fs_filetype) g_menu->root[*selidx].data)) {
 			u32 orgidx = *selidx;
 
 			do {
@@ -1431,10 +1259,7 @@ static void jump_to_gi(u32 gi)
 			cur_book_view.rowtop = 0;
 			cur_book_view.rrow = tr->start - fs->buf;
 			fs->crow = 1;
-			while (fs->crow < fs->row_count
-				   && (fs->rows[fs->crow >> 10] +
-					   (fs->crow & 0x3FF))->start - fs->buf <=
-				   cur_book_view.rrow)
+			while (fs->crow < fs->row_count && (fs->rows[fs->crow >> 10] + (fs->crow & 0x3FF))->start - fs->buf <= cur_book_view.rrow)
 				fs->crow++;
 			fs->crow--;
 			return;
@@ -1459,16 +1284,12 @@ static void jump_to_percent(float percent)
 	cur_book_view.rowtop = 0;
 	cur_book_view.rrow = tr->start - fs->buf;
 	fs->crow = 1;
-	while (fs->crow < fs->row_count
-		   && (fs->rows[fs->crow >> 10] +
-			   (fs->crow & 0x3FF))->start - fs->buf <= cur_book_view.rrow)
+	while (fs->crow < fs->row_count && (fs->rows[fs->crow >> 10] + (fs->crow & 0x3FF))->start - fs->buf <= cur_book_view.rrow)
 		fs->crow++;
 	fs->crow--;
 }
 
-t_win_menu_op scene_bookmark_menucb(u32 key, p_win_menuitem item,
-									u32 * count, u32 max_height,
-									u32 * topindex, u32 * index)
+t_win_menu_op scene_bookmark_menucb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	switch (key) {
 		case (PSP_CTRL_SELECT | PSP_CTRL_START):
@@ -1476,18 +1297,14 @@ t_win_menu_op scene_bookmark_menucb(u32 key, p_win_menuitem item,
 		case PSP_CTRL_SELECT:
 			bookmark_delete(g_bm);
 			memset(&g_bm->row[0], 0xFF, 10 * sizeof(u32));
-			win_msg(_("已删除书签!"), COLOR_WHITE, COLOR_WHITE,
-					config.msgbcolor);
+			win_msg(_("已删除书签!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 			return win_menu_op_cancel;
 		case PSP_CTRL_START:
-			if (win_msgbox
-				(_("是否要导出书签？"), _("是"), _("否"),
-				 COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
+			if (win_msgbox(_("是否要导出书签？"), _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
 				char bmfn[PATH_MAX];
 				bool ret;
 
-				if (where == scene_in_zip || where == scene_in_chm
-					|| where == scene_in_rar) {
+				if (where == scene_in_zip || where == scene_in_chm || where == scene_in_rar) {
 					STRCPY_S(bmfn, config.shortpath);
 					STRCAT_S(bmfn, fs->filename);
 				} else
@@ -1497,19 +1314,16 @@ t_win_menu_op scene_bookmark_menucb(u32 key, p_win_menuitem item,
 				ret = bookmark_export(g_bm, bmfn);
 
 				if (ret) {
-					win_msg(_("已导出书签!"), COLOR_WHITE, COLOR_WHITE,
-							config.msgbcolor);
+					win_msg(_("已导出书签!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 				} else {
-					win_msg(_("书签导出失败!"), COLOR_WHITE, COLOR_WHITE,
-							config.msgbcolor);
+					win_msg(_("书签导出失败!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 				}
 			}
 			return win_menu_op_force_redraw;
 		case PSP_CTRL_SQUARE:
 			STRCPY_S(item[*index].name, "       ");
 			g_bm->row[(*index) + 1] = *(u32 *) item[0].data;
-			utils_dword2string(g_bm->row[(*index) + 1] / 2, item[*index].name,
-							   7);
+			utils_dword2string(g_bm->row[(*index) + 1] / 2, item[*index].name, 7);
 			bookmark_save(g_bm);
 			return win_menu_op_redraw;
 		case PSP_CTRL_TRIANGLE:
@@ -1529,48 +1343,37 @@ t_win_menu_op scene_bookmark_menucb(u32 key, p_win_menuitem item,
 	return win_menu_defcb(key, item, count, max_height, topindex, index);
 }
 
-void scene_bookmark_predraw(p_win_menuitem item, u32 index, u32 topindex,
-							u32 max_height)
+void scene_bookmark_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
-	disp_rectangle(63, 60 - DISP_FONTSIZE, 416,
-				   64 + (1 + DISP_FONTSIZE) * 10, COLOR_WHITE);
+	disp_rectangle(63, 60 - DISP_FONTSIZE, 416, 64 + (1 + DISP_FONTSIZE) * 10, COLOR_WHITE);
 	disp_fillrect(64, 61 - DISP_FONTSIZE, 415, 60, config.titlecolor);
 	disp_putstring(75, 61 - DISP_FONTSIZE, COLOR_WHITE, (const u8 *)
 				   _("书签      ○读取  ×取消  □保存  △删除"));
-	disp_fillrect(68 + 7 * DISP_FONTSIZE / 2, 62, 415,
-				  63 + (1 + DISP_FONTSIZE) * 10, config.titlecolor);
+	disp_fillrect(68 + 7 * DISP_FONTSIZE / 2, 62, 415, 63 + (1 + DISP_FONTSIZE) * 10, config.titlecolor);
 	disp_line(64, 61, 415, 61, COLOR_WHITE);
-	disp_line(64, 64 + (1 + DISP_FONTSIZE) * 9, 415,
-			  64 + (1 + DISP_FONTSIZE) * 9, COLOR_WHITE);
-	disp_fillrect(64, 65 + (1 + DISP_FONTSIZE) * 9,
-				  67 + 7 * DISP_FONTSIZE / 2, 63 + (1 + DISP_FONTSIZE) * 10,
-				  config.titlecolor);
-	disp_line(67 + 7 * DISP_FONTSIZE / 2, 62, 67 + 7 * DISP_FONTSIZE / 2,
-			  63 + (1 + DISP_FONTSIZE) * 9, COLOR_WHITE);
+	disp_line(64, 64 + (1 + DISP_FONTSIZE) * 9, 415, 64 + (1 + DISP_FONTSIZE) * 9, COLOR_WHITE);
+	disp_fillrect(64, 65 + (1 + DISP_FONTSIZE) * 9, 67 + 7 * DISP_FONTSIZE / 2, 63 + (1 + DISP_FONTSIZE) * 10, config.titlecolor);
+	disp_line(67 + 7 * DISP_FONTSIZE / 2, 62, 67 + 7 * DISP_FONTSIZE / 2, 63 + (1 + DISP_FONTSIZE) * 9, COLOR_WHITE);
 	++index;
 	disp_putstring(64, 65 + (1 + DISP_FONTSIZE) * 9, COLOR_WHITE, (const u8 *)
 				   _("SELECT 删除全部书签    START 导出书签"));
-	if (g_bm->row[index] < fs->size
-		&& fs_file_get_type(fs->filename) != fs_filetype_unknown) {
+	if (g_bm->row[index] < fs->size && fs_file_get_type(fs->filename) != fs_filetype_unknown) {
 		u8 bp[0x80];
 		t_text preview;
 		int old_book_fontsize = DISP_BOOK_FONTSIZE;
 
 		memset(&preview, 0, sizeof(t_text));
 		preview.buf = fs->buf + min(fs->size, g_bm->row[index]);
-		if (fs->buf + fs->size - preview.buf <
-			8 * ((347 - 7 * DISP_FONTSIZE / 2) / (DISP_FONTSIZE / 2)))
+		if (fs->buf + fs->size - preview.buf < 8 * ((347 - 7 * DISP_FONTSIZE / 2) / (DISP_FONTSIZE / 2)))
 			preview.size = fs->buf + fs->size - preview.buf;
 		else
-			preview.size =
-				8 * ((347 - 7 * DISP_FONTSIZE / 2) / (DISP_FONTSIZE / 2));
+			preview.size = 8 * ((347 - 7 * DISP_FONTSIZE / 2) / (DISP_FONTSIZE / 2));
 
 		memcpy(bp, disp_ewidth, 0x80);
 		memset(disp_ewidth, DISP_FONTSIZE / 2, 0x80);
 
 		DISP_BOOK_FONTSIZE = DISP_FONTSIZE;
-		text_format(&preview, 347 - 7 * DISP_FONTSIZE / 2,
-					config.fontsize <= 10 ? 1 : 0, false);
+		text_format(&preview, 347 - 7 * DISP_FONTSIZE / 2, config.fontsize <= 10 ? 1 : 0, false);
 		memcpy(disp_ewidth, bp, 0x80);
 		if (preview.rows[0] != NULL) {
 			u32 i;
@@ -1581,10 +1384,7 @@ void scene_bookmark_predraw(p_win_menuitem item, u32 index, u32 topindex,
 				disp_putnstring(70 + 7 * DISP_FONTSIZE / 2,
 								66 + (2 + DISP_FONTSIZE) * i,
 								COLOR_WHITE,
-								(const u8 *) preview.rows[0][i].start,
-								preview.rows[0][i].count,
-								config.fontsize <= 10 ? 1 : 0,
-								0, DISP_FONTSIZE, 0);
+								(const u8 *) preview.rows[0][i].start, preview.rows[0][i].count, config.fontsize <= 10 ? 1 : 0, 0, DISP_FONTSIZE, 0);
 			free(preview.rows[0]);
 		}
 		DISP_BOOK_FONTSIZE = old_book_fontsize;
@@ -1620,12 +1420,9 @@ bool scene_bookmark(PBookViewData pView)
 	item[0].data = (void *) orgp;
 	item[1].data = (void *) false;
 
-	if ((index =
-		 win_menu(64, 62, 7, 9, item, 9, 0, 0,
-				  config.menubcolor, true, scene_bookmark_predraw, NULL,
-				  scene_bookmark_menucb)) != INVALID);
+	if ((index = win_menu(64, 62, 7, 9, item, 9, 0, 0, config.menubcolor, true, scene_bookmark_predraw, NULL, scene_bookmark_menucb)) != INVALID);
 
-	return (bool)(int) item[1].data;
+	return (bool) (int) item[1].data;
 }
 
 int book_handle_input(PBookViewData pView, u32 * selidx, u32 key)
@@ -1662,8 +1459,7 @@ int book_handle_input(PBookViewData pView, u32 * selidx, u32 key)
 		return *selidx;
 	} else if ((key == ctlkey[0] || key == ctlkey2[0])
 			   && scene_readbook_in_raw_mode == false) {
-		pView->rrow =
-			(fs->rows[fs->crow >> 10] + (fs->crow & 0x3FF))->start - fs->buf;
+		pView->rrow = (fs->rows[fs->crow >> 10] + (fs->crow & 0x3FF))->start - fs->buf;
 		pView->text_needrb = scene_bookmark(pView);
 		pView->text_needrf = pView->text_needrb;
 		pView->text_needrp = true;
@@ -1674,9 +1470,7 @@ int book_handle_input(PBookViewData pView, u32 * selidx, u32 key)
 		switch (scene_options(&*selidx)) {
 			case 2:
 			case 4:
-				pView->rrow =
-					(fs->rows[fs->crow >> 10] +
-					 (fs->crow & 0x3FF))->start - fs->buf;
+				pView->rrow = (fs->rows[fs->crow >> 10] + (fs->crow & 0x3FF))->start - fs->buf;
 				pView->text_needrb = pView->text_needrf = true;
 				break;
 			case 3:
@@ -1840,11 +1634,9 @@ static void scene_text_delay_action(void)
 		scePowerTick(0);
 }
 
-u32 scene_reload_raw(const char *title, const unsigned char *data,
-					   size_t size, t_fs_filetype ft)
+u32 scene_reload_raw(const char *title, const unsigned char *data, size_t size, t_fs_filetype ft)
 {
-	fs = text_open_in_raw(title, data, size, ft, pixelsperrow,
-						  config.wordspace, config.encode, config.reordertxt);
+	fs = text_open_in_raw(title, data, size, ft, pixelsperrow, config.wordspace, config.encode, config.reordertxt);
 
 	if (fs == NULL) {
 		return 1;
@@ -1855,9 +1647,7 @@ u32 scene_reload_raw(const char *title, const unsigned char *data,
 	if (cur_book_view.text_needrb && ft != fs_filetype_unknown) {
 		cur_book_view.rowtop = 0;
 		fs->crow = 1;
-		while (fs->crow < fs->row_count
-			   && (fs->rows[fs->crow >> 10] +
-				   (fs->crow & 0x3FF))->start - fs->buf <= cur_book_view.rrow)
+		while (fs->crow < fs->row_count && (fs->rows[fs->crow >> 10] + (fs->crow & 0x3FF))->start - fs->buf <= cur_book_view.rrow)
 			fs->crow++;
 		fs->crow--;
 		cur_book_view.text_needrb = false;
@@ -1913,8 +1703,7 @@ static void redraw_infobar(u32 selidx)
 #endif
 }
 
-u32 scene_readbook_raw(const char *title, const unsigned char *data,
-						 size_t size, t_fs_filetype ft)
+u32 scene_readbook_raw(const char *title, const unsigned char *data, size_t size, t_fs_filetype ft)
 {
 	bool prev_raw = scene_readbook_in_raw_mode;
 	// dummy selidx
@@ -1923,7 +1712,7 @@ u32 scene_readbook_raw(const char *title, const unsigned char *data,
 	u64 timer_start, timer_end;
 	u32 key;
 	int ret;
-	
+
 	scene_readbook_in_raw_mode = true;
 
 	STRCPY_S(g_titlename, title);
@@ -1941,12 +1730,8 @@ u32 scene_readbook_raw(const char *title, const unsigned char *data,
 			}
 
 			if (scene_reload_raw(title, data, size, ft)) {
-				win_msg(_("文件打开失败"), COLOR_WHITE,
-						COLOR_WHITE, config.msgbcolor);
-				dbg_printf(d,
-						   _
-						   ("scene_readbook_raw: 文件%s打开失败 where=%d"),
-						   title, where);
+				win_msg(_("文件打开失败"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
+				dbg_printf(d, _("scene_readbook_raw: 文件%s打开失败 where=%d"), title, where);
 				fs = prev_text;
 				copy_book_view(&cur_book_view, &prev_book_view);
 
@@ -2068,8 +1853,7 @@ u32 scene_readbook(u32 selidx)
 				}
 			}
 #if defined(ENABLE_MUSIC) && defined(ENABLE_LYRIC)
-			if (config.infobar == conf_infobar_lyric
-				&& lyric_check_changed(music_get_lyric())) {
+			if (config.infobar == conf_infobar_lyric && lyric_check_changed(music_get_lyric())) {
 				break;
 			}
 #endif
@@ -2155,19 +1939,15 @@ u32 scene_readbook(u32 selidx)
 	return selidx;
 }
 
-t_win_menu_op scene_txtkey_menucb(u32 key, p_win_menuitem item, u32 * count,
-								  u32 max_height, u32 * topindex,
-								  u32 * index)
+t_win_menu_op scene_txtkey_menucb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	u32 key1, key2;
 	SceCtrlData ctl;
 	int i;
-	
+
 	switch (key) {
 		case (PSP_CTRL_SELECT | PSP_CTRL_START):
-			if (win_msgbox
-				(_("是否退出软件?"), _("是"), _("否"),
-				 COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
+			if (win_msgbox(_("是否退出软件?"), _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
 				scene_exit();
 				return win_menu_op_continue;
 			}
@@ -2184,9 +1964,7 @@ t_win_menu_op scene_txtkey_menucb(u32 key, p_win_menuitem item, u32 * count,
 			do {
 				sceCtrlReadBufferPositive(&ctl, 1);
 				key1 = (ctl.Buttons & ~PSP_CTRL_SELECT) & ~PSP_CTRL_START;
-			} while ((key1 &
-					  ~(PSP_CTRL_UP | PSP_CTRL_DOWN | PSP_CTRL_LEFT |
-						PSP_CTRL_RIGHT)) == 0);
+			} while ((key1 & ~(PSP_CTRL_UP | PSP_CTRL_DOWN | PSP_CTRL_LEFT | PSP_CTRL_RIGHT)) == 0);
 			key2 = key1;
 			while ((key2 & key1) == key1) {
 				key1 = key2;
@@ -2229,15 +2007,13 @@ t_win_menu_op scene_txtkey_menucb(u32 key, p_win_menuitem item, u32 * count,
 	return win_menu_defcb(key, item, count, max_height, topindex, index);
 }
 
-void scene_txtkey_predraw(p_win_menuitem item, u32 index, u32 topindex,
-						  u32 max_height)
+void scene_txtkey_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
 	char keyname[256];
 	int left, right, upper, bottom, lines = 0;
 	u32 i;
 
-	default_predraw(&g_predraw, _("按键设置   △ 删除"), max_height, &left,
-					&right, &upper, &bottom, 8 * DISP_FONTSIZE + 4);
+	default_predraw(&g_predraw, _("按键设置   △ 删除"), max_height, &left, &right, &upper, &bottom, 8 * DISP_FONTSIZE + 4);
 
 	for (i = topindex; i < topindex + max_height; i++) {
 		conf_get_keyname(config.txtkey[i], keyname);
@@ -2248,11 +2024,7 @@ void scene_txtkey_predraw(p_win_menuitem item, u32 index, u32 topindex,
 			STRCAT_S(keyname, _(" | "));
 			STRCAT_S(keyname, keyname2);
 		}
-		disp_putstring(left + (right - left) / 2,
-					   upper + 2 + (lines + 1 +
-									g_predraw.linespace) * (1 +
-															DISP_FONTSIZE),
-					   COLOR_WHITE, (const u8 *) keyname);
+		disp_putstring(left + (right - left) / 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) keyname);
 		lines++;
 	}
 }
@@ -2287,8 +2059,7 @@ u32 scene_txtkey(u32 * selidx)
 		item[i].selected = false;
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
-		item[i].selrcolor =
-			config.menubcolor;
+		item[i].selrcolor = config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -2304,9 +2075,7 @@ u32 scene_txtkey(u32 * selidx)
 			win_menu(g_predraw.left,
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
-					 g_predraw.linespace,
-					 config.menubcolor, true, scene_txtkey_predraw, NULL,
-					 scene_txtkey_menucb)) != INVALID);
+					 g_predraw.linespace, config.menubcolor, true, scene_txtkey_predraw, NULL, scene_txtkey_menucb)) != INVALID);
 
 	memcpy(&g_predraw, &prev, sizeof(win_menu_predraw_data));
 

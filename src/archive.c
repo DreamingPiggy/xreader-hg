@@ -40,10 +40,7 @@
 #include "dmalloc.h"
 #endif
 
-static void extract_zip_file_into_buffer_with_password(buffer * buf,
-													   const char *archname,
-													   const char *archpath,
-													   const char *password)
+static void extract_zip_file_into_buffer_with_password(buffer * buf, const char *archname, const char *archpath, const char *password)
 {
 	unzFile unzf = unzOpen(archname);
 	int ret;
@@ -51,8 +48,7 @@ static void extract_zip_file_into_buffer_with_password(buffer * buf,
 
 	if (unzf == NULL)
 		return;
-	if (unzLocateFile(unzf, archpath, 0) != UNZ_OK
-		|| unzOpenCurrentFilePassword(unzf, password) != UNZ_OK) {
+	if (unzLocateFile(unzf, archpath, 0) != UNZ_OK || unzOpenCurrentFilePassword(unzf, password) != UNZ_OK) {
 		unzClose(unzf);
 		return;
 	}
@@ -89,8 +85,7 @@ static void extract_zip_file_into_buffer_with_password(buffer * buf,
 	unzClose(unzf);
 }
 
-static void extract_zip_file_into_buffer(buffer * buf, const char *archname,
-										 const char *archpath)
+static void extract_zip_file_into_buffer(buffer * buf, const char *archname, const char *archpath)
 {
 	unzFile unzf = unzOpen(archname);
 	unz_file_info info;
@@ -99,8 +94,7 @@ static void extract_zip_file_into_buffer(buffer * buf, const char *archname,
 
 	if (unzf == NULL)
 		return;
-	if (unzLocateFile(unzf, archpath, 0) != UNZ_OK
-		|| unzOpenCurrentFile(unzf) != UNZ_OK) {
+	if (unzLocateFile(unzf, archpath, 0) != UNZ_OK || unzOpenCurrentFile(unzf) != UNZ_OK) {
 		unzClose(unzf);
 		return;
 	}
@@ -126,8 +120,7 @@ static void extract_zip_file_into_buffer(buffer * buf, const char *archname,
 					continue;
 				}
 				dbg_printf(d, "%s: trying list password: %s", __func__, b->ptr);
-				extract_zip_file_into_buffer_with_password(buf, archname,
-														   archpath, b->ptr);
+				extract_zip_file_into_buffer_with_password(buf, archname, archpath, b->ptr);
 				if (buf->ptr != NULL) {
 					// ok
 					add_password(b->ptr);
@@ -135,12 +128,10 @@ static void extract_zip_file_into_buffer(buffer * buf, const char *archname,
 				}
 			}
 		}
-
 		// if all passwords failed, ask user input password
 		if (get_osk_input_password(pass, 128) == 1 && strcmp(pass, "") != 0) {
 			dbg_printf(d, "%s: input %s", __func__, pass);
-			extract_zip_file_into_buffer_with_password(buf, archname,
-													   archpath, pass);
+			extract_zip_file_into_buffer_with_password(buf, archname, archpath, pass);
 			if (buf->ptr != NULL) {
 				// ok
 				add_password(pass);
@@ -192,10 +183,7 @@ static int rarcbproc(UINT msg, LONG UserData, LONG P1, LONG P2)
 	return 0;
 }
 
-static void extract_rar_file_into_buffer_with_password(buffer * buf,
-													   const char *archname,
-													   const char *archpath,
-													   char *password)
+static void extract_rar_file_into_buffer_with_password(buffer * buf, const char *archname, const char *archpath, char *password)
 {
 	struct RAROpenArchiveData arcdata;
 	int code = 0;
@@ -231,8 +219,7 @@ static void extract_rar_file_into_buffer_with_password(buffer * buf,
 	}
 }
 
-static bool test_rar_file_password(buffer * buf,
-								   const char *archname, const char *archpath)
+static bool test_rar_file_password(buffer * buf, const char *archname, const char *archpath)
 {
 	char pass[128];
 	bool result = false;
@@ -249,8 +236,7 @@ static bool test_rar_file_password(buffer * buf,
 				continue;
 			}
 			dbg_printf(d, "%s: trying list password: %s", __func__, b->ptr);
-			extract_rar_file_into_buffer_with_password(buf, archname,
-													   archpath, b->ptr);
+			extract_rar_file_into_buffer_with_password(buf, archname, archpath, b->ptr);
 			if (buf->ptr != NULL) {
 				// ok
 				add_password(b->ptr);
@@ -258,12 +244,10 @@ static bool test_rar_file_password(buffer * buf,
 			}
 		}
 	}
-
 	// if all passwords failed, ask user input password
 	if (get_osk_input_password(pass, 128) == 1 && strcmp(pass, "") != 0) {
 		dbg_printf(d, "%s: input %s", __func__, pass);
-		extract_rar_file_into_buffer_with_password(buf, archname,
-												   archpath, pass);
+		extract_rar_file_into_buffer_with_password(buf, archname, archpath, pass);
 		if (buf->ptr != NULL) {
 			// ok
 			add_password(pass);
@@ -280,8 +264,7 @@ static bool test_rar_file_password(buffer * buf,
 	return result;
 }
 
-static void extract_rar_file_into_buffer(buffer * buf, const char *archname,
-										 const char *archpath)
+static void extract_rar_file_into_buffer(buffer * buf, const char *archname, const char *archpath)
 {
 	struct RAROpenArchiveData arcdata;
 	int code = 0;
@@ -335,8 +318,7 @@ static void extract_rar_file_into_buffer(buffer * buf, const char *archname,
 	}
 }
 
-static void extract_chm_file_into_buffer(buffer * buf, const char *archname,
-										 const char *archpath)
+static void extract_chm_file_into_buffer(buffer * buf, const char *archname, const char *archpath)
 {
 	struct chmFile *chm = chm_open(archname);
 	struct chmUnitInfo ui;
@@ -373,10 +355,7 @@ static void extract_chm_file_into_buffer(buffer * buf, const char *archname,
  *
  * @note 如果解压失败, *buf = NULL
  */
-extern void extract_archive_file_into_buffer(buffer ** buf,
-											 const char *archname,
-											 const char *archpath,
-											 t_fs_filetype filetype)
+extern void extract_archive_file_into_buffer(buffer ** buf, const char *archname, const char *archpath, t_fs_filetype filetype)
 {
 	buffer *b;
 
@@ -429,10 +408,7 @@ static int imagerarcbproc(UINT msg, LONG UserData, LONG P1, LONG P2)
 	return 0;
 }
 
-static void extract_rar_file_into_image_with_password(t_image_rar * image,
-													  const char *archname,
-													  const char *archpath,
-													  char *password)
+static void extract_rar_file_into_image_with_password(t_image_rar * image, const char *archname, const char *archpath, char *password)
 {
 	struct RAROpenArchiveData arcdata;
 	int code = 0;
@@ -478,8 +454,7 @@ static void extract_rar_file_into_image_with_password(t_image_rar * image,
 	}
 }
 
-static bool test_rar_image_password(t_image_rar * image,
-									const char *archname, const char *archpath)
+static bool test_rar_image_password(t_image_rar * image, const char *archname, const char *archpath)
 {
 	char pass[128];
 	bool result = false;
@@ -496,8 +471,7 @@ static bool test_rar_image_password(t_image_rar * image,
 				continue;
 			}
 			dbg_printf(d, "%s: trying list password: %s", __func__, b->ptr);
-			extract_rar_file_into_image_with_password(image, archname,
-													  archpath, b->ptr);
+			extract_rar_file_into_image_with_password(image, archname, archpath, b->ptr);
 			if (image->buf != NULL) {
 				// ok
 				add_password(b->ptr);
@@ -505,12 +479,10 @@ static bool test_rar_image_password(t_image_rar * image,
 			}
 		}
 	}
-
 	// if all passwords failed, ask user input password
 	if (get_osk_input_password(pass, 128) == 1 && strcmp(pass, "") != 0) {
 		dbg_printf(d, "%s: input %s", __func__, pass);
-		extract_rar_file_into_image_with_password(image, archname,
-												  archpath, pass);
+		extract_rar_file_into_image_with_password(image, archname, archpath, pass);
 		if (image->buf != NULL) {
 			// ok
 			add_password(pass);
@@ -534,9 +506,7 @@ static bool test_rar_image_password(t_image_rar * image,
  * @param archname 档案文件路径
  * @param archpath 解压文件路径
  */
-extern void extract_rar_file_into_image(t_image_rar * image,
-										const char *archname,
-										const char *archpath)
+extern void extract_rar_file_into_image(t_image_rar * image, const char *archname, const char *archpath)
 {
 	struct RAROpenArchiveData arcdata;
 	int code = 0, ret;
@@ -624,7 +594,6 @@ extern HANDLE reopen_rar_with_passwords(struct RAROpenArchiveData *arcdata)
 		RARSetPassword(hrar, b->ptr);
 		return hrar;
 	}
-
 	// if all passwords failed, ask user input password
 	if (get_osk_input_password(pass, 128) == 1 && strcmp(pass, "") != 0) {
 		dbg_printf(d, "%s: input %s", __func__, pass);

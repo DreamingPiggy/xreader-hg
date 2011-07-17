@@ -60,7 +60,7 @@ static bool fat_inited = false;
 
 static void msstor_close(void)
 {
-	if(fatfd >= 0) {
+	if (fatfd >= 0) {
 		xrIoClose(fatfd);
 		fatfd = -1;
 	}
@@ -72,7 +72,7 @@ static int is_on_ef0(void)
 
 	apitype = xrKernelInitApitype();
 
-	if(apitype == 0x152 && psp_model == PSP_GO) {
+	if (apitype == 0x152 && psp_model == PSP_GO) {
 		return 1;
 	}
 
@@ -83,7 +83,7 @@ static SceUID msstor_reopen(void)
 {
 	msstor_close();
 
-	if(is_on_ef0()) {
+	if (is_on_ef0()) {
 		fatfd = xrIoOpen("eflash0a0f0:", PSP_O_RDONLY, 0777);
 	} else {
 		fatfd = xrIoOpen("msstor:", PSP_O_RDONLY, 0777);
@@ -135,11 +135,9 @@ static bool fat_init(void)
 		return false;
 	}
 	dbr_pos = mbr.dpt[0].start_sec * 0x200;
-	if (xrIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos
-		|| xrIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
+	if (xrIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos || xrIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
 		dbr_pos = 0;
-		if (xrIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos
-			|| xrIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
+		if (xrIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos || xrIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
 			msstor_close();
 			fat_unlock();
 			return false;
@@ -147,12 +145,9 @@ static bool fat_init(void)
 	}
 
 	total_sec = (dbr.total_sec == 0) ? dbr.big_total_sec : dbr.total_sec;
-	fat_sec =
-		(dbr.sec_per_fat == 0) ? dbr.ufat.fat32.sec_per_fat : dbr.sec_per_fat;
-	root_sec =
-		(dbr.root_entry * 32 + dbr.bytes_per_sec - 1) / dbr.bytes_per_sec;
-	data_sec =
-		total_sec - dbr.reserved_sec - (dbr.num_fats * fat_sec) - root_sec;
+	fat_sec = (dbr.sec_per_fat == 0) ? dbr.ufat.fat32.sec_per_fat : dbr.sec_per_fat;
+	root_sec = (dbr.root_entry * 32 + dbr.bytes_per_sec - 1) / dbr.bytes_per_sec;
+	data_sec = total_sec - dbr.reserved_sec - (dbr.num_fats * fat_sec) - root_sec;
 	data_clus = data_sec / dbr.sec_per_clus;
 
 	if (data_clus < 4085) {
@@ -169,16 +164,12 @@ static bool fat_init(void)
 	bytes_per_clus = 1ull * dbr.sec_per_clus * dbr.bytes_per_sec;
 	if (fat_type == fat32) {
 		data_pos = 1ull * dbr_pos;
-		data_pos +=
-			1ull * (dbr.ufat.fat32.sec_per_fat * dbr.num_fats +
-					dbr.reserved_sec) * dbr.bytes_per_sec;
+		data_pos += 1ull * (dbr.ufat.fat32.sec_per_fat * dbr.num_fats + dbr.reserved_sec) * dbr.bytes_per_sec;
 		root_pos = data_pos;
 		root_pos += 1ull * bytes_per_clus * dbr.ufat.fat32.root_clus;
 	} else {
 		root_pos = 1ull * dbr_pos;
-		root_pos +=
-			1ull * (dbr.num_fats * dbr.sec_per_fat +
-					dbr.reserved_sec) * dbr.bytes_per_sec;
+		root_pos += 1ull * (dbr.num_fats * dbr.sec_per_fat + dbr.reserved_sec) * dbr.bytes_per_sec;
 		data_pos = root_pos;
 		data_pos += 1ull * dbr.root_entry * sizeof(t_fat_entry);
 	}
@@ -224,11 +215,9 @@ static bool convert_table_fat12(void)
 	}
 	for (i = 0, j = 0; i < entrycount; i += 4, j += 3) {
 		fat_table[i] = otable[j] & 0x0FFF;
-		fat_table[i + 1] =
-			((otable[j] >> 12) & 0x000F) | ((otable[j + 1] & 0x00FF) << 4);
-		fat_table[i + 2] =
-			((otable[j + 1] >> 8) & 0x00FF) | ((otable[j + 2] & 0x000F)
-											   << 8);
+		fat_table[i + 1] = ((otable[j] >> 12) & 0x000F) | ((otable[j + 1] & 0x00FF) << 4);
+		fat_table[i + 2] = ((otable[j + 1] >> 8) & 0x00FF) | ((otable[j + 2] & 0x000F)
+															  << 8);
 		fat_table[i + 3] = otable[j + 2] >> 4;
 	}
 	free(otable);
@@ -272,15 +261,11 @@ static bool fat_load_table(void)
 	if (fatfd < 0)
 		return false;
 
-	fat_table_size =
-		((fat_type ==
-		  fat32) ? dbr.ufat.fat32.sec_per_fat : dbr.sec_per_fat) *
-		dbr.bytes_per_sec;
+	fat_table_size = ((fat_type == fat32) ? dbr.ufat.fat32.sec_per_fat : dbr.sec_per_fat) * dbr.bytes_per_sec;
 
 	if (xrIoLseek
 		(fatfd, dbr_pos + dbr.reserved_sec * dbr.bytes_per_sec,
-		 PSP_SEEK_SET) != dbr_pos + dbr.reserved_sec * dbr.bytes_per_sec
-		|| (fat_table = malloc(fat_table_size)) == NULL) {
+		 PSP_SEEK_SET) != dbr_pos + dbr.reserved_sec * dbr.bytes_per_sec || (fat_table = malloc(fat_table_size)) == NULL) {
 		msstor_close();
 		return false;
 	}
@@ -346,10 +331,7 @@ static bool fat_dir_list(u32 clus, u32 * count, p_fat_entry * entrys)
 		*count = dbr.root_entry;
 		if ((*entrys = malloc(*count * sizeof(**entrys))) == NULL)
 			return false;
-		if (xrIoLseek(fatfd, root_pos, PSP_SEEK_SET) != root_pos
-			|| xrIoRead(fatfd, *entrys,
-						*count * sizeof(t_fat_entry)) !=
-			*count * sizeof(t_fat_entry)) {
+		if (xrIoLseek(fatfd, root_pos, PSP_SEEK_SET) != root_pos || xrIoRead(fatfd, *entrys, *count * sizeof(t_fat_entry)) != *count * sizeof(t_fat_entry)) {
 			free(*entrys);
 			return false;
 		}
@@ -378,9 +360,7 @@ static bool fat_dir_list(u32 clus, u32 * count, p_fat_entry * entrys)
 		do {
 			u64 epos = data_pos + 1ull * (c2 - 2) * bytes_per_clus;
 
-			if (xrIoLseek(fatfd, epos, PSP_SEEK_SET) != epos
-				|| xrIoRead(fatfd, &(*entrys)[ep],
-							bytes_per_clus) != bytes_per_clus) {
+			if (xrIoLseek(fatfd, epos, PSP_SEEK_SET) != epos || xrIoRead(fatfd, &(*entrys)[ep], bytes_per_clus) != bytes_per_clus) {
 				free(*entrys);
 				return false;
 			}
@@ -404,10 +384,7 @@ static bool fat_get_longname(p_fat_entry entrys, u32 cur, char *longnamestr)
 		u32 k;
 
 		j--;
-		if (entrys[j].norm.attr != 0x0F
-			|| entrys[j].longfile.checksum != chksum
-			|| entrys[j].norm.filename[0] == 0
-			|| (u8) entrys[j].norm.filename[0] == 0xE5)
+		if (entrys[j].norm.attr != 0x0F || entrys[j].longfile.checksum != chksum || entrys[j].norm.filename[0] == 0 || (u8) entrys[j].norm.filename[0] == 0xE5)
 			return false;
 		order = entrys[j].longfile.order & 0x3F;
 
@@ -429,8 +406,7 @@ static bool fat_get_longname(p_fat_entry entrys, u32 cur, char *longnamestr)
 		return false;
 	longname[255] = 0;
 	memset(longnamestr, 0, 256);
-	charsets_ucs_conv((const u8 *) longname, sizeof(longname),
-					  (u8 *) longnamestr, 256);
+	charsets_ucs_conv((const u8 *) longname, sizeof(longname), (u8 *) longnamestr, 256);
 	return true;
 }
 
@@ -460,10 +436,7 @@ static void fat_get_shortname(p_fat_entry entry, char *shortnamestr)
 	if ((entry->norm.flag & 0x08) > 0)
 		abit = 0x20;
 	while (i < 8 && entry->norm.filename[i] != 0x20) {
-		*shortnamestr++ =
-			entry->norm.
-			filename[i] | ((chartable[(u8) entry->norm.filename[i]]) ? abit :
-						   0);
+		*shortnamestr++ = entry->norm.filename[i] | ((chartable[(u8) entry->norm.filename[i]]) ? abit : 0);
 		i++;
 	}
 	if (entry->norm.fileext[0] != 0x20) {
@@ -475,8 +448,7 @@ static void fat_get_shortname(p_fat_entry entry, char *shortnamestr)
 	*shortnamestr = 0;
 }
 
-extern bool fat_locate(const char *name, char *sname, u32 clus,
-					   p_fat_entry info)
+extern bool fat_locate(const char *name, char *sname, u32 clus, p_fat_entry info)
 {
 	u32 count;
 	p_fat_entry entrys;
@@ -513,22 +485,18 @@ extern bool fat_locate(const char *name, char *sname, u32 clus,
 	}
 
 	for (i = 0; i < count; i++) {
-		if ((entrys[i].norm.attr & FAT_FILEATTR_VOLUME) == 0
-			&& entrys[i].norm.filename[0] != 0
-			&& (u8) entrys[i].norm.filename[0] != 0xE5) {
+		if ((entrys[i].norm.attr & FAT_FILEATTR_VOLUME) == 0 && entrys[i].norm.filename[0] != 0 && (u8) entrys[i].norm.filename[0] != 0xE5) {
 			int result;
 			char longnames[256];
 
 			memset(&sid, 0, sizeof(SceIoDirent));
 
-			while ((result = sceIoDread(dl, &sid)) > 0
-				   && (sid.d_stat.st_attr & 0x08) > 0);
+			while ((result = sceIoDread(dl, &sid)) > 0 && (sid.d_stat.st_attr & 0x08) > 0);
 			if (result == 0)
 				break;
 			if (entrys[i].norm.filename[0] == 0x05)
 				entrys[i].norm.filename[0] = 0xE5;
-			if (!onlylong
-				&& strnicmp(shortname, &entrys[i].norm.filename[0], 11) == 0) {
+			if (!onlylong && strnicmp(shortname, &entrys[i].norm.filename[0], 11) == 0) {
 				if ((u8) entrys[i].norm.filename[0] == 0xE5)
 					entrys[i].norm.filename[0] = 0x05;
 				memcpy(info, &entrys[i], sizeof(t_fat_entry));
@@ -591,10 +559,7 @@ static u32 fat_dir_clus(const char *dir, char *shortdir)
 		fat_free_table();
 		return 0;
 	}
-	if (strcmp(partname, "ms0:") != 0 &&
-			strcmp(partname, "fatms:") != 0 && 
-			strcmp(partname, "fatms:") != 0 && 
-			strcmp(partname, "ef0:") != 0) {
+	if (strcmp(partname, "ms0:") != 0 && strcmp(partname, "fatms:") != 0 && strcmp(partname, "fatms:") != 0 && strcmp(partname, "ef0:") != 0) {
 		fat_free_table();
 		return 0;
 	}
@@ -607,8 +572,7 @@ static u32 fat_dir_clus(const char *dir, char *shortdir)
 		if (partname[0] != 0) {
 			if (fat_locate(partname, shortdir, clus, &entry)) {
 				clus = entry.norm.clus_high;
-				clus =
-					((fat_type == fat32) ? (clus << 16) : 0) + entry.norm.clus;
+				clus = ((fat_type == fat32) ? (clus << 16) : 0) + entry.norm.clus;
 			} else {
 				fat_free_table();
 				return 0;
@@ -631,11 +595,11 @@ extern u32 fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 
 	fat_lock();
 
-	if(!fat_inited) {
+	if (!fat_inited) {
 		fat_init();
 	}
 
-	if(!fat_inited) {
+	if (!fat_inited) {
 		fat_unlock();
 		fat_free();
 
@@ -672,9 +636,7 @@ extern u32 fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 	for (i = 0; i < ecount; i++) {
 		if ((entrys[i].norm.attr & FAT_FILEATTR_VOLUME) != 0
 			|| entrys[i].norm.filename[0] == 0
-			|| (u8) entrys[i].norm.filename[0] == 0xE5
-			|| (entrys[i].norm.filename[0] == '.'
-				&& entrys[i].norm.filename[1] == 0x20))
+			|| (u8) entrys[i].norm.filename[0] == 0xE5 || (entrys[i].norm.filename[0] == '.' && entrys[i].norm.filename[1] == 0x20))
 			continue;
 		count++;
 	}
@@ -694,19 +656,13 @@ extern u32 fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 
 		if ((entrys[i].norm.attr & FAT_FILEATTR_VOLUME) != 0
 			|| entrys[i].norm.filename[0] == 0
-			|| (u8) entrys[i].norm.filename[0] == 0xE5
-			|| (entrys[i].norm.filename[0] == '.'
-				&& entrys[i].norm.filename[1] == 0x20)
-			|| (entrys[i].norm.filename[0] == '.'
-				&& entrys[i].norm.filename[1] == '.'
-				&& entrys[i].norm.filename[2] == 0x20)
+			|| (u8) entrys[i].norm.filename[0] == 0xE5 || (entrys[i].norm.filename[0] == '.' && entrys[i].norm.filename[1] == 0x20)
+			|| (entrys[i].norm.filename[0] == '.' && entrys[i].norm.filename[1] == '.' && entrys[i].norm.filename[2] == 0x20)
 			)
 			continue;
 		memset(&sid, 0, sizeof(SceIoDirent));
 
-		while ((result = sceIoDread(dl, &sid)) > 0
-			   && ((sid.d_stat.st_attr & 0x08) > 0
-				   || (sid.d_name[0] == '.' && sid.d_name[1] == 0)));
+		while ((result = sceIoDread(dl, &sid)) > 0 && ((sid.d_stat.st_attr & 0x08) > 0 || (sid.d_name[0] == '.' && sid.d_name[1] == 0)));
 
 		if (result == 0)
 			break;
@@ -726,10 +682,7 @@ extern u32 fat_readdir(const char *dir, char *sdir, p_fat_info * info)
 		inf->ctime = entrys[i].norm.cr_time;
 		inf->mdate = entrys[i].norm.last_mod_date;
 		inf->mtime = entrys[i].norm.last_mod_time;
-		inf->clus =
-			((fat_type ==
-			  fat32) ? (((u32) entrys[i].norm.clus_high) << 16) : 0) +
-			entrys[i].norm.clus;
+		inf->clus = ((fat_type == fat32) ? (((u32) entrys[i].norm.clus_high) << 16) : 0) + entrys[i].norm.clus;
 		inf->attr = entrys[i].norm.attr;
 		cur++;
 	}
@@ -751,8 +704,7 @@ extern u32 fat_readdir(const char *dir, char *sdir, p_fat_info * info)
  * @return 是否成功
  * @note 参考: http://support.microsoft.com/kb/142982/zh-cn
  */
-extern bool fat_longnametoshortname(char *shortname, const char *longname,
-									u32 size)
+extern bool fat_longnametoshortname(char *shortname, const char *longname, u32 size)
 {
 	p_fat_info info = NULL;
 	char dirname[PATH_MAX], spath[PATH_MAX], longfilename[PATH_MAX];

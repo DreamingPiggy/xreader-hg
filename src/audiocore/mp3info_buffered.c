@@ -46,11 +46,7 @@ static int id3v2_match(const uint8_t * buf)
 {
 	return buf[0] == 'I' &&
 		buf[1] == 'D' &&
-		buf[2] == '3' &&
-		buf[3] != 0xff &&
-		buf[4] != 0xff &&
-		(buf[6] & 0x80) == 0 &&
-		(buf[7] & 0x80) == 0 && (buf[8] & 0x80) == 0 && (buf[9] & 0x80) == 0;
+		buf[2] == '3' && buf[3] != 0xff && buf[4] != 0xff && (buf[6] & 0x80) == 0 && (buf[7] & 0x80) == 0 && (buf[8] & 0x80) == 0 && (buf[9] & 0x80) == 0;
 }
 
 static int _bitrate[9][16] = {
@@ -74,13 +70,11 @@ static int _sample_freq[3][4] = {
 
 static int check_bc_combination(int bitrate, uint8_t channel_mode)
 {
-	if (bitrate == 64 || bitrate == 96 || bitrate == 112 || bitrate == 128
-		|| bitrate == 160 || bitrate == 192)
+	if (bitrate == 64 || bitrate == 96 || bitrate == 112 || bitrate == 128 || bitrate == 160 || bitrate == 192)
 		return 0;
 
 	if (channel_mode == 0 || channel_mode == 1 || channel_mode == 2) {
-		if (bitrate == 224 || bitrate == 256 || bitrate == 320
-			|| bitrate == 384)
+		if (bitrate == 224 || bitrate == 256 || bitrate == 320 || bitrate == 384)
 			return 0;
 	}
 
@@ -92,9 +86,7 @@ static int check_bc_combination(int bitrate, uint8_t channel_mode)
 	return -1;
 }
 
-static inline int parse_frame(uint8_t * h, int *lv, int *br,
-							  struct MP3Info *info, mp3_reader_data * data,
-							  offset_t start)
+static inline int parse_frame(uint8_t * h, int *lv, int *br, struct MP3Info *info, mp3_reader_data * data, offset_t start)
 {
 	uint8_t mp3_version, mp3_level;
 	uint8_t layer;
@@ -104,8 +96,7 @@ static inline int parse_frame(uint8_t * h, int *lv, int *br,
 	uint32_t framelenbyte;
 	int bitrate;
 	int freq;
-	uint16_t mp3_samples_per_frames[9] =
-		{ 384, 1152, 1152, 384, 1152, 576, 384, 1152, 576 };
+	uint16_t mp3_samples_per_frames[9] = { 384, 1152, 1152, 384, 1152, 576, 384, 1152, 576 };
 
 	if (h[0] != 0xff)
 		return -1;
@@ -191,8 +182,7 @@ int skip_id3v2_tag_buffered(mp3_reader_data * data)
 
 		memset(&info, 0, sizeof(info));
 		/* parse ID3v2 header */
-		len = ((buf[6] & 0x7f) << 21) |
-			((buf[7] & 0x7f) << 14) | ((buf[8] & 0x7f) << 7) | (buf[9] & 0x7f);
+		len = ((buf[6] & 0x7f) << 21) | ((buf[7] & 0x7f) << 14) | ((buf[8] & 0x7f) << 7) | (buf[9] & 0x7f);
 		buffered_reader_seek(data->r, buffered_reader_position(data->r) + len);
 	} else {
 		buffered_reader_seek(data->r, 0);
@@ -223,9 +213,7 @@ int search_valid_frame_me_buffered(mp3_reader_data * data, int *brate)
 	start = 0;
 	while ((end = buffered_reader_read(data->r, &buf[4], sizeof(buf) - 4)) > 0) {
 		while (start < end) {
-			size =
-				parse_frame(buf + start, &level, brate, info, data,
-							dcount * (sizeof(buf) - 4) + off + start);
+			size = parse_frame(buf + start, &level, brate, info, data, dcount * (sizeof(buf) - 4) + off + start);
 
 			if (size > 0) {
 				goto found;

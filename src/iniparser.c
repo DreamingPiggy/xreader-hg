@@ -300,9 +300,7 @@ void iniparser_dump_ini(dictionary * d, FILE * f)
 			if (d->key[j] == NULL)
 				continue;
 			if (!strncmp(d->key[j], keym, seclen + 1)) {
-				fprintf(f,
-						"%s=%s\r\n",
-						d->key[j] + seclen + 1, d->val[j] ? d->val[j] : "");
+				fprintf(f, "%s=%s\r\n", d->key[j] + seclen + 1, d->val[j] ? d->val[j] : "");
 			}
 		}
 	}
@@ -375,8 +373,7 @@ int iniparser_getint(dictionary * d, const char *key, int notfound)
 	return (int) strtol(str, NULL, 0);
 }
 
-unsigned long iniparser_getunsigned(dictionary * d, const char *key,
-									unsigned long notfound)
+unsigned long iniparser_getunsigned(dictionary * d, const char *key, unsigned long notfound)
 {
 	char *str;
 
@@ -451,8 +448,7 @@ int iniparser_getboolean(dictionary * d, const char *key, int notfound)
 		return notfound;
 	if (c[0] == 'y' || c[0] == 'Y' || c[0] == '1' || c[0] == 't' || c[0] == 'T') {
 		ret = 1;
-	} else if (c[0] == 'n' || c[0] == 'N' || c[0] == '0' || c[0] == 'f'
-			   || c[0] == 'F') {
+	} else if (c[0] == 'n' || c[0] == 'N' || c[0] == '0' || c[0] == 'f' || c[0] == 'F') {
 		ret = 0;
 	} else {
 		ret = notfound;
@@ -525,8 +521,7 @@ void iniparser_unset(dictionary * ini, char *entry)
   @return   line_status value
  */
 /*--------------------------------------------------------------------------*/
-static line_status iniparser_line(char *input_line,
-								  char *section, char *key, char *value)
+static line_status iniparser_line(char *input_line, char *section, char *key, char *value)
 {
 	line_status sta;
 	char line[ASCIILINESZ + 1];
@@ -549,8 +544,7 @@ static line_status iniparser_line(char *input_line,
 		strcpy_s(section, ASCIILINESZ + 1, strlwc(section));
 		sta = LINE_SECTION;
 	} else if (sscanf(line, "%[^=] = \"%[^\"]\"", key, value) == 2
-			   || sscanf(line, "%[^=] = '%[^\']'", key, value) == 2
-			   || sscanf(line, "%[^=] = %[^;#]", key, value) == 2) {
+			   || sscanf(line, "%[^=] = '%[^\']'", key, value) == 2 || sscanf(line, "%[^=] = %[^;#]", key, value) == 2) {
 		/* Usual key=value, with or without comments */
 		strcpy_s(key, ASCIILINESZ + 1, strstrip(key));
 		strcpy_s(key, ASCIILINESZ + 1, strlwc(key));
@@ -563,8 +557,7 @@ static line_status iniparser_line(char *input_line,
 			value[0] = 0;
 		}
 		sta = LINE_VALUE;
-	} else if (sscanf(line, "%[^=] = %[;#]", key, value) == 2
-			   || sscanf(line, "%[^=] %[=]", key, value) == 2) {
+	} else if (sscanf(line, "%[^=] = %[;#]", key, value) == 2 || sscanf(line, "%[^=] %[=]", key, value) == 2) {
 		/*
 		 * Special cases:
 		 * key=
@@ -635,9 +628,7 @@ dictionary *iniparser_load(const char *ininame)
 		len = (int) strlen(line) - 1;
 		/* Safety check against buffer overflows */
 		if (line[len] != '\n') {
-			fprintf(stderr,
-					"iniparser: input line too long in %s (%d)\n",
-					ininame, lineno);
+			fprintf(stderr, "iniparser: input line too long in %s (%d)\n", ininame, lineno);
 			dictionary_del(dict);
 			fclose(in);
 			return NULL;
@@ -671,8 +662,7 @@ dictionary *iniparser_load(const char *ininame)
 				break;
 
 			case LINE_ERROR:
-				fprintf(stderr, "iniparser: syntax error in %s (%d):\n",
-						ininame, lineno);
+				fprintf(stderr, "iniparser: syntax error in %s (%d):\n", ininame, lineno);
 				fprintf(stderr, "-> %s\n", line);
 				errs++;
 				break;

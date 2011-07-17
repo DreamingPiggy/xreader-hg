@@ -140,9 +140,7 @@ static int __end(void)
 
 static int m4a_seek_seconds(double seconds)
 {
-	mp4sample_id =
-		MP4GetSampleIdFromTime(mp4file, mp4track, seconds * g_info.sample_freq,
-							   0);
+	mp4sample_id = MP4GetSampleIdFromTime(mp4file, mp4track, seconds * g_info.sample_freq, 0);
 
 	dbg_printf(d, "%s: jump to frame %d", __func__, mp4sample_id);
 
@@ -159,8 +157,7 @@ static int m4a_seek_seconds(double seconds)
  * @param frames 复制帧数
  * @param channels 声道数
  */
-static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames,
-						   int channels)
+static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames, int channels)
 {
 	int n;
 	signed short *p = (signed short *) buf;
@@ -228,9 +225,7 @@ static int m4a_audiocallback(void *buf, unsigned int reqn, void *pdata)
 		avail_frame = g_buff_frame_size - g_buff_frame_start;
 
 		if (avail_frame >= snd_buf_frame_size) {
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * 2],
-						   snd_buf_frame_size, 2);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], snd_buf_frame_size, 2);
 			g_buff_frame_start += snd_buf_frame_size;
 			audio_buf += snd_buf_frame_size * 2;
 			snd_buf_frame_size = 0;
@@ -241,15 +236,11 @@ static int m4a_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			u_int32_t buffer_size = 0;
 			uint16_t *output;
 
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * 2], avail_frame, 2);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], avail_frame, 2);
 			snd_buf_frame_size -= avail_frame;
 			audio_buf += avail_frame * 2;
 			memset(aac_mix_buffer, 0, sizeof(aac_mix_buffer));
-			res = MP4ReadSample(mp4file,
-								mp4track,
-								mp4sample_id++,
-								&buffer, &buffer_size, NULL, NULL, NULL, NULL);
+			res = MP4ReadSample(mp4file, mp4track, mp4sample_id++, &buffer, &buffer_size, NULL, NULL, NULL, NULL);
 
 			if (res == 0 || buffer == NULL) {
 				if (buffer != NULL) {
@@ -367,8 +358,7 @@ static void m4a_get_tag()
 	while (MP4GetMetadataByIndex(mp4file, i, &name, &buffer, &buffer_size)) {
 		if (*(unsigned long *) name == 0x6f6f74a9) {
 			memset(g_vendor_str, 0, sizeof(g_vendor_str));
-			strncpy_s(g_vendor_str, sizeof(g_vendor_str), (const char *) buffer,
-					  buffer_size);
+			strncpy_s(g_vendor_str, sizeof(g_vendor_str), (const char *) buffer, buffer_size);
 			dbg_printf(d, "%s: Encoder %s", __func__, g_vendor_str);
 			break;
 		}
@@ -442,25 +432,19 @@ static int m4a_load(const char *spath, const char *lpath)
 		goto failed;
 	}
 
-	if (NeAACDecInit2
-		(decoder, buffer, buffer_size, (unsigned long *) &(g_info.sample_freq),
-		 (unsigned char *) &(g_info.channels)) < 0) {
+	if (NeAACDecInit2(decoder, buffer, buffer_size, (unsigned long *) &(g_info.sample_freq), (unsigned char *) &(g_info.channels)) < 0) {
 		free(buffer);
 		NeAACDecClose(decoder);
 		goto failed;
 	}
 
 	g_force_up_sampling = cfg.forceUpSampling;
-	dbg_printf(d, "forceUpSampling is %s",
-			   g_force_up_sampling ? "true" : "false");
+	dbg_printf(d, "forceUpSampling is %s", g_force_up_sampling ? "true" : "false");
 
 	free(buffer);
 	NeAACDecClose(decoder);
 
-	ms_duration = MP4ConvertFromTrackDuration(mp4file, mp4track,
-													   MP4GetTrackDuration
-													   (mp4file, mp4track),
-													   MP4_MSECS_TIME_SCALE);
+	ms_duration = MP4ConvertFromTrackDuration(mp4file, mp4track, MP4GetTrackDuration(mp4file, mp4track), MP4_MSECS_TIME_SCALE);
 
 	g_info.duration = ms_duration / 1000.0;
 
@@ -668,8 +652,7 @@ static int m4a_set_opt(const char *unused, const char *values)
 	build_args(values, &argc, &argv);
 
 	for (i = 0; i < argc; ++i) {
-		if (!strncasecmp
-			(argv[i], "m4a_buffer_size", sizeof("m4a_buffer_size") - 1)) {
+		if (!strncasecmp(argv[i], "m4a_buffer_size", sizeof("m4a_buffer_size") - 1)) {
 			const char *p = argv[i];
 
 			if ((p = strrchr(p, '=')) != NULL) {

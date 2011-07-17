@@ -107,8 +107,7 @@ extern void disp_set_book_fontsize(int fontsize);
  *
  * @return
  */
-extern bool disp_has_zipped_font(const char *zipfile, const char *efont,
-								 const char *cfont);
+extern bool disp_has_zipped_font(const char *zipfile, const char *efont, const char *cfont);
 
 /**
  * 从ZIP文件中装载系统点阵字体
@@ -119,8 +118,7 @@ extern bool disp_has_zipped_font(const char *zipfile, const char *efont,
  *
  * @return
  */
-extern bool disp_load_zipped_font(const char *zipfile, const char *efont,
-								  const char *cfont);
+extern bool disp_load_zipped_font(const char *zipfile, const char *efont, const char *cfont);
 
 /**
  * 从ZIP文件中装载文本点阵字体
@@ -131,8 +129,7 @@ extern bool disp_load_zipped_font(const char *zipfile, const char *efont,
  *
  * @return
  */
-extern bool disp_load_zipped_book_font(const char *zipfile, const char *efont,
-									   const char *cfont);
+extern bool disp_load_zipped_book_font(const char *zipfile, const char *efont, const char *cfont);
 
 /**
  * 重新装载ttf字体
@@ -185,69 +182,41 @@ extern void disp_flip(void);
 extern void disp_getimage(u32 x, u32 y, u32 w, u32 h, pixel * buf);
 extern void disp_getimage_draw(u32 x, u32 y, u32 w, u32 h, pixel * buf);
 
-extern void disp_newputimage(int x, int y, int w, int h, int bufw, int startx,
-							 int starty, int ow, int oh, pixel * buf,
-							 bool swizzled);
-extern void disp_putimage(u32 x, u32 y, u32 w, u32 h, u32 startx,
-						  u32 starty, pixel * buf);
+extern void disp_newputimage(int x, int y, int w, int h, int bufw, int startx, int starty, int ow, int oh, pixel * buf, bool swizzled);
+extern void disp_putimage(u32 x, u32 y, u32 w, u32 h, u32 startx, u32 starty, pixel * buf);
 extern void disp_duptocache(void);
 extern void disp_duptocachealpha(int percent);
 extern void disp_rectduptocache(u32 x1, u32 y1, u32 x2, u32 y2);
-extern void disp_rectduptocachealpha(u32 x1, u32 y1, u32 x2, u32 y2,
-									 int percent);
+extern void disp_rectduptocachealpha(u32 x1, u32 y1, u32 x2, u32 y2, int percent);
 
-extern void disp_putnstring(int x, int y, pixel color, const u8 * str,
-							int count, u32 wordspace, int top, int height,
-							int bot);
+extern void disp_putnstring(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot);
 #define disp_putstring(x,y,color,str) disp_putnstring((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_FONTSIZE,PSP_SCREEN_HEIGHT)
 
-extern void disp_putnstringreversal(int x, int y, pixel color, const u8 * str,
-									int count, u32 wordspace, int top,
-									int height, int bot);
+extern void disp_putnstringreversal(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot);
 #define disp_putstringreversal(x,y,color,str) disp_putnstringreversal((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
-extern void disp_putnstringhorz(int x, int y, pixel color, const u8 * str,
-								int count, u32 wordspace, int top, int height,
-								int bot);
+extern void disp_putnstringhorz(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot);
 #define disp_putstringhorz(x,y,color,str) disp_putnstringhorz((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
-extern void disp_putnstringlvert(int x, int y, pixel color, const u8 * str,
-								 int count, u32 wordspace, int top,
-								 int height, int bot);
+extern void disp_putnstringlvert(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot);
 #define disp_putstringlvert(x,y,color,str) disp_putnstringlvert((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
-extern void disp_putnstringrvert(int x, int y, pixel color, const u8 * str,
-								 int count, u32 wordspace, int top,
-								 int height, int bot);
+extern void disp_putnstringrvert(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot);
 #define disp_putstringrvert(x,y,color,str) disp_putnstringrvert((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
-extern void disp_putnstringreversal_sys(int x, int y, pixel color,
-										const u8 * str, int count,
-										u32 wordspace, int top, int height,
-										int bot);
+extern void disp_putnstringreversal_sys(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot);
 #define disp_putstringreversal_sys(x,y,color,str) disp_putnstringreversal_sys((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
-extern void disp_putnstringhorz_sys(int x, int y, pixel color, const u8 * str,
-									int count, u32 wordspace, int top,
-									int height, int bot);
+extern void disp_putnstringhorz_sys(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot);
 #define disp_putstringhorz_sys(x,y,color,str) disp_putnstringhorz_sys((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
-extern void disp_putnstringlvert_sys(int x, int y, pixel color,
-									 const u8 * str, int count,
-									 u32 wordspace, int top, int height,
-									 int bot);
+extern void disp_putnstringlvert_sys(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot);
 #define disp_putstringlvert_sys(x,y,color,str) disp_putnstringlvert_sys((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
-extern void disp_putnstringrvert_sys(int x, int y, pixel color,
-									 const u8 * str, int count,
-									 u32 wordspace, int top, int height,
-									 int bot);
+extern void disp_putnstringrvert_sys(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot);
 #define disp_putstringrvert_sys(x,y,color,str) disp_putnstringrvert_sys((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
-extern void disp_putnstringreversal_sys(int x, int y, pixel color,
-										const u8 * str, int count,
-										u32 wordspace, int top, int height,
-										int bot);
+extern void disp_putnstringreversal_sys(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot);
 #define disp_putstringreversal_sys(x,y,color,str) disp_putnstringreversal_sys((x),(y),(color),(str),0x7FFFFFFF,0,0,DISP_BOOK_FONTSIZE,0)
 
 extern void disp_fillvram(pixel color);

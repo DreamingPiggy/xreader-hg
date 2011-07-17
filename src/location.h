@@ -23,15 +23,11 @@
 
 #include "common/datatype.h"
 
-typedef void (*t_location_enum_func) (u32 index, char *comppath,
-									  char *shortpath, char *compname,
-									  char *name, bool isreading, void *data);
+typedef void (*t_location_enum_func) (u32 index, char *comppath, char *shortpath, char *compname, char *name, bool isreading, void *data);
 
 extern void location_init(const char *filename, int *slotaval);
-extern bool location_get(u32 index, char *comppath, char *shortpath,
-						 char *compname, char *name, bool * isreading);
-extern bool location_set(u32 index, char *comppath, char *shortpath,
-						 char *compname, char *name, bool isreading);
+extern bool location_get(u32 index, char *comppath, char *shortpath, char *compname, char *name, bool * isreading);
+extern bool location_set(u32 index, char *comppath, char *shortpath, char *compname, char *name, bool isreading);
 extern bool location_enum(t_location_enum_func func, void *data);
 
 #endif

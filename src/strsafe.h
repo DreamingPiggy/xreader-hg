@@ -26,18 +26,13 @@ extern "C"
 {
 #endif
 
-	size_t strncpy_s(char *strDest, size_t numberOfElements,
-					 const char *strSource, size_t count);
-	size_t strcpy_s(char *strDestination, size_t numberOfElements,
-					const char *strSource);
-	size_t strncat_s(char *strDest, size_t numberOfElements,
-					 const char *strSource, size_t count);
-	size_t strcat_s(char *strDestination, size_t numberOfElements,
-					const char *strSource);
+	size_t strncpy_s(char *strDest, size_t numberOfElements, const char *strSource, size_t count);
+	size_t strcpy_s(char *strDestination, size_t numberOfElements, const char *strSource);
+	size_t strncat_s(char *strDest, size_t numberOfElements, const char *strSource, size_t count);
+	size_t strcat_s(char *strDestination, size_t numberOfElements, const char *strSource);
 	int snprintf_s(char *buffer, size_t sizeOfBuffer, const char *format, ...);
 	size_t mbcslen(const unsigned char *str);
-	size_t mbcsncpy_s(unsigned char *dst, size_t nBytes,
-					  const unsigned char *src, size_t n);
+	size_t mbcsncpy_s(unsigned char *dst, size_t nBytes, const unsigned char *src, size_t n);
 
 #define NELEMS(n) (sizeof(n) / sizeof(n[0]))
 

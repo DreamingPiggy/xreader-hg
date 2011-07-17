@@ -11493,29 +11493,19 @@ static int hkscs_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 
 				if (i < 2041) {
 					if (i < 1883)
-						swc =
-							hkscs_2uni_page88[i - 1256],
-							wc = hkscs_2uni_upages[swc >> 6]
+						swc = hkscs_2uni_page88[i - 1256], wc = hkscs_2uni_upages[swc >> 6]
 							| (swc & 0x3f);
 				} else if (i < 10990) {
 					if (i < 5181)
-						swc =
-							hkscs_2uni_page8d[i - 2041],
-							wc = hkscs_2uni_upages[swc >> 6]
+						swc = hkscs_2uni_page8d[i - 2041], wc = hkscs_2uni_upages[swc >> 6]
 							| (swc & 0x3f);
 				} else if (i < 18997) {
 					if (i < 11461)
-						swc =
-							hkscs_2uni_pagec6[i -
-											  10990],
-							wc = hkscs_2uni_upages[swc >> 6]
+						swc = hkscs_2uni_pagec6[i - 10990], wc = hkscs_2uni_upages[swc >> 6]
 							| (swc & 0x3f);
 				} else {
 					if (i < 19939)
-						swc =
-							hkscs_2uni_pagef9[i -
-											  18997],
-							wc = hkscs_2uni_upages[swc >> 6]
+						swc = hkscs_2uni_pagef9[i - 18997], wc = hkscs_2uni_upages[swc >> 6]
 							| (swc & 0x3f);
 				}
 				if (wc != 0xfffd) {
@@ -11653,10 +11643,8 @@ static int shift_jisx0213_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 						if (wc) {
 							if (wc < 0x80) {
 								/* It's a combining character. */
-								ucs4_t wc1 =
-									jisx0213_to_ucs_combining[wc - 1][0];
-								ucs4_t wc2 =
-									jisx0213_to_ucs_combining[wc - 1][1];
+								ucs4_t wc1 = jisx0213_to_ucs_combining[wc - 1][0];
+								ucs4_t wc2 = jisx0213_to_ucs_combining[wc - 1][1];
 								/* We cannot output two Unicode characters at once. So,
 								   output the first character and buffer the second one. */
 								*pwc = wc1;
@@ -11694,8 +11682,7 @@ int utf8_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 	} else if (c < 0xf0) {
 		if (n < 3)
 			return RET_TOOFEW(0);
-		if (!((s[1] ^ 0x80) < 0x40 && (s[2] ^ 0x80) < 0x40
-			  && (c >= 0xe1 || s[1] >= 0xa0)))
+		if (!((s[1] ^ 0x80) < 0x40 && (s[2] ^ 0x80) < 0x40 && (c >= 0xe1 || s[1] >= 0xa0)))
 			return RET_ILSEQ;
 		*pwc = ((ucs4_t) (c & 0x0f) << 12)
 			| ((ucs4_t) (s[1] ^ 0x80) << 6)
@@ -11704,8 +11691,7 @@ int utf8_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 	} else if (c < 0xf8 && sizeof(ucs4_t) * 8 >= 32) {
 		if (n < 4)
 			return RET_TOOFEW(0);
-		if (!((s[1] ^ 0x80) < 0x40 && (s[2] ^ 0x80) < 0x40
-			  && (s[3] ^ 0x80) < 0x40 && (c >= 0xf1 || s[1] >= 0x90)))
+		if (!((s[1] ^ 0x80) < 0x40 && (s[2] ^ 0x80) < 0x40 && (s[3] ^ 0x80) < 0x40 && (c >= 0xf1 || s[1] >= 0x90)))
 			return RET_ILSEQ;
 		*pwc = ((ucs4_t) (c & 0x07) << 18)
 			| ((ucs4_t) (s[1] ^ 0x80) << 12)
@@ -11715,9 +11701,7 @@ int utf8_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 	} else if (c < 0xfc && sizeof(ucs4_t) * 8 >= 32) {
 		if (n < 5)
 			return RET_TOOFEW(0);
-		if (!((s[1] ^ 0x80) < 0x40 && (s[2] ^ 0x80) < 0x40
-			  && (s[3] ^ 0x80) < 0x40 && (s[4] ^ 0x80) < 0x40
-			  && (c >= 0xf9 || s[1] >= 0x88)))
+		if (!((s[1] ^ 0x80) < 0x40 && (s[2] ^ 0x80) < 0x40 && (s[3] ^ 0x80) < 0x40 && (s[4] ^ 0x80) < 0x40 && (c >= 0xf9 || s[1] >= 0x88)))
 			return RET_ILSEQ;
 		*pwc = ((ucs4_t) (c & 0x03) << 24)
 			| ((ucs4_t) (s[1] ^ 0x80) << 18)
@@ -11729,8 +11713,7 @@ int utf8_mbtowc(ucs4_t * pwc, const u8 * s, int n)
 		if (n < 6)
 			return RET_TOOFEW(0);
 		if (!((s[1] ^ 0x80) < 0x40 && (s[2] ^ 0x80) < 0x40
-			  && (s[3] ^ 0x80) < 0x40 && (s[4] ^ 0x80) < 0x40
-			  && (s[5] ^ 0x80) < 0x40 && (c >= 0xfd || s[1] >= 0x84)))
+			  && (s[3] ^ 0x80) < 0x40 && (s[4] ^ 0x80) < 0x40 && (s[5] ^ 0x80) < 0x40 && (c >= 0xfd || s[1] >= 0x84)))
 			return RET_ILSEQ;
 		*pwc = ((ucs4_t) (c & 0x01) << 30)
 			| ((ucs4_t) (s[1] ^ 0x80) << 24)
@@ -12193,8 +12176,7 @@ int gbk_wctomb(u8 * r, ucs4_t wc, int n)
 }
 
 /* bg5hk -> unicode */
-extern u32 charsets_bg5hk2cjk(const u8 * big5hk, size_t inputlen,
-								u8 * cjk, size_t outputlen)
+extern u32 charsets_bg5hk2cjk(const u8 * big5hk, size_t inputlen, u8 * cjk, size_t outputlen)
 {
 	int transcount = 0;
 
@@ -12211,17 +12193,14 @@ extern u32 charsets_bg5hk2cjk(const u8 * big5hk, size_t inputlen,
 }
 
 /* utf-32 (used in rar) string convert */
-extern u32 charsets_utf32_conv(const u8 * ucs, size_t inputlen, u8 * cjk,
-								 size_t outputlen)
+extern u32 charsets_utf32_conv(const u8 * ucs, size_t inputlen, u8 * cjk, size_t outputlen)
 {
 	int i = 0, j = 0;
 
 	if (cjk == NULL)
 		cjk = (u8 *) ucs;
 
-	while ((*(ucs + i) != 0 || *(ucs + i + 1) != 0 ||
-			*(ucs + i + 2) != 0 || *(ucs + i + 3) != 0) && inputlen
-		   && outputlen) {
+	while ((*(ucs + i) != 0 || *(ucs + i + 1) != 0 || *(ucs + i + 2) != 0 || *(ucs + i + 3) != 0) && inputlen && outputlen) {
 		int l = gbk_wctomb(cjk + j, *(u16 *) (ucs + i), 2);
 
 		j += l;
@@ -12234,8 +12213,7 @@ extern u32 charsets_utf32_conv(const u8 * ucs, size_t inputlen, u8 * cjk,
 }
 
 /* unicode string convert */
-extern u32 charsets_ucs_conv(const u8 * ucs, size_t inputlen, u8 * cjk,
-							   size_t outputlen)
+extern u32 charsets_ucs_conv(const u8 * ucs, size_t inputlen, u8 * cjk, size_t outputlen)
 {
 	int i = 0, j = 0;
 
@@ -12255,8 +12233,7 @@ extern u32 charsets_ucs_conv(const u8 * ucs, size_t inputlen, u8 * cjk,
 }
 
 /* utf-8 string convert */
-extern u32 charsets_utf8_conv(const u8 * ucs, size_t inputlen, u8 * cjk,
-								size_t outputlen)
+extern u32 charsets_utf8_conv(const u8 * ucs, size_t inputlen, u8 * cjk, size_t outputlen)
 {
 	int i = 0, j = 0, l = strlen((const char *) ucs);
 
@@ -12283,8 +12260,7 @@ extern u32 charsets_utf8_conv(const u8 * ucs, size_t inputlen, u8 * cjk,
 }
 
 /* utf-16 string convert */
-extern u32 charsets_utf16_conv(const u8 * ucs, size_t inputlen, u8 * cjk,
-								 size_t outputlen)
+extern u32 charsets_utf16_conv(const u8 * ucs, size_t inputlen, u8 * cjk, size_t outputlen)
 {
 	int i = 0, j = 0, l = strlen((const char *) ucs);
 
@@ -12315,8 +12291,7 @@ extern u32 charsets_utf16_conv(const u8 * ucs, size_t inputlen, u8 * cjk,
 }
 
 /* utf-16be string convert */
-extern u32 charsets_utf16be_conv(const u8 * ucs, size_t inputlen,
-								   u8 * cjk, size_t outputlen)
+extern u32 charsets_utf16be_conv(const u8 * ucs, size_t inputlen, u8 * cjk, size_t outputlen)
 {
 	int i = 0, j = 0, l = strlen((const char *) ucs);
 
@@ -12346,8 +12321,7 @@ extern u32 charsets_utf16be_conv(const u8 * ucs, size_t inputlen,
 }
 
 /* big5 string convert */
-extern u32 charsets_big5_conv(const u8 * big5, size_t inputlen, u8 * cjk,
-								size_t outputlen)
+extern u32 charsets_big5_conv(const u8 * big5, size_t inputlen, u8 * cjk, size_t outputlen)
 {
 	int ilen = strlen((const char *) big5);
 	int i = 0;

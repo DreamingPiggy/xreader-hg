@@ -93,11 +93,8 @@ int get_font_config(font_config * p);
 int report_font_config(font_config * p);
 
 fontconfig_mgr *fontconfigmgr_init(void);
-font_config *fontconfigmgr_add_cache(fontconfig_mgr * font_mgr,
-									 font_config * p_cfg);
-font_config *fontconfigmgr_lookup(fontconfig_mgr * font_mgr,
-								  const char *font_name, int pixelsize,
-								  bool cjkmode);
+font_config *fontconfigmgr_add_cache(fontconfig_mgr * font_mgr, font_config * p_cfg);
+font_config *fontconfigmgr_lookup(fontconfig_mgr * font_mgr, const char *font_name, int pixelsize, bool cjkmode);
 void fontconfigmgr_free(fontconfig_mgr * font_mgr);
 
 #endif

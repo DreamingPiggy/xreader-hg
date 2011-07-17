@@ -48,7 +48,7 @@ static int append_str(char ch, char **str)
 	size_t slen;
 	char *p;
 
-	if(*str == NULL) {
+	if (*str == NULL) {
 		slen = 0;
 	} else {
 		slen = strlen(*str);

@@ -130,15 +130,9 @@ static int64_t asf_seek_cb(void *userdata, void *buf, SceOff offset, int whence)
 		if (whence == PSP_SEEK_SET) {
 			ret = buffered_reader_seek(reader->r, offset);
 		} else if (whence == PSP_SEEK_CUR) {
-			ret =
-				buffered_reader_seek(reader->r,
-									 offset +
-									 buffered_reader_position(reader->r));
+			ret = buffered_reader_seek(reader->r, offset + buffered_reader_position(reader->r));
 		} else if (whence == PSP_SEEK_END) {
-			ret =
-				buffered_reader_seek(reader->r,
-									 buffered_reader_length(reader->r) -
-									 offset);
+			ret = buffered_reader_seek(reader->r, buffered_reader_length(reader->r) - offset);
 		}
 	} else {
 		ret = sceIoLseek(reader->fd, offset, whence);
@@ -159,8 +153,7 @@ static int64_t asf_seek_cb(void *userdata, void *buf, SceOff offset, int whence)
  * @param frames 复制帧数
  * @param channels 声道数
  */
-static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames,
-						   int channels)
+static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames, int channels)
 {
 	int n;
 	signed short *p = (signed short *) buf;
@@ -307,15 +300,12 @@ static int wma_audiocallback(void *buf, unsigned int reqn, void *pdata)
 		avail_frame = g_buff_frame_size - g_buff_frame_start;
 
 		if (avail_frame >= snd_buf_frame_size) {
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * 2],
-						   snd_buf_frame_size, 2);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], snd_buf_frame_size, 2);
 			g_buff_frame_start += snd_buf_frame_size;
 			audio_buf += snd_buf_frame_size * 2;
 			snd_buf_frame_size = 0;
 		} else {
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * 2], avail_frame, 2);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], avail_frame, 2);
 			snd_buf_frame_size -= avail_frame;
 			audio_buf += avail_frame * 2;
 
@@ -376,16 +366,14 @@ static int parse_standard_tag(struct WMAStdTag *tag)
 
 	memset(tag, 0, sizeof(*tag));
 
-	ret =
-		sceAsfParser_685E0DA7(&asfparser, &ms, 0x00004000, NULL, &start, &size);
+	ret = sceAsfParser_685E0DA7(&asfparser, &ms, 0x00004000, NULL, &start, &size);
 
 	if (ret < 0) {
 		dbg_printf(d, "%s: sceAsfParser_685E0DA7@0x%08x", __func__, ret);
 		return ret;
 	}
 
-	dbg_printf(d, "%s: standard arg @0x%08x size %u", __func__, (u32) start,
-			   (u32) size);
+	dbg_printf(d, "%s: standard arg @0x%08x size %u", __func__, (u32) start, (u32) size);
 
 	framedata = malloc(size);
 
@@ -507,16 +495,14 @@ static int parse_ex_tag(struct WMAExTag *tag)
 	tag->key = NULL;
 	tag->value = NULL;
 
-	ret =
-		sceAsfParser_685E0DA7(&asfparser, &ms, 0x00008000, NULL, &start, &size);
+	ret = sceAsfParser_685E0DA7(&asfparser, &ms, 0x00008000, NULL, &start, &size);
 
 	if (ret < 0) {
 		dbg_printf(d, "%s: sceAsfParser_685E0DA7@0x%08x", __func__, ret);
 		return ret;
 	}
 
-	dbg_printf(d, "%s: ex arg @0x%08x size %u", __func__, (u32) start,
-			   (u32) size);
+	dbg_printf(d, "%s: ex arg @0x%08x size %u", __func__, (u32) start, (u32) size);
 
 	framedata = calloc(1, size);
 
@@ -752,25 +738,21 @@ static void get_wma_tag(void)
 	g_info.tag.encode = conf_encode_ucs;
 
 	if (tag.title != NULL) {
-		memcpy(g_info.tag.title, tag.title,
-			   min(2 * (ucslen(tag.title) + 1), sizeof(g_info.tag.title)));
+		memcpy(g_info.tag.title, tag.title, min(2 * (ucslen(tag.title) + 1), sizeof(g_info.tag.title)));
 	}
 
 	if (tag.artist != NULL) {
-		memcpy(g_info.tag.artist, tag.artist,
-			   min(2 * (ucslen(tag.artist) + 1), sizeof(g_info.tag.artist)));
+		memcpy(g_info.tag.artist, tag.artist, min(2 * (ucslen(tag.artist) + 1), sizeof(g_info.tag.artist)));
 	}
 
 	if (tag.comment != NULL) {
-		memcpy(g_info.tag.comment, tag.comment,
-			   min(2 * (ucslen(tag.comment) + 1), sizeof(g_info.tag.comment)));
+		memcpy(g_info.tag.comment, tag.comment, min(2 * (ucslen(tag.comment) + 1), sizeof(g_info.tag.comment)));
 	}
 
 	r = lookup_value(&ex_tag, "WM/AlbumTitle");
 
 	if (r >= 0) {
-		memcpy(g_info.tag.album, ex_tag.value[r],
-			   min(ex_tag.value_size[r], sizeof(g_info.tag.album)));
+		memcpy(g_info.tag.album, ex_tag.value[r], min(ex_tag.value_size[r], sizeof(g_info.tag.album)));
 	}
 
 	free_standard_tag(&tag);
@@ -870,8 +852,7 @@ static int wma_set_opt(const char *unused, const char *values)
 	build_args(values, &argc, &argv);
 
 	for (i = 0; i < argc; ++i) {
-		if (!strncasecmp
-			(argv[i], "wma_buffer_size", sizeof("wma_buffer_size") - 1)) {
+		if (!strncasecmp(argv[i], "wma_buffer_size", sizeof("wma_buffer_size") - 1)) {
 			const char *p = argv[i];
 
 			if ((p = strrchr(p, '=')) != NULL) {
@@ -993,9 +974,7 @@ static int wma_load(const char *spath, const char *lpath)
 
 	g_info.duration = (double) asfparser.iDuration / 10000 / 1000;
 
-	dbg_printf(d, "Duration %f Channels %d, Samplerate %d Block %d",
-			   g_info.duration, g_info.channels, g_info.sample_freq,
-			   wma_block_align);
+	dbg_printf(d, "Duration %f Channels %d, Samplerate %d Block %d", g_info.duration, g_info.channels, g_info.sample_freq, wma_block_align);
 
 	wma_frame_buffer = memalign(64, wma_block_align);
 

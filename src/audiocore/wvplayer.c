@@ -103,8 +103,7 @@ static buffered_reader_t *wv = NULL, *wvc = NULL;
  * @param frames 复制帧数
  * @param channels 声道数
  */
-static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames,
-						   int channels)
+static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames, int channels)
 {
 	int n;
 	signed short *p = (signed short *) buf;
@@ -280,18 +279,14 @@ static int wv_audiocallback(void *buf, unsigned int reqn, void *pdata)
 		avail_frame = g_buff_frame_size - g_buff_frame_start;
 
 		if (avail_frame >= snd_buf_frame_size) {
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * g_info.channels],
-						   snd_buf_frame_size, g_info.channels);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * g_info.channels], snd_buf_frame_size, g_info.channels);
 			g_buff_frame_start += snd_buf_frame_size;
 			audio_buf += snd_buf_frame_size * 2;
 			snd_buf_frame_size = 0;
 		} else {
 			int ret;
 
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * g_info.channels],
-						   avail_frame, g_info.channels);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * g_info.channels], avail_frame, g_info.channels);
 			snd_buf_frame_size -= avail_frame;
 			audio_buf += avail_frame * 2;
 			ret = WavpackUnpackSamples(g_decoder, wv_buffer, MAX_BLOCK_SIZE);
@@ -299,13 +294,10 @@ static int wv_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			if (ret > 0) {
 				int i;
 				uint8_t *output;
-				
+
 				if (ret > g_buff_size) {
 					g_buff_size = ret;
-					g_buff =
-						safe_realloc(g_buff,
-									 g_buff_size * g_info.channels *
-									 sizeof(*g_buff));
+					g_buff = safe_realloc(g_buff, g_buff_size * g_info.channels * sizeof(*g_buff));
 
 					if (g_buff == NULL) {
 						__end();
@@ -364,41 +356,35 @@ static void wv_get_tag(void)
 {
 	int n;
 
-	n = WavpackGetTagItem(g_decoder, "Title", g_info.tag.title,
-						  sizeof(g_info.tag.title));
+	n = WavpackGetTagItem(g_decoder, "Title", g_info.tag.title, sizeof(g_info.tag.title));
 
 	if (n != 0) {
 		g_info.tag.type = APETAG;
 		g_info.tag.encode = conf_encode_utf8;
 	} else {
-		WavpackGetTagItem(g_decoder, "title", g_info.tag.title,
-						  sizeof(g_info.tag.title));
+		WavpackGetTagItem(g_decoder, "title", g_info.tag.title, sizeof(g_info.tag.title));
 		g_info.tag.type = ID3V1;
 		g_info.tag.encode = config.mp3encode;
 	}
 
-	n = WavpackGetTagItem(g_decoder, "Artist", g_info.tag.artist,
-						  sizeof(g_info.tag.artist));
+	n = WavpackGetTagItem(g_decoder, "Artist", g_info.tag.artist, sizeof(g_info.tag.artist));
 
 	if (n != 0) {
 		g_info.tag.type = APETAG;
 		g_info.tag.encode = conf_encode_utf8;
 	} else {
-		WavpackGetTagItem(g_decoder, "artist", g_info.tag.artist,
-						  sizeof(g_info.tag.artist));
+		WavpackGetTagItem(g_decoder, "artist", g_info.tag.artist, sizeof(g_info.tag.artist));
 		g_info.tag.type = ID3V1;
 		g_info.tag.encode = config.mp3encode;
 	}
 
-	n = WavpackGetTagItem(g_decoder, "Album", g_info.tag.album,
-						  sizeof(g_info.tag.album));
+	n = WavpackGetTagItem(g_decoder, "Album", g_info.tag.album, sizeof(g_info.tag.album));
 
 	if (n != 0) {
 		g_info.tag.type = APETAG;
 		g_info.tag.encode = conf_encode_utf8;
 	} else {
-		WavpackGetTagItem(g_decoder, "album", g_info.tag.album,
-						  sizeof(g_info.tag.album));
+		WavpackGetTagItem(g_decoder, "album", g_info.tag.album, sizeof(g_info.tag.album));
 		g_info.tag.type = ID3V1;
 		g_info.tag.encode = config.mp3encode;
 	}
@@ -484,8 +470,7 @@ static WavpackStreamReader breader = {
 	write_bytes
 };
 
-static WavpackContext *open_wvfile(const char *spath, int flags,
-								   int norm_offset)
+static WavpackContext *open_wvfile(const char *spath, int flags, int norm_offset)
 {
 	char error[80];
 
@@ -510,8 +495,7 @@ static WavpackContext *open_wvfile(const char *spath, int flags,
 		goto failed;
 	}
 
-	return WavpackOpenFileInputEx(&breader, (void *) wv, (void *) wvc, error,
-								  flags, norm_offset);
+	return WavpackOpenFileInputEx(&breader, (void *) wv, (void *) wvc, error, flags, norm_offset);
 
   failed:
 	if (wv != NULL) {
@@ -564,9 +548,7 @@ static int wv_load(const char *spath, const char *lpath)
 	g_info.filesize = sceIoLseek(fd, 0, PSP_SEEK_END);
 	sceIoClose(fd);
 
-	g_decoder =
-		open_wvfile(spath, OPEN_WVC | OPEN_TAGS | OPEN_2CH_MAX | OPEN_NORMALIZE,
-					23);
+	g_decoder = open_wvfile(spath, OPEN_WVC | OPEN_TAGS | OPEN_2CH_MAX | OPEN_NORMALIZE, 23);
 
 	if (g_decoder == NULL) {
 		__end();
@@ -656,13 +638,10 @@ static int wv_load(const char *spath, const char *lpath)
 			   "[%d channel(s), %d Hz, %.2f kbps, %02d:%02d, encoder: %s, Ratio: %.3f]",
 			   g_info.channels, g_info.sample_freq, g_info.avg_bps / 1000,
 			   (int) (g_info.duration / 60), (int) g_info.duration % 60,
-			   g_encode_name,
-			   1.0 * g_info.filesize / (g_info.samples * g_info.channels *
-										(g_wv_bits_per_sample / 8))
+			   g_encode_name, 1.0 * g_info.filesize / (g_info.samples * g_info.channels * (g_wv_bits_per_sample / 8))
 		);
 
-	dbg_printf(d, "[%s - %s - %s, wv tag]", g_info.tag.artist, g_info.tag.album,
-			   g_info.tag.title);
+	dbg_printf(d, "[%s - %s - %s, wv tag]", g_info.tag.artist, g_info.tag.album, g_info.tag.title);
 
 	xAudioSetChannelCallback(0, wv_audiocallback, NULL);
 
@@ -808,10 +787,7 @@ static int wv_get_info(struct music_info *pinfo)
 	if (pinfo->type & MD_GET_ENCODEMSG) {
 		if (config.show_encoder_msg && g_status != ST_UNKNOWN) {
 			SPRINTF_S(pinfo->encode_msg, "%s %s: %.3f", g_encode_name,
-					  _("压缩率"),
-					  1.0 * g_info.filesize / (g_info.samples *
-											   g_info.channels *
-											   (g_wv_bits_per_sample / 8)));
+					  _("压缩率"), 1.0 * g_info.filesize / (g_info.samples * g_info.channels * (g_wv_bits_per_sample / 8)));
 		} else {
 			pinfo->encode_msg[0] = '\0';
 		}
@@ -857,8 +833,7 @@ static int wv_set_opt(const char *unused, const char *values)
 	build_args(values, &argc, &argv);
 
 	for (i = 0; i < argc; ++i) {
-		if (!strncasecmp
-			(argv[i], "wv_buffer_size", sizeof("wv_buffer_size") - 1)) {
+		if (!strncasecmp(argv[i], "wv_buffer_size", sizeof("wv_buffer_size") - 1)) {
 			const char *p = argv[i];
 
 			if ((p = strrchr(p, '=')) != NULL) {

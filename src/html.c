@@ -32,8 +32,7 @@ static char *html_skip_spaces(char *string, size_t size)
 {
 	char *res = string;
 
-	while (size > 0
-		   && (*res == '\r' || *res == '\n' || *res == ' ' || *res == '\t')) {
+	while (size > 0 && (*res == '\r' || *res == '\n' || *res == ' ' || *res == '\t')) {
 		res++;
 		size--;
 	}
@@ -41,8 +40,7 @@ static char *html_skip_spaces(char *string, size_t size)
 	return res;
 }
 
-static char *html_find_next_tag(char *string, size_t size, char **tag,
-								char **property, bool * istag, bool stripeol)
+static char *html_find_next_tag(char *string, size_t size, char **tag, char **property, bool * istag, bool stripeol)
 {
 	char *res = string;
 	bool inquote = false;
@@ -52,8 +50,7 @@ static char *html_find_next_tag(char *string, size_t size, char **tag,
 	*property = NULL;
 
 	while (size > 0 && *res != '\0' && *res != '<' && *res != '&') {
-		if (stripeol
-			&& (*res == ' ' || *res == '\t' || *res == '\r' || *res == '\n')) {
+		if (stripeol && (*res == ' ' || *res == '\t' || *res == '\r' || *res == '\n')) {
 			if (res > string && *(res - 1) == ' ')
 				*res = 0x1F;
 			else
@@ -100,9 +97,7 @@ static char *html_find_next_tag(char *string, size_t size, char **tag,
 				if (size == 0)
 					return res;
 
-			} else if (!inquote
-					   && (*res == ' ' || *res == '\t'
-						   || *res == '\r' || *res == '\n')) {
+			} else if (!inquote && (*res == ' ' || *res == '\t' || *res == '\r' || *res == '\n')) {
 				*res = 0;
 				res++;
 				size--;
@@ -154,8 +149,7 @@ static char *html_find_next_tag(char *string, size_t size, char **tag,
 
 		*tag = res;
 
-		while (size > 0 && *res != '\0' && *res != ' ' && *res != ';'
-			   && *res != '<' && *res != '&') {
+		while (size > 0 && *res != '\0' && *res != ' ' && *res != ';' && *res != '<' && *res != '&') {
 			res++;
 			size--;
 		}
@@ -232,8 +226,7 @@ static char *html_skip_close_tag(char *string, size_t size, char *tag)
 
 extern u32 html_to_text(char *string, u32 size, bool stripeol)
 {
-	char *nstr = NULL, *ntag = string, *cstr = string, *str = string, *prop =
-		NULL;
+	char *nstr = NULL, *ntag = string, *cstr = string, *str = string, *prop = NULL;
 	bool istag = false;
 
 	if (size > 0) {
@@ -244,10 +237,7 @@ extern u32 html_to_text(char *string, u32 size, bool stripeol)
 				*cur = 1;
 	}
 
-	while (str != NULL
-		   && (nstr =
-			   html_find_next_tag(str, size, &ntag, &prop, &istag,
-								  stripeol)) != NULL) {
+	while (str != NULL && (nstr = html_find_next_tag(str, size, &ntag, &prop, &istag, stripeol)) != NULL) {
 		int len = (int) ntag - (int) str - 1;
 
 		if (len > 0) {
@@ -272,8 +262,7 @@ extern u32 html_to_text(char *string, u32 size, bool stripeol)
 		}
 
 		if (istag) {
-			if (stricmp(ntag, "head") == 0
-				|| stricmp(ntag, "style") == 0 || stricmp(ntag, "title") == 0) {
+			if (stricmp(ntag, "head") == 0 || stricmp(ntag, "style") == 0 || stricmp(ntag, "title") == 0) {
 				char *pstr = html_skip_close_tag(nstr, size, ntag);
 
 				if (pstr != NULL)
@@ -294,8 +283,7 @@ extern u32 html_to_text(char *string, u32 size, bool stripeol)
 
 						kstr++;
 						dstr = kstr;
-						while (*dstr != 0
-							   && (*dstr != qt || *(dstr - 1) == '\\'))
+						while (*dstr != 0 && (*dstr != qt || *(dstr - 1) == '\\'))
 							dstr++;
 						if (*dstr == qt) {
 							strncpy(cstr, kstr, dstr - kstr);
@@ -330,10 +318,7 @@ extern u32 html_to_text(char *string, u32 size, bool stripeol)
 					|| stricmp(ntag, "li") == 0
 					|| stricmp(ntag, "p") == 0
 					|| stricmp(ntag, "/p") == 0
-					|| stricmp(ntag, "tr") == 0
-					|| stricmp(ntag, "/table") == 0
-					|| stricmp(ntag, "div") == 0
-					|| stricmp(ntag, "/div") == 0) {
+					|| stricmp(ntag, "tr") == 0 || stricmp(ntag, "/table") == 0 || stricmp(ntag, "div") == 0 || stricmp(ntag, "/div") == 0) {
 					if (prop != NULL) {
 						char *v = strchr(prop, '=');
 
@@ -348,10 +333,7 @@ extern u32 html_to_text(char *string, u32 size, bool stripeol)
 							char *t = v - 1;
 
 							*v = 0;
-							while (t > prop
-								   && (*t == ' '
-									   || *t == '\t'
-									   || *t == '\r' || *t == '\n'))
+							while (t > prop && (*t == ' ' || *t == '\t' || *t == '\r' || *t == '\n'))
 								t--;
 							*(t + 1) = 0;
 							if (stricmp(prop, "style") == 0) {
@@ -383,9 +365,8 @@ extern u32 html_to_text(char *string, u32 size, bool stripeol)
 											return cstr - string;
 										}
 									} else {
-										char *pstr =
-											html_skip_close_tag(nstr, size,
-																ntag);
+										char *pstr = html_skip_close_tag(nstr, size,
+																		 ntag);
 
 										if (pstr != NULL)
 											nstr = pstr;

@@ -123,10 +123,7 @@ static void report_image_error(int status)
 	SPRINTF_S(infomsg, _("图像无法装载, 原因: %s"), errstr);
 	win_msg(infomsg, COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 	ctrl_waitrelease();
-	dbg_printf(d,
-			   _
-			   ("图像无法装载，原因: %s where = %d config.path %s filename %s"),
-			   errstr, where, config.path, filename);
+	dbg_printf(d, _("图像无法装载，原因: %s where = %d config.path %s filename %s"), errstr, where, config.path, filename);
 	imgreading = false;
 	reset_image_ptr();
 }
@@ -191,15 +188,12 @@ static int cache_get_image(u32 selidx)
 
 	if (img->status == CACHE_OK && img->result == 0) {
 		dbg_printf(d, "CLIENT: Image %u load OK in %.3f s, %ux%u",
-				   (unsigned) img->selidx, pspDiffTime(&now, &start),
-				   (unsigned) img->width, (unsigned) img->height);
+				   (unsigned) img->selidx, pspDiffTime(&now, &start), (unsigned) img->width, (unsigned) img->height);
 		ret = 0;
 	} else {
 		dbg_printf(d,
 				   "CLIENT: Image %u load FAILED in %.3f s, %ux%u, status %u, result %u",
-				   (unsigned) img->selidx, pspDiffTime(&now, &start),
-				   (unsigned) img->width, (unsigned) img->height, img->status,
-				   img->result);
+				   (unsigned) img->selidx, pspDiffTime(&now, &start), (unsigned) img->width, (unsigned) img->height, img->status, img->result);
 		ret = img->result;
 	}
 
@@ -249,19 +243,16 @@ static u32 scene_rotateimage(void)
 {
 	int ret;
 
-	ret = image_rotate(imgdata, &width, &height, oldangle,
-					   (u32) config.rotate * 90);
+	ret = image_rotate(imgdata, &width, &height, oldangle, (u32) config.rotate * 90);
 
 	if (ret < 0) {
-		win_msg("内存不足无法完成旋转!", COLOR_WHITE, COLOR_WHITE,
-				config.msgbcolor);
+		win_msg("内存不足无法完成旋转!", COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 		config.rotate = conf_rotate_0;
 	}
 
 	oldangle = (u32) config.rotate * 90;
 
-	if (config.fit > 0
-		&& (config.fit != conf_fit_custom || config.scale != 100)) {
+	if (config.fit > 0 && (config.fit != conf_fit_custom || config.scale != 100)) {
 
 		reset_image_show_ptr();
 
@@ -322,17 +313,13 @@ static u32 scene_rotateimage(void)
 			width_rotated = width * imgh / height;
 		}
 
-		imgshow =
-			(pixel *) memalign(16,
-							   sizeof(pixel) * width_rotated * height_rotated);
+		imgshow = (pixel *) memalign(16, sizeof(pixel) * width_rotated * height_rotated);
 
 		if (imgshow != NULL) {
 			if (config.bicubic)
-				image_zoom_bicubic(imgdata, width, height,
-								   imgshow, width_rotated, height_rotated);
+				image_zoom_bicubic(imgdata, width, height, imgshow, width_rotated, height_rotated);
 			else
-				image_zoom_bilinear(imgdata, width, height,
-									imgshow, width_rotated, height_rotated);
+				image_zoom_bilinear(imgdata, width, height, imgshow, width_rotated, height_rotated);
 		} else {
 			imgshow = imgdata;
 			width_rotated = width;
@@ -385,8 +372,7 @@ static u32 scene_rotateimage(void)
 		thumb_width = width * 128 / height;
 	}
 
-	image_zoom_bilinear(imgdata, width, height, thumbimg, thumb_width,
-						thumb_height);
+	image_zoom_bilinear(imgdata, width, height, thumbimg, thumb_width, thumb_height);
 
 	if (slideshow)
 		lasttime = time(NULL);
@@ -401,33 +387,22 @@ static void scene_show_info(int selidx)
 
 	if (config.fit == conf_fit_custom)
 		SPRINTF_S(infostr, _("%dx%d  %d%%  旋转角度 %d  %s"),
-				  (int) width_rotated, (int) height_rotated,
-				  (int) config.scale, (int) oldangle,
-				  config.bicubic ? _("三次立方") : _("两次线性"));
+				  (int) width_rotated, (int) height_rotated, (int) config.scale, (int) oldangle, config.bicubic ? _("三次立方") : _("两次线性"));
 	else
 		SPRINTF_S(infostr, _("%dx%d  %s  旋转角度 %d  %s"),
-				  (int) width_rotated, (int) height_rotated,
-				  conf_get_fitname(config.fit), (int) oldangle,
-				  config.bicubic ? _("三次立方") : _("两次线性"));
+				  (int) width_rotated, (int) height_rotated, conf_get_fitname(config.fit), (int) oldangle, config.bicubic ? _("三次立方") : _("两次线性"));
 
 	ilen = strlen(infostr);
 
 	if (config.imginfobar) {
 		disp_fillrect(0, PSP_SCREEN_HEIGHT - DISP_FONTSIZE, 479, 271, 0);
 		disp_putnstring(0, PSP_SCREEN_HEIGHT - DISP_FONTSIZE,
-						COLOR_WHITE,
-						(const u8 *) g_menu->root[selidx].name,
-						960 / DISP_FONTSIZE - ilen - 1, 0, 0, DISP_FONTSIZE, 0);
+						COLOR_WHITE, (const u8 *) g_menu->root[selidx].name, 960 / DISP_FONTSIZE - ilen - 1, 0, 0, DISP_FONTSIZE, 0);
 		disp_putnstring(PSP_SCREEN_WIDTH -
-						DISP_FONTSIZE / 2 * ilen,
-						PSP_SCREEN_HEIGHT - DISP_FONTSIZE,
-						COLOR_WHITE, (const u8 *) infostr,
-						ilen, 0, 0, DISP_FONTSIZE, 0);
+						DISP_FONTSIZE / 2 * ilen, PSP_SCREEN_HEIGHT - DISP_FONTSIZE, COLOR_WHITE, (const u8 *) infostr, ilen, 0, 0, DISP_FONTSIZE, 0);
 	} else {
-		disp_fillrect(11, 11, 10 + DISP_FONTSIZE / 2 * ilen,
-					  10 + DISP_FONTSIZE, 0);
-		disp_putnstring(11, 11, COLOR_WHITE,
-						(const u8 *) infostr, ilen, 0, 0, DISP_FONTSIZE, 0);
+		disp_fillrect(11, 11, 10 + DISP_FONTSIZE / 2 * ilen, 10 + DISP_FONTSIZE, 0);
+		disp_putnstring(11, 11, COLOR_WHITE, (const u8 *) infostr, ilen, 0, 0, DISP_FONTSIZE, 0);
 	}
 }
 
@@ -436,8 +411,8 @@ static void scene_show_thumb(void)
 	short b;
 	u32 top = (PSP_SCREEN_HEIGHT - thumb_height) / 2, bottom = top + thumb_height;
 	u32 thumbl = 0, thumbr = 0, thumbt = 0, thumbb = 0;
-	
-	if(config.imginfobar) {
+
+	if (config.imginfobar) {
 		return;
 	}
 
@@ -446,8 +421,7 @@ static void scene_show_thumb(void)
 		thumbr = thumb_width - 1;
 	} else {
 		thumbl = curleft * thumb_width / width_rotated;
-		thumbr =
-			(curleft + PSP_SCREEN_WIDTH - 1) * thumb_width / width_rotated;
+		thumbr = (curleft + PSP_SCREEN_WIDTH - 1) * thumb_width / width_rotated;
 	}
 
 	if (painttop > 0) {
@@ -470,8 +444,7 @@ static int scene_printimage(int selidx)
 {
 	disp_waitv();
 	disp_fillvram(bgcolor);
-	disp_putimage(paintleft, painttop, width_rotated, height_rotated,
-				  curleft, curtop, imgshow);
+	disp_putimage(paintleft, painttop, width_rotated, height_rotated, curleft, curtop, imgshow);
 
 	if ((config.thumb == conf_thumb_always || thumb)) {
 		scene_show_thumb();
@@ -518,8 +491,7 @@ static void image_left(void)
 
 static void image_right(void)
 {
-	if (width_rotated > PSP_SCREEN_WIDTH
-		&& curleft < width_rotated - PSP_SCREEN_WIDTH) {
+	if (width_rotated > PSP_SCREEN_WIDTH && curleft < width_rotated - PSP_SCREEN_WIDTH) {
 		curleft += (int) config.imgmvspd * 2;
 		if (curleft > width_rotated - PSP_SCREEN_WIDTH)
 			curleft = width_rotated - PSP_SCREEN_WIDTH;
@@ -538,20 +510,17 @@ static void image_move(u32 key)
 		image_left();
 	}
 
-	if ((key & config.imgkey[15] && !(key & config.imgkey[14])) ||
-		(key & config.imgkey2[15] && !(key & config.imgkey2[14]))
+	if ((key & config.imgkey[15] && !(key & config.imgkey[14])) || (key & config.imgkey2[15] && !(key & config.imgkey2[14]))
 		) {
 		image_right();
 	}
 
-	if ((key & config.imgkey[12] && !(key & config.imgkey[13])) ||
-		(key & config.imgkey2[12] && !(key & config.imgkey2[13]))
+	if ((key & config.imgkey[12] && !(key & config.imgkey[13])) || (key & config.imgkey2[12] && !(key & config.imgkey2[13]))
 		) {
 		image_up();
 	}
 
-	if ((key & config.imgkey[13] && !(key & config.imgkey[12])) ||
-		(key & config.imgkey2[13] && !(key & config.imgkey2[12]))) {
+	if ((key & config.imgkey[13] && !(key & config.imgkey[12])) || (key & config.imgkey2[13] && !(key & config.imgkey2[12]))) {
 		image_down();
 	}
 
@@ -720,11 +689,9 @@ static bool image_paging_updown(bool is_forward)
 	}
 
 	if (is_forward)
-		curtop = (height_rotated > imgh
-				  && ypos == 2) ? height_rotated - imgh : 0;
+		curtop = (height_rotated > imgh && ypos == 2) ? height_rotated - imgh : 0;
 	else
-		curtop = (height_rotated > imgh
-				  && ypos < 2) ? height_rotated - imgh : 0;
+		curtop = (height_rotated > imgh && ypos < 2) ? height_rotated - imgh : 0;
 
 	switch (xpos) {
 		case 0:
@@ -784,11 +751,9 @@ static bool image_paging_leftright(bool is_forward)
 	}
 
 	if (is_forward)
-		curleft = (width_rotated > PSP_SCREEN_WIDTH
-				   && xpos == 2) ? width_rotated - PSP_SCREEN_WIDTH : 0;
+		curleft = (width_rotated > PSP_SCREEN_WIDTH && xpos == 2) ? width_rotated - PSP_SCREEN_WIDTH : 0;
 	else
-		curleft = (width_rotated > PSP_SCREEN_WIDTH
-				   && xpos < 2) ? width_rotated - PSP_SCREEN_WIDTH : 0;
+		curleft = (width_rotated > PSP_SCREEN_WIDTH && xpos < 2) ? width_rotated - PSP_SCREEN_WIDTH : 0;
 
 	switch (ypos) {
 		case 0:
@@ -833,19 +798,13 @@ static bool is_need_delay(void)
 		sceRtcGetCurrentTick(&start);
 	}
 
-	if (config.imgpaging_duration <= 1
-		|| g_imgpaging_count < config.imgpaging_duration) {
+	if (config.imgpaging_duration <= 1 || g_imgpaging_count < config.imgpaging_duration) {
 		if (config.image_scroll_chgn_speed && config.imgpaging_duration > 1) {
 			if (g_imgpaging_count <= config.imgpaging_duration / 2)
-				g_current_spd =
-					config.imgpaging_spd * 2 * g_imgpaging_count /
-					config.imgpaging_duration;
+				g_current_spd = config.imgpaging_spd * 2 * g_imgpaging_count / config.imgpaging_duration;
 			else
 				g_current_spd =
-					config.imgpaging_spd -
-					config.imgpaging_spd * 2 * (g_imgpaging_count -
-												config.imgpaging_duration / 2) /
-					config.imgpaging_duration;
+					config.imgpaging_spd - config.imgpaging_spd * 2 * (g_imgpaging_count - config.imgpaging_duration / 2) / config.imgpaging_duration;
 
 			g_current_spd = max(g_current_spd, 1);
 		} else
@@ -853,8 +812,7 @@ static bool is_need_delay(void)
 
 		return false;
 	} else {
-		if (g_imgpaging_count >=
-			config.imgpaging_duration + config.imgpaging_interval) {
+		if (g_imgpaging_count >= config.imgpaging_duration + config.imgpaging_interval) {
 			g_imgpaging_count = 0;
 		}
 
@@ -881,8 +839,7 @@ static bool splashz(void)
 		sceRtcGetCurrentTick(&start);
 	}
 
-	s = sqrt(1. * (destx - srcx) * (destx - srcx) +
-			 (desty - srcy) * (desty - srcy));
+	s = sqrt(1. * (destx - srcx) * (destx - srcx) + (desty - srcy) * (desty - srcy));
 
 	if (config.imgpaging_spd)
 		t = s / config.imgpaging_spd;
@@ -892,11 +849,9 @@ static bool splashz(void)
 	if (z_mode_cnt <= t + 1) {
 		if (s) {
 			if (destx > srcx)
-				t2 = srcx + z_mode_cnt * (destx -
-										  srcx) * config.imgpaging_spd / s;
+				t2 = srcx + z_mode_cnt * (destx - srcx) * config.imgpaging_spd / s;
 			else
-				t2 = srcx - z_mode_cnt * (srcx -
-										  destx) * config.imgpaging_spd / s;
+				t2 = srcx - z_mode_cnt * (srcx - destx) * config.imgpaging_spd / s;
 			curleft = (int) t2;
 			if (destx - srcx)
 				curtop = srcy + (desty - srcy) * (t2 - srcx) / (destx - srcx);
@@ -1027,19 +982,15 @@ bool enter_z_mode(bool is_forward, bool leftright)
 
 	if (leftright) {
 		if (is_forward) {
-			destx = (width_rotated > PSP_SCREEN_WIDTH
-					 && xpos == 2) ? width_rotated - PSP_SCREEN_WIDTH : 0;
+			destx = (width_rotated > PSP_SCREEN_WIDTH && xpos == 2) ? width_rotated - PSP_SCREEN_WIDTH : 0;
 		} else {
-			destx = (width_rotated > PSP_SCREEN_WIDTH
-					 && xpos < 2) ? width_rotated - PSP_SCREEN_WIDTH : 0;
+			destx = (width_rotated > PSP_SCREEN_WIDTH && xpos < 2) ? width_rotated - PSP_SCREEN_WIDTH : 0;
 		}
 	} else {
 		if (is_forward) {
-			desty = (height_rotated > imgh
-					 && ypos == 2) ? height_rotated - imgh : 0;
+			desty = (height_rotated > imgh && ypos == 2) ? height_rotated - imgh : 0;
 		} else {
-			desty = (height_rotated > imgh
-					 && ypos < 2) ? height_rotated - imgh : 0;
+			desty = (height_rotated > imgh && ypos < 2) ? height_rotated - imgh : 0;
 		}
 	}
 
@@ -1344,8 +1295,7 @@ static int image_handle_input(u32 * selidx, u32 key)
 			   || key == CTRL_FORWARD) {
 		bool should_exit = false;
 
-		if (config.imgpaging == conf_imgpaging_updown ||
-			config.imgpaging == conf_imgpaging_leftright)
+		if (config.imgpaging == conf_imgpaging_updown || config.imgpaging == conf_imgpaging_leftright)
 			sceKernelDelayThread(200000);
 
 		if (!image_paging(true, config.imgpaging))
@@ -1358,8 +1308,7 @@ static int image_handle_input(u32 * selidx, u32 key)
 		}
 	} else if (key == config.imgkey[0] || key == config.imgkey2[0]
 			   || key == CTRL_BACK) {
-		if (config.imgpaging == conf_imgpaging_updown ||
-			config.imgpaging == conf_imgpaging_leftright)
+		if (config.imgpaging == conf_imgpaging_updown || config.imgpaging == conf_imgpaging_leftright)
 			sceKernelDelayThread(200000);
 
 		if (!image_paging(false, config.imgpaging))
@@ -1385,8 +1334,7 @@ static int image_handle_input(u32 * selidx, u32 key)
 			ctrl_waitrelease();
 		} else {
 			slideshow = false;
-			win_msg(_("幻灯片播放已经停止！"), COLOR_WHITE,
-					COLOR_WHITE, config.msgbcolor);
+			win_msg(_("幻灯片播放已经停止！"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 			ctrl_waitrelease();
 		}
 	} else if (key == config.imgkey[7] || key == config.imgkey2[7]) {
@@ -1415,8 +1363,7 @@ static int image_handle_input(u32 * selidx, u32 key)
 			   || key == CTRL_PLAYPAUSE) {
 		if (slideshow) {
 			slideshow = false;
-			win_msg(_("幻灯片播放已经停止！"), COLOR_WHITE,
-					COLOR_WHITE, config.msgbcolor);
+			win_msg(_("幻灯片播放已经停止！"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 			ctrl_waitrelease();
 		} else {
 			imgreading = false;
@@ -1468,13 +1415,10 @@ static int image_handle_input(u32 * selidx, u32 key)
 		img_needrc = img_needrp = true;
 		ctrl_waitreleasekey(key);
 	} else if (key &
-			   (config.imgkey[12] | config.imgkey[13] | config.
-				imgkey[14] | config.imgkey[15] | config.imgkey2[12] | config.
+			   (config.imgkey[12] | config.imgkey[13] | config.imgkey[14] | config.imgkey[15] | config.imgkey2[12] | config.
 				imgkey2[13] | config.imgkey2[14] | config.imgkey2[15])
 			   && !(key &
-					~(config.imgkey[12] | config.imgkey[13] | config.
-					  imgkey[14] | config.imgkey[15] | config.
-					  imgkey2[12] | config.imgkey2[13] | config.
+					~(config.imgkey[12] | config.imgkey[13] | config.imgkey[14] | config.imgkey[15] | config.imgkey2[12] | config.imgkey2[13] | config.
 					  imgkey2[14] | config.imgkey2[15]
 					))) {
 		slideshow_move = true;
@@ -1496,8 +1440,7 @@ static int scene_slideshow_forward(u32 * selidx)
 {
 	bool should_exit = false;
 
-	if (config.imgpaging == conf_imgpaging_updown ||
-		config.imgpaging == conf_imgpaging_leftright) {
+	if (config.imgpaging == conf_imgpaging_updown || config.imgpaging == conf_imgpaging_leftright) {
 		sceKernelDelayThread(200000);
 	}
 
@@ -1519,13 +1462,11 @@ u32 scene_readimage(u32 selidx)
 	u64 timer_start, timer_end;
 	u64 slide_start, slide_end;
 
-	width_rotated = 0, height_rotated = 0, thumb_width = 0, thumb_height =
-		0, paintleft = 0, painttop = 0;
+	width_rotated = 0, height_rotated = 0, thumb_width = 0, thumb_height = 0, paintleft = 0, painttop = 0;
 	imgdata = NULL, imgshow = NULL;
 	oldangle = 0;
 	curtop = 0, curleft = 0, xpos = 0, ypos = 0;
-	img_needrf = true, img_needrc = true, img_needrp = true, showinfo =
-		false, thumb = false;
+	img_needrf = true, img_needrc = true, img_needrp = true, showinfo = false, thumb = false;
 	slideshow = false;
 	now = 0, lasttime = 0;
 	imgreading = true;
@@ -1561,8 +1502,7 @@ u32 scene_readimage(u32 selidx)
 
 			img_needrf = false;
 			sceRtcGetCurrentTick(&dbgnow);
-			dbg_printf(d, _("装载图像时间: %.2f秒"),
-					   pspDiffTime(&dbgnow, &dbglasttick));
+			dbg_printf(d, _("装载图像时间: %.2f秒"), pspDiffTime(&dbgnow, &dbglasttick));
 			freq_leave(fid);
 		}
 
@@ -1574,8 +1514,7 @@ u32 scene_readimage(u32 selidx)
 			scene_rotateimage();
 			img_needrc = false;
 			sceRtcGetCurrentTick(&dbgnow);
-			dbg_printf(d, _("旋转图像时间: %.2f秒"),
-					   pspDiffTime(&dbgnow, &dbglasttick));
+			dbg_printf(d, _("旋转图像时间: %.2f秒"), pspDiffTime(&dbgnow, &dbglasttick));
 			freq_leave(fid);
 		}
 
@@ -1596,9 +1535,8 @@ u32 scene_readimage(u32 selidx)
 
 		if (ret == -1 && slideshow && !slideshow_move) {
 			if (key == PSP_CTRL_CIRCLE) {
-			} else if (key != 0
-					   && (key == config.imgkey[1] || key == config.imgkey2[1]
-						   || key == CTRL_FORWARD)) {
+			} else if (key != 0 && (key == config.imgkey[1] || key == config.imgkey2[1]
+									|| key == CTRL_FORWARD)) {
 				bool should_exit = false;
 
 				next_image(&selidx, &should_exit);
@@ -1606,15 +1544,12 @@ u32 scene_readimage(u32 selidx)
 				if (should_exit) {
 					break;
 				}
-			} else if (key != 0
-					   && (key == config.imgkey[0] || key == config.imgkey2[0]
-						   || key == CTRL_BACK)) {
+			} else if (key != 0 && (key == config.imgkey[0] || key == config.imgkey2[0]
+									|| key == CTRL_BACK)) {
 				prev_image(&selidx);
 			} else {
 				scePowerTick(0);
-				if (config.imgpaging == conf_imgpaging_direct ||
-					config.imgpaging == conf_imgpaging_updown ||
-					config.imgpaging == conf_imgpaging_leftright) {
+				if (config.imgpaging == conf_imgpaging_direct || config.imgpaging == conf_imgpaging_updown || config.imgpaging == conf_imgpaging_leftright) {
 					if (now - lasttime >= config.slideinterval) {
 						lasttime = now;
 						ret = scene_slideshow_forward(&selidx);
@@ -1665,9 +1600,7 @@ u32 scene_readimage(u32 selidx)
 	return selidx;
 }
 
-static t_win_menu_op scene_imgkey_menucb(u32 key, p_win_menuitem item,
-										 u32 * count, u32 max_height,
-										 u32 * topindex, u32 * index)
+static t_win_menu_op scene_imgkey_menucb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	u32 key1, key2;
 	SceCtrlData ctl;
@@ -1730,15 +1663,13 @@ static t_win_menu_op scene_imgkey_menucb(u32 key, p_win_menuitem item,
 	return win_menu_defcb(key, item, count, max_height, topindex, index);
 }
 
-static void scene_imgkey_predraw(p_win_menuitem item, u32 index,
-								 u32 topindex, u32 max_height)
+static void scene_imgkey_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
 	char keyname[256];
 	int left, right, upper, bottom, lines = 0;
 	u32 i;
 
-	default_predraw(&g_predraw, _("按键设置   △ 删除"), max_height, &left,
-					&right, &upper, &bottom, 8 * DISP_FONTSIZE + 4);
+	default_predraw(&g_predraw, _("按键设置   △ 删除"), max_height, &left, &right, &upper, &bottom, 8 * DISP_FONTSIZE + 4);
 
 	for (i = topindex; i < topindex + max_height; i++) {
 		conf_get_keyname(config.imgkey[i], keyname);
@@ -1749,11 +1680,7 @@ static void scene_imgkey_predraw(p_win_menuitem item, u32 index,
 			STRCAT_S(keyname, " | ");
 			STRCAT_S(keyname, keyname2);
 		}
-		disp_putstring(left + (right - left) / 2,
-					   upper + 2 + (lines + 1 +
-									g_predraw.linespace) * (1 +
-															DISP_FONTSIZE),
-					   COLOR_WHITE, (const u8 *) keyname);
+		disp_putstring(left + (right - left) / 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) keyname);
 		lines++;
 	}
 }
@@ -1810,9 +1737,7 @@ u32 scene_imgkey(u32 * selidx)
 			win_menu(g_predraw.left,
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, g_predraw.item_count, 0,
-					 g_predraw.linespace,
-					 config.menubcolor, true, scene_imgkey_predraw, NULL,
-					 scene_imgkey_menucb)) != INVALID);
+					 g_predraw.linespace, config.menubcolor, true, scene_imgkey_predraw, NULL, scene_imgkey_menucb)) != INVALID);
 
 	memcpy(&g_predraw, &prev, sizeof(win_menu_predraw_data));
 

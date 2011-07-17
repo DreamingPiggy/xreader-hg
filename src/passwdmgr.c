@@ -34,11 +34,12 @@
 #include "dmalloc.h"
 #endif
 
-enum {
+enum
+{
 	LINEBUF = 256,
 };
 
-static char g_read_buf[LINEBUF] __attribute__((aligned(64)));
+static char g_read_buf[LINEBUF] __attribute__ ((aligned(64)));
 static char *read_ptr = NULL;
 static int read_cnt = 0;
 
@@ -47,18 +48,18 @@ static rc4_key g_key;
 #define CRYPT_KEY "xReader_rc4_default_key"
 #define CRYPT_MAGIC 0xC01DB12D
 
-static int read_char(SceUID fd, char *c, rc4_key *key)
+static int read_char(SceUID fd, char *c, rc4_key * key)
 {
 	u8 prg;
 
-	if(read_cnt <= 0) {
+	if (read_cnt <= 0) {
 		read_cnt = sceIoRead(fd, g_read_buf, LINEBUF);
 
-		if(read_cnt < 0) {
+		if (read_cnt < 0) {
 			return read_cnt;
 		}
 
-		if(read_cnt == 0) {
+		if (read_cnt == 0) {
 			return read_cnt;
 		}
 
@@ -67,7 +68,7 @@ static int read_char(SceUID fd, char *c, rc4_key *key)
 
 	read_cnt--;
 
-	if(key != NULL) {
+	if (key != NULL) {
 		prg = rc4_prga(key);
 		*c = *read_ptr++ ^ prg;
 	} else {
@@ -80,73 +81,75 @@ static int read_char(SceUID fd, char *c, rc4_key *key)
 /**
   * @return how many bytes we have read, or -1 when EOF
   */
-static int read_lines(SceUID fd, char *lines, size_t linebuf_size, rc4_key *key)
+static int read_lines(SceUID fd, char *lines, size_t linebuf_size, rc4_key * key)
 {
 	char *p;
 	int ret;
 	size_t re;
 
-	if(linebuf_size == 0) {
+	if (linebuf_size == 0) {
 		return -1;
 	}
 
 	p = lines;
 	re = linebuf_size;
 
-	while(re -- != 0) {
+	while (re-- != 0) {
 		ret = read_char(fd, p, key);
 
-		if(ret < 0) {
+		if (ret < 0) {
 			break;
 		}
 
-		if(ret == 0) {
-			if(p == lines) {
+		if (ret == 0) {
+			if (p == lines) {
 				ret = -1;
 			}
 
 			break;
 		}
 
-		if(*p == '\r') {
+		if (*p == '\r') {
 			continue;
 		}
 
-		if(*p == '\n') {
+		if (*p == '\n') {
 			break;
 		}
 
 		p++;
 	}
 
-	if(p < lines + linebuf_size) {
+	if (p < lines + linebuf_size) {
 		*p = '\0';
 	}
 
 	return ret >= 0 ? p - lines : ret;
 }
 
-typedef struct _password {
+typedef struct _password
+{
 	buffer *b;
 	struct _password *next;
 } password;
 
 static password g_pwd_head = { NULL, NULL };
+
 static password *g_pwd_tail = &g_pwd_head;
 
 int add_password(const char *passwd)
 {
 	password *pwd;
 
-	for(pwd = g_pwd_head.next; pwd != NULL; pwd = pwd->next) {
-		if(0 == strcmp(passwd, pwd->b->ptr)) {
+	for (pwd = g_pwd_head.next; pwd != NULL; pwd = pwd->next) {
+		if (0 == strcmp(passwd, pwd->b->ptr)) {
 			return 0;
 		}
 	}
 
-	pwd = (password *)malloc(sizeof(*pwd));
+	pwd = (password *) malloc(sizeof(*pwd));
 
-	if(pwd == NULL) {
+	if (pwd == NULL) {
 		return -1;
 	}
 
@@ -166,20 +169,20 @@ static int is_encrypted(const char *path)
 
 	fd = sceIoOpen(path, PSP_O_RDONLY, 0);
 
-	if(fd < 0) {
+	if (fd < 0) {
 		goto exit;
 	}
 
-	if(sizeof(magic) != sceIoRead(fd, &magic, sizeof(magic))) {
+	if (sizeof(magic) != sceIoRead(fd, &magic, sizeof(magic))) {
 		goto exit;
 	}
 
-	if(CRYPT_MAGIC == magic) {
+	if (CRYPT_MAGIC == magic) {
 		result = 1;
 	}
 
-exit:
-	if(fd >= 0) {
+  exit:
+	if (fd >= 0) {
 		sceIoClose(fd);
 		fd = -1;
 	}
@@ -196,8 +199,8 @@ bool load_passwords(void)
 	STRCPY_S(path, scene_appdir());
 	STRCAT_S(path, "password.lst");
 
-	if(is_encrypted(path)) {
-		rc4_prepare_key((u8*)CRYPT_KEY, sizeof(CRYPT_KEY) - 1, &g_key);
+	if (is_encrypted(path)) {
+		rc4_prepare_key((u8 *) CRYPT_KEY, sizeof(CRYPT_KEY) - 1, &g_key);
 		pkey = &g_key;
 	} else {
 		pkey = NULL;
@@ -205,17 +208,17 @@ bool load_passwords(void)
 
 	fd = sceIoOpen(path, PSP_O_RDONLY, 0);
 
-	if(fd < 0) {
+	if (fd < 0) {
 		return false;
 	}
 
-	if(pkey != NULL) {
+	if (pkey != NULL) {
 		sceIoLseek(fd, 4, PSP_SEEK_SET);
 	}
 
-	linebuf[sizeof(linebuf)-1] = '\0';
+	linebuf[sizeof(linebuf) - 1] = '\0';
 
-	while(read_lines(fd, linebuf, sizeof(linebuf)-1, pkey) >= 0) {
+	while (read_lines(fd, linebuf, sizeof(linebuf) - 1, pkey) >= 0) {
 		add_password(linebuf);
 	}
 
@@ -239,10 +242,10 @@ static int write_chars(SceUID fd, char *ch, size_t n)
 	int ret;
 	size_t i;
 
-	for(i=0; i<n; ++i) {
+	for (i = 0; i < n; ++i) {
 		ret = write_char(fd, *ch++);
 
-		if(ret != 1) {
+		if (ret != 1) {
 			return ret;
 		}
 	}
@@ -260,20 +263,20 @@ bool save_passwords(void)
 	STRCPY_S(path, scene_appdir());
 	STRCAT_S(path, "password.lst");
 
-	rc4_prepare_key((u8*)CRYPT_KEY, sizeof(CRYPT_KEY) - 1, &g_key);
+	rc4_prepare_key((u8 *) CRYPT_KEY, sizeof(CRYPT_KEY) - 1, &g_key);
 
 	fd = sceIoOpen(path, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_TRUNC, 0777);
 
-	if(fd < 0) {
+	if (fd < 0) {
 		return false;
 	}
 
 	magic = CRYPT_MAGIC;
 	sceIoWrite(fd, &magic, sizeof(magic));
 
-	for(pwd = g_pwd_head.next; pwd != NULL; pwd = pwd->next) {
+	for (pwd = g_pwd_head.next; pwd != NULL; pwd = pwd->next) {
 		write_chars(fd, pwd->b->ptr, strlen(pwd->b->ptr));
-		write_chars(fd, "\r\n", sizeof("\r\n")-1);
+		write_chars(fd, "\r\n", sizeof("\r\n") - 1);
 	}
 
 	sceIoClose(fd);
@@ -284,7 +287,7 @@ bool save_passwords(void)
 /*
  * @return next password after deleted password
  */
-static password *free_password(password *pwd)
+static password *free_password(password * pwd)
 {
 	password *next;
 
@@ -302,7 +305,7 @@ void free_passwords(void)
 
 	pwd = g_pwd_head.next;
 
-	while(pwd != NULL) {
+	while (pwd != NULL) {
 		pwd = free_password(pwd);
 	}
 
@@ -318,7 +321,7 @@ size_t get_password_count(void)
 	pwd = g_pwd_head.next;
 	i = 0;
 
-	while(pwd != NULL) {
+	while (pwd != NULL) {
 		pwd = pwd->next;
 		i++;
 	}
@@ -332,7 +335,7 @@ buffer *get_password(int num)
 
 	pwd = g_pwd_head.next;
 
-	while(num-->0 && pwd != NULL) {
+	while (num-- > 0 && pwd != NULL) {
 		pwd = pwd->next;
 	}
 

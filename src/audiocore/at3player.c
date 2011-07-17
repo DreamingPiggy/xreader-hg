@@ -152,8 +152,7 @@ static int at3_seek_seconds(double seconds)
 	pos = at3_data_start;
 	pos += frame_index * at3_data_align;
 
-	dbg_printf(d, "%s: jump to frame %u pos 0x%08x", __func__, frame_index,
-			   pos);
+	dbg_printf(d, "%s: jump to frame %u pos 0x%08x", __func__, frame_index, pos);
 
 	if (data.use_buffer) {
 		ret = buffered_reader_seek(data.r, pos);
@@ -181,8 +180,7 @@ static int at3_seek_seconds(double seconds)
  * @param frames 复制帧数
  * @param channels 声道数
  */
-static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames,
-						   int channels)
+static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames, int channels)
 {
 	int n;
 	signed short *p = (signed short *) buf;
@@ -250,9 +248,7 @@ static int at3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 		avail_frame = g_buff_frame_size - g_buff_frame_start;
 
 		if (avail_frame >= snd_buf_frame_size) {
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * 2],
-						   snd_buf_frame_size, 2);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], snd_buf_frame_size, 2);
 			g_buff_frame_start += snd_buf_frame_size;
 			audio_buf += snd_buf_frame_size * 2;
 			snd_buf_frame_size = 0;
@@ -262,8 +258,7 @@ static int at3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			int res;
 			uint16_t *output;
 
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * 2], avail_frame, 2);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], avail_frame, 2);
 			snd_buf_frame_size -= avail_frame;
 			audio_buf += avail_frame * 2;
 			memset(at3_mix_buffer, 0, 2048 * 2 * 2);
@@ -271,22 +266,18 @@ static int at3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			if (at3_type == TYPE_ATRAC3) {
 				memset(at3_data_buffer, 0, 0x180);
 				if (data.use_buffer) {
-					if (buffered_reader_read
-						(data.r, at3_data_buffer,
-						 at3_data_align) != at3_data_align) {
+					if (buffered_reader_read(data.r, at3_data_buffer, at3_data_align) != at3_data_align) {
 						__end();
 						return -1;
 					}
 				} else {
-					if (sceIoRead(data.fd, at3_data_buffer, at3_data_align) !=
-						at3_data_align) {
+					if (sceIoRead(data.fd, at3_data_buffer, at3_data_align) != at3_data_align) {
 						__end();
 						return -1;
 					}
 				}
 				if (at3_channel_mode) {
-					memcpy(at3_data_buffer + at3_data_align, at3_data_buffer,
-						   at3_data_align);
+					memcpy(at3_data_buffer + at3_data_align, at3_data_buffer, at3_data_align);
 				}
 				decode_type = 0x1001;
 			} else {
@@ -296,9 +287,7 @@ static int at3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 				at3_data_buffer[2] = at3_at3plus_flagdata[0];
 				at3_data_buffer[3] = at3_at3plus_flagdata[1];
 				if (data.use_buffer) {
-					if (buffered_reader_read
-						(data.r, at3_data_buffer + 8,
-						 at3_data_align) != at3_data_align) {
+					if (buffered_reader_read(data.r, at3_data_buffer + 8, at3_data_align) != at3_data_align) {
 						__end();
 						return -1;
 					}
@@ -351,8 +340,7 @@ static int at3_load(const char *spath, const char *lpath)
 		goto failed;
 	}
 
-	if (sceIoRead(data.fd, riff_header, sizeof(riff_header)) !=
-		sizeof(riff_header)) {
+	if (sceIoRead(data.fd, riff_header, sizeof(riff_header)) != sizeof(riff_header)) {
 		goto failed;
 	}
 	// RIFF
@@ -360,8 +348,7 @@ static int at3_load(const char *spath, const char *lpath)
 		goto failed;
 	}
 
-	if (sceIoRead(data.fd, wavefmt_header, sizeof(wavefmt_header)) !=
-		sizeof(wavefmt_header)) {
+	if (sceIoRead(data.fd, wavefmt_header, sizeof(wavefmt_header)) != sizeof(wavefmt_header)) {
 		goto failed;
 	}
 	// WAVEfmt
@@ -393,15 +380,13 @@ static int at3_load(const char *spath, const char *lpath)
 	free(wavefmt_data);
 
 	// Search for data header
-	if (sceIoRead(data.fd, data_header, sizeof(data_header)) !=
-		sizeof(data_header)) {
+	if (sceIoRead(data.fd, data_header, sizeof(data_header)) != sizeof(data_header)) {
 		goto failed;
 	}
 
 	while (data_header[0] != 0x61746164) {
 		sceIoLseek32(data.fd, data_header[1], PSP_SEEK_CUR);
-		if (sceIoRead(data.fd, data_header, sizeof(data_header)) !=
-			sizeof(data_header)) {
+		if (sceIoRead(data.fd, data_header, sizeof(data_header)) != sizeof(data_header)) {
 			goto failed;
 		}
 	}
@@ -410,8 +395,7 @@ static int at3_load(const char *spath, const char *lpath)
 	at3_data_size = data_header[1];
 
 	if (at3_data_size % at3_data_align != 0) {
-		dbg_printf(d, "%s: at3_data_size %d at3_data_align %d not align",
-				   __func__, at3_data_size, at3_data_align);
+		dbg_printf(d, "%s: at3_data_size %d at3_data_align %d not align", __func__, at3_data_size, at3_data_align);
 		goto failed;
 	}
 
@@ -473,8 +457,7 @@ static int at3_load(const char *spath, const char *lpath)
 
 		at3_codec_buffer[5] = 0x1;
 		at3_codec_buffer[10] = at3_at3plus_flagdata[1];
-		at3_codec_buffer[10] =
-			(at3_codec_buffer[10] << 8) | at3_at3plus_flagdata[0];
+		at3_codec_buffer[10] = (at3_codec_buffer[10] << 8) | at3_at3plus_flagdata[0];
 		at3_codec_buffer[12] = 0x1;
 		at3_codec_buffer[14] = 0x1;
 
@@ -497,9 +480,7 @@ static int at3_load(const char *spath, const char *lpath)
 	g_info.avg_bps = 0;
 
 	if (g_info.sample_freq != 0 && at3_data_align != 0) {
-		g_info.duration =
-			(double) at3_data_size *at3_sample_per_frame / at3_data_align /
-			g_info.sample_freq;
+		g_info.duration = (double) at3_data_size *at3_sample_per_frame / at3_data_align / g_info.sample_freq;
 		if (g_info.duration != 0) {
 			g_info.avg_bps = (double) at3_data_size *8 / g_info.duration;
 		}
@@ -694,8 +675,7 @@ static int at3_set_opt(const char *unused, const char *values)
 	build_args(values, &argc, &argv);
 
 	for (i = 0; i < argc; ++i) {
-		if (!strncasecmp
-			(argv[i], "at3_buffer_size", sizeof("at3_buffer_size") - 1)) {
+		if (!strncasecmp(argv[i], "at3_buffer_size", sizeof("at3_buffer_size") - 1)) {
 			const char *p = argv[i];
 
 			if ((p = strrchr(p, '=')) != NULL) {
