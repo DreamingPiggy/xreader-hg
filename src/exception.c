@@ -79,18 +79,14 @@ void ExceptionHandler(PspDebugRegBlock * regs)
 	pspDebugScreenPrintf("Exception details:\n\n");
 
 	pspDebugScreenPrintf("Exception - %s\n", codeTxt[(regs->cause >> 2) & 31]);
-	pspDebugScreenPrintf("EPC       - %08X / %s.text + %08X\n", (int) regs->epc,
-						 module_info.modname,
-						 (unsigned int) (regs->epc - (int) &_ftext));
+	pspDebugScreenPrintf("EPC       - %08X / %s.text + %08X\n", (int) regs->epc, module_info.modname, (unsigned int) (regs->epc - (int) &_ftext));
 	pspDebugScreenPrintf("Cause     - %08X\n", (int) regs->cause);
 	pspDebugScreenPrintf("Status    - %08X\n", (int) regs->status);
 	pspDebugScreenPrintf("BadVAddr  - %08X\n", (int) regs->badvaddr);
 	for (i = 0; i < 32; i += 4)
 		pspDebugScreenPrintf("%s:%08X %s:%08X %s:%08X %s:%08X\n", regName[i],
 							 (int) regs->r[i], regName[i + 1],
-							 (int) regs->r[i + 1], regName[i + 2],
-							 (int) regs->r[i + 2], regName[i + 3],
-							 (int) regs->r[i + 3]);
+							 (int) regs->r[i + 1], regName[i + 2], (int) regs->r[i + 2], regName[i + 3], (int) regs->r[i + 3]);
 
 	pspDebugScreenPrintf("\n");
 
@@ -101,15 +97,11 @@ void ExceptionHandler(PspDebugRegBlock * regs)
 		pspDebugScreenPrintf("\t%d: caller %08X(%08X) func %08X(%08X)\n", i,
 							 (unsigned int) traces[i].call_addr,
 							 (unsigned int) traces[i].call_addr -
-							 (unsigned int) &_ftext,
-							 (unsigned int) traces[i].func_addr,
-							 (unsigned int) traces[i].func_addr -
-							 (unsigned int) &_ftext);
+							 (unsigned int) &_ftext, (unsigned int) traces[i].func_addr, (unsigned int) traces[i].func_addr - (unsigned int) &_ftext);
 	}
 
 	sceKernelDelayThread(1000000);
-	pspDebugScreenPrintf
-		("\n\nPress O to dump information on file exception.log and quit");
+	pspDebugScreenPrintf("\n\nPress O to dump information on file exception.log and quit");
 	pspDebugScreenPrintf("\nPress X to restart");
 
 	for (;;) {
@@ -124,8 +116,7 @@ void ExceptionHandler(PspDebugRegBlock * regs)
 				break;
 			}
 
-			SPRINTF_S(testo, "%-21s: %s %s\r\n", "xReader version",
-					  XREADER_VERSION_LONG,
+			SPRINTF_S(testo, "%-21s: %s %s\r\n", "xReader version", XREADER_VERSION_LONG,
 #ifdef ENABLE_LITE
 					  "lite"
 #else
@@ -139,8 +130,7 @@ void ExceptionHandler(PspDebugRegBlock * regs)
 			fwrite(testo, 1, strlen(testo), log);
 
 			sceRtcGetCurrentClockLocalTime(&tm);
-			SPRINTF_S(timestr, "%u-%u-%u %02u:%02u:%02u", tm.year, tm.month,
-					  tm.day, tm.hour, tm.minutes, tm.seconds);
+			SPRINTF_S(timestr, "%u-%u-%u %02u:%02u:%02u", tm.year, tm.month, tm.day, tm.hour, tm.minutes, tm.seconds);
 
 			SPRINTF_S(testo, "%-21s: %s\r\n", "Crash time", timestr);
 			fwrite(testo, 1, strlen(testo), log);
@@ -150,12 +140,9 @@ void ExceptionHandler(PspDebugRegBlock * regs)
 
 			SPRINTF_S(testo, "Exception details:\r\n\r\n");
 			fwrite(testo, 1, strlen(testo), log);
-			SPRINTF_S(testo, "Exception - %s\r\n",
-					  codeTxt[(regs->cause >> 2) & 31]);
+			SPRINTF_S(testo, "Exception - %s\r\n", codeTxt[(regs->cause >> 2) & 31]);
 			fwrite(testo, 1, strlen(testo), log);
-			SPRINTF_S(testo, "EPC       - %08X / %s.text + %08X\r\n",
-					  (int) regs->epc, module_info.modname,
-					  (unsigned int) (regs->epc - (int) &_ftext));
+			SPRINTF_S(testo, "EPC       - %08X / %s.text + %08X\r\n", (int) regs->epc, module_info.modname, (unsigned int) (regs->epc - (int) &_ftext));
 			fwrite(testo, 1, strlen(testo), log);
 			SPRINTF_S(testo, "Cause     - %08X\r\n", (int) regs->cause);
 			fwrite(testo, 1, strlen(testo), log);
@@ -166,9 +153,7 @@ void ExceptionHandler(PspDebugRegBlock * regs)
 			for (i = 0; i < 32; i += 4) {
 				SPRINTF_S(testo, "%s:%08X %s:%08X %s:%08X %s:%08X\r\n",
 						  regName[i], (int) regs->r[i], regName[i + 1],
-						  (int) regs->r[i + 1], regName[i + 2],
-						  (int) regs->r[i + 2], regName[i + 3],
-						  (int) regs->r[i + 3]);
+						  (int) regs->r[i + 1], regName[i + 2], (int) regs->r[i + 2], regName[i + 3], (int) regs->r[i + 3]);
 				fwrite(testo, 1, strlen(testo), log);
 			}
 			SPRINTF_S(testo, "\r\n");
@@ -180,10 +165,7 @@ void ExceptionHandler(PspDebugRegBlock * regs)
 						  "\t%d: caller %08X(%08X) func %08X(%08X)\r\n", i,
 						  (unsigned int) traces[i].call_addr,
 						  (unsigned int) traces[i].call_addr -
-						  (unsigned int) &_ftext,
-						  (unsigned int) traces[i].func_addr,
-						  (unsigned int) traces[i].func_addr -
-						  (unsigned int) &_ftext);
+						  (unsigned int) &_ftext, (unsigned int) traces[i].func_addr, (unsigned int) traces[i].func_addr - (unsigned int) &_ftext);
 				fwrite(testo, 1, strlen(testo), log);
 			}
 			fclose(log);

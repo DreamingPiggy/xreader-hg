@@ -128,7 +128,7 @@ int module_start(SceSize args, void *argp)
 	if (!curr_handler || !exception_regs)
 		return -1;
 
-	ret = sceKernelRegisterDefaultExceptionHandler((void *)_pspDebugExceptionHandler);
+	ret = sceKernelRegisterDefaultExceptionHandler((void *) _pspDebugExceptionHandler);
 #endif
 
 	return 0;

@@ -52,8 +52,7 @@ Word swap_Word(Word r)
 DWord swap_DWord(DWord r)
 {
 	if (m_littlendian)
-		return ((r >> 24) & 0x00FF) | (r << 24) | ((r >> 8) & 0xFF00) |
-			((r << 8) & 0xFF0000);
+		return ((r >> 24) & 0x00FF) | (r << 24) | ((r >> 8) & 0xFF00) | ((r << 8) & 0xFF0000);
 	else
 		return r;
 }
@@ -151,14 +150,10 @@ long read_pdb_data(const char *pdbfile, buffer ** pbuf)
 			//dbg_printf(d, "%s read umd file chunk error,ret:%d!",__func__,p->used);
 			break;
 		}
-		if (strncmp(m_header.type, DOC_TYPE, sizeof(m_header.type)) ||
-			strncmp(m_header.creator, DOC_CREATOR, sizeof(m_header.creator))) {
-			printf
-				("type:%s,creator:%s,This file is not recognized as a PDB document\n",
-				 m_header.type, m_header.creator);
+		if (strncmp(m_header.type, DOC_TYPE, sizeof(m_header.type)) || strncmp(m_header.creator, DOC_CREATOR, sizeof(m_header.creator))) {
+			printf("type:%s,creator:%s,This file is not recognized as a PDB document\n", m_header.type, m_header.creator);
 			break;
 		}
-
 		// progressbar
 		num_records = swap_Word(m_header.numRecords) - 1;
 

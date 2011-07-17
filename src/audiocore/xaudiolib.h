@@ -70,10 +70,8 @@ extern "C"
 
 	void xAudioSetVolume(int channel, int left, int right);
 	void xAudioChannelThreadCallback(int channel, void *buf, unsigned int reqn);
-	void xAudioSetChannelCallback(int channel, xAudioCallback_t callback,
-								  void *pdata);
-	int xAudioOutBlocking(unsigned int channel, unsigned int vol1,
-						  unsigned int vol2, void *buf);
+	void xAudioSetChannelCallback(int channel, xAudioCallback_t callback, void *pdata);
+	int xAudioOutBlocking(unsigned int channel, unsigned int vol1, unsigned int vol2, void *buf);
 	int xAudioSetFrequency(unsigned short freq);
 
 	void xAudioClearSndBuf(void *buf, int frames);
@@ -82,7 +80,7 @@ extern "C"
 	void xAudioSetFrameSize(int size);
 	void xAudioSetUseVaudio(unsigned char use_vaudio);
 	void xAudioSetEffectType(int type);
-	void xAudioSetAlcMode(unsigned char mode);	
+	void xAudioSetAlcMode(unsigned char mode);
 
 #ifdef __cplusplus
 }

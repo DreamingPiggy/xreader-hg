@@ -50,8 +50,7 @@
 #define HEXDUMP_HEXSTUFF_PER_LINE \
     (HEXDUMP_HEXSTUFF_PER_SHORT * HEXDUMP_SHORTS_PER_LINE)
 
-static void dbg_set_handle(dbg_handle * p, void (*init) (void *),
-						   dbg_func writer, void (*cleanup) (void *), void *arg)
+static void dbg_set_handle(dbg_handle * p, void (*init) (void *), dbg_func writer, void (*cleanup) (void *), void *arg)
 {
 	p->init = init;
 	p->write = writer;
@@ -59,8 +58,7 @@ static void dbg_set_handle(dbg_handle * p, void (*init) (void *),
 	p->cleanup = cleanup;
 }
 
-static int dbg_add_handle(DBG * d, void (*init) (void *), dbg_func writer,
-						  void (*cleanup) (void *), void *arg)
+static int dbg_add_handle(DBG * d, void (*init) (void *), dbg_func writer, void (*cleanup) (void *), void *arg)
 {
 	if (!d)
 		return -1;
@@ -131,8 +129,7 @@ int dbg_close_handle(DBG * d, size_t index)
 
 	if (index > 0) {
 		memcpy(newot, d->ot, sizeof(dbg_handle) * index);
-		memcpy(newot + index, d->ot + index + 1,
-			   sizeof(dbg_handle) * (d->otsize - index - 1));
+		memcpy(newot + index, d->ot + index + 1, sizeof(dbg_handle) * (d->otsize - index - 1));
 	} else {
 		memcpy(newot, d->ot + 1, sizeof(dbg_handle) * (d->otsize - 1));
 	}
@@ -221,13 +218,11 @@ int dbg_open_psp_logfile(DBG * d, const char *logfile)
 {
 	extern void dbg_write_psp_logfile(void *arg, const char *str);
 	extern void dbg_close_psp_logfile(void *arg);
-	SceUID fd =
-		sceIoOpen(logfile, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
+	SceUID fd = sceIoOpen(logfile, PSP_O_WRONLY | PSP_O_CREAT | PSP_O_APPEND, 0777);
 	if (fd < 0) {
 		return -1;
 	}
-	return dbg_add_handle(d, 0, dbg_write_psp_logfile,
-						  dbg_close_psp_logfile, (void *) fd);
+	return dbg_add_handle(d, 0, dbg_write_psp_logfile, dbg_close_psp_logfile, (void *) fd);
 }
 
 void dbg_write_psp_logfile(void *arg, const char *str)
@@ -336,14 +331,11 @@ void dbg_write_custom(void *arg, const char *str)
 		(*(void (*)(const char *)) (arg)) (str);
 }
 
-void dbg_assert(DBG * d, char *info, int test, const char *func,
-				const char *file, int line)
+void dbg_assert(DBG * d, char *info, int test, const char *func, const char *file, int line)
 {
 	if (!test) {
 		// assertion "0" failed: file "test.c", function "main", line 6
-		dbg_printf_raw(d,
-					   "assertion \"%s\" failed: file \"%s\", function \"%s\", line %d",
-					   info, file, func, line);
+		dbg_printf_raw(d, "assertion \"%s\" failed: file \"%s\", function \"%s\", line %d", info, file, func, line);
 	}
 }
 
@@ -366,8 +358,7 @@ int dbg_printf(DBG * d, const char *fmt, ...)
 
 	sceRtcGetCurrentClockLocalTime(&tm);
 
-	SPRINTF_S(timestr, "%u-%u-%u %02u:%02u:%02u", tm.year, tm.month, tm.day,
-			  tm.hour, tm.minutes, tm.seconds);
+	SPRINTF_S(timestr, "%u-%u-%u %02u:%02u:%02u", tm.year, tm.month, tm.day, tm.hour, tm.minutes, tm.seconds);
 
 	timelen = strlen(timestr);
 
@@ -429,16 +420,12 @@ int dbg_printf_raw(DBG * d, const char *fmt, ...)
 	return l;
 }
 
-void
-hex_and_ascii_print_with_offset(DBG * d, register const char *ident,
-								register const u_char * cp,
-								register u_int length, register u_int oset)
+void hex_and_ascii_print_with_offset(DBG * d, register const char *ident, register const u_char * cp, register u_int length, register u_int oset)
 {
 	register u_int i;
 	register int s1, s2;
 	register int nshorts;
-	char hexstuff[HEXDUMP_SHORTS_PER_LINE * HEXDUMP_HEXSTUFF_PER_SHORT + 1],
-		*hsp;
+	char hexstuff[HEXDUMP_SHORTS_PER_LINE * HEXDUMP_HEXSTUFF_PER_SHORT + 1], *hsp;
 	char asciistuff[ASCII_LINELENGTH + 1], *asp;
 
 	nshorts = length / sizeof(u_short);
@@ -448,18 +435,14 @@ hex_and_ascii_print_with_offset(DBG * d, register const char *ident,
 	while (--nshorts >= 0) {
 		s1 = *cp++;
 		s2 = *cp++;
-		(void) snprintf(hsp, sizeof(hexstuff) - (hsp - hexstuff),
-						" %02x%02x", s1, s2);
+		(void) snprintf(hsp, sizeof(hexstuff) - (hsp - hexstuff), " %02x%02x", s1, s2);
 		hsp += HEXDUMP_HEXSTUFF_PER_SHORT;
 		*(asp++) = (isgraph(s1) ? s1 : '.');
 		*(asp++) = (isgraph(s2) ? s2 : '.');
 		i++;
 		if (i >= HEXDUMP_SHORTS_PER_LINE) {
 			*hsp = *asp = '\0';
-			(void) dbg_printf_raw(d, "%s0x%04x: %-*s  %s",
-								  ident, oset,
-								  HEXDUMP_HEXSTUFF_PER_LINE,
-								  hexstuff, asciistuff);
+			(void) dbg_printf_raw(d, "%s0x%04x: %-*s  %s", ident, oset, HEXDUMP_HEXSTUFF_PER_LINE, hexstuff, asciistuff);
 			i = 0;
 			hsp = hexstuff;
 			asp = asciistuff;
@@ -475,29 +458,21 @@ hex_and_ascii_print_with_offset(DBG * d, register const char *ident,
 	}
 	if (i > 0) {
 		*hsp = *asp = '\0';
-		(void) dbg_printf_raw(d, "%s0x%04x: %-*s  %s",
-							  ident, oset, HEXDUMP_HEXSTUFF_PER_LINE,
-							  hexstuff, asciistuff);
+		(void) dbg_printf_raw(d, "%s0x%04x: %-*s  %s", ident, oset, HEXDUMP_HEXSTUFF_PER_LINE, hexstuff, asciistuff);
 	}
 }
 
-static void
-hex_and_ascii_print(DBG * d, register const char *ident,
-					register const u_char * cp, register u_int length)
+static void hex_and_ascii_print(DBG * d, register const char *ident, register const u_char * cp, register u_int length)
 {
 	hex_and_ascii_print_with_offset(d, ident, cp, length, 0);
 }
 
-static void
-hex_print_with_offset(DBG * d, register const char *ident,
-					  register const u_char * cp, register u_int length,
-					  register u_int oset)
+static void hex_print_with_offset(DBG * d, register const char *ident, register const u_char * cp, register u_int length, register u_int oset)
 {
 	register u_int i;
 	register int s1, s2;
 	register int nshorts;
-	char hexstuff[HEXDUMP_SHORTS_PER_LINE * HEXDUMP_HEXSTUFF_PER_SHORT + 1],
-		*hsp;
+	char hexstuff[HEXDUMP_SHORTS_PER_LINE * HEXDUMP_HEXSTUFF_PER_SHORT + 1], *hsp;
 
 	nshorts = length / sizeof(u_short);
 	i = 0;
@@ -505,15 +480,12 @@ hex_print_with_offset(DBG * d, register const char *ident,
 	while (--nshorts >= 0) {
 		s1 = *cp++;
 		s2 = *cp++;
-		(void) snprintf(hsp, sizeof(hexstuff) - (hsp - hexstuff),
-						" %02x%02x", s1, s2);
+		(void) snprintf(hsp, sizeof(hexstuff) - (hsp - hexstuff), " %02x%02x", s1, s2);
 		hsp += HEXDUMP_HEXSTUFF_PER_SHORT;
 		i++;
 		if (i >= HEXDUMP_SHORTS_PER_LINE) {
 			*hsp = '\0';
-			(void) dbg_printf_raw(d, "%s0x%04x: %-*s",
-								  ident, oset,
-								  HEXDUMP_HEXSTUFF_PER_LINE, hexstuff);
+			(void) dbg_printf_raw(d, "%s0x%04x: %-*s", ident, oset, HEXDUMP_HEXSTUFF_PER_LINE, hexstuff);
 			i = 0;
 			hsp = hexstuff;
 			oset += HEXDUMP_BYTES_PER_LINE;
@@ -527,17 +499,14 @@ hex_print_with_offset(DBG * d, register const char *ident,
 	}
 	if (i > 0) {
 		*hsp = '\0';
-		(void) dbg_printf_raw(d, "%s0x%04x: %-*s",
-							  ident, oset, HEXDUMP_HEXSTUFF_PER_LINE, hexstuff);
+		(void) dbg_printf_raw(d, "%s0x%04x: %-*s", ident, oset, HEXDUMP_HEXSTUFF_PER_LINE, hexstuff);
 	}
 }
 
 /*
  * just for completeness
  */
-static void
-hex_print(DBG * d, register const char *ident, register const u_char * cp,
-		  register u_int length)
+static void hex_print(DBG * d, register const char *ident, register const u_char * cp, register u_int length)
 {
 	hex_print_with_offset(d, ident, cp, length, 0);
 }
@@ -606,11 +575,9 @@ int main(int argc, char *argv[])
 
 	dbg_open_custom(d, WriteToMessageBox);
 	dbg_printf_raw(d, "Hello %s", "World");
-	dbg_hexdump_ascii(d, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-					  strlen("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+	dbg_hexdump_ascii(d, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", strlen("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
 	dbg_switch(d, 0);
-	dbg_hexdump(d, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-				strlen("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+	dbg_hexdump(d, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", strlen("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
 	dbg_switch(d, 1);
 	dbg_hexdump_ascii(d, (const unsigned char *) d, sizeof(*d));
 	dbg_close(d);

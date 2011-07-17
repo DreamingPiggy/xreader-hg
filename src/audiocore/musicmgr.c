@@ -224,14 +224,12 @@ static int shuffle_next(void)
 	if (g_list.cycle_mode == conf_cycle_random) {
 		stack_push(&played, g_list.curr_pos);
 
-		if (g_shuffle.index == g_shuffle.size ||
-			g_shuffle.size != music_maxindex()
+		if (g_shuffle.index == g_shuffle.size || g_shuffle.size != music_maxindex()
 			) {
 			rebuild_shuffle_data();
 		}
 
-		dbg_printf(d, "%s: g_shuffle index %d, pos %d", __func__,
-				   g_shuffle.index, g_shuffle.table[g_shuffle.index]);
+		dbg_printf(d, "%s: g_shuffle index %d, pos %d", __func__, g_shuffle.index, g_shuffle.table[g_shuffle.index]);
 		g_list.curr_pos = g_shuffle.table[g_shuffle.index++];
 	}
 
@@ -320,8 +318,7 @@ int music_add(const char *spath, const char *lpath)
 	count = 0;
 
 	while (*tmp) {
-		if (!strcmp((*tmp)->shortpath->ptr, spath) &&
-			!strcmp((*tmp)->longpath->ptr, lpath)) {
+		if (!strcmp((*tmp)->shortpath->ptr, spath) && !strcmp((*tmp)->longpath->ptr, lpath)) {
 			return -EBUSY;
 		}
 		tmp = &(*tmp)->next;
@@ -391,8 +388,7 @@ int music_stop(void)
 	if (ret < 0)
 		return ret;
 
-	if (ret == ST_PLAYING || ret == ST_PAUSED || ret == ST_LOADED
-		|| ret == ST_STOPPED || ret == ST_FFORWARD || ret == ST_FBACKWARD) {
+	if (ret == ST_PLAYING || ret == ST_PAUSED || ret == ST_LOADED || ret == ST_STOPPED || ret == ST_FFORWARD || ret == ST_FBACKWARD) {
 		ret = musicdrv_end();
 	} else
 		ret = 0;
@@ -448,9 +444,7 @@ static int music_setupdriver(const char *spath, const char *lpath)
 	}
 
 	if (dev != ops) {
-		dbg_printf(d,
-				   "%s: set musicdrv dev (0x%08x) != ops(0x%08x), but they have same name.",
-				   __func__, (unsigned int) dev, (unsigned int) ops);
+		dbg_printf(d, "%s: set musicdrv dev (0x%08x) != ops(0x%08x), but they have same name.", __func__, (unsigned int) dev, (unsigned int) ops);
 	}
 
 	return dev ? 0 : -ENODEV;
@@ -780,8 +774,7 @@ static int music_thread(SceSize arg, void *argp)
 			sceRtcGetCurrentTick(&end);
 			interval = pspDiffTime(&end, &start);
 
-			if (key == PSP_HPRM_FORWARD || key == PSP_HPRM_BACK
-				|| key == PSP_HPRM_PLAYPAUSE) {
+			if (key == PSP_HPRM_FORWARD || key == PSP_HPRM_BACK || key == PSP_HPRM_PLAYPAUSE) {
 				if (key != oldkey) {
 					sceRtcGetCurrentTick(&start);
 					sceRtcGetCurrentTick(&end);
@@ -805,8 +798,7 @@ static int music_thread(SceSize arg, void *argp)
 					scePowerRequestSuspend();
 				}
 			} else {
-				if ((oldkey == PSP_HPRM_FORWARD || oldkey == PSP_HPRM_BACK
-					 || oldkey == PSP_HPRM_PLAYPAUSE)) {
+				if ((oldkey == PSP_HPRM_FORWARD || oldkey == PSP_HPRM_BACK || oldkey == PSP_HPRM_PLAYPAUSE)) {
 					if (interval < 0.5) {
 						if (oldkey == PSP_HPRM_FORWARD)
 							music_next();
@@ -848,9 +840,9 @@ int music_init(void)
 
 	seed = sctrlKernelRand();
 
-	if(seed == 0x8002013A) {
+	if (seed == 0x8002013A) {
 		pspTime tm;
-		
+
 		sceRtcGetCurrentClockLocalTime(&tm);
 		seed = tm.microseconds;
 	}
@@ -914,8 +906,7 @@ int music_init(void)
 	g_list.first_time = true;
 	g_shuffle.first_time = true;
 	stack_init(&played);
-	g_music_thread = sceKernelCreateThread("Music Thread",
-										  music_thread, 0x12, 0x10000, 0, NULL);
+	g_music_thread = sceKernelCreateThread("Music Thread", music_thread, 0x12, 0x10000, 0, NULL);
 
 	if (g_music_thread < 0) {
 		return -EBUSY;
@@ -1084,7 +1075,7 @@ int music_add_dir(const char *spath, const char *lpath)
 	for (i = 0; i < count; i++) {
 		char sfn[PATH_MAX];
 		char lfn[PATH_MAX];
-		
+
 		if ((info[i].attr & FAT_FILEATTR_DIRECTORY) > 0) {
 			char lpath2[PATH_MAX], spath2[PATH_MAX];
 
@@ -1119,9 +1110,7 @@ p_lyric music_get_lyric(void)
 		mad_timer_t timer;
 
 		timer.seconds = (int) info.cur_time;
-		timer.fraction =
-			(unsigned long) ((info.cur_time - (long) info.cur_time) *
-							 MAD_TIMER_RESOLUTION);
+		timer.fraction = (unsigned long) ((info.cur_time - (long) info.cur_time) * MAD_TIMER_RESOLUTION);
 		lyric_update_pos(&lyric, &timer);
 	}
 
@@ -1235,7 +1224,7 @@ int music_list_load(const char *path)
 	fclose(fp);
 	freq_leave(fid);
 
-end:
+  end:
 	music_list_refresh();
 
 	return ret;

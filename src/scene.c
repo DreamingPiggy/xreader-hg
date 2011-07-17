@@ -97,8 +97,7 @@ bool imgreading = false, locreading = false;
 bool prx_loaded = false;
 int locaval[10];
 t_fonts fonts[5], bookfonts[21];
-static int fontcount = 0, fontindex = 0, bookfontcount = 0, bookfontindex =
-	0, ttfsize = 0;
+static int fontcount = 0, fontindex = 0, bookfontcount = 0, bookfontindex = 0, ttfsize = 0;
 bool g_force_text_view_mode = false;
 
 char prev_path[PATH_MAX], prev_shortpath[PATH_MAX];
@@ -130,32 +129,20 @@ extern int get_center_pos(int left, int right, const char *str)
 	return left + (right - left) / 2 - strlen(str) * DISP_FONTSIZE / 2 / 2;
 }
 
-int default_predraw(const win_menu_predraw_data * pData, const char *str,
-					int max_height, int *left, int *right, int *upper,
-					int *bottom, int width_fixup)
+int default_predraw(const win_menu_predraw_data * pData, const char *str, int max_height, int *left, int *right, int *upper, int *bottom, int width_fixup)
 {
 	if (pData == NULL || left == NULL || right == NULL || bottom == NULL)
 		return -1;
 
 	*left = pData->left - 1;
-	*right =
-		pData->x + width_fixup + DISP_FONTSIZE / 2 * pData->max_item_len / 2;
+	*right = pData->x + width_fixup + DISP_FONTSIZE / 2 * pData->max_item_len / 2;
 	*upper = pData->upper - (DISP_FONTSIZE + 1) - 1;
-	*bottom =
-		pData->upper + 2 + 1 + DISP_FONTSIZE + (max_height - 1) * (1 +
-																   DISP_FONTSIZE
-																   +
-																   pData->
-																   linespace);
+	*bottom = pData->upper + 2 + 1 + DISP_FONTSIZE + (max_height - 1) * (1 + DISP_FONTSIZE + pData->linespace);
 
 	disp_rectangle(*left, *upper, *right, *bottom, COLOR_WHITE);
-	disp_fillrect(*left + 1, *upper + 1,
-				  *right - 1, *bottom - 1,
-				  config.menubcolor);
-	disp_putstring(get_center_pos(*left, *right, str), *upper + 1, COLOR_WHITE,
-				   (const u8 *) str);
-	disp_line(*left, *upper + 1 + DISP_FONTSIZE, *right,
-			  *upper + 1 + DISP_FONTSIZE, COLOR_WHITE);
+	disp_fillrect(*left + 1, *upper + 1, *right - 1, *bottom - 1, config.menubcolor);
+	disp_putstring(get_center_pos(*left, *right, str), *upper + 1, COLOR_WHITE, (const u8 *) str);
+	disp_line(*left, *upper + 1 + DISP_FONTSIZE, *right, *upper + 1 + DISP_FONTSIZE, COLOR_WHITE);
 
 	return 0;
 }
@@ -173,8 +160,7 @@ static void load_fontsize_to_config(void)
 
 t_win_menu_op exit_confirm(void)
 {
-	if (win_msgbox(_("是否退出软件?"), _("是"), _("否"),
-				   COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
+	if (win_msgbox(_("是否退出软件?"), _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
 		scene_exit();
 		return win_menu_op_continue;
 	}
@@ -253,10 +239,8 @@ bool scene_load_book_font(void)
 		fid = freq_enter_hotzone();
 
 		if (!disp_load_zipped_book_font(fontzipfile, efontfile, cfontfile)) {
-			SPRINTF_S(efontfile, "%sfonts/ASC%d", scene_appdir(),
-					  config.bookfontsize);
-			SPRINTF_S(cfontfile, "%sfonts/GBK%d", scene_appdir(),
-					  config.bookfontsize);
+			SPRINTF_S(efontfile, "%sfonts/ASC%d", scene_appdir(), config.bookfontsize);
+			SPRINTF_S(cfontfile, "%sfonts/GBK%d", scene_appdir(), config.bookfontsize);
 			if (!disp_load_book_font(efontfile, cfontfile)) {
 				freq_leave(fid);
 
@@ -277,22 +261,14 @@ extern int prompt_press_any_key(void)
 	int right = 240 + DISP_FONTSIZE * len / 2;
 	int center = get_center_pos(left + 1, right - 1, _("请按对应按键"));
 
-	disp_rectangle(left,
-				   135 - DISP_FONTSIZE / 2,
-				   right, 136 + DISP_FONTSIZE / 2, COLOR_WHITE);
-	disp_fillrect(left + 1,
-				  136 - DISP_FONTSIZE / 2,
-				  right - 1, 135 + DISP_FONTSIZE / 2, RGB(0x8, 0x18, 0x10));
-	disp_putstring(center,
-				   136 - DISP_FONTSIZE / 2, COLOR_WHITE,
-				   (const u8 *) _("请按对应按键"));
+	disp_rectangle(left, 135 - DISP_FONTSIZE / 2, right, 136 + DISP_FONTSIZE / 2, COLOR_WHITE);
+	disp_fillrect(left + 1, 136 - DISP_FONTSIZE / 2, right - 1, 135 + DISP_FONTSIZE / 2, RGB(0x8, 0x18, 0x10));
+	disp_putstring(center, 136 - DISP_FONTSIZE / 2, COLOR_WHITE, (const u8 *) _("请按对应按键"));
 
 	return 0;
 }
 
-t_win_menu_op scene_flkey_menucb(u32 key, p_win_menuitem item, u32 * count,
-								 u32 max_height, u32 * topindex,
-								 u32 * index)
+t_win_menu_op scene_flkey_menucb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	u32 key1, key2;
 	SceCtrlData ctl;
@@ -314,9 +290,7 @@ t_win_menu_op scene_flkey_menucb(u32 key, p_win_menuitem item, u32 * count,
 			do {
 				sceCtrlReadBufferPositive(&ctl, 1);
 				key1 = (ctl.Buttons & ~PSP_CTRL_SELECT) & ~PSP_CTRL_START;
-			} while ((key1 &
-					  ~(PSP_CTRL_UP | PSP_CTRL_DOWN | PSP_CTRL_LEFT |
-						PSP_CTRL_RIGHT)) == 0);
+			} while ((key1 & ~(PSP_CTRL_UP | PSP_CTRL_DOWN | PSP_CTRL_LEFT | PSP_CTRL_RIGHT)) == 0);
 			key2 = key1;
 			while ((key2 & key1) == key1) {
 				key1 = key2;
@@ -360,15 +334,13 @@ t_win_menu_op scene_flkey_menucb(u32 key, p_win_menuitem item, u32 * count,
 	return win_menu_defcb(key, item, count, max_height, topindex, index);
 }
 
-void scene_flkey_predraw(p_win_menuitem item, u32 index, u32 topindex,
-						 u32 max_height)
+void scene_flkey_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
 	char keyname[256];
 	int left, right, upper, bottom, lines = 0;
 	u32 i;
 
-	default_predraw(&g_predraw, _("按键设置   △ 删除"), max_height, &left,
-					&right, &upper, &bottom, 8 * DISP_FONTSIZE + 4);
+	default_predraw(&g_predraw, _("按键设置   △ 删除"), max_height, &left, &right, &upper, &bottom, 8 * DISP_FONTSIZE + 4);
 
 	for (i = topindex; i < topindex + max_height; i++) {
 		conf_get_keyname(config.flkey[i], keyname);
@@ -379,11 +351,7 @@ void scene_flkey_predraw(p_win_menuitem item, u32 index, u32 topindex,
 			STRCAT_S(keyname, _(" | "));
 			STRCAT_S(keyname, keyname2);
 		}
-		disp_putstring(left + (right - left) / 2,
-					   upper + 2 + (lines + 1 +
-									g_predraw.linespace) * (1 +
-															DISP_FONTSIZE),
-					   COLOR_WHITE, (const u8 *) keyname);
+		disp_putstring(left + (right - left) / 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) keyname);
 		lines++;
 	}
 }
@@ -410,8 +378,7 @@ u32 scene_flkey(u32 * selidx)
 		item[i].selected = false;
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
-		item[i].selrcolor =
-			config.menubcolor;
+		item[i].selrcolor = config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -427,10 +394,7 @@ u32 scene_flkey(u32 * selidx)
 			win_menu(g_predraw.left,
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
-					 g_predraw.linespace,
-					 config.menubcolor,
-					 true, scene_flkey_predraw, NULL,
-					 scene_flkey_menucb)) != INVALID);
+					 g_predraw.linespace, config.menubcolor, true, scene_flkey_predraw, NULL, scene_flkey_menucb)) != INVALID);
 
 	memcpy(&g_predraw, &prev, sizeof(win_menu_predraw_data));
 
@@ -465,12 +429,9 @@ static void set_background_image(p_win_menuitem item, u32 * index)
 	dbg_printf(d, "bgfile: %s", bgfile);
 
 	if ((where == scene_in_dir && stricmp(bgfile, config.bgfile) == 0) ||
-		(where != scene_in_dir && stricmp(bgfile, config.bgfile) == 0 &&
-		 stricmp(bgarchname, config.bgarch) == 0)
+		(where != scene_in_dir && stricmp(bgfile, config.bgfile) == 0 && stricmp(bgarchname, config.bgarch) == 0)
 		) {
-		if (win_msgbox
-			(_("是否取消背景图？"), _("是"), _("否"), COLOR_WHITE,
-			 COLOR_WHITE, config.msgbcolor)) {
+		if (win_msgbox(_("是否取消背景图？"), _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
 			dbg_printf(d, _("取消背景图"));
 			STRCPY_S(config.bgfile, "");
 			STRCPY_S(config.bgarch, "");
@@ -481,17 +442,14 @@ static void set_background_image(p_win_menuitem item, u32 * index)
 			disp_fillvram(0);
 		}
 	} else {
-		if (win_msgbox
-			(_("是否将当前图片文件设为背景图？"),
-			 _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
+		if (win_msgbox(_("是否将当前图片文件设为背景图？"), _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
 			config.bgwhere = where;
 			STRCPY_S(config.bgfile, bgfile);
 			STRCPY_S(config.bgarch, bgarchname);
 			dbg_printf(d, "bgarch: %s", config.bgarch);
 			dbg_printf(d, "bgfile: %s", config.bgfile);
 			dbg_printf(d, "bgwhere: %d", config.bgwhere);
-			bg_load(config.bgfile,
-					config.bgarch, config.bgcolor, (t_fs_filetype)
+			bg_load(config.bgfile, config.bgarch, config.bgcolor, (t_fs_filetype)
 					item[*index].data, config.grayscale, config.bgwhere);
 			repaintbg = true;
 		}
@@ -504,8 +462,7 @@ int scene_filelist_compare_ext(void *data1, void *data2)
 	const char *fn1, *fn2;
 	int cmp;
 
-	if (((p_win_menuitem) data1)->compname == NULL
-		|| ((p_win_menuitem) data2)->compname == NULL) {
+	if (((p_win_menuitem) data1)->compname == NULL || ((p_win_menuitem) data2)->compname == NULL) {
 		dbg_printf(d, "%s: !!!!", __func__);
 		return 0;
 	}
@@ -524,8 +481,7 @@ int scene_filelist_compare_name(void *data1, void *data2)
 {
 	t_fs_filetype ft1, ft2;
 
-	if (((p_win_menuitem) data1)->compname == NULL
-		|| ((p_win_menuitem) data2)->compname == NULL) {
+	if (((p_win_menuitem) data1)->compname == NULL || ((p_win_menuitem) data2)->compname == NULL) {
 		dbg_printf(d, "%s: !!!!", __func__);
 		return 0;
 	}
@@ -539,54 +495,42 @@ int scene_filelist_compare_name(void *data1, void *data2)
 	} else if (ft2 == fs_filetype_dir)
 		return 1;
 
-	return stricmp(((p_win_menuitem) data1)->compname->ptr,
-				   ((p_win_menuitem) data2)->compname->ptr);
+	return stricmp(((p_win_menuitem) data1)->compname->ptr, ((p_win_menuitem) data2)->compname->ptr);
 }
 
 int scene_filelist_compare_size(void *data1, void *data2)
 {
-	t_fs_filetype ft1 =
-		(t_fs_filetype) ((p_win_menuitem) data1)->data, ft2 =
-		(t_fs_filetype) ((p_win_menuitem) data2)->data;
+	t_fs_filetype ft1 = (t_fs_filetype) ((p_win_menuitem) data1)->data, ft2 = (t_fs_filetype) ((p_win_menuitem) data2)->data;
 	if (ft1 == fs_filetype_dir) {
 		if (ft2 != fs_filetype_dir)
 			return -1;
 	} else if (ft2 == fs_filetype_dir)
 		return 1;
-	return (int) ((p_win_menuitem) data1)->data3 -
-		(int) ((p_win_menuitem) data2)->data3;
+	return (int) ((p_win_menuitem) data1)->data3 - (int) ((p_win_menuitem) data2)->data3;
 }
 
 int scene_filelist_compare_ctime(void *data1, void *data2)
 {
-	t_fs_filetype ft1 =
-		(t_fs_filetype) ((p_win_menuitem) data1)->data, ft2 =
-		(t_fs_filetype) ((p_win_menuitem) data2)->data;
+	t_fs_filetype ft1 = (t_fs_filetype) ((p_win_menuitem) data1)->data, ft2 = (t_fs_filetype) ((p_win_menuitem) data2)->data;
 	if (ft1 == fs_filetype_dir) {
 		if (ft2 != fs_filetype_dir)
 			return -1;
 	} else if (ft2 == fs_filetype_dir)
 		return 1;
 	return (((int) ((p_win_menuitem) data1)->data2[0]) << 16) +
-		(int) ((p_win_menuitem) data1)->data2[1] -
-		((((int) ((p_win_menuitem) data2)->data2[0]) << 16) +
-		 (int) ((p_win_menuitem) data2)->data2[1]);
+		(int) ((p_win_menuitem) data1)->data2[1] - ((((int) ((p_win_menuitem) data2)->data2[0]) << 16) + (int) ((p_win_menuitem) data2)->data2[1]);
 }
 
 int scene_filelist_compare_mtime(void *data1, void *data2)
 {
-	t_fs_filetype ft1 =
-		(t_fs_filetype) ((p_win_menuitem) data1)->data, ft2 =
-		(t_fs_filetype) ((p_win_menuitem) data2)->data;
+	t_fs_filetype ft1 = (t_fs_filetype) ((p_win_menuitem) data1)->data, ft2 = (t_fs_filetype) ((p_win_menuitem) data2)->data;
 	if (ft1 == fs_filetype_dir) {
 		if (ft2 != fs_filetype_dir)
 			return -1;
 	} else if (ft2 == fs_filetype_dir)
 		return 1;
 	return (((int) ((p_win_menuitem) data1)->data2[2]) << 16) +
-		(int) ((p_win_menuitem) data1)->data2[3] -
-		((((int) ((p_win_menuitem) data2)->data2[2]) << 16) +
-		 (int) ((p_win_menuitem) data2)->data2[3]);
+		(int) ((p_win_menuitem) data1)->data2[3] - ((((int) ((p_win_menuitem) data2)->data2[2]) << 16) + (int) ((p_win_menuitem) data2)->data2[3]);
 }
 
 qsort_compare compare_func[] = {
@@ -598,9 +542,7 @@ qsort_compare compare_func[] = {
 };
 
 #ifdef ENABLE_IMAGE
-t_win_menu_op scene_ioptions_menucb(u32 key, p_win_menuitem item,
-									u32 * count, u32 max_height,
-									u32 * topindex, u32 * index)
+t_win_menu_op scene_ioptions_menucb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	switch (key) {
 		case (PSP_CTRL_SELECT | PSP_CTRL_START):
@@ -800,104 +742,61 @@ t_win_menu_op scene_ioptions_menucb(u32 key, p_win_menuitem item,
 	return win_menu_defcb(key, item, count, max_height, topindex, index);
 }
 
-void scene_ioptions_predraw(p_win_menuitem item, u32 index, u32 topindex,
-							u32 max_height)
+void scene_ioptions_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
 	int left, right, upper, bottom, lines = 0;
 	char number[20];
 	char infomsg[80];
 
-	if (strcmp(simple_textdomain(NULL), "zh_CN") == 0 ||
-		strcmp(simple_textdomain(NULL), "zh_TW") == 0)
-		default_predraw(&g_predraw, _("看图选项"), max_height, &left,
-						&right, &upper, &bottom, 4 * DISP_FONTSIZE + 4);
+	if (strcmp(simple_textdomain(NULL), "zh_CN") == 0 || strcmp(simple_textdomain(NULL), "zh_TW") == 0)
+		default_predraw(&g_predraw, _("看图选项"), max_height, &left, &right, &upper, &bottom, 4 * DISP_FONTSIZE + 4);
 	else
-		default_predraw(&g_predraw, _("看图选项"), max_height, &left,
-						&right, &upper, &bottom, 6 * DISP_FONTSIZE + 4);
+		default_predraw(&g_predraw, _("看图选项"), max_height, &left, &right, &upper, &bottom, 6 * DISP_FONTSIZE + 4);
 
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
 				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.bicubic ? _("三次立方") :
-								   _("两次线性")));
+																	DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.bicubic ? _("三次立方") : _("两次线性")));
 	lines++;
 	SPRINTF_S(number, "%d %s", config.slideinterval, _("秒"));
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) conf_get_viewposname(config.viewpos));
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) conf_get_viewposname(config.viewpos));
 	lines++;
 	memset(number, ' ', 4);
 	SPRINTF_S(number, "%d", config.imgmvspd);
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) conf_get_imgpagingname(config.imgpaging));
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) conf_get_imgpagingname(config.imgpaging));
 	lines++;
 	SPRINTF_S(number, "%d", config.imgpagereserve);
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) conf_get_thumbname(config.thumb));
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) conf_get_thumbname(config.thumb));
 	lines++;
 
 	SPRINTF_S(infomsg, "%d%%", config.imgbrightness);
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) infomsg);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) infomsg);
 	lines++;
 #ifdef ENABLE_ANALOG
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
 				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   config.img_enable_analog ? (const u8 *) _("是") : (const
-																		u8 *)
+																	DISP_FONTSIZE), COLOR_WHITE, config.img_enable_analog ? (const u8 *) _("是") : (const u8 *)
 				   _("否"));
 #else
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) _("已关闭"));
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) _("已关闭"));
 #endif
 	lines++;
 	SPRINTF_S(number, "%d", config.imgpaging_spd);
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 	SPRINTF_S(number, _("%.1f秒"), 0.1f * config.imgpaging_interval);
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 	SPRINTF_S(number, _("%.1f秒"), 0.1f * config.imgpaging_duration);
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 }
 
@@ -930,8 +829,7 @@ u32 scene_ioptions(u32 * selidx)
 		item[i].selected = false;
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
-		item[i].selrcolor =
-			config.menubcolor;
+		item[i].selrcolor = config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -947,10 +845,7 @@ u32 scene_ioptions(u32 * selidx)
 			win_menu(g_predraw.left,
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
-					 g_predraw.linespace,
-					 config.menubcolor,
-					 true, scene_ioptions_predraw, NULL,
-					 scene_ioptions_menucb)) != INVALID);
+					 g_predraw.linespace, config.menubcolor, true, scene_ioptions_predraw, NULL, scene_ioptions_menucb)) != INVALID);
 
 	if (orgimgbrightness != config.imgbrightness) {
 		cache_reload_all();
@@ -962,9 +857,7 @@ u32 scene_ioptions(u32 * selidx)
 }
 #endif
 
-t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
-								 u32 max_height, u32 * topindex,
-								 u32 * index)
+t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	u32 r, g, b;
 
@@ -1044,8 +937,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 		case PSP_CTRL_RIGHT:
 			switch (*index) {
 				case 0:
-					r = RGB_R(config.forecolor), g =
-						RGB_G(config.forecolor), b = RGB_B(config.forecolor);
+					r = RGB_R(config.forecolor), g = RGB_G(config.forecolor), b = RGB_B(config.forecolor);
 					if (r == COLOR_MAX)
 						r = 0;
 					else
@@ -1053,8 +945,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 					config.forecolor = RGB2(r, g, b);
 					break;
 				case 1:
-					r = RGB_R(config.forecolor), g =
-						RGB_G(config.forecolor), b = RGB_B(config.forecolor);
+					r = RGB_R(config.forecolor), g = RGB_G(config.forecolor), b = RGB_B(config.forecolor);
 					if (g == COLOR_MAX)
 						g = 0;
 					else
@@ -1062,8 +953,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 					config.forecolor = RGB2(r, g, b);
 					break;
 				case 2:
-					r = RGB_R(config.forecolor), g =
-						RGB_G(config.forecolor), b = RGB_B(config.forecolor);
+					r = RGB_R(config.forecolor), g = RGB_G(config.forecolor), b = RGB_B(config.forecolor);
 					if (b == COLOR_MAX)
 						b = 0;
 					else
@@ -1071,8 +961,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 					config.forecolor = RGB2(r, g, b);
 					break;
 				case 3:
-					r = RGB_R(config.bgcolor), g =
-						RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
+					r = RGB_R(config.bgcolor), g = RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
 					if (r == COLOR_MAX)
 						r = 0;
 					else
@@ -1080,8 +969,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 					config.bgcolor = RGB2(r, g, b);
 					break;
 				case 4:
-					r = RGB_R(config.bgcolor), g =
-						RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
+					r = RGB_R(config.bgcolor), g = RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
 					if (g == COLOR_MAX)
 						g = 0;
 					else
@@ -1089,8 +977,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 					config.bgcolor = RGB2(r, g, b);
 					break;
 				case 5:
-					r = RGB_R(config.bgcolor), g =
-						RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
+					r = RGB_R(config.bgcolor), g = RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
 					if (b == COLOR_MAX)
 						b = 0;
 					else
@@ -1111,8 +998,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 		case PSP_CTRL_LTRIGGER:
 			switch (*index) {
 				case 0:
-					r = RGB_R(config.forecolor), g =
-						RGB_G(config.forecolor), b = RGB_B(config.forecolor);
+					r = RGB_R(config.forecolor), g = RGB_G(config.forecolor), b = RGB_B(config.forecolor);
 					if (r > (COLOR_MAX * 25 / 255))
 						r -= (COLOR_MAX * 25 / 255);
 					else
@@ -1120,8 +1006,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 					config.forecolor = RGB2(r, g, b);
 					break;
 				case 1:
-					r = RGB_R(config.forecolor), g =
-						RGB_G(config.forecolor), b = RGB_B(config.forecolor);
+					r = RGB_R(config.forecolor), g = RGB_G(config.forecolor), b = RGB_B(config.forecolor);
 					if (g > (COLOR_MAX * 25 / 255))
 						g -= (COLOR_MAX * 25 / 255);
 					else
@@ -1129,8 +1014,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 					config.forecolor = RGB2(r, g, b);
 					break;
 				case 2:
-					r = RGB_R(config.forecolor), g =
-						RGB_G(config.forecolor), b = RGB_B(config.forecolor);
+					r = RGB_R(config.forecolor), g = RGB_G(config.forecolor), b = RGB_B(config.forecolor);
 					if (b > (COLOR_MAX * 25 / 255))
 						b -= (COLOR_MAX * 25 / 255);
 					else
@@ -1138,8 +1022,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 					config.forecolor = RGB2(r, g, b);
 					break;
 				case 3:
-					r = RGB_R(config.bgcolor), g =
-						RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
+					r = RGB_R(config.bgcolor), g = RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
 					if (r > (COLOR_MAX * 25 / 255))
 						r -= (COLOR_MAX * 25 / 255);
 					else
@@ -1147,8 +1030,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 					config.bgcolor = RGB2(r, g, b);
 					break;
 				case 4:
-					r = RGB_R(config.bgcolor), g =
-						RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
+					r = RGB_R(config.bgcolor), g = RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
 					if (g > (COLOR_MAX * 25 / 255))
 						g -= (COLOR_MAX * 25 / 255);
 					else
@@ -1156,8 +1038,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 					config.bgcolor = RGB2(r, g, b);
 					break;
 				case 5:
-					r = RGB_R(config.bgcolor), g =
-						RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
+					r = RGB_R(config.bgcolor), g = RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
 					if (b > (COLOR_MAX * 25 / 255))
 						b -= (COLOR_MAX * 25 / 255);
 					else
@@ -1175,8 +1056,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 		case PSP_CTRL_RTRIGGER:
 			switch (*index) {
 				case 0:
-					r = RGB_R(config.forecolor), g =
-						RGB_G(config.forecolor), b = RGB_B(config.forecolor);
+					r = RGB_R(config.forecolor), g = RGB_G(config.forecolor), b = RGB_B(config.forecolor);
 					if (r < COLOR_MAX - (COLOR_MAX * 25 / 255))
 						r += (COLOR_MAX * 25 / 255);
 					else
@@ -1184,8 +1064,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 					config.forecolor = RGB2(r, g, b);
 					break;
 				case 1:
-					r = RGB_R(config.forecolor), g =
-						RGB_G(config.forecolor), b = RGB_B(config.forecolor);
+					r = RGB_R(config.forecolor), g = RGB_G(config.forecolor), b = RGB_B(config.forecolor);
 					if (g < COLOR_MAX - (COLOR_MAX * 25 / 255))
 						g += (COLOR_MAX * 25 / 255);
 					else
@@ -1193,8 +1072,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 					config.forecolor = RGB2(r, g, b);
 					break;
 				case 2:
-					r = RGB_R(config.forecolor), g =
-						RGB_G(config.forecolor), b = RGB_B(config.forecolor);
+					r = RGB_R(config.forecolor), g = RGB_G(config.forecolor), b = RGB_B(config.forecolor);
 					if (b < COLOR_MAX - (COLOR_MAX * 25 / 255))
 						b += (COLOR_MAX * 25 / 255);
 					else
@@ -1202,8 +1080,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 					config.forecolor = RGB2(r, g, b);
 					break;
 				case 3:
-					r = RGB_R(config.bgcolor), g =
-						RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
+					r = RGB_R(config.bgcolor), g = RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
 					if (r < COLOR_MAX - (COLOR_MAX * 25 / 255))
 						r += (COLOR_MAX * 25 / 255);
 					else
@@ -1211,8 +1088,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 					config.bgcolor = RGB2(r, g, b);
 					break;
 				case 4:
-					r = RGB_R(config.bgcolor), g =
-						RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
+					r = RGB_R(config.bgcolor), g = RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
 					if (g < COLOR_MAX - (COLOR_MAX * 25 / 255))
 						g += (COLOR_MAX * 25 / 255);
 					else
@@ -1220,8 +1096,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 					config.bgcolor = RGB2(r, g, b);
 					break;
 				case 5:
-					r = RGB_R(config.bgcolor), g =
-						RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
+					r = RGB_R(config.bgcolor), g = RGB_G(config.bgcolor), b = RGB_B(config.bgcolor);
 					if (b < COLOR_MAX - (COLOR_MAX * 25 / 255))
 						b += (COLOR_MAX * 25 / 255);
 					else
@@ -1241,8 +1116,7 @@ t_win_menu_op scene_color_menucb(u32 key, p_win_menuitem item, u32 * count,
 	return win_menu_defcb(key, item, count, max_height, topindex, index);
 }
 
-void scene_color_predraw(p_win_menuitem item, u32 index, u32 topindex,
-						 u32 max_height)
+void scene_color_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
 	char number[5];
 	int pad = 0;
@@ -1253,81 +1127,50 @@ void scene_color_predraw(p_win_menuitem item, u32 index, u32 topindex,
 		pad = 6 * (12 - config.fontsize);
 	}
 
-	if (strcmp(simple_textdomain(NULL), "zh_CN") == 0 ||
-		strcmp(simple_textdomain(NULL), "zh_TW") == 0)
+	if (strcmp(simple_textdomain(NULL), "zh_CN") == 0 || strcmp(simple_textdomain(NULL), "zh_TW") == 0)
 		npad = 35;
 	else
 		npad = 0;
 
-	default_predraw(&g_predraw, _("颜色选项"), max_height, &left, &right,
-					&upper, &bottom, pad + npad);
+	default_predraw(&g_predraw, _("颜色选项"), max_height, &left, &right, &upper, &bottom, pad + npad);
 
-	disp_fillrect(g_predraw.x + 40, upper + 3 + DISP_FONTSIZE,
-				  g_predraw.x + 70, upper + 3 + DISP_FONTSIZE + 30,
-				  config.forecolor);
+	disp_fillrect(g_predraw.x + 40, upper + 3 + DISP_FONTSIZE, g_predraw.x + 70, upper + 3 + DISP_FONTSIZE + 30, config.forecolor);
 	disp_fillrect(g_predraw.x + 40,
 				  upper + 2 + (3 + 1 + g_predraw.linespace) * (1 +
-															   DISP_FONTSIZE),
-				  g_predraw.x + 70,
-				  upper + 2 + (3 + 1 + g_predraw.linespace) * (1 +
-															   DISP_FONTSIZE)
+															   DISP_FONTSIZE), g_predraw.x + 70, upper + 2 + (3 + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE)
 				  + 30, config.bgcolor);
 
 	memset(number, ' ', 4);
 	utils_dword2string(RGB_R(config.forecolor), number, 4);
-	disp_putstring(g_predraw.x + 2,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 	memset(number, ' ', 4);
 	utils_dword2string(RGB_G(config.forecolor), number, 4);
-	disp_putstring(g_predraw.x + 2,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 	memset(number, ' ', 4);
 	utils_dword2string(RGB_B(config.forecolor), number, 4);
-	disp_putstring(g_predraw.x + 2,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 	memset(number, ' ', 4);
 	utils_dword2string(RGB_R(config.bgcolor), number, 4);
-	disp_putstring(g_predraw.x + 2,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 	memset(number, ' ', 4);
 	utils_dword2string(RGB_G(config.bgcolor), number, 4);
-	disp_putstring(g_predraw.x + 2,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 	memset(number, ' ', 4);
 	utils_dword2string(RGB_B(config.bgcolor), number, 4);
-	disp_putstring(g_predraw.x + 2,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 	memset(number, ' ', 4);
 #ifdef ENABLE_BG
 	utils_dword2string(config.grayscale, number, 4);
-	disp_putstring(g_predraw.x + 2,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 #else
-	disp_putstring(g_predraw.x + 8,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) _("不支持"));
+	disp_putstring(g_predraw.x + 8, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) _("不支持"));
 	lines++;
 #endif
 }
@@ -1371,8 +1214,7 @@ u32 scene_color(u32 * selidx)
 		item[i].selected = false;
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
-		item[i].selrcolor =
-			config.menubcolor;
+		item[i].selrcolor = config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -1388,18 +1230,12 @@ u32 scene_color(u32 * selidx)
 			win_menu(g_predraw.left,
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
-					 g_predraw.linespace,
-					 config.menubcolor,
-					 true, scene_color_predraw, NULL,
-					 scene_color_menucb)) != INVALID);
+					 g_predraw.linespace, config.menubcolor, true, scene_color_predraw, NULL, scene_color_menucb)) != INVALID);
 
 #ifdef ENABLE_BG
 	if (orgbgcolor != config.bgcolor || orggrayscale != config.grayscale) {
-		dbg_printf(d, "更换背景: %s %s gray: %d", config.bgarch,
-				   config.bgfile, config.grayscale);
-		bg_load(config.bgfile, config.bgarch, config.bgcolor,
-				fs_file_get_type(config.bgfile), config.grayscale,
-				config.bgwhere);
+		dbg_printf(d, "更换背景: %s %s gray: %d", config.bgarch, config.bgfile, config.grayscale);
+		bg_load(config.bgfile, config.bgarch, config.bgcolor, fs_file_get_type(config.bgfile), config.grayscale, config.bgwhere);
 	}
 #endif
 
@@ -1407,9 +1243,7 @@ u32 scene_color(u32 * selidx)
 	return 0;
 }
 
-t_win_menu_op scene_boptions_menucb(u32 key, p_win_menuitem item,
-									u32 * count, u32 max_height,
-									u32 * topindex, u32 * index)
+t_win_menu_op scene_boptions_menucb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	switch (key) {
 		case (PSP_CTRL_SELECT | PSP_CTRL_START):
@@ -1564,169 +1398,100 @@ t_win_menu_op scene_boptions_menucb(u32 key, p_win_menuitem item,
 	return win_menu_defcb(key, item, count, max_height, topindex, index);
 }
 
-void scene_boptions_predraw(p_win_menuitem item, u32 index, u32 topindex,
-							u32 max_height)
+void scene_boptions_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
 	char number[5];
 
 	int left, right, upper, bottom, lines = 0;
 
-	default_predraw(&g_predraw, _("阅读选项"), max_height, &left, &right,
-					&upper, &bottom, 2 * DISP_FONTSIZE + 4);
+	default_predraw(&g_predraw, _("阅读选项"), max_height, &left, &right, &upper, &bottom, 2 * DISP_FONTSIZE + 4);
 
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) conf_get_infobarname(config.infobar));
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) conf_get_infobarname(config.infobar));
+	lines++;
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.rlastrow ? _("是") : _("否")));
+	lines++;
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) ((config.vertread == 3) ? _("颠倒")
+																												   : (config.vertread ==
+																													  2) ? _("左向") : (config.vertread ==
+																																		1 ? _("右向") :
+																																		_("无"))));
+	lines++;
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) conf_get_encodename(config.encode));
+	lines++;
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.scrollbar ? _("是") : _("否")));
+	lines++;
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.autobm ? _("是") : _("否")));
+	lines++;
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.reordertxt ? _("是") : _("否")));
 	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
 				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
 																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.rlastrow ? _("是") : _("否")));
-	lines++;
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) ((config.vertread == 3) ? _("颠倒")
-								   : (config.vertread ==
-									  2) ? _("左向") : (config.vertread ==
-														1 ? _("右向") :
-														_("无"))));
-	lines++;
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) conf_get_encodename(config.encode));
-	lines++;
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.scrollbar ? _("是") : _("否")));
-	lines++;
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.autobm ? _("是") : _("否")));
-	lines++;
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.reordertxt ? _("是") : _("否")));
-	lines++;
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.pagetonext ? _("下篇文章") :
-								   _("无动作")));
+				   COLOR_WHITE, (const u8 *) (config.pagetonext ? _("下篇文章") : _("无动作")));
 	lines++;
 	if (config.autopagetype == 2) {
-		disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-					   upper + 2 + (lines + 1 +
-									g_predraw.linespace) * (1 +
-															DISP_FONTSIZE),
-					   COLOR_WHITE, (const u8 *) _("无"));
+		disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) _("无"));
 		lines++;
 	} else if (config.autopagetype == 1) {
 		disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-					   upper + 2 + (lines + 1 +
-									g_predraw.linespace) * (1 +
-															DISP_FONTSIZE),
-					   COLOR_WHITE, (const u8 *) _("自动滚屏"));
+					   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) _("自动滚屏"));
 		lines++;
 	} else {
 		disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-					   upper + 2 + (lines + 1 +
-									g_predraw.linespace) * (1 +
-															DISP_FONTSIZE),
-					   COLOR_WHITE, (const u8 *) _("自动翻页"));
+					   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) _("自动翻页"));
 		lines++;
 	}
 	if (config.autopage) {
 		char infomsg[80];
 
 		SPRINTF_S(infomsg, "%2d", config.autopage);
-		disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-					   upper + 2 + (lines + 1 +
-									g_predraw.linespace) * (1 +
-															DISP_FONTSIZE),
-					   COLOR_WHITE, (const u8 *) infomsg);
+		disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) infomsg);
 		lines++;
 	} else {
 		disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-					   upper + 2 + (lines + 1 +
-									g_predraw.linespace) * (1 +
-															DISP_FONTSIZE),
-					   COLOR_WHITE, (const u8 *) _("已关闭"));
+					   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) _("已关闭"));
 		lines++;
 	}
 	if (config.autolinedelay) {
 		memset(number, ' ', 4);
 		utils_dword2string(config.autolinedelay, number, 2);
-		disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-					   upper + 2 + (lines + 1 +
-									g_predraw.linespace) * (1 +
-															DISP_FONTSIZE),
-					   COLOR_WHITE, (const u8 *) number);
+		disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 		lines++;
 	} else {
 		disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-					   upper + 2 + (lines + 1 +
-									g_predraw.linespace) * (1 +
-															DISP_FONTSIZE),
-					   COLOR_WHITE, (const u8 *) _("已关闭"));
+					   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) _("已关闭"));
 		lines++;
 	}
 #ifdef ENABLE_ANALOG
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   config.enable_analog ? (const u8 *) _("是") : (const u8
-																	*)
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, config.enable_analog ? (const u8 *) _("是") : (const u8 *)
 				   _("否"));
 #else
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) _("已关闭"));
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) _("已关闭"));
 #endif
 	lines++;
 	memset(number, ' ', 4);
 	utils_dword2string(config.scrollbar_width, number, 2);
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 +
-								g_predraw.linespace) * (1 +
-														DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
 				   upper + 2 + (lines + 1 +
-								g_predraw.linespace) * (1 +
-														DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.infobar_style ==
-								   0 ? _("矩形") : _("直线")));
+								g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.infobar_style == 0 ? _("矩形") : _("直线")));
 	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
 				   upper + 2 + (lines + 1 +
-								g_predraw.linespace) * (1 +
-														DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.infobar_use_ttf_mode ? _("TTF") :
-								   _("点阵")));
+								g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.infobar_use_ttf_mode ? _("TTF") : _("点阵")));
 	lines++;
 }
 
-static void recalc_size(u32 * drperpage, u32 * rowsperpage,
-						u32 * pixelsperrow)
+static void recalc_size(u32 * drperpage, u32 * rowsperpage, u32 * pixelsperrow)
 {
 	int t = config.vertread;
 
@@ -1735,25 +1500,14 @@ static void recalc_size(u32 * drperpage, u32 * rowsperpage,
 
 	if (config.hide_last_row)
 		*drperpage =
-			((t ? PSP_SCREEN_WIDTH : PSP_SCREEN_HEIGHT) -
-			 scene_get_infobar_height() +
-			 config.borderspace * 2) / (config.rowspace + DISP_BOOK_FONTSIZE);
+			((t ? PSP_SCREEN_WIDTH : PSP_SCREEN_HEIGHT) - scene_get_infobar_height() + config.borderspace * 2) / (config.rowspace + DISP_BOOK_FONTSIZE);
 	else
 		*drperpage =
 			((t ? PSP_SCREEN_WIDTH : PSP_SCREEN_HEIGHT) -
-			 config.borderspace * 2 + config.rowspace + DISP_BOOK_FONTSIZE * 2 -
-			 2) / (config.rowspace + DISP_BOOK_FONTSIZE);
-	*rowsperpage =
-		((t ? PSP_SCREEN_WIDTH : PSP_SCREEN_HEIGHT) -
-		 scene_get_infobar_height() -
-		 config.borderspace * 2) / (config.rowspace + DISP_BOOK_FONTSIZE);
-	*pixelsperrow =
-		(t
-		 ? (config.scrollbar ? PSP_SCREEN_HEIGHT -
-			config.scrollbar_width : PSP_SCREEN_HEIGHT)
-		 : (config.scrollbar ? PSP_SCREEN_WIDTH -
-			config.scrollbar_width : PSP_SCREEN_WIDTH)) -
-		config.borderspace * 2;
+			 config.borderspace * 2 + config.rowspace + DISP_BOOK_FONTSIZE * 2 - 2) / (config.rowspace + DISP_BOOK_FONTSIZE);
+	*rowsperpage = ((t ? PSP_SCREEN_WIDTH : PSP_SCREEN_HEIGHT) - scene_get_infobar_height() - config.borderspace * 2) / (config.rowspace + DISP_BOOK_FONTSIZE);
+	*pixelsperrow = (t ? (config.scrollbar ? PSP_SCREEN_HEIGHT - config.scrollbar_width : PSP_SCREEN_HEIGHT)
+					 : (config.scrollbar ? PSP_SCREEN_WIDTH - config.scrollbar_width : PSP_SCREEN_WIDTH)) - config.borderspace * 2;
 }
 
 static int scene_bookmark_autosave(void)
@@ -1766,8 +1520,7 @@ static int scene_bookmark_autosave(void)
 	}
 
 	if (fs != NULL && g_bm != NULL) {
-		g_bm->row[0] =
-			(fs->rows[fs->crow >> 10] + (fs->crow & 0x3FF))->start - fs->buf;
+		g_bm->row[0] = (fs->rows[fs->crow >> 10] + (fs->crow & 0x3FF))->start - fs->buf;
 		bookmark_save(g_bm);
 	}
 
@@ -1820,8 +1573,7 @@ u32 scene_boptions(u32 * selidx)
 		item[i].selected = false;
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
-		item[i].selrcolor =
-			config.menubcolor;
+		item[i].selrcolor = config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -1837,26 +1589,19 @@ u32 scene_boptions(u32 * selidx)
 			win_menu(g_predraw.left,
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
-					 g_predraw.linespace,
-					 config.menubcolor,
-					 true, scene_boptions_predraw, NULL,
-					 scene_boptions_menucb)) != INVALID);
+					 g_predraw.linespace, config.menubcolor, true, scene_boptions_predraw, NULL, scene_boptions_menucb)) != INVALID);
 
 	if (orgibar != config.infobar || orgvert != config.vertread
 		|| orgrowspace != config.rowspace
 		|| orgwordspace != config.wordspace
-		|| orgborderspace != config.borderspace
-		|| orgscrollbar != config.scrollbar
-		|| (config.scrollbar && orgscrollbar_width != config.scrollbar_width)
-		|| orginfobar_style != config.infobar_style
-		|| orginfobar_use_ttf_mode != orginfobar_use_ttf_mode) {
+		|| orgborderspace != config.borderspace || orgscrollbar != config.scrollbar || (config.scrollbar && orgscrollbar_width != config.scrollbar_width)
+		|| orginfobar_style != config.infobar_style || orginfobar_use_ttf_mode != orginfobar_use_ttf_mode) {
 		u32 orgpixelsperrow = pixelsperrow;
 
 		scene_bookmark_autosave();
 		recalc_size(&drperpage, &rowsperpage, &pixelsperrow);
 		cur_book_view.rrow = INVALID;
-		cur_book_view.text_needrf = cur_book_view.text_needrb =
-			cur_book_view.text_needrp = true;
+		cur_book_view.text_needrf = cur_book_view.text_needrb = cur_book_view.text_needrp = true;
 		if (orgpixelsperrow != pixelsperrow)
 			result = win_menu_op_force_redraw;
 	}
@@ -1870,9 +1615,7 @@ u32 scene_boptions(u32 * selidx)
 	return result;
 }
 
-t_win_menu_op scene_ctrlset_menucb(u32 key, p_win_menuitem item,
-								   u32 * count, u32 max_height,
-								   u32 * topindex, u32 * index)
+t_win_menu_op scene_ctrlset_menucb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	switch (key) {
 		case (PSP_CTRL_SELECT | PSP_CTRL_START):
@@ -1904,27 +1647,20 @@ t_win_menu_op scene_ctrlset_menucb(u32 key, p_win_menuitem item,
 	return win_menu_defcb(key, item, count, max_height, topindex, index);
 }
 
-void scene_ctrlset_predraw(p_win_menuitem item, u32 index, u32 topindex,
-						   u32 max_height)
+void scene_ctrlset_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
 	int left, right, upper, bottom, lines = 0;
 
-	default_predraw(&g_predraw, _("操作设置"), max_height, &left, &right,
-					&upper, &bottom, 4 * DISP_FONTSIZE + 4);
+	default_predraw(&g_predraw, _("操作设置"), max_height, &left, &right, &upper, &bottom, 4 * DISP_FONTSIZE + 4);
 
 #ifdef ENABLE_HPRM
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
 				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
 																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.hprmctrl ? _("控制翻页") :
-								   _("控制音乐")));
+				   COLOR_WHITE, (const u8 *) (config.hprmctrl ? _("控制翻页") : _("控制音乐")));
 	lines++;
 #else
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) _("不支持"));
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) _("不支持"));
 	lines++;
 #endif
 }
@@ -1954,8 +1690,7 @@ u32 scene_ctrlset(u32 * selidx)
 		item[i].selected = false;
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
-		item[i].selrcolor =
-			config.menubcolor;
+		item[i].selrcolor = config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -1964,10 +1699,7 @@ u32 scene_ctrlset(u32 * selidx)
 			win_menu(g_predraw.left,
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
-					 g_predraw.linespace,
-					 config.menubcolor,
-					 true, scene_ctrlset_predraw, NULL,
-					 scene_ctrlset_menucb)) != INVALID);
+					 g_predraw.linespace, config.menubcolor, true, scene_ctrlset_predraw, NULL, scene_ctrlset_menucb)) != INVALID);
 #ifdef ENABLE_HPRM
 	if (orghprmctrl != config.hprmctrl) {
 		ctrl_enablehprm(config.hprmctrl);
@@ -1981,9 +1713,7 @@ u32 scene_ctrlset(u32 * selidx)
 	return 0;
 }
 
-t_win_menu_op scene_fontsel_menucb(u32 key, p_win_menuitem item,
-								   u32 * count, u32 max_height,
-								   u32 * topindex, u32 * index)
+t_win_menu_op scene_fontsel_menucb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	switch (key) {
 		case (PSP_CTRL_SELECT | PSP_CTRL_START):
@@ -2039,8 +1769,7 @@ t_win_menu_op scene_fontsel_menucb(u32 key, p_win_menuitem item,
 						ttfsize = bookfonts[bookfontindex].size;
 					else {
 						bookfontindex = 0;
-						while (bookfontindex < bookfontcount
-							   && bookfonts[bookfontindex].size <= ttfsize)
+						while (bookfontindex < bookfontcount && bookfonts[bookfontindex].size <= ttfsize)
 							bookfontindex++;
 						if (bookfontindex > 0)
 							bookfontindex--;
@@ -2111,8 +1840,7 @@ t_win_menu_op scene_fontsel_menucb(u32 key, p_win_menuitem item,
 						ttfsize = bookfonts[bookfontindex].size;
 					else {
 						bookfontindex = 0;
-						while (bookfontindex < bookfontcount
-							   && bookfonts[bookfontindex].size <= ttfsize)
+						while (bookfontindex < bookfontcount && bookfonts[bookfontindex].size <= ttfsize)
 							bookfontindex++;
 						if (bookfontindex > 0)
 							bookfontindex--;
@@ -2141,71 +1869,44 @@ t_win_menu_op scene_fontsel_menucb(u32 key, p_win_menuitem item,
 	return win_menu_defcb(key, item, count, max_height, topindex, index);
 }
 
-void scene_fontsel_predraw(p_win_menuitem item, u32 index, u32 topindex,
-						   u32 max_height)
+void scene_fontsel_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
 	char number[5];
 	int left, right, upper, bottom;
 	int lines = 0;
 
-	default_predraw(&g_predraw, _("字体设置"), max_height, &left, &right,
-					&upper, &bottom, 4);
+	default_predraw(&g_predraw, _("字体设置"), max_height, &left, &right, &upper, &bottom, 4);
 	memset(number, ' ', 4);
 	utils_dword2string(fonts[fontindex].size, number, 4);
-	disp_putstring(g_predraw.x + 2,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 	memset(number, ' ', 4);
-	utils_dword2string(config.usettf ? ttfsize : bookfonts[bookfontindex].size,
-					   number, 4);
-	disp_putstring(g_predraw.x + 2,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	utils_dword2string(config.usettf ? ttfsize : bookfonts[bookfontindex].size, number, 4);
+	disp_putstring(g_predraw.x + 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 	memset(number, ' ', 4);
 	utils_dword2string(config.wordspace, number, 4);
-	disp_putstring(g_predraw.x + 2,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 	memset(number, ' ', 4);
 	utils_dword2string(config.rowspace, number, 4);
-	disp_putstring(g_predraw.x + 2,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 	memset(number, ' ', 4);
 	utils_dword2string(config.borderspace, number, 4);
-	disp_putstring(g_predraw.x + 2,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 #ifdef ENABLE_TTF
 	disp_putstring(g_predraw.x + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.usettf ? _("是") : _("否")));
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.usettf ? _("是") : _("否")));
 	lines++;
 #else
-	disp_putstring(g_predraw.x + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) (_("已关闭")));
+	disp_putstring(g_predraw.x + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (_("已关闭")));
 	lines++;
 #endif
 	memset(number, ' ', 4);
 	utils_dword2string(config.infobar_fontsize, number, 4);
-	disp_putstring(g_predraw.x + 2,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
 	lines++;
 }
 
@@ -2245,8 +1946,7 @@ u32 scene_fontsel(u32 * selidx)
 		item[i].selected = false;
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
-		item[i].selrcolor =
-			config.menubcolor;
+		item[i].selrcolor = config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -2263,11 +1963,8 @@ u32 scene_fontsel(u32 * selidx)
 			win_menu(g_predraw.left,
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
-					 g_predraw.linespace,
-					 config.menubcolor, true, scene_fontsel_predraw, NULL,
-					 scene_fontsel_menucb)) != INVALID);
-	if (orgfontindex != fontindex || orgusettf != config.usettf
-		|| (!config.usettf && orgbookfontindex != bookfontindex)
+					 g_predraw.linespace, config.menubcolor, true, scene_fontsel_predraw, NULL, scene_fontsel_menucb)) != INVALID);
+	if (orgfontindex != fontindex || orgusettf != config.usettf || (!config.usettf && orgbookfontindex != bookfontindex)
 		|| (config.usettf && orgttfsize != ttfsize)) {
 		if (orgfontindex != fontindex)
 			scene_load_font();
@@ -2285,8 +1982,7 @@ u32 scene_fontsel(u32 * selidx)
 		scene_bookmark_autosave();
 		recalc_size(&drperpage, &rowsperpage, &pixelsperrow);
 		cur_book_view.rrow = INVALID;
-		cur_book_view.text_needrf = cur_book_view.text_needrb =
-			cur_book_view.text_needrp = true;
+		cur_book_view.text_needrf = cur_book_view.text_needrb = cur_book_view.text_needrp = true;
 
 		memcpy(&g_predraw, &prev, sizeof(win_menu_predraw_data));
 		return win_menu_op_ok;
@@ -2296,21 +1992,17 @@ u32 scene_fontsel(u32 * selidx)
 		scene_bookmark_autosave();
 		recalc_size(&drperpage, &rowsperpage, &pixelsperrow);
 		cur_book_view.rrow = INVALID;
-		cur_book_view.text_needrf = cur_book_view.text_needrb =
-			cur_book_view.text_needrp = true;
+		cur_book_view.text_needrf = cur_book_view.text_needrb = cur_book_view.text_needrp = true;
 	}
 	if (orgibar != config.infobar || orgvert != config.vertread
 		|| orgwordspace != config.wordspace
-		|| orgscrollbar != config.scrollbar
-		|| (config.infobar != conf_infobar_none
-			&& orginfobar_fontsize != config.infobar_fontsize)) {
+		|| orgscrollbar != config.scrollbar || (config.infobar != conf_infobar_none && orginfobar_fontsize != config.infobar_fontsize)) {
 		u32 orgpixelsperrow = pixelsperrow;
 
 		scene_bookmark_autosave();
 		recalc_size(&drperpage, &rowsperpage, &pixelsperrow);
 		cur_book_view.rrow = INVALID;
-		cur_book_view.text_needrf = cur_book_view.text_needrb =
-			cur_book_view.text_needrp = true;
+		cur_book_view.text_needrf = cur_book_view.text_needrb = cur_book_view.text_needrp = true;
 		if (orgpixelsperrow != pixelsperrow)
 			result = win_menu_op_force_redraw;
 	}
@@ -2342,9 +2034,7 @@ const char *get_sfx_mode_str(int effect_type)
 	return "";
 }
 
-t_win_menu_op scene_musicopt_menucb(u32 key, p_win_menuitem item,
-									u32 * count, u32 max_height,
-									u32 * topindex, u32 * index)
+t_win_menu_op scene_musicopt_menucb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	switch (key) {
 		case (PSP_CTRL_SELECT | PSP_CTRL_START):
@@ -2469,69 +2159,41 @@ t_win_menu_op scene_musicopt_menucb(u32 key, p_win_menuitem item,
 	return win_menu_defcb(key, item, count, max_height, topindex, index);
 }
 
-void scene_musicopt_predraw(p_win_menuitem item, u32 index, u32 topindex,
-							u32 max_height)
+void scene_musicopt_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
 	char number[5];
 
 	int left, right, upper, bottom, lines = 0;
 
-	default_predraw(&g_predraw, _("音乐设置"), max_height, &left, &right,
-					&upper, &bottom, 4);
+	default_predraw(&g_predraw, _("音乐设置"), max_height, &left, &right, &upper, &bottom, 4);
 
 #ifdef ENABLE_MUSIC
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.autoplay ? _("是") : _("否")));
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.autoplay ? _("是") : _("否")));
 	lines++;
 #else
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) _("不支持"));
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) _("不支持"));
 	lines++;
 #endif
 	memset(number, ' ', 4);
 	utils_dword2string(config.lyricex * 2 + 1, number, 4);
-	disp_putstring(g_predraw.x + 2,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) number);
+	disp_putstring(g_predraw.x + 2, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) number);
+	lines++;
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) conf_get_encodename(config.lyricencode));
 	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
 				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) conf_get_encodename(config.lyricencode));
+																	DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.show_encoder_msg ? _("是") : _("否")));
 	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.show_encoder_msg ? _("是") :
-								   _("否")));
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.use_vaudio ? _("是") : _("否")));
 	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.use_vaudio ? _("是") :
-								   _("否")));
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (get_sfx_mode_str(config.sfx_mode)));
 	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (get_sfx_mode_str(config.sfx_mode)));
-	lines++;
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.alc_mode ? _("是") :
-								   _("否")));
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.alc_mode ? _("是") : _("否")));
 	lines++;
 }
 
@@ -2559,8 +2221,7 @@ u32 scene_musicopt(u32 * selidx)
 		item[i].selected = false;
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
-		item[i].selrcolor =
-			config.menubcolor;
+		item[i].selrcolor = config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -2576,9 +2237,7 @@ u32 scene_musicopt(u32 * selidx)
 			win_menu(g_predraw.left,
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
-					 g_predraw.linespace,
-					 config.menubcolor, true, scene_musicopt_predraw, NULL,
-					 scene_musicopt_menucb)) != INVALID);
+					 g_predraw.linespace, config.menubcolor, true, scene_musicopt_predraw, NULL, scene_musicopt_menucb)) != INVALID);
 
 	memcpy(&g_predraw, &prev, sizeof(win_menu_predraw_data));
 	return 0;
@@ -2620,9 +2279,7 @@ extern void get_language(void)
 	}
 }
 
-t_win_menu_op scene_moptions_menucb(u32 key, p_win_menuitem item,
-									u32 * count, u32 max_height,
-									u32 * topindex, u32 * index)
+t_win_menu_op scene_moptions_menucb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	switch (key) {
 		case (PSP_CTRL_SELECT | PSP_CTRL_START):
@@ -2769,57 +2426,34 @@ static const char *GetLanguageHelpString(const char *language)
 	return NULL;
 }
 
-void scene_moptions_predraw(p_win_menuitem item, u32 index, u32 topindex,
-							u32 max_height)
+void scene_moptions_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
 	int left, right, upper, bottom, lines = 0;
 	char infomsg[80];
 
-	default_predraw(&g_predraw, _("系统选项"), max_height, &left, &right,
-					&upper, &bottom, 3 * DISP_FONTSIZE + 4);
+	default_predraw(&g_predraw, _("系统选项"), max_height, &left, &right, &upper, &bottom, 3 * DISP_FONTSIZE + 4);
 
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.showhidden ? _("显示") : _("隐藏")));
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.showhidden ? _("显示") : _("隐藏")));
 	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.showunknown ? _("显示") : _("隐藏")));
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.showunknown ? _("显示") : _("隐藏")));
 	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.showfinfo ? _("显示") : _("隐藏")));
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.showfinfo ? _("显示") : _("隐藏")));
 	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.allowdelete ? _("是") : _("否")));
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.allowdelete ? _("是") : _("否")));
 	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) conf_get_arrangename(config.arrange));
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) conf_get_arrangename(config.arrange));
 	lines++;
 #ifdef ENABLE_USB
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.enableusb ? _("是") : _("否")));
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.enableusb ? _("是") : _("否")));
 	lines++;
 #else
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) _("不支持"));
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) _("不支持"));
 	lines++;
 #endif
 	if (config.autosleep == 0) {
@@ -2827,56 +2461,30 @@ void scene_moptions_predraw(p_win_menuitem item, u32 index, u32 topindex,
 	} else {
 		SPRINTF_S(infomsg, _("%d分钟"), config.autosleep);
 	}
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) infomsg);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) infomsg);
 	lines++;
-	SPRINTF_S(infomsg, "%d/%d", freq_list[config.freqs[0]][0],
-			  freq_list[config.freqs[0]][1]);
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) infomsg);
+	SPRINTF_S(infomsg, "%d/%d", freq_list[config.freqs[0]][0], freq_list[config.freqs[0]][1]);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) infomsg);
 	lines++;
-	SPRINTF_S(infomsg, "%d/%d", freq_list[config.freqs[1]][0],
-			  freq_list[config.freqs[1]][1]);
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) infomsg);
+	SPRINTF_S(infomsg, "%d/%d", freq_list[config.freqs[1]][0], freq_list[config.freqs[1]][1]);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) infomsg);
 	lines++;
-	SPRINTF_S(infomsg, "%d/%d", freq_list[config.freqs[2]][0],
-			  freq_list[config.freqs[2]][1]);
+	SPRINTF_S(infomsg, "%d/%d", freq_list[config.freqs[2]][0], freq_list[config.freqs[2]][1]);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) infomsg);
+	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) infomsg);
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.dis_scrsave ? _("是") : _("否")));
 	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
 				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
 																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.dis_scrsave ? _("是") : _("否")));
-	lines++;
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.launchtype ==
-								   2 ? _("普通程序") : _("PS游戏")));
+				   COLOR_WHITE, (const u8 *) (config.launchtype == 2 ? _("普通程序") : _("PS游戏")));
 	lines++;
 	SPRINTF_S(infomsg, "%s", GetLanguageHelpString(simple_textdomain(NULL)));
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) infomsg);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) infomsg);
 	lines++;
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE,
-				   (const u8 *) (config.save_password ? _("是") : _("否")));
+				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.save_password ? _("是") : _("否")));
 	lines++;
 }
 
@@ -2913,8 +2521,7 @@ u32 scene_moptions(u32 * selidx)
 		item[i].selected = false;
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
-		item[i].selrcolor =
-			config.menubcolor;
+		item[i].selrcolor = config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -2926,16 +2533,13 @@ u32 scene_moptions(u32 * selidx)
 	g_predraw.y = 123;
 	g_predraw.linespace = 0;
 	g_predraw.left = g_predraw.x - DISP_FONTSIZE * g_predraw.max_item_len / 2;
-	g_predraw.upper =
-		g_predraw.y - DISP_FONTSIZE * (g_predraw.item_count - 1) / 2;
+	g_predraw.upper = g_predraw.y - DISP_FONTSIZE * (g_predraw.item_count - 1) / 2;
 
 	while ((index =
 			win_menu(g_predraw.left,
 					 g_predraw.upper, g_predraw.max_item_len,
 					 g_predraw.item_count, item, NELEMS(item), 0,
-					 g_predraw.linespace,
-					 config.menubcolor, true, scene_moptions_predraw, NULL,
-					 scene_moptions_menucb)) != INVALID);
+					 g_predraw.linespace, config.menubcolor, true, scene_moptions_predraw, NULL, scene_moptions_menucb)) != INVALID);
 
 	if (strcmp(orglanguage, config.language) != 0) {
 		set_language();
@@ -2949,9 +2553,7 @@ u32 scene_moptions(u32 * selidx)
 	}
 #endif
 
-	if (orgshowhidden != config.showhidden
-		|| orgshowunknown != config.showunknown
-		|| orgarrange != config.arrange) {
+	if (orgshowhidden != config.showhidden || orgshowunknown != config.showunknown || orgarrange != config.arrange) {
 		memcpy(&g_predraw, &prev, sizeof(win_menu_predraw_data));
 		return 1;
 	}
@@ -2960,8 +2562,7 @@ u32 scene_moptions(u32 * selidx)
 	return 0;
 }
 
-static int scene_locname_to_itemname(char *dst, size_t dstsize, const char *src,
-									 size_t srcsize, bool isreading)
+static int scene_locname_to_itemname(char *dst, size_t dstsize, const char *src, size_t srcsize, bool isreading)
 {
 	if (dst == NULL || dstsize == 0 || src == NULL || srcsize < 4)
 		return -1;
@@ -2986,9 +2587,7 @@ static int scene_locname_to_itemname(char *dst, size_t dstsize, const char *src,
 	return 0;
 }
 
-t_win_menu_op scene_locsave_menucb(u32 key, p_win_menuitem item,
-								   u32 * count, u32 max_height,
-								   u32 * topindex, u32 * index)
+t_win_menu_op scene_locsave_menucb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	switch (key) {
 		case (PSP_CTRL_SELECT | PSP_CTRL_START):
@@ -2997,30 +2596,21 @@ t_win_menu_op scene_locsave_menucb(u32 key, p_win_menuitem item,
 			if (*index < 10) {
 				if (location_set
 					(*index, config.path, config.shortpath,
-					 g_menu->root[(u32) item[1].data].compname->ptr,
-					 g_menu->root[(u32) item[1].data].name, config.isreading)) {
+					 g_menu->root[(u32) item[1].data].compname->ptr, g_menu->root[(u32) item[1].data].name, config.isreading)) {
 					char t[128];
 
-					dbg_printf(d, "location_set: %s %s %s %d",
-							   config.path, config.shortpath,
-							   g_menu->root[(u32) item[1].data].compname->ptr,
-							   config.isreading);
+					dbg_printf(d, "location_set: %s %s %s %d", config.path, config.shortpath, g_menu->root[(u32) item[1].data].compname->ptr, config.isreading);
 					locaval[*index] = true;
 					STRCPY_S(t, config.path);
 
-					if (config.path[strlen(config.path) - 1] != '/'
-						&& g_menu->root[(u32) item[1].data].name[0] != '/')
+					if (config.path[strlen(config.path) - 1] != '/' && g_menu->root[(u32) item[1].data].name[0] != '/')
 						STRCAT_S(t, "/");
 
 					if (strcmp(g_menu->root[(u32) item[1].data].name, "..")) {
 						STRCAT_S(t, g_menu->root[(u32) item[1].data].name);
 					}
 
-					scene_locname_to_itemname(item[*index].name,
-											  NELEMS(item[*index].name), t,
-											  (config.filelistwidth /
-											   config.fontsize * 4),
-											  config.isreading);
+					scene_locname_to_itemname(item[*index].name, NELEMS(item[*index].name), t, (config.filelistwidth / config.fontsize * 4), config.isreading);
 					item[*index].width = strlen(item[*index].name);
 				}
 //          win_msg("保存成功！", COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
@@ -3030,22 +2620,18 @@ t_win_menu_op scene_locsave_menucb(u32 key, p_win_menuitem item,
 	return win_menu_defcb(key, item, count, max_height, topindex, index);
 }
 
-void scene_locsave_predraw(p_win_menuitem item, u32 index, u32 topindex,
-						   u32 max_height)
+void scene_locsave_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
 	int left, right, upper, bottom;
 
-	default_predraw(&g_predraw, _("保存文件位置"), max_height, &left,
-					&right, &upper, &bottom, 4);
+	default_predraw(&g_predraw, _("保存文件位置"), max_height, &left, &right, &upper, &bottom, 4);
 }
 
-void scene_loc_enum(u32 index, char *comppath, char *shortpath,
-					char *compname, char *name, bool isreading, void *data)
+void scene_loc_enum(u32 index, char *comppath, char *shortpath, char *compname, char *name, bool isreading, void *data)
 {
 	p_win_menuitem item = (p_win_menuitem) data;
 
-	dbg_printf(d, "scene_loc_enum: %s %s %s %d", comppath, shortpath,
-			   compname, isreading);
+	dbg_printf(d, "scene_loc_enum: %s %s %s %d", comppath, shortpath, compname, isreading);
 
 	if (index < 10) {
 		char t[128];
@@ -3056,10 +2642,7 @@ void scene_loc_enum(u32 index, char *comppath, char *shortpath,
 		}
 		if (strcmp(name, ".."))
 			STRCAT_S(t, name);
-		scene_locname_to_itemname(item[index].name,
-								  NELEMS(item[index].name), t,
-								  (config.filelistwidth /
-								   config.fontsize * 4), isreading);
+		scene_locname_to_itemname(item[index].name, NELEMS(item[index].name), t, (config.filelistwidth / config.fontsize * 4), isreading);
 		item[index].width = strlen(item[index].name);
 	}
 }
@@ -3079,8 +2662,7 @@ u32 scene_locsave(u32 * selidx)
 		item[i].selected = false;
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
-		item[i].selrcolor =
-			config.menubcolor;
+		item[i].selrcolor = config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -3090,8 +2672,7 @@ u32 scene_locsave(u32 * selidx)
 	g_predraw.item_count = NELEMS(item);
 	g_predraw.x = 240;
 	g_predraw.y = 123;
-	g_predraw.left =
-		g_predraw.x - DISP_FONTSIZE * g_predraw.max_item_len / 2 / 2;
+	g_predraw.left = g_predraw.x - DISP_FONTSIZE * g_predraw.max_item_len / 2 / 2;
 	g_predraw.upper = g_predraw.y - DISP_FONTSIZE * g_predraw.item_count / 2;
 	g_predraw.linespace = 0;
 
@@ -3100,10 +2681,7 @@ u32 scene_locsave(u32 * selidx)
 	index =
 		win_menu(g_predraw.left,
 				 g_predraw.upper, g_predraw.max_item_len,
-				 g_predraw.item_count, item, NELEMS(item), 0,
-				 g_predraw.linespace,
-				 config.menubcolor,
-				 true, scene_locsave_predraw, NULL, scene_locsave_menucb);
+				 g_predraw.item_count, item, NELEMS(item), 0, g_predraw.linespace, config.menubcolor, true, scene_locsave_predraw, NULL, scene_locsave_menucb);
 
 	memcpy(&g_predraw, &prev, sizeof(win_menu_predraw_data));
 	return 0;
@@ -3116,45 +2694,26 @@ static void scene_open_dir_or_archive(u32 * idx)
 	if (plen > 0 && config.path[plen - 1] == '/')
 		if (strnicmp(config.path, "ms0:/", 5) == 0) {
 			fs_dir_to_menu(config.path, config.shortpath,
-						   config.menutextcolor, config.selicolor,
-						   config.menubcolor, config.selbcolor,
-						   config.showhidden, config.showunknown);
-		}
-		else
-			fs_flashdir_to_menu(config.path,
-								config.shortpath,
-								config.menutextcolor,
-								config.selicolor,
-								config.menubcolor, config.selbcolor);
+						   config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor, config.showhidden, config.showunknown);
+		} else
+			fs_flashdir_to_menu(config.path, config.shortpath, config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 	else
 		switch (fs_file_get_type(config.path)) {
 			case fs_filetype_zip:
 				where = scene_in_zip;
-				fs_zip_to_menu(config.shortpath,
-							   config.menutextcolor,
-							   config.selicolor,
-							   config.menubcolor, config.selbcolor);
+				fs_zip_to_menu(config.shortpath, config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 				break;
 			case fs_filetype_chm:
 				where = scene_in_chm;
-				fs_chm_to_menu(config.shortpath,
-							   config.menutextcolor,
-							   config.selicolor,
-							   config.menubcolor, config.selbcolor);
+				fs_chm_to_menu(config.shortpath, config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 				break;
 			case fs_filetype_umd:
 				where = scene_in_umd;
-				fs_umd_to_menu(config.shortpath,
-							   config.menutextcolor,
-							   config.selicolor,
-							   config.menubcolor, config.selbcolor);
+				fs_umd_to_menu(config.shortpath, config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 				break;
 			case fs_filetype_rar:
 				where = scene_in_rar;
-				fs_rar_to_menu(config.shortpath,
-							   config.menutextcolor,
-							   config.selicolor,
-							   config.menubcolor, config.selbcolor);
+				fs_rar_to_menu(config.shortpath, config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 				break;
 			default:
 				win_menu_destroy(g_menu);
@@ -3166,19 +2725,14 @@ static void scene_open_dir_or_archive(u32 * idx)
 		STRCPY_S(config.path, "ms0:/");
 		STRCPY_S(config.shortpath, "ms0:/");
 		fs_dir_to_menu(config.path, config.shortpath,
-					   config.menutextcolor, config.selicolor,
-					   config.menubcolor, config.selbcolor,
-					   config.showhidden, config.showunknown);
+					   config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor, config.showhidden, config.showunknown);
 	}
 
 	quicksort(g_menu->root,
 			  (g_menu->size > 0
-			   && g_menu->root[0].compname->ptr[0] == '.') ? 1 : 0,
-			  g_menu->size - 1, sizeof(t_win_menuitem),
-			  compare_func[(int) config.arrange]);
+			   && g_menu->root[0].compname->ptr[0] == '.') ? 1 : 0, g_menu->size - 1, sizeof(t_win_menuitem), compare_func[(int) config.arrange]);
 	*idx = 0;
-	while (*idx < g_menu->size
-		   && stricmp(g_menu->root[*idx].compname->ptr, config.lastfile) != 0)
+	while (*idx < g_menu->size && stricmp(g_menu->root[*idx].compname->ptr, config.lastfile) != 0)
 		(*idx)++;
 	if (*idx >= g_menu->size) {
 		config.isreading = false;
@@ -3186,24 +2740,18 @@ static void scene_open_dir_or_archive(u32 * idx)
 	}
 }
 
-t_win_menu_op scene_locload_menucb(u32 key, p_win_menuitem item,
-								   u32 * count, u32 max_height,
-								   u32 * topindex, u32 * index)
+t_win_menu_op scene_locload_menucb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	switch (key) {
 		case (PSP_CTRL_SELECT | PSP_CTRL_START):
 			return exit_confirm();
 		case PSP_CTRL_CIRCLE:
 			if (*index < 10) {
-				char comppath[PATH_MAX] = "", shortpath[PATH_MAX] =
-					"", compname[PATH_MAX] = "", name[PATH_MAX] = "";
-				if (location_get
-					(*index, comppath, shortpath, compname, name, &locreading)
-					&& comppath[0] != 0 && shortpath[0] != 0
-					&& compname[0] != 0 && name[0] != 0) {
+				char comppath[PATH_MAX] = "", shortpath[PATH_MAX] = "", compname[PATH_MAX] = "", name[PATH_MAX] = "";
+				if (location_get(*index, comppath, shortpath, compname, name, &locreading)
+					&& comppath[0] != 0 && shortpath[0] != 0 && compname[0] != 0 && name[0] != 0) {
 					u32 idx = 0;
-					dbg_printf(d, "location_get %s %s %s %s %d",
-							   comppath, shortpath, compname, name, locreading);
+					dbg_printf(d, "location_get %s %s %s %s %d", comppath, shortpath, compname, name, locreading);
 					where = scene_in_dir;
 					STRCPY_S(config.path, comppath);
 					STRCPY_S(config.shortpath, shortpath);
@@ -3224,13 +2772,11 @@ t_win_menu_op scene_locload_menucb(u32 key, p_win_menuitem item,
 	return win_menu_defcb(key, item, count, max_height, topindex, index);
 }
 
-void scene_locload_predraw(p_win_menuitem item, u32 index, u32 topindex,
-						   u32 max_height)
+void scene_locload_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
 	int left, right, upper, bottom;
 
-	default_predraw(&g_predraw, _("读取文件位置"), max_height, &left,
-					&right, &upper, &bottom, 4);
+	default_predraw(&g_predraw, _("读取文件位置"), max_height, &left, &right, &upper, &bottom, 4);
 }
 
 u32 scene_locload(u32 * selidx)
@@ -3248,8 +2794,7 @@ u32 scene_locload(u32 * selidx)
 		item[i].selected = false;
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
-		item[i].selrcolor =
-			config.menubcolor;
+		item[i].selrcolor = config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -3259,8 +2804,7 @@ u32 scene_locload(u32 * selidx)
 	g_predraw.item_count = NELEMS(item);
 	g_predraw.x = 240;
 	g_predraw.y = 123;
-	g_predraw.left =
-		g_predraw.x - DISP_FONTSIZE * g_predraw.max_item_len / 2 / 2;
+	g_predraw.left = g_predraw.x - DISP_FONTSIZE * g_predraw.max_item_len / 2 / 2;
 	g_predraw.upper = g_predraw.y - DISP_FONTSIZE * g_predraw.item_count / 2;
 	g_predraw.linespace = 0;
 
@@ -3269,47 +2813,32 @@ u32 scene_locload(u32 * selidx)
 	index =
 		win_menu(g_predraw.left,
 				 g_predraw.upper, g_predraw.max_item_len,
-				 g_predraw.item_count, item, NELEMS(item), 0,
-				 g_predraw.linespace,
-				 config.menubcolor,
-				 true, scene_locload_predraw, NULL, scene_locload_menucb);
+				 g_predraw.item_count, item, NELEMS(item), 0, g_predraw.linespace, config.menubcolor, true, scene_locload_predraw, NULL, scene_locload_menucb);
 
 	*selidx = (u32) item[1].data;
 
 	memcpy(&g_predraw, &prev, sizeof(win_menu_predraw_data));
-	return (bool)(int) item[0].data;
+	return (bool) (int) item[0].data;
 }
 
-void scene_setting_mgr_predraw(p_win_menuitem item, u32 index, u32 topindex,
-							   u32 max_height)
+void scene_setting_mgr_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
 	int left, right, upper, bottom, lines = 0;
 	char conffile[PATH_MAX];
 	char infomsg[80];
 
-	default_predraw(&g_predraw, _("设置管理"), max_height, &left, &right,
-					&upper, &bottom, 4 * DISP_FONTSIZE + 4);
+	default_predraw(&g_predraw, _("设置管理"), max_height, &left, &right, &upper, &bottom, 4 * DISP_FONTSIZE + 4);
 
 	SPRINTF_S(infomsg, _("%d号设置"), config_num);
 
-	SPRINTF_S(conffile, "%s%s%d%s", scene_appdir(), "config", config_num,
-			  ".ini");
+	SPRINTF_S(conffile, "%s%s%d%s", scene_appdir(), "config", config_num, ".ini");
 	if (utils_is_file_exists(conffile)) {
 		STRCAT_S(infomsg, "*");
 	}
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) infomsg);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) infomsg);
 	lines++;
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) infomsg);
-	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
-				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
-																	DISP_FONTSIZE),
-				   COLOR_WHITE, (const u8 *) infomsg);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) infomsg);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) infomsg);
 }
 
 int detect_config_change(const p_conf prev, const p_conf curr)
@@ -3378,8 +2907,7 @@ int detect_config_change(const p_conf prev, const p_conf curr)
 	cur_book_view.rrow = INVALID;
 
 #ifdef ENABLE_BG
-	bg_load(curr->bgfile, curr->bgarch, curr->bgcolor,
-			fs_file_get_type(curr->bgfile), curr->grayscale, curr->bgwhere);
+	bg_load(curr->bgfile, curr->bgarch, curr->bgcolor, fs_file_get_type(curr->bgfile), curr->grayscale, curr->bgwhere);
 #endif
 
 	for (i = 0; i < 3; ++i) {
@@ -3398,8 +2926,7 @@ int detect_config_change(const p_conf prev, const p_conf curr)
 #ifdef ENABLE_IMAGE
 	img_needrf = img_needrc = img_needrp = true;
 #endif
-	cur_book_view.text_needrf = cur_book_view.text_needrp =
-		cur_book_view.text_needrb = true;
+	cur_book_view.text_needrf = cur_book_view.text_needrp = cur_book_view.text_needrb = true;
 
 #ifdef ENABLE_MUSIC
 	if (prev->mp3cycle != curr->mp3cycle) {
@@ -3414,9 +2941,7 @@ int detect_config_change(const p_conf prev, const p_conf curr)
 	return 0;
 }
 
-t_win_menu_op scene_setting_mgr_menucb(u32 key, p_win_menuitem item,
-									   u32 * count, u32 max_height,
-									   u32 * topindex, u32 * index)
+t_win_menu_op scene_setting_mgr_menucb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	switch (key) {
 		case (PSP_CTRL_SELECT | PSP_CTRL_START):
@@ -3439,17 +2964,14 @@ t_win_menu_op scene_setting_mgr_menucb(u32 key, p_win_menuitem item,
 
 				if (config.save_password)
 					save_passwords();
-				SPRINTF_S(conffile, "%s%s%d%s", scene_appdir(), "config",
-						  config_num, ".ini");
+				SPRINTF_S(conffile, "%s%s%d%s", scene_appdir(), "config", config_num, ".ini");
 				conf_set_file(conffile);
 
 #ifdef ENABLE_MUSIC
 				if (config_num == 0) {
-					SPRINTF_S(musiclst_path, "%s%s", scene_appdir(),
-							  "music.lst");
+					SPRINTF_S(musiclst_path, "%s%s", scene_appdir(), "music.lst");
 				} else {
-					SPRINTF_S(musiclst_path, "%s%s%d%s", scene_appdir(),
-							  "music", config_num, ".lst");
+					SPRINTF_S(musiclst_path, "%s%s%d%s", scene_appdir(), "music", config_num, ".lst");
 				}
 #endif
 
@@ -3464,8 +2986,7 @@ t_win_menu_op scene_setting_mgr_menucb(u32 key, p_win_menuitem item,
 
 					// load
 					if (!conf_load(&config)) {
-						win_msg(_("读取设置失败!"), COLOR_WHITE,
-								COLOR_WHITE, config.msgbcolor);
+						win_msg(_("读取设置失败!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 						memcpy(&config, &prev_config, sizeof(t_conf));
 						return win_menu_op_redraw;
 					}
@@ -3480,8 +3001,7 @@ t_win_menu_op scene_setting_mgr_menucb(u32 key, p_win_menuitem item,
 					save_passwords();
 
 					if (!conf_save(&config)) {
-						win_msg(_("保存设置失败!"), COLOR_WHITE,
-								COLOR_WHITE, config.msgbcolor);
+						win_msg(_("保存设置失败!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 						return win_menu_op_redraw;
 					}
 				} else {
@@ -3490,8 +3010,7 @@ t_win_menu_op scene_setting_mgr_menucb(u32 key, p_win_menuitem item,
 					utils_del_file(musiclst_path);
 #endif
 					if (!utils_del_file(conffile)) {
-						win_msg(_("删除设置失败!"), COLOR_WHITE,
-								COLOR_WHITE, config.msgbcolor);
+						win_msg(_("删除设置失败!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 						return win_menu_op_redraw;
 					}
 				}
@@ -3523,8 +3042,7 @@ u32 scene_setting_mgr(u32 * selidx)
 		item[i].selected = false;
 		item[i].icolor = config.menutextcolor;
 		item[i].selicolor = config.selicolor;
-		item[i].selrcolor =
-			config.menubcolor;
+		item[i].selrcolor = config.menubcolor;
 		item[i].selbcolor = config.selbcolor;
 		item[i].data = NULL;
 	}
@@ -3542,10 +3060,7 @@ u32 scene_setting_mgr(u32 * selidx)
 	index =
 		win_menu(g_predraw.left, g_predraw.upper, g_predraw.max_item_len,
 				 g_predraw.item_count, item, NELEMS(item), 0,
-				 g_predraw.linespace,
-				 config.menubcolor,
-				 true, scene_setting_mgr_predraw, NULL,
-				 scene_setting_mgr_menucb);
+				 g_predraw.linespace, config.menubcolor, true, scene_setting_mgr_predraw, NULL, scene_setting_mgr_menucb);
 
 	memcpy(&g_predraw, &prev, sizeof(win_menu_predraw_data));
 
@@ -3583,9 +3098,7 @@ t_scene_option_func scene_option_func[] = {
 	NULL
 };
 
-t_win_menu_op scene_options_menucb(u32 key, p_win_menuitem item,
-								   u32 * count, u32 max_height,
-								   u32 * topindex, u32 * index)
+t_win_menu_op scene_options_menucb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	switch (key) {
 		case (PSP_CTRL_SELECT | PSP_CTRL_START):
@@ -3597,38 +3110,29 @@ t_win_menu_op scene_options_menucb(u32 key, p_win_menuitem item,
 				pixel *saveimage;
 
 				if (dbg_memory_buffer == NULL) {
-					win_msg(_("无法打开调试信息!"), COLOR_WHITE,
-							COLOR_WHITE, config.msgbcolor);
+					win_msg(_("无法打开调试信息!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 					return win_menu_op_cancel;
 				}
 
-				saveimage = (pixel *) memalign(16,
-											   PSP_SCREEN_WIDTH *
-											   PSP_SCREEN_HEIGHT
-											   * sizeof(pixel));
+				saveimage = (pixel *) memalign(16, PSP_SCREEN_WIDTH * PSP_SCREEN_HEIGHT * sizeof(pixel));
 				if (saveimage)
-					disp_getimage(0, 0, PSP_SCREEN_WIDTH,
-								  PSP_SCREEN_HEIGHT, saveimage);
+					disp_getimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, saveimage);
 				scene_readbook_raw(_("调试信息"), (const unsigned char *)
-								   dbg_memory_buffer->ptr,
-								   dbg_memory_buffer->used, fs_filetype_txt);
+								   dbg_memory_buffer->ptr, dbg_memory_buffer->used, fs_filetype_txt);
 				g_force_text_view_mode = false;
 				ctrl_waitrelease();
 
 				if (saveimage) {
-					disp_putimage(0, 0, PSP_SCREEN_WIDTH,
-								  PSP_SCREEN_HEIGHT, 0, 0, saveimage);
+					disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0, saveimage);
 					disp_flip();
-					disp_putimage(0, 0, PSP_SCREEN_WIDTH,
-								  PSP_SCREEN_HEIGHT, 0, 0, saveimage);
+					disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0, saveimage);
 					free(saveimage);
 				}
 
 				return win_menu_op_cancel;
 			}
 			if (scene_option_func[*index] != NULL) {
-				item[0].data =
-					(void *) scene_option_func[*index] (item[1].data);
+				item[0].data = (void *) scene_option_func[*index] (item[1].data);
 				if (item[0].data != win_menu_op_continue)
 					return win_menu_op_cancel;
 			}
@@ -3640,29 +3144,18 @@ t_win_menu_op scene_options_menucb(u32 key, p_win_menuitem item,
 	return win_menu_defcb(key, item, count, max_height, topindex, index);
 }
 
-void scene_options_predraw(p_win_menuitem item, u32 index, u32 topindex,
-						   u32 max_height)
+void scene_options_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
 	int left = g_predraw.left - 1;
-	int right =
-		g_predraw.x - (DISP_FONTSIZE / 2) * g_predraw.max_item_len / 2 + 2 +
-		g_predraw.max_item_len * (DISP_FONTSIZE / 2) + 1;
+	int right = g_predraw.x - (DISP_FONTSIZE / 2) * g_predraw.max_item_len / 2 + 2 + g_predraw.max_item_len * (DISP_FONTSIZE / 2) + 1;
 	int upper = g_predraw.upper - (DISP_FONTSIZE + 1) - 1;
-	int bottom =
-		g_predraw.upper + 2 + 1 + DISP_FONTSIZE + (max_height - 1) * (1 +
-																	  DISP_FONTSIZE
-																	  +
-																	  g_predraw.
-																	  linespace);
+	int bottom = g_predraw.upper + 2 + 1 + DISP_FONTSIZE + (max_height - 1) * (1 + DISP_FONTSIZE + g_predraw.linespace);
 
 	disp_rectangle(left, upper, right, bottom, COLOR_WHITE);
 
-	disp_fillrect(left + 1, upper + 1, right - 1, upper + DISP_FONTSIZE,
-				  config.menubcolor);
-	disp_putstring(get_center_pos(left, right, _("设置选项")), upper + 1,
-				   COLOR_WHITE, (const u8 *) _("设置选项"));
-	disp_line(left, upper + 1 + DISP_FONTSIZE, right, upper + 1 + DISP_FONTSIZE,
-			  COLOR_WHITE);
+	disp_fillrect(left + 1, upper + 1, right - 1, upper + DISP_FONTSIZE, config.menubcolor);
+	disp_putstring(get_center_pos(left, right, _("设置选项")), upper + 1, COLOR_WHITE, (const u8 *) _("设置选项"));
+	disp_line(left, upper + 1 + DISP_FONTSIZE, right, upper + 1 + DISP_FONTSIZE, COLOR_WHITE);
 }
 
 u32 scene_options(u32 * selidx)
@@ -3719,24 +3212,19 @@ u32 scene_options(u32 * selidx)
 	g_predraw.x = 238;
 	g_predraw.y = 122;
 	g_predraw.linespace = 0;
-	g_predraw.left =
-		g_predraw.x - (DISP_FONTSIZE / 2) * g_predraw.max_item_len / 2;
-	g_predraw.upper =
-		g_predraw.y - DISP_FONTSIZE * (g_predraw.item_count - 1) / 2;
+	g_predraw.left = g_predraw.x - (DISP_FONTSIZE / 2) * g_predraw.max_item_len / 2;
+	g_predraw.upper = g_predraw.y - DISP_FONTSIZE * (g_predraw.item_count - 1) / 2;
 
 	while ((index =
 			win_menu(g_predraw.left,
 					 g_predraw.upper,
 					 g_predraw.max_item_len, NELEMS(item), item,
-					 NELEMS(item), index, g_predraw.linespace,
-					 config.menubcolor, true, scene_options_predraw, NULL,
-					 scene_options_menucb)) != INVALID);
+					 NELEMS(item), index, g_predraw.linespace, config.menubcolor, true, scene_options_predraw, NULL, scene_options_menucb)) != INVALID);
 
 	return (u32) item[0].data;
 }
 
-void scene_mountrbkey(u32 * ctlkey, u32 * ctlkey2, u32 * ku, u32 * kd,
-					  u32 * kl, u32 * kr)
+void scene_mountrbkey(u32 * ctlkey, u32 * ctlkey2, u32 * ku, u32 * kd, u32 * kl, u32 * kr)
 {
 	u32 i;
 
@@ -3843,8 +3331,7 @@ static const char *remove_hanzi(char *dst, const char *src, size_t size)
 	return dst;
 }
 
-static const char *insert_string(char *str, size_t size, const char *insstr,
-								 int inspos)
+static const char *insert_string(char *str, size_t size, const char *insstr, int inspos)
 {
 	size_t len, inslen;
 
@@ -3907,8 +3394,7 @@ static bool confirm_overwrite(const char *filename, void *dummy)
 	char infomsg[PATH_MAX];
 
 	SPRINTF_S(infomsg, _("是否覆盖文件%s？"), filename);
-	if (win_msgbox(infomsg, _("是"), _("否"),
-				   COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
+	if (win_msgbox(infomsg, _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
 		return true;
 	}
 	return false;
@@ -3926,8 +3412,7 @@ static void scene_copy_files(int sidx)
 			// CHM Compname is UTF8 encoding.
 			char fname[PATH_MAX];
 
-			charsets_utf8_conv((u8 *) copylist->root[sidx].compname->ptr, -1,
-							   (u8 *) fname, sizeof(fname));
+			charsets_utf8_conv((u8 *) copylist->root[sidx].compname->ptr, -1, (u8 *) fname, sizeof(fname));
 			STRCPY_S(temp, fname);
 		} else
 			STRCPY_S(temp, copylist->root[sidx].compname->ptr);
@@ -3946,12 +3431,9 @@ static void scene_copy_files(int sidx)
 
 				get_file_basename(basename, PATH_MAX, temp);
 				if (basename[0] != '\0') {
-					insert_string(temp, NELEMS(temp),
-								  "_", strrchr(temp, '.') - temp);
+					insert_string(temp, NELEMS(temp), "_", strrchr(temp, '.') - temp);
 				}
-				insert_string(temp, NELEMS(temp),
-							  copylist->root[sidx].shortname->ptr,
-							  strrchr(temp, '.') - temp);
+				insert_string(temp, NELEMS(temp), copylist->root[sidx].shortname->ptr, strrchr(temp, '.') - temp);
 			}
 		}
 		STRCAT_S(copydest, temp);
@@ -3959,13 +3441,9 @@ static void scene_copy_files(int sidx)
 		if ((t_fs_filetype) copylist->root[sidx].data != fs_filetype_dir) {
 			u32 result;
 
-			result = extract_archive_file(archname,
-										  copylist->root[sidx].compname->ptr,
-										  copydest, NULL, confirm_overwrite,
-										  NULL);
+			result = extract_archive_file(archname, copylist->root[sidx].compname->ptr, copydest, NULL, confirm_overwrite, NULL);
 			if (result == (u32) false) {
-				win_msg(_("文件解压失败!"), COLOR_WHITE,
-						COLOR_WHITE, config.msgbcolor);
+				win_msg(_("文件解压失败!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 			}
 		}
 	} else {
@@ -3979,12 +3457,9 @@ static void scene_copy_files(int sidx)
 		if ((t_fs_filetype) copylist->root[sidx].data == fs_filetype_dir)
 			result = copy_dir(copysrc, copydest, NULL, confirm_overwrite, NULL);
 		else
-			result =
-				(u32) copy_file(copysrc, copydest, NULL,
-								  confirm_overwrite, NULL);
+			result = (u32) copy_file(copysrc, copydest, NULL, confirm_overwrite, NULL);
 		if (result == (u32) false) {
-			win_msg(_("文件/目录复制失败!"), COLOR_WHITE,
-					COLOR_WHITE, config.msgbcolor);
+			win_msg(_("文件/目录复制失败!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 		}
 	}
 }
@@ -3994,23 +3469,15 @@ int scene_single_file_ops_draw(p_win_menuitem item, u32 selidx)
 	switch ((t_fs_filetype) item[selidx].data) {
 		case fs_filetype_ebm:
 			if (where == scene_in_dir) {
-				disp_putstring(240 - DISP_FONTSIZE * 3,
-							   136 - DISP_FONTSIZE * 2, COLOR_WHITE,
-							   (const u8 *) _("○  导入书签"));
-				disp_putstring(240 - DISP_FONTSIZE * 3,
-							   136 - DISP_FONTSIZE, COLOR_WHITE,
-							   (const u8 *) _("□  导入书签"));
+				disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE * 2, COLOR_WHITE, (const u8 *) _("○  导入书签"));
+				disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE, COLOR_WHITE, (const u8 *) _("□  导入书签"));
 			}
 			break;
 		case fs_filetype_dir:
-			disp_putstring(240 - DISP_FONTSIZE * 3,
-						   136 - DISP_FONTSIZE * 2, COLOR_WHITE,
-						   (const u8 *) _("○  进入目录"));
+			disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE * 2, COLOR_WHITE, (const u8 *) _("○  进入目录"));
 #ifdef ENABLE_MUSIC
 			if (where == scene_in_dir)
-				disp_putstring(240 - DISP_FONTSIZE * 3,
-							   136 - DISP_FONTSIZE, COLOR_WHITE,
-							   (const u8 *) _("□  添加音乐"));
+				disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE, COLOR_WHITE, (const u8 *) _("□  添加音乐"));
 #endif
 			break;
 		case fs_filetype_umd:
@@ -4018,23 +3485,15 @@ int scene_single_file_ops_draw(p_win_menuitem item, u32 selidx)
 		case fs_filetype_zip:
 		case fs_filetype_rar:
 			if (where == scene_in_dir) {
-				disp_putstring(240 - DISP_FONTSIZE * 3,
-							   136 - DISP_FONTSIZE * 2, COLOR_WHITE,
-							   (const u8 *) _("○  进入文档"));
-				disp_putstring(240 - DISP_FONTSIZE * 3,
-							   136 - DISP_FONTSIZE, COLOR_WHITE,
-							   (const u8 *) _("□  进入文档"));
+				disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE * 2, COLOR_WHITE, (const u8 *) _("○  进入文档"));
+				disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE, COLOR_WHITE, (const u8 *) _("□  进入文档"));
 			}
 			break;
 #ifdef ENABLE_MUSIC
 		case fs_filetype_music:
 			if (where == scene_in_dir) {
-				disp_putstring(240 - DISP_FONTSIZE * 3,
-							   136 - DISP_FONTSIZE * 2, COLOR_WHITE,
-							   (const u8 *) _("○  直接播放"));
-				disp_putstring(240 - DISP_FONTSIZE * 3,
-							   136 - DISP_FONTSIZE, COLOR_WHITE,
-							   (const u8 *) _("□  添加音乐"));
+				disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE * 2, COLOR_WHITE, (const u8 *) _("○  直接播放"));
+				disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE, COLOR_WHITE, (const u8 *) _("□  添加音乐"));
 			}
 			break;
 #endif
@@ -4045,39 +3504,29 @@ int scene_single_file_ops_draw(p_win_menuitem item, u32 selidx)
 		case fs_filetype_tga:
 		case fs_filetype_bmp:
 #ifdef ENABLE_IMAGE
-			disp_putstring(240 - DISP_FONTSIZE * 3,
-						   136 - DISP_FONTSIZE * 2, COLOR_WHITE,
-						   (const u8 *) _("○  查看图片"));
+			disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE * 2, COLOR_WHITE, (const u8 *) _("○  查看图片"));
 #endif
 #ifdef ENABLE_BG
-			disp_putstring(240 - DISP_FONTSIZE * 3,
-						   136 - DISP_FONTSIZE, COLOR_WHITE,
-						   (const u8 *) _("□  设为背景"));
+			disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE, COLOR_WHITE, (const u8 *) _("□  设为背景"));
 #endif
 			break;
 #endif
 		default:
-			disp_putstring(240 - DISP_FONTSIZE * 3,
-						   136 - DISP_FONTSIZE * 2, COLOR_WHITE,
-						   (const u8 *) _("○  阅读文本"));
-			disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE,
-						   COLOR_WHITE, (const u8 *) _("□  阅读文本"));
+			disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE * 2, COLOR_WHITE, (const u8 *) _("○  阅读文本"));
+			disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE, COLOR_WHITE, (const u8 *) _("□  阅读文本"));
 			break;
 	}
 
 	return 0;
 }
 
-static void scene_fileops_menu_draw(int selcount, p_win_menuitem item,
-									u32 selidx, int mp3count, int dircount,
-									int bmcount)
+static void scene_fileops_menu_draw(int selcount, p_win_menuitem item, u32 selidx, int mp3count, int dircount, int bmcount)
 {
 	int left, right;
 
 	disp_duptocachealpha(50);
 
-	if (strcmp(simple_textdomain(NULL), "zh_CN") == 0 ||
-		strcmp(simple_textdomain(NULL), "zh_TW") == 0) {
+	if (strcmp(simple_textdomain(NULL), "zh_CN") == 0 || strcmp(simple_textdomain(NULL), "zh_TW") == 0) {
 		left = 240 - DISP_FONTSIZE * 3 - 1;
 		right = 240 + DISP_FONTSIZE * 3 + 1;
 	} else {
@@ -4085,67 +3534,42 @@ static void scene_fileops_menu_draw(int selcount, p_win_menuitem item,
 		right = 240 + DISP_FONTSIZE * 12 + 1;
 	}
 
-	disp_rectangle(left, 136 - DISP_FONTSIZE * 3 - 1,
-				   right, 136 + DISP_FONTSIZE * 5, COLOR_WHITE);
-	disp_fillrect(left + 1, 136 - DISP_FONTSIZE * 3,
-				  right - 1, 136 + DISP_FONTSIZE * 5 - 1, config.msgbcolor);
-	disp_putstring(left + 1, 136 - DISP_FONTSIZE * 3,
-				   COLOR_WHITE, (const u8 *) _("△  退出操作"));
+	disp_rectangle(left, 136 - DISP_FONTSIZE * 3 - 1, right, 136 + DISP_FONTSIZE * 5, COLOR_WHITE);
+	disp_fillrect(left + 1, 136 - DISP_FONTSIZE * 3, right - 1, 136 + DISP_FONTSIZE * 5 - 1, config.msgbcolor);
+	disp_putstring(left + 1, 136 - DISP_FONTSIZE * 3, COLOR_WHITE, (const u8 *) _("△  退出操作"));
 	if (selcount <= 1 && strcmp(item[selidx].compname->ptr, "..") != 0) {
 		scene_single_file_ops_draw(item, selidx);
 	} else {
 		if (mp3count + dircount > 0 && bmcount > 0) {
-			disp_putstring(240 - DISP_FONTSIZE * 3,
-						   136 - DISP_FONTSIZE * 2, COLOR_WHITE,
-						   (const u8 *) _("○  添加音乐"));
-			disp_putstring(240 - DISP_FONTSIZE * 3,
-						   136 - DISP_FONTSIZE, COLOR_WHITE,
-						   (const u8 *) _("□  导入书签"));
+			disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE * 2, COLOR_WHITE, (const u8 *) _("○  添加音乐"));
+			disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE, COLOR_WHITE, (const u8 *) _("□  导入书签"));
 		} else if (mp3count + dircount > 0) {
-			disp_putstring(240 - DISP_FONTSIZE * 3,
-						   136 - DISP_FONTSIZE * 2, COLOR_WHITE,
-						   (const u8 *) _("○  添加音乐"));
-			disp_putstring(240 - DISP_FONTSIZE * 3,
-						   136 - DISP_FONTSIZE, COLOR_WHITE,
-						   (const u8 *) _("□  添加音乐"));
+			disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE * 2, COLOR_WHITE, (const u8 *) _("○  添加音乐"));
+			disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE, COLOR_WHITE, (const u8 *) _("□  添加音乐"));
 		} else if (bmcount > 0) {
-			disp_putstring(240 - DISP_FONTSIZE * 3,
-						   136 - DISP_FONTSIZE * 2, COLOR_WHITE,
-						   (const u8 *) _("○  导入书签"));
-			disp_putstring(240 - DISP_FONTSIZE * 3,
-						   136 - DISP_FONTSIZE, COLOR_WHITE,
-						   (const u8 *) _("□  导入书签"));
+			disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE * 2, COLOR_WHITE, (const u8 *) _("○  导入书签"));
+			disp_putstring(240 - DISP_FONTSIZE * 3, 136 - DISP_FONTSIZE, COLOR_WHITE, (const u8 *) _("□  导入书签"));
 		}
 	}
 	if (where == scene_in_dir) {
 		if (selcount > 1 || strcmp(item[selidx].compname->ptr, "..") != 0) {
 			if (strnicmp(config.path, "ms0:/", 5) == 0) {
 				if (config.allowdelete)
-					disp_putstring(240 - DISP_FONTSIZE * 3,
-								   136, COLOR_WHITE, (const u8 *)
+					disp_putstring(240 - DISP_FONTSIZE * 3, 136, COLOR_WHITE, (const u8 *)
 								   _("×    删除"));
-				disp_putstring(240 - DISP_FONTSIZE * 3,
-							   136 + DISP_FONTSIZE * 2,
-							   COLOR_WHITE, (const u8 *) _(" R    剪切"));
+				disp_putstring(240 - DISP_FONTSIZE * 3, 136 + DISP_FONTSIZE * 2, COLOR_WHITE, (const u8 *) _(" R    剪切"));
 			}
 			if (config.path[0] != 0)
-				disp_putstring(240 - DISP_FONTSIZE * 3,
-							   136 + DISP_FONTSIZE, COLOR_WHITE,
-							   (const u8 *) _(" L    复制"));
+				disp_putstring(240 - DISP_FONTSIZE * 3, 136 + DISP_FONTSIZE, COLOR_WHITE, (const u8 *) _(" L    复制"));
 		}
-		if (strnicmp(config.path, "ms0:/", 5) == 0
-			&& ((copylist != NULL && copylist->size > 0 && stricmp(copydir, config.shortpath) != 0)
-				|| (cutlist != NULL && cutlist->size > 0 && stricmp(cutdir, config.shortpath) != 0)))
-			disp_putstring(240 - DISP_FONTSIZE * 3,
-						   136 + DISP_FONTSIZE * 3, COLOR_WHITE,
-						   (const u8 *) _("START 粘贴"));
+		if (strnicmp(config.path, "ms0:/", 5) == 0 && ((copylist != NULL && copylist->size > 0 && stricmp(copydir, config.shortpath) != 0)
+													   || (cutlist != NULL && cutlist->size > 0 && stricmp(cutdir, config.shortpath) != 0)))
+			disp_putstring(240 - DISP_FONTSIZE * 3, 136 + DISP_FONTSIZE * 3, COLOR_WHITE, (const u8 *) _("START 粘贴"));
 	}
 	if (where == scene_in_zip || where == scene_in_chm || where == scene_in_rar) {
 		if (selcount > 1 || strcmp(item[selidx].compname->ptr, "..") != 0) {
 			if (config.path[0] != 0)
-				disp_putstring(240 - DISP_FONTSIZE * 3,
-							   136 + DISP_FONTSIZE, COLOR_WHITE,
-							   (const u8 *) _(" L    复制"));
+				disp_putstring(240 - DISP_FONTSIZE * 3, 136 + DISP_FONTSIZE, COLOR_WHITE, (const u8 *) _(" L    复制"));
 		}
 	}
 }
@@ -4173,10 +3597,7 @@ static void scene_open_text(u32 * idx)
 
 static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 												t_win_menu_op * retop,
-												p_win_menuitem item,
-												u32 selidx, u32 * index,
-												u32 mp3count, u32 dircount,
-												u32 bmcount, u32 selcount)
+												p_win_menuitem item, u32 selidx, u32 * index, u32 mp3count, u32 dircount, u32 bmcount, u32 selcount)
 {
 	switch (key) {
 		case PSP_CTRL_TRIANGLE:
@@ -4184,12 +3605,9 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 			*retop = win_menu_op_continue;
 			break;
 		case PSP_CTRL_CROSS:
-			if (!config.allowdelete || where != scene_in_dir
-				|| strnicmp(config.path, "ms0:/", 5) != 0)
+			if (!config.allowdelete || where != scene_in_dir || strnicmp(config.path, "ms0:/", 5) != 0)
 				break;
-			if (win_msgbox
-				(_("删除所选文件？"), _("是"), _("否"),
-				 COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
+			if (win_msgbox(_("删除所选文件？"), _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
 				char fn[PATH_MAX];
 				u32 sidx;
 
@@ -4201,18 +3619,12 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 						STRCAT_S(fn, item[sidx].shortname->ptr);
 						if ((t_fs_filetype) item[sidx].data == fs_filetype_dir) {
 							if (!utils_del_dir(fn)) {
-								win_msg(_
-										("删除目录失败!"),
-										COLOR_WHITE,
-										COLOR_WHITE, config.msgbcolor);
+								win_msg(_("删除目录失败!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 								return win_menu_op_redraw;
 							}
 						} else {
 							if (!utils_del_file(fn)) {
-								win_msg(_
-										("删除文件失败!"),
-										COLOR_WHITE,
-										COLOR_WHITE, config.msgbcolor);
+								win_msg(_("删除文件失败!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 								return win_menu_op_redraw;
 							}
 						}
@@ -4222,11 +3634,9 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 							while (idx < g_menu->size && item[idx].selected)
 								idx++;
 							if (idx < g_menu->size)
-								STRCPY_S(config.lastfile,
-										 item[idx].compname->ptr);
+								STRCPY_S(config.lastfile, item[idx].compname->ptr);
 							else if (sidx > 0)
-								STRCPY_S(config.lastfile,
-										 item[idx - 1].compname->ptr);
+								STRCPY_S(config.lastfile, item[idx - 1].compname->ptr);
 						}
 					}
 				*retop = win_menu_op_cancel;
@@ -4240,26 +3650,17 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 				switch ((t_fs_filetype) item[sidx].data) {
 #ifdef ENABLE_MUSIC
 					case fs_filetype_dir:
-						if (win_msgbox
-							(_("添加目录内所有歌曲到播放列表？"),
-							 _("是"), _("否"),
-							 COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
+						if (win_msgbox(_("添加目录内所有歌曲到播放列表？"), _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
 							char cfn[PATH_MAX], sfn[PATH_MAX];
 
-							SPRINTF_S(cfn, "%s%s/", config.path,
-									  item[sidx].compname->ptr);
-							SPRINTF_S(sfn, "%s%s/", config.shortpath,
-									  item[sidx].shortname->ptr);
+							SPRINTF_S(cfn, "%s%s/", config.path, item[sidx].compname->ptr);
+							SPRINTF_S(sfn, "%s%s/", config.shortpath, item[sidx].shortname->ptr);
 							music_add_dir(sfn, cfn);
-							win_msg(_("已添加歌曲到列表!"),
-									COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
+							win_msg(_("已添加歌曲到列表!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 						}
 						break;
 					case fs_filetype_music:
-						if (win_msgbox
-							(_("添加歌曲到播放列表？"), _("是"),
-							 _("否"), COLOR_WHITE, COLOR_WHITE,
-							 config.msgbcolor)) {
+						if (win_msgbox(_("添加歌曲到播放列表？"), _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
 							char mp3name[PATH_MAX], mp3longname[PATH_MAX];
 
 							STRCPY_S(mp3name, config.shortpath);
@@ -4267,8 +3668,7 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 							STRCPY_S(mp3longname, config.path);
 							STRCAT_S(mp3longname, g_menu->root[sidx].compname->ptr);
 							music_add(mp3name, mp3longname);
-							win_msg(_("已添加歌曲到列表!"),
-									COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
+							win_msg(_("已添加歌曲到列表!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 						}
 						break;
 #endif
@@ -4307,14 +3707,10 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 				if (where != scene_in_dir)
 					break;
 				if (bmcount > 0) {
-					if (!win_msgbox
-						(_("是否要导入书签？"), _("是"),
-						 _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor))
+					if (!win_msgbox(_("是否要导入书签？"), _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor))
 						break;
 				} else {
-					if (!win_msgbox
-						(_("添加歌曲到播放列表？"), _("是"),
-						 _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor))
+					if (!win_msgbox(_("添加歌曲到播放列表？"), _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor))
 						break;
 				}
 
@@ -4326,11 +3722,8 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 								if (bmcount == 0) {
 									char cfn[PATH_MAX], sfn[PATH_MAX];
 
-									SPRINTF_S(cfn, "%s%s/",
-											  config.path,
-											  item[sidx].compname->ptr);
-									SPRINTF_S(sfn, "%s%s/", config.shortpath,
-											  item[sidx].shortname->ptr);
+									SPRINTF_S(cfn, "%s%s/", config.path, item[sidx].compname->ptr);
+									SPRINTF_S(sfn, "%s%s/", config.shortpath, item[sidx].shortname->ptr);
 									music_add_dir(sfn, cfn);
 								}
 								break;
@@ -4347,15 +3740,12 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 #ifdef ENABLE_MUSIC
 							case fs_filetype_music:
 								if (bmcount == 0) {
-									char mp3name[PATH_MAX],
-										mp3longname[PATH_MAX];
+									char mp3name[PATH_MAX], mp3longname[PATH_MAX];
 
 									STRCPY_S(mp3name, config.shortpath);
-									STRCAT_S(mp3name,
-											 g_menu->root[sidx].shortname->ptr);
+									STRCAT_S(mp3name, g_menu->root[sidx].shortname->ptr);
 									STRCPY_S(mp3longname, config.path);
-									STRCAT_S(mp3longname,
-											 g_menu->root[sidx].compname->ptr);
+									STRCAT_S(mp3longname, g_menu->root[sidx].compname->ptr);
 									music_add(mp3name, mp3longname);
 								}
 								break;
@@ -4365,12 +3755,10 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 						}
 					}
 				if (mp3count + dircount == 0 && bmcount > 0)
-					win_msg(_("已导入书签!"), COLOR_WHITE,
-							COLOR_WHITE, config.msgbcolor);
+					win_msg(_("已导入书签!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 #ifdef ENABLE_MUSIC
 				else if (mp3count + dircount > 0)
-					win_msg(_("已添加歌曲到列表!"), COLOR_WHITE,
-							COLOR_WHITE, config.msgbcolor);
+					win_msg(_("已添加歌曲到列表!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 #endif
 			}
 			*inop = false;
@@ -4386,16 +3774,12 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 				if (where != scene_in_dir)
 					break;
 				if (mp3count + dircount == 0) {
-					if (!win_msgbox
-						(_("是否要导入书签？"), _("是"),
-						 _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor))
+					if (!win_msgbox(_("是否要导入书签？"), _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor))
 						break;
 				}
 #ifdef ENABLE_MUSIC
 				else {
-					if (!win_msgbox
-						(_("添加歌曲到播放列表？"), _("是"),
-						 _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor))
+					if (!win_msgbox(_("添加歌曲到播放列表？"), _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor))
 						break;
 				}
 #endif
@@ -4407,12 +3791,8 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 								if (dircount > 0) {
 									char cfn[PATH_MAX], lfn[PATH_MAX];
 
-									SPRINTF_S(cfn, "%s%s/",
-											  config.path,
-											  item[sidx].compname->ptr);
-									SPRINTF_S(lfn, "%s%s/",
-											  config.shortpath,
-											  item[sidx].shortname->ptr);
+									SPRINTF_S(cfn, "%s%s/", config.path, item[sidx].compname->ptr);
+									SPRINTF_S(lfn, "%s%s/", config.shortpath, item[sidx].shortname->ptr);
 									music_add_dir(lfn, cfn);
 								}
 								break;
@@ -4429,15 +3809,12 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 #ifdef ENABLE_MUSIC
 							case fs_filetype_music:
 								if (mp3count > 0) {
-									char mp3name[PATH_MAX],
-										mp3longname[PATH_MAX];
+									char mp3name[PATH_MAX], mp3longname[PATH_MAX];
 
 									STRCPY_S(mp3name, config.shortpath);
-									STRCAT_S(mp3name,
-											 g_menu->root[sidx].shortname->ptr);
+									STRCAT_S(mp3name, g_menu->root[sidx].shortname->ptr);
 									STRCPY_S(mp3longname, config.path);
-									STRCAT_S(mp3longname,
-											 g_menu->root[sidx].compname->ptr);
+									STRCAT_S(mp3longname, g_menu->root[sidx].compname->ptr);
 									music_add(mp3name, mp3longname);
 								}
 								break;
@@ -4447,27 +3824,25 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 						}
 					}
 				if (mp3count + dircount == 0 && bmcount > 0)
-					win_msg(_("已导入书签!"), COLOR_WHITE,
-							COLOR_WHITE, config.msgbcolor);
+					win_msg(_("已导入书签!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 #ifdef ENABLE_MUSIC
 				else if (mp3count + dircount > 0)
-					win_msg(_("已添加歌曲到列表!"), COLOR_WHITE,
-							COLOR_WHITE, config.msgbcolor);
+					win_msg(_("已添加歌曲到列表!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 #endif
 			}
 			*inop = false;
 			break;
 		case PSP_CTRL_LTRIGGER:
-			if(copylist != NULL) {
+			if (copylist != NULL) {
 				win_menu_destroy(copylist);
 				copylist = NULL;
 			}
 
-			if(cutlist != NULL) {
+			if (cutlist != NULL) {
 				win_menu_destroy(cutlist);
 				cutlist = NULL;
 			}
-			
+
 			if (where == scene_in_dir) {
 				copy_archmode = false;
 				STRCPY_S(copydir, config.shortpath);
@@ -4479,7 +3854,7 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 
 			copylist = win_menu_new();
 
-			if(copylist == NULL) {
+			if (copylist == NULL) {
 				break;
 			}
 
@@ -4496,19 +3871,19 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 		case PSP_CTRL_RTRIGGER:
 			if (where != scene_in_dir || strnicmp(config.path, "ms0:/", 5) != 0)
 				break;
-			if(copylist != NULL) {
+			if (copylist != NULL) {
 				win_menu_destroy(copylist);
 				copylist = NULL;
 			}
 
-			if(cutlist != NULL) {
+			if (cutlist != NULL) {
 				win_menu_destroy(cutlist);
 				cutlist = NULL;
 			}
 
 			cutlist = win_menu_new();
 
-			if(cutlist == NULL) {
+			if (cutlist == NULL) {
 				break;
 			}
 
@@ -4553,17 +3928,12 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 					STRCAT_S(cutdest, cutlist->root[sidx].compname->ptr);
 
 					if ((t_fs_filetype) cutlist->root[sidx].data == fs_filetype_dir)
-						result =
-							(u32) move_dir(cutsrc, cutdest,
-											 NULL, confirm_overwrite, NULL);
+						result = (u32) move_dir(cutsrc, cutdest, NULL, confirm_overwrite, NULL);
 					else
-						result =
-							move_file(cutsrc, cutdest, NULL,
-									  confirm_overwrite, NULL);
+						result = move_file(cutsrc, cutdest, NULL, confirm_overwrite, NULL);
 
 					if (result == (u32) false) {
-						win_msg(_("文件/目录移动失败!"),
-								COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
+						win_msg(_("文件/目录移动失败!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 					}
 				}
 
@@ -4571,7 +3941,7 @@ static t_win_menu_op scene_fileops_handle_input(u32 key, bool * inop,
 				*retop = win_menu_op_cancel;
 				*inop = false;
 
-				if(cutlist != NULL) {
+				if (cutlist != NULL) {
 					win_menu_destroy(cutlist);
 					cutlist = NULL;
 				}
@@ -4611,31 +3981,26 @@ static t_win_menu_op scene_fileops(p_win_menuitem item, u32 * index)
 		}
 	if (selcount == 0)
 		selidx = *index;
-	if (selcount <= 1 && strcmp(item[selidx].compname->ptr, "..") == 0
-		&& cutlist != NULL && copylist != NULL && cutlist->size + copylist->size <= 0)
+	if (selcount <= 1 && strcmp(item[selidx].compname->ptr, "..") == 0 && cutlist != NULL && copylist != NULL && cutlist->size + copylist->size <= 0)
 		return win_menu_op_continue;
 	if (selcount == 0)
 		item[selidx].selected = true;
 
-	saveimage = (pixel *) memalign(16,
-								   PSP_SCREEN_WIDTH *
-								   PSP_SCREEN_HEIGHT * sizeof(pixel));
+	saveimage = (pixel *) memalign(16, PSP_SCREEN_WIDTH * PSP_SCREEN_HEIGHT * sizeof(pixel));
 
 	if (saveimage)
 		disp_getimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, saveimage);
 
-	scene_fileops_menu_draw(selcount, item, selidx, mp3count, dircount,
-							bmcount);
+	scene_fileops_menu_draw(selcount, item, selidx, mp3count, dircount, bmcount);
 	disp_flip();
 
 	while (inop) {
 		u32 key = ctrl_waitany();
 
-		t_win_menu_op op =
-			scene_fileops_handle_input(key, &inop, &retop, item, selidx,
-									   index,
-									   mp3count, dircount,
-									   bmcount, selcount);
+		t_win_menu_op op = scene_fileops_handle_input(key, &inop, &retop, item, selidx,
+													  index,
+													  mp3count, dircount,
+													  bmcount, selcount);
 
 		if (op != win_menu_op_continue) {
 			return op;
@@ -4644,20 +4009,16 @@ static t_win_menu_op scene_fileops(p_win_menuitem item, u32 * index)
 	if (selcount == 0)
 		item[selidx].selected = false;
 	if (saveimage) {
-		disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0,
-					  saveimage);
+		disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0, saveimage);
 		disp_flip();
-		disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0,
-					  saveimage);
+		disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0, saveimage);
 		free(saveimage);
 		saveimage = NULL;
 	}
 	return retop;
 }
 
-t_win_menu_op scene_filelist_menucb(u32 key, p_win_menuitem item,
-									u32 * count, u32 max_height,
-									u32 * topindex, u32 * index)
+t_win_menu_op scene_filelist_menucb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	u32 orgidx = *index;
 	t_win_menu_op op = win_menu_op_continue;
@@ -4684,8 +4045,7 @@ t_win_menu_op scene_filelist_menucb(u32 key, p_win_menuitem item,
 	} else if (key == config.flkey[7]) {
 		dbg_printf(d, "%s: 返回到上一个文件", __func__);
 
-		if (prev_lastfile[0] == '\0' ||
-			prev_path[0] == '\0' || prev_shortpath[0] == '\0')
+		if (prev_lastfile[0] == '\0' || prev_path[0] == '\0' || prev_shortpath[0] == '\0')
 			return win_menu_op_cancel;
 
 		STRCPY_S(config.path, prev_path);
@@ -4746,18 +4106,14 @@ t_win_menu_op scene_filelist_menucb(u32 key, p_win_menuitem item,
 		ctrl_waitrelease();
 		op = win_menu_op_ok;
 	}
-	if (((t_fs_filetype) item[*index].data == fs_filetype_dir
-		 && (t_fs_filetype) item[orgidx].data != fs_filetype_dir)
-		|| (*index != orgidx && *index >= *topindex
-			&& *index < *topindex + HRR * 2
-			&& ((orgidx - *topindex < HRR && *index - *topindex >= HRR)
-				|| (orgidx - *topindex >= HRR && *index - *topindex < HRR))))
+	if (((t_fs_filetype) item[*index].data == fs_filetype_dir && (t_fs_filetype) item[orgidx].data != fs_filetype_dir)
+		|| (*index != orgidx && *index >= *topindex && *index < *topindex + HRR * 2 && ((orgidx - *topindex < HRR && *index - *topindex >= HRR)
+																						|| (orgidx - *topindex >= HRR && *index - *topindex < HRR))))
 		return win_menu_op_force_redraw;
 	return op;
 }
 
-void scene_filelist_predraw(p_win_menuitem item, u32 index, u32 topindex,
-							u32 max_height)
+void scene_filelist_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
 	char infomsg[80];
 
@@ -4779,31 +4135,20 @@ void scene_filelist_predraw(p_win_menuitem item, u32 index, u32 topindex,
 #endif
 	disp_putstring(0, 0, COLOR_WHITE, (const u8 *) infomsg);
 	disp_line(0, DISP_FONTSIZE, 479, DISP_FONTSIZE, COLOR_WHITE);
-	disp_rectangle(239 - WRR * DISP_FONTSIZE,
-				   138 - (HRR + 1) * (DISP_FONTSIZE + 1),
-				   243 + WRR * DISP_FONTSIZE,
-				   141 + HRR * (DISP_FONTSIZE + 1), COLOR_WHITE);
+	disp_rectangle(239 - WRR * DISP_FONTSIZE, 138 - (HRR + 1) * (DISP_FONTSIZE + 1), 243 + WRR * DISP_FONTSIZE, 141 + HRR * (DISP_FONTSIZE + 1), COLOR_WHITE);
 	disp_fillrect(240 - WRR * DISP_FONTSIZE,
-				  139 - (HRR + 1) * (DISP_FONTSIZE + 1),
-				  242 + WRR * DISP_FONTSIZE,
-				  137 - HRR * (DISP_FONTSIZE + 1), config.titlecolor);
+				  139 - (HRR + 1) * (DISP_FONTSIZE + 1), 242 + WRR * DISP_FONTSIZE, 137 - HRR * (DISP_FONTSIZE + 1), config.titlecolor);
 	disp_putnstring(240 - WRR * DISP_FONTSIZE,
 					139 - (HRR + 1) * (DISP_FONTSIZE + 1), COLOR_WHITE,
-					(const u8 *) config.path,
-					config.filelistwidth * 4 / DISP_FONTSIZE - 3, 0, 0,
-					DISP_FONTSIZE, 0);
-	disp_line(240 - WRR * DISP_FONTSIZE, 138 - HRR * (DISP_FONTSIZE + 1),
-			  242 + WRR * DISP_FONTSIZE, 138 - HRR * (DISP_FONTSIZE + 1),
-			  COLOR_WHITE);
+					(const u8 *) config.path, config.filelistwidth * 4 / DISP_FONTSIZE - 3, 0, 0, DISP_FONTSIZE, 0);
+	disp_line(240 - WRR * DISP_FONTSIZE, 138 - HRR * (DISP_FONTSIZE + 1), 242 + WRR * DISP_FONTSIZE, 138 - HRR * (DISP_FONTSIZE + 1), COLOR_WHITE);
 	disp_line(0, 271 - DISP_FONTSIZE, 479, 271 - DISP_FONTSIZE, COLOR_WHITE);
 	disp_fillrect(0, PSP_SCREEN_HEIGHT - DISP_FONTSIZE, 479, 271, 0);
-	disp_putstring(0, PSP_SCREEN_HEIGHT - DISP_FONTSIZE, COLOR_WHITE,
-				   (const u8 *)
+	disp_putstring(0, PSP_SCREEN_HEIGHT - DISP_FONTSIZE, COLOR_WHITE, (const u8 *)
 				   _("START 音乐播放控制   SELECT 选项   选项内按○进入设置"));
 }
 
-void scene_filelist_postdraw(p_win_menuitem item, u32 index, u32 topindex,
-							 u32 max_height)
+void scene_filelist_postdraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_height)
 {
 	STRCPY_S(config.lastfile, item[index].compname->ptr);
 	if (!config.showfinfo)
@@ -4814,128 +4159,65 @@ void scene_filelist_postdraw(p_win_menuitem item, u32 index, u32 topindex,
 				char outstr[256];
 
 				disp_rectangle(239 - (WRR - 2) * DISP_FONTSIZE,
-							   135 + (HRR -
-									  3) * (DISP_FONTSIZE + 1),
-							   243 + (WRR - 2) * DISP_FONTSIZE,
-							   136 + HRR * (DISP_FONTSIZE + 1), COLOR_WHITE);
+							   135 + (HRR - 3) * (DISP_FONTSIZE + 1), 243 + (WRR - 2) * DISP_FONTSIZE, 136 + HRR * (DISP_FONTSIZE + 1), COLOR_WHITE);
 				disp_fillrect(240 - (WRR - 2) * DISP_FONTSIZE,
-							  136 + (HRR - 3) * (DISP_FONTSIZE +
-												 1),
-							  242 + (WRR - 2) * DISP_FONTSIZE,
-							  135 + HRR * (DISP_FONTSIZE + 1),
-							  RGB(0x20, 0x20, 0x20));
-				SPRINTF_S(outstr, _("文件大小: %u 字节\n"),
-						  (unsigned int) item[index].data3);
-				disp_putstring(242 - (WRR - 2) * DISP_FONTSIZE,
-							   136 + (HRR -
-									  3) * (DISP_FONTSIZE + 1),
-							   COLOR_WHITE, (const u8 *) outstr);
+							  136 + (HRR - 3) * (DISP_FONTSIZE + 1), 242 + (WRR - 2) * DISP_FONTSIZE, 135 + HRR * (DISP_FONTSIZE + 1), RGB(0x20, 0x20, 0x20));
+				SPRINTF_S(outstr, _("文件大小: %u 字节\n"), (unsigned int) item[index].data3);
+				disp_putstring(242 - (WRR - 2) * DISP_FONTSIZE, 136 + (HRR - 3) * (DISP_FONTSIZE + 1), COLOR_WHITE, (const u8 *) outstr);
 				SPRINTF_S(outstr,
 						  _
 						  ("创建时间: %04d-%02d-%02d %02d:%02d:%02d\n"),
 						  (item[index].data2[0] >> 9) + 1980,
 						  (item[index].data2[0] & 0x01FF) >> 5,
-						  item[index].data2[0] & 0x01F,
-						  item[index].data2[1] >> 11,
-						  (item[index].data2[1] & 0x07FF) >> 5,
-						  (item[index].data2[1] & 0x01F) * 2);
-				disp_putstring(242 - (WRR - 2) * DISP_FONTSIZE,
-							   136 + (HRR -
-									  2) * (DISP_FONTSIZE + 1),
-							   COLOR_WHITE, (const u8 *) outstr);
+						  item[index].data2[0] & 0x01F, item[index].data2[1] >> 11, (item[index].data2[1] & 0x07FF) >> 5, (item[index].data2[1] & 0x01F) * 2);
+				disp_putstring(242 - (WRR - 2) * DISP_FONTSIZE, 136 + (HRR - 2) * (DISP_FONTSIZE + 1), COLOR_WHITE, (const u8 *) outstr);
 				SPRINTF_S(outstr,
 						  _
 						  ("最后修改: %04d-%02d-%02d %02d:%02d:%02d\n"),
 						  (item[index].data2[2] >> 9) + 1980,
 						  (item[index].data2[2] & 0x01FF) >> 5,
-						  item[index].data2[2] & 0x01F,
-						  item[index].data2[3] >> 11,
-						  (item[index].data2[3] & 0x07FF) >> 5,
-						  (item[index].data2[3] & 0x01F) * 2);
-				disp_putstring(242 - (WRR - 2) * DISP_FONTSIZE,
-							   136 + (HRR -
-									  1) * (DISP_FONTSIZE + 1),
-							   COLOR_WHITE, (const u8 *) outstr);
+						  item[index].data2[2] & 0x01F, item[index].data2[3] >> 11, (item[index].data2[3] & 0x07FF) >> 5, (item[index].data2[3] & 0x01F) * 2);
+				disp_putstring(242 - (WRR - 2) * DISP_FONTSIZE, 136 + (HRR - 1) * (DISP_FONTSIZE + 1), COLOR_WHITE, (const u8 *) outstr);
 			} else {
 				char outstr[256];
 
 				disp_rectangle(239 - (WRR - 2) * DISP_FONTSIZE,
-							   141 - HRR * (DISP_FONTSIZE + 1),
-							   243 + (WRR - 2) * DISP_FONTSIZE,
-							   142 - (HRR -
-									  3) * (DISP_FONTSIZE + 1), COLOR_WHITE);
+							   141 - HRR * (DISP_FONTSIZE + 1), 243 + (WRR - 2) * DISP_FONTSIZE, 142 - (HRR - 3) * (DISP_FONTSIZE + 1), COLOR_WHITE);
 				disp_fillrect(240 - (WRR - 2) * DISP_FONTSIZE,
-							  142 - HRR * (DISP_FONTSIZE + 1),
-							  242 + (WRR - 2) * DISP_FONTSIZE,
-							  141 - (HRR - 3) * (DISP_FONTSIZE +
-												 1), RGB(0x20, 0x20, 0x20));
-				SPRINTF_S(outstr, _("文件大小: %u 字节\n"),
-						  (unsigned int) item[index].data3);
-				disp_putstring(242 - (WRR - 2) * DISP_FONTSIZE,
-							   142 - HRR * (DISP_FONTSIZE + 1),
-							   COLOR_WHITE, (const u8 *) outstr);
+							  142 - HRR * (DISP_FONTSIZE + 1), 242 + (WRR - 2) * DISP_FONTSIZE, 141 - (HRR - 3) * (DISP_FONTSIZE + 1), RGB(0x20, 0x20, 0x20));
+				SPRINTF_S(outstr, _("文件大小: %u 字节\n"), (unsigned int) item[index].data3);
+				disp_putstring(242 - (WRR - 2) * DISP_FONTSIZE, 142 - HRR * (DISP_FONTSIZE + 1), COLOR_WHITE, (const u8 *) outstr);
 				SPRINTF_S(outstr,
 						  _
 						  ("创建时间: %04d-%02d-%02d %02d:%02d:%02d\n"),
 						  (item[index].data2[0] >> 9) + 1980,
 						  (item[index].data2[0] & 0x01FF) >> 5,
-						  item[index].data2[0] & 0x01F,
-						  item[index].data2[1] >> 11,
-						  (item[index].data2[1] & 0x07FF) >> 5,
-						  (item[index].data2[1] & 0x01F) * 2);
-				disp_putstring(242 - (WRR - 2) * DISP_FONTSIZE,
-							   142 - (HRR -
-									  1) * (DISP_FONTSIZE + 1),
-							   COLOR_WHITE, (const u8 *) outstr);
+						  item[index].data2[0] & 0x01F, item[index].data2[1] >> 11, (item[index].data2[1] & 0x07FF) >> 5, (item[index].data2[1] & 0x01F) * 2);
+				disp_putstring(242 - (WRR - 2) * DISP_FONTSIZE, 142 - (HRR - 1) * (DISP_FONTSIZE + 1), COLOR_WHITE, (const u8 *) outstr);
 				SPRINTF_S(outstr,
 						  _
 						  ("最后修改: %04d-%02d-%02d %02d:%02d:%02d\n"),
 						  (item[index].data2[2] >> 9) + 1980,
 						  (item[index].data2[2] & 0x01FF) >> 5,
-						  item[index].data2[2] & 0x01F,
-						  item[index].data2[3] >> 11,
-						  (item[index].data2[3] & 0x07FF) >> 5,
-						  (item[index].data2[3] & 0x01F) * 2);
-				disp_putstring(242 - (WRR - 2) * DISP_FONTSIZE,
-							   142 - (HRR -
-									  2) * (DISP_FONTSIZE + 1),
-							   COLOR_WHITE, (const u8 *) outstr);
+						  item[index].data2[2] & 0x01F, item[index].data2[3] >> 11, (item[index].data2[3] & 0x07FF) >> 5, (item[index].data2[3] & 0x01F) * 2);
+				disp_putstring(242 - (WRR - 2) * DISP_FONTSIZE, 142 - (HRR - 2) * (DISP_FONTSIZE + 1), COLOR_WHITE, (const u8 *) outstr);
 			}
 		} else {
 			char outstr[256];
 
-			SPRINTF_S(outstr, _("文件大小: %s 字节\n"),
-					  item[index].shortname->ptr);
+			SPRINTF_S(outstr, _("文件大小: %s 字节\n"), item[index].shortname->ptr);
 			if (index - topindex < HRR) {
 				disp_rectangle(239 - (WRR - 2) * DISP_FONTSIZE,
-							   135 + (HRR -
-									  1) * (DISP_FONTSIZE + 1),
-							   243 + (WRR - 2) * DISP_FONTSIZE,
-							   136 + HRR * (DISP_FONTSIZE + 1), COLOR_WHITE);
+							   135 + (HRR - 1) * (DISP_FONTSIZE + 1), 243 + (WRR - 2) * DISP_FONTSIZE, 136 + HRR * (DISP_FONTSIZE + 1), COLOR_WHITE);
 				disp_fillrect(240 - (WRR - 2) * DISP_FONTSIZE,
-							  136 + (HRR - 1) * (DISP_FONTSIZE +
-												 1),
-							  242 + (WRR - 2) * DISP_FONTSIZE,
-							  135 + HRR * (DISP_FONTSIZE + 1),
-							  RGB(0x20, 0x20, 0x20));
-				disp_putstring(242 - (WRR - 2) * DISP_FONTSIZE,
-							   136 + (HRR -
-									  1) * (DISP_FONTSIZE + 1),
-							   COLOR_WHITE, (const u8 *) outstr);
+							  136 + (HRR - 1) * (DISP_FONTSIZE + 1), 242 + (WRR - 2) * DISP_FONTSIZE, 135 + HRR * (DISP_FONTSIZE + 1), RGB(0x20, 0x20, 0x20));
+				disp_putstring(242 - (WRR - 2) * DISP_FONTSIZE, 136 + (HRR - 1) * (DISP_FONTSIZE + 1), COLOR_WHITE, (const u8 *) outstr);
 			} else {
 				disp_rectangle(239 - (WRR - 2) * DISP_FONTSIZE,
-							   141 - HRR * (DISP_FONTSIZE + 1),
-							   243 + (WRR - 2) * DISP_FONTSIZE,
-							   142 - (HRR -
-									  1) * (DISP_FONTSIZE + 1), COLOR_WHITE);
+							   141 - HRR * (DISP_FONTSIZE + 1), 243 + (WRR - 2) * DISP_FONTSIZE, 142 - (HRR - 1) * (DISP_FONTSIZE + 1), COLOR_WHITE);
 				disp_fillrect(240 - (WRR - 2) * DISP_FONTSIZE,
-							  142 - HRR * (DISP_FONTSIZE + 1),
-							  242 + (WRR - 2) * DISP_FONTSIZE,
-							  141 - (HRR - 1) * (DISP_FONTSIZE +
-												 1), RGB(0x20, 0x20, 0x20));
-				disp_putstring(242 - (WRR - 2) * DISP_FONTSIZE,
-							   142 - HRR * (DISP_FONTSIZE + 1),
-							   COLOR_WHITE, (const u8 *) outstr);
+							  142 - HRR * (DISP_FONTSIZE + 1), 242 + (WRR - 2) * DISP_FONTSIZE, 141 - (HRR - 1) * (DISP_FONTSIZE + 1), RGB(0x20, 0x20, 0x20));
+				disp_putstring(242 - (WRR - 2) * DISP_FONTSIZE, 142 - HRR * (DISP_FONTSIZE + 1), COLOR_WHITE, (const u8 *) outstr);
 			}
 		}
 	}
@@ -4959,9 +4241,7 @@ static void scene_exec_prog(u32 * idx)
 
 	if (ext) {
 		if (stricmp(ext, "iso") == 0 || stricmp(ext, "cso") == 0) {
-			if (win_msgbox
-				(_("是否运行这个游戏?"), _("是"), _("否"), COLOR_WHITE,
-				 COLOR_WHITE, config.msgbcolor)) {
+			if (win_msgbox(_("是否运行这个游戏?"), _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
 				int r;
 				char path[PATH_MAX], upper[PATH_MAX];
 
@@ -4979,11 +4259,8 @@ static void scene_exec_prog(u32 * idx)
 		}
 	}
 
-	SPRINTF_S(infomsg, _("是否以%s方式执行该程序?"),
-			  config.launchtype == 2 ? _("普通程序") : _("PS游戏"));
-	if (win_msgbox
-		(infomsg, _("是"), _("否"), COLOR_WHITE, COLOR_WHITE,
-		 config.msgbcolor)) {
+	SPRINTF_S(infomsg, _("是否以%s方式执行该程序?"), config.launchtype == 2 ? _("普通程序") : _("PS游戏"));
+	if (win_msgbox(infomsg, _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
 		char path[PATH_MAX], upper[PATH_MAX];
 
 		save_passwords();
@@ -5044,26 +4321,15 @@ static void scene_enter_dir(u32 * idx)
 		STRCAT_S(config.shortpath, "/");
 	}
 	if (config.path[0] == 0) {
-		fs_list_device(config.path, config.shortpath,
-					   config.menutextcolor,
-					   config.selicolor,
-					   config.menubcolor, config.selbcolor);
+		fs_list_device(config.path, config.shortpath, config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 	} else if (strnicmp(config.path, "ms0:/", 5) == 0) {
 		fs_dir_to_menu(config.path, config.shortpath,
-					   config.menutextcolor,
-					   config.selicolor,
-					   config.menubcolor, config.selbcolor,
-					   config.showhidden, config.showunknown);
+					   config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor, config.showhidden, config.showunknown);
 	} else
-		fs_flashdir_to_menu(config.path, config.shortpath,
-							config.menutextcolor,
-							config.selicolor,
-							config.menubcolor, config.selbcolor);
+		fs_flashdir_to_menu(config.path, config.shortpath, config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 	quicksort(g_menu->root,
 			  (g_menu->size > 0
-			   && g_menu->root[0].compname->ptr[0] == '.') ? 1 : 0,
-			  g_menu->size - 1, sizeof(t_win_menuitem),
-			  compare_func[(int) config.arrange]);
+			   && g_menu->root[0].compname->ptr[0] == '.') ? 1 : 0, g_menu->size - 1, sizeof(t_win_menuitem), compare_func[(int) config.arrange]);
 	if (isup) {
 		for (*idx = 0; *idx < g_menu->size; (*idx)++)
 			if (stricmp(g_menu->root[*idx].compname->ptr, pdir) == 0)
@@ -5099,32 +4365,22 @@ static void scene_enter_archive(u32 * idx, enum ArchiveType type)
 	*idx = 0;
 	switch (type) {
 		case ZIP:
-			fs_zip_to_menu(config.shortpath,
-						   config.menutextcolor, config.selicolor,
-						   config.menubcolor, config.selbcolor);
+			fs_zip_to_menu(config.shortpath, config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 			break;
 		case RAR:
-			fs_rar_to_menu(config.shortpath,
-						   config.menutextcolor, config.selicolor,
-						   config.menubcolor, config.selbcolor);
+			fs_rar_to_menu(config.shortpath, config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 			break;
 		case CHM:
-			fs_chm_to_menu(config.shortpath,
-						   config.menutextcolor, config.selicolor,
-						   config.menubcolor, config.selbcolor);
+			fs_chm_to_menu(config.shortpath, config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 			break;
 		case UMD:
-			fs_umd_to_menu(config.shortpath,
-						   config.menutextcolor, config.selicolor,
-						   config.menubcolor, config.selbcolor);
+			fs_umd_to_menu(config.shortpath, config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 			break;
 	}
 	if (UMD != type)
 		quicksort(g_menu->root,
 				  (g_menu->size > 0
-				   && g_menu->root[0].compname->ptr[0] == '.') ? 1 : 0,
-				  g_menu->size - 1, sizeof(t_win_menuitem),
-				  compare_func[(int) config.arrange]);
+				   && g_menu->root[0].compname->ptr[0] == '.') ? 1 : 0, g_menu->size - 1, sizeof(t_win_menuitem), compare_func[(int) config.arrange]);
 }
 
 #ifdef ENABLE_IMAGE
@@ -5176,9 +4432,7 @@ static void scene_open_music(u32 * idx)
 
 static void scene_open_ebm(u32 * idx)
 {
-	if (win_msgbox
-		(_("是否要导入书签？"), _("是"), _("否"),
-		 COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
+	if (win_msgbox(_("是否要导入书签？"), _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
 		char bmfn[PATH_MAX];
 		bool ret;
 
@@ -5187,11 +4441,9 @@ static void scene_open_ebm(u32 * idx)
 		ret = bookmark_import(bmfn);
 
 		if (ret) {
-			win_msg(_("已导入书签!"), COLOR_WHITE, COLOR_WHITE,
-					config.msgbcolor);
+			win_msg(_("已导入书签!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 		} else {
-			win_msg(_("书签导入失败!"), COLOR_WHITE, COLOR_WHITE,
-					config.msgbcolor);
+			win_msg(_("书签导入失败!"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 		}
 	}
 }
@@ -5208,9 +4460,7 @@ static void scene_open_font(u32 * idx)
 		STRCPY_S(fn, g_menu->root[*idx].compname->ptr);
 	}
 
-	if (win_msgbox
-		(_("是否为中文字体？"), _("是"), _("否"),
-		 COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
+	if (win_msgbox(_("是否为中文字体？"), _("是"), _("否"), COLOR_WHITE, COLOR_WHITE, config.msgbcolor)) {
 		// clean ettf in case of insuffient memory
 		STRCPY_S(config.ettfarch, "");
 		STRCPY_S(config.ettfpath, "");
@@ -5226,8 +4476,7 @@ static void scene_open_font(u32 * idx)
 		else
 			STRCPY_S(config.ettfarch, config.shortpath);
 	}
-	dbg_printf(d, "ettf: %s %s cttf: %s %s", config.ettfarch,
-			   config.ettfpath, config.cttfarch, config.cttfpath);
+	dbg_printf(d, "ettf: %s %s cttf: %s %s", config.ettfarch, config.ettfpath, config.cttfarch, config.cttfpath);
 
 	config.usettf = true;
 
@@ -5247,7 +4496,7 @@ void scene_filelist(void)
 {
 	u32 idx = 0;
 #ifdef DMALLOC
-//	static int device_mark = -1;
+//  static int device_mark = -1;
 #endif
 
 	where = scene_in_dir;
@@ -5270,28 +4519,21 @@ void scene_filelist(void)
 			if (g_menu == NULL || g_menu->root == 0 || g_menu->size == 0) {
 				// empty directory ?
 				if (where == scene_in_dir) {
-					fs_empty_dir(config.menutextcolor,
-								 config.selicolor,
-								 config.menubcolor, config.selbcolor);
+					fs_empty_dir(config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 					idx = 0;
 					idx =
 						win_menu(240 - WRR * DISP_FONTSIZE,
 								 139 -
 								 HRR * (DISP_FONTSIZE + 1),
 								 WRR * 4, HRR * 2, g_menu->root,
-								 g_menu->size, idx, 0,
-								 config.menubcolor, false,
-								 scene_filelist_predraw,
-								 scene_filelist_postdraw,
-								 scene_filelist_menucb);
+								 g_menu->size, idx, 0, config.menubcolor, false, scene_filelist_predraw, scene_filelist_postdraw, scene_filelist_menucb);
 				} else {
 					char infomsg[80];
 					int ll;
 					char *lps;
 
 					SPRINTF_S(infomsg, _("%s压缩包格式损坏"), config.path);
-					win_msg(infomsg, COLOR_WHITE,
-							COLOR_WHITE, config.msgbcolor);
+					win_msg(infomsg, COLOR_WHITE, COLOR_WHITE, config.msgbcolor);
 
 					if ((ll = strlen(config.path) - 1) >= 0)
 						while (config.path[ll] == '/' && ll >= 0) {
@@ -5313,9 +4555,7 @@ void scene_filelist(void)
 					win_menu(240 - WRR * DISP_FONTSIZE,
 							 139 - HRR * (DISP_FONTSIZE + 1),
 							 WRR * 4, HRR * 2, g_menu->root,
-							 g_menu->size, idx, 0,
-							 config.menubcolor, false, scene_filelist_predraw,
-							 scene_filelist_postdraw, scene_filelist_menucb);
+							 g_menu->size, idx, 0, config.menubcolor, false, scene_filelist_predraw, scene_filelist_postdraw, scene_filelist_menucb);
 		} else {
 			config.isreading = false;
 			locreading = false;
@@ -5323,43 +4563,24 @@ void scene_filelist(void)
 		if (idx == INVALID) {
 			switch (where) {
 				case scene_in_umd:
-					fs_umd_to_menu(config.shortpath,
-								   config.menutextcolor,
-								   config.selicolor,
-								   config.menubcolor, config.selbcolor);
+					fs_umd_to_menu(config.shortpath, config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 					break;
 				case scene_in_zip:
-					fs_zip_to_menu(config.shortpath,
-								   config.menutextcolor,
-								   config.selicolor,
-								   config.menubcolor, config.selbcolor);
+					fs_zip_to_menu(config.shortpath, config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 					break;
 				case scene_in_chm:
-					fs_chm_to_menu(config.shortpath,
-								   config.menutextcolor,
-								   config.selicolor,
-								   config.menubcolor, config.selbcolor);
+					fs_chm_to_menu(config.shortpath, config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 					break;
 				case scene_in_rar:
-					fs_rar_to_menu(config.shortpath,
-								   config.menutextcolor,
-								   config.selicolor,
-								   config.menubcolor, config.selbcolor);
+					fs_rar_to_menu(config.shortpath, config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 					break;
 				default:
 					if (config.path[0] == '\0') {
-						fs_list_device(config.path, config.shortpath,
-									   config.menutextcolor,
-									   config.selicolor,
-									   config.menubcolor, config.selbcolor);
+						fs_list_device(config.path, config.shortpath, config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor);
 					} else {
 						fs_dir_to_menu(config.path,
 									   config.shortpath,
-									   config.menutextcolor,
-									   config.selicolor,
-									   config.menubcolor, config.selbcolor,
-									   config.showhidden,
-									   config.showunknown);
+									   config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor, config.showhidden, config.showunknown);
 					}
 			}
 
@@ -5368,21 +4589,13 @@ void scene_filelist(void)
 				STRCPY_S(config.shortpath, "ms0:/");
 				fs_dir_to_menu(config.path,
 							   config.shortpath,
-							   config.menutextcolor,
-							   config.selicolor,
-							   config.menubcolor, config.selbcolor,
-							   config.showhidden, config.showunknown);
+							   config.menutextcolor, config.selicolor, config.menubcolor, config.selbcolor, config.showhidden, config.showunknown);
 			}
 			quicksort(g_menu->root,
 					  (g_menu->size > 0
-					   && g_menu->root[0].compname->ptr[0] ==
-					   '.') ? 1 : 0, g_menu->size - 1,
-					  sizeof(t_win_menuitem),
-					  compare_func[(int) config.arrange]);
+					   && g_menu->root[0].compname->ptr[0] == '.') ? 1 : 0, g_menu->size - 1, sizeof(t_win_menuitem), compare_func[(int) config.arrange]);
 			idx = 0;
-			while (idx < g_menu->size
-				   && stricmp(g_menu->root[idx].compname->ptr,
-							  config.lastfile) != 0)
+			while (idx < g_menu->size && stricmp(g_menu->root[idx].compname->ptr, config.lastfile) != 0)
 				idx++;
 			if (idx >= g_menu->size) {
 				config.isreading = false;
@@ -5512,20 +4725,18 @@ extern void scene_init(void)
 	u32 key;
 	u64 dbgnow, dbglasttick;
 	u64 start, end;
-	char fontzipfile[PATH_MAX], efontfile[PATH_MAX], cfontfile[PATH_MAX],
-		conffile[PATH_MAX], locconf[PATH_MAX], bmfile[PATH_MAX];
+	char fontzipfile[PATH_MAX], efontfile[PATH_MAX], cfontfile[PATH_MAX], conffile[PATH_MAX], locconf[PATH_MAX], bmfile[PATH_MAX];
 	int _fsize;
 
 #ifdef DMALLOC
-//	unsigned mark;
+//  unsigned mark;
 	void *p;
 
-	(void)p;
+	(void) p;
 	dmalloc_debug_setup("log-stats,check-fence,check-heap,check-funcs,check-blank,print-messages,inter=100");
 
 #if 0
-	dmalloc_debug_setup
-		("log-stats,log-non-free,check-fence,check-funcs,check-blank,print-messages");
+	dmalloc_debug_setup("log-stats,log-non-free,check-fence,check-funcs,check-blank,print-messages");
 	mark = dmalloc_mark();
 	p = malloc(4096);
 	dmalloc_log_changed(mark, 1, 0, 1);
@@ -5567,8 +4778,7 @@ extern void scene_init(void)
 #endif
 
 	SPRINTF_S(infomsg, "%s %s (gcc version %d.%d.%d %s) now loading...",
-			  PACKAGE_NAME, VERSION, __GNUC__, __GNUC_MINOR__,
-			  __GNUC_PATCHLEVEL__, "Built " __TIME__ " " __DATE__);
+			  PACKAGE_NAME, VERSION, __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__, "Built " __TIME__ " " __DATE__);
 	dbg_printf(d, infomsg);
 	dbg_printf(d, "configure as %s", CONFIGURE_CMDLINE);
 
@@ -5586,8 +4796,7 @@ extern void scene_init(void)
 	STRCPY_S(config.path, "ms0:/");
 	STRCPY_S(config.shortpath, "ms0:/");
 
-	SPRINTF_S(conffile, "%s%s%d%s", scene_appdir(), "config", config_num,
-			  ".ini");
+	SPRINTF_S(conffile, "%s%s%d%s", scene_appdir(), "config", config_num, ".ini");
 	conf_set_file(conffile);
 #ifdef ENABLE_MUSIC
 	STRCPY_S(musiclst_path, scene_appdir());
@@ -5604,14 +4813,12 @@ extern void scene_init(void)
 	} else {
 		conf_load(&config);
 		sceRtcGetCurrentTick(&dbgnow);
-		dbg_printf(d, "conf_load() etc: %.2fs",
-				   pspDiffTime(&dbgnow, &dbglasttick));
+		dbg_printf(d, "conf_load() etc: %.2fs", pspDiffTime(&dbgnow, &dbglasttick));
 	}
 
 #ifdef ENABLE_BG
 	sceRtcGetCurrentTick(&dbglasttick);
-	bg_load(config.bgfile, config.bgarch, config.bgcolor,
-			fs_file_get_type(config.bgfile), config.grayscale, config.bgwhere);
+	bg_load(config.bgfile, config.bgarch, config.bgcolor, fs_file_get_type(config.bgfile), config.grayscale, config.bgwhere);
 	sceRtcGetCurrentTick(&dbgnow);
 	dbg_printf(d, "bg_load(): %.2fs", pspDiffTime(&dbgnow, &dbglasttick));
 #endif
@@ -5657,14 +4864,12 @@ extern void scene_init(void)
 			}
 		}
 		sceRtcGetCurrentTick(&dbgnow);
-		dbg_printf(d, "has_font(%d): %.2f second", _fsize,
-				   pspDiffTime(&dbgnow, &dbglasttick));
+		dbg_printf(d, "has_font(%d): %.2f second", _fsize, pspDiffTime(&dbgnow, &dbglasttick));
 	}
 	sceRtcGetCurrentTick(&dbglasttick);
 	if (fontcount == 0 || !scene_load_font() || !scene_load_book_font()) {
 		pspDebugScreenInit();
-		pspDebugScreenPrintf
-			("Error loading font file! Press any buttun for exit!");
+		pspDebugScreenPrintf("Error loading font file! Press any buttun for exit!");
 		ctrl_waitany();
 		sceKernelExitGame();
 	}
@@ -5676,8 +4881,7 @@ extern void scene_init(void)
 	recalc_size(&drperpage, &rowsperpage, &pixelsperrow);
 	cur_book_view.rrow = INVALID;
 	sceRtcGetCurrentTick(&dbgnow);
-	dbg_printf(d, "scene_load_font() & scene_load_book_font(): %.2f second",
-			   pspDiffTime(&dbgnow, &dbglasttick));
+	dbg_printf(d, "scene_load_font() & scene_load_book_font(): %.2f second", pspDiffTime(&dbgnow, &dbglasttick));
 	sceRtcGetCurrentTick(&dbglasttick);
 #ifdef ENABLE_HPRM
 	ctrl_enablehprm(config.hprmctrl);
@@ -5696,19 +4900,17 @@ extern void scene_init(void)
 			if (ret == 0) {
 				prx_loaded = true;
 			} else {
-				dbg_printf(d, "xrPrx.prx load failed, return value %08X",
-						(unsigned int) ret);
+				dbg_printf(d, "xrPrx.prx load failed, return value %08X", (unsigned int) ret);
 			}
 
 			ret = load_rdriver();
 			dbg_printf(d, "load_rdriver returns 0x%08x", ret);
 
 			sceRtcGetCurrentTick(&dbgnow);
-			dbg_printf(d, "initExceptionHandler(): %.2fs",
-					pspDiffTime(&dbgnow, &dbglasttick));
+			dbg_printf(d, "initExceptionHandler(): %.2fs", pspDiffTime(&dbgnow, &dbglasttick));
 		}
 	}
-	
+
 	STRCPY_S(bmfile, scene_appdir());
 	STRCAT_S(bmfile, "bookmark.conf");
 	bookmark_init(bmfile);
@@ -5717,8 +4919,7 @@ extern void scene_init(void)
 	location_init(locconf, locaval);
 
 	sceRtcGetCurrentTick(&dbgnow);
-	dbg_printf(d, "misc_init(): %.2f second",
-			   pspDiffTime(&dbgnow, &dbglasttick));
+	dbg_printf(d, "misc_init(): %.2f second", pspDiffTime(&dbgnow, &dbglasttick));
 
 #ifdef ENABLE_MUSIC
 	sceRtcGetCurrentTick(&dbglasttick);
@@ -5730,8 +4931,7 @@ extern void scene_init(void)
 		sceRtcGetCurrentTick(&dbglasttick);
 		music_add_dir("ms0:/MUSIC/", "ms0:/MUSIC/");
 		sceRtcGetCurrentTick(&dbgnow);
-		dbg_printf(d, "music_add_dir(): %.2fs",
-				   pspDiffTime(&dbgnow, &dbglasttick));
+		dbg_printf(d, "music_add_dir(): %.2fs", pspDiffTime(&dbgnow, &dbglasttick));
 	}
 	sceRtcGetCurrentTick(&dbglasttick);
 #ifdef ENABLE_HPRM
@@ -5747,8 +4947,7 @@ extern void scene_init(void)
 #endif
 
 	sceRtcGetCurrentTick(&end);
-	dbg_printf(d, "Load finished in %.2fs, press any key to continue",
-			   pspDiffTime(&end, &start));
+	dbg_printf(d, "Load finished in %.2fs, press any key to continue", pspDiffTime(&end, &start));
 	if (printDebugInfo) {
 #ifdef _DEBUG
 		dbg_close_handle(d, 3);
@@ -5844,21 +5043,17 @@ u32 lerp_color(u32 color1, u32 color2, float fWeight)
 		u8 IWeight = ~Weight;
 		u32 dwTemp = 0;
 
-		dwTemp = (((0xFF00FF00 & color1) >> 8) * IWeight +
-				  ((0xFF00FF00 & color2) >> 8) * Weight) & 0xFF00FF00;
+		dwTemp = (((0xFF00FF00 & color1) >> 8) * IWeight + ((0xFF00FF00 & color2) >> 8) * Weight) & 0xFF00FF00;
 
-		dwTemp |= (((0x00FF00FF & color1) * IWeight +
-					(0x00FF00FF & color2) * Weight) & 0xFF00FF00) >> 8;
+		dwTemp |= (((0x00FF00FF & color1) * IWeight + (0x00FF00FF & color2) * Weight) & 0xFF00FF00) >> 8;
 		return dwTemp;
 	}
 }
 
 /* time in 24 hours */
-static inline int get_diff_second(int srcHour, int srcMinute, int srcSeconds,
-								  int dstHour, int dstMinute, int dstSeconds)
+static inline int get_diff_second(int srcHour, int srcMinute, int srcSeconds, int dstHour, int dstMinute, int dstSeconds)
 {
-	return (dstHour * 60 * 60 + dstMinute * 60 + dstSeconds -
-			(srcHour * 60 * 60 + srcMinute * 60 + srcSeconds));
+	return (dstHour * 60 * 60 + dstMinute * 60 + dstSeconds - (srcHour * 60 * 60 + srcMinute * 60 + srcSeconds));
 }
 
 int chmod(const char *path, unsigned mode)

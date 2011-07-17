@@ -114,12 +114,10 @@ int module_start(SceSize args, void *argp)
 
 	sceIoRead(fd, sceKernelGetBlockHeadAddr(pid), size);
 
-	sctrlHENLoadModuleOnReboot("/kd/usersystemlib.prx",
-							   sceKernelGetBlockHeadAddr(pid), size,
-							   BOOTLOAD_GAME | BOOTLOAD_POPS | BOOTLOAD_UMDEMU);
+	sctrlHENLoadModuleOnReboot("/kd/usersystemlib.prx", sceKernelGetBlockHeadAddr(pid), size, BOOTLOAD_GAME | BOOTLOAD_POPS | BOOTLOAD_UMDEMU);
 
-	orig_funcs[0] = (void*) sctrlHENFindFunction("sceLoadExec", "LoadExecForUser", 0x05572A5F);
-	orig_funcs[1] = (void*) sctrlHENFindFunction("sceLoadExec", "LoadExecForUser", 0x2AC9954B);
+	orig_funcs[0] = (void *) sctrlHENFindFunction("sceLoadExec", "LoadExecForUser", 0x05572A5F);
+	orig_funcs[1] = (void *) sctrlHENFindFunction("sceLoadExec", "LoadExecForUser", 0x2AC9954B);
 	sctrlHENPatchSyscall(orig_funcs[0], ExitPatched);	// sceKernelExitGame
 	sctrlHENPatchSyscall(orig_funcs[1], ExitPatched2);	// sceKernelExitGameWithStatus
 

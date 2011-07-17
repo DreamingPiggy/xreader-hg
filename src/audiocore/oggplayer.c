@@ -98,8 +98,7 @@ static ov_callbacks vorbis_callbacks = {
  * @param frames 复制帧数
  * @param channels 声道数
  */
-static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames,
-						   int channels)
+static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames, int channels)
 {
 	int n;
 	signed short *p = (signed short *) buf;
@@ -133,9 +132,7 @@ static int ogg_process_single(void)
 	int bytes;
 	int current_section;
 
-	bytes =
-		ov_read(decoder, (char *) g_buff, g_buff_size * sizeof(g_buff[0]),
-				&current_section);
+	bytes = ov_read(decoder, (char *) g_buff, g_buff_size * sizeof(g_buff[0]), &current_section);
 
 	switch (bytes) {
 		case 0:
@@ -217,16 +214,12 @@ static int ogg_audiocallback(void *buf, unsigned int reqn, void *pdata)
 		avail_frame = g_buff_frame_size - g_buff_frame_start;
 
 		if (avail_frame >= snd_buf_frame_size) {
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * g_info.channels],
-						   snd_buf_frame_size, g_info.channels);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * g_info.channels], snd_buf_frame_size, g_info.channels);
 			g_buff_frame_start += snd_buf_frame_size;
 			audio_buf += snd_buf_frame_size * 2;
 			snd_buf_frame_size = 0;
 		} else {
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * g_info.channels],
-						   avail_frame, g_info.channels);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * g_info.channels], avail_frame, g_info.channels);
 			snd_buf_frame_size -= avail_frame;
 			audio_buf += avail_frame * 2;
 
@@ -290,26 +283,14 @@ static void get_ogg_tag(OggVorbis_File * decoder)
 	for (i = 0; i < comment->comments; i++) {
 		dbg_printf(d, "%s: %s", __func__, comment->user_comments[i]);
 
-		if (!strnicmp
-			(comment->user_comments[i], "TITLE=", sizeof("TITLE=") - 1)) {
-			STRCPY_S(g_info.tag.title,
-					 comment->user_comments[i] + sizeof("TITLE=") - 1);
-		} else if (!strnicmp
-				   (comment->user_comments[i], "ALBUM=",
-					sizeof("ALBUM=") - 1)) {
-			STRCPY_S(g_info.tag.album,
-					 comment->user_comments[i] + sizeof("ALBUM=") - 1);
-		} else
-			if (!strnicmp
-				(comment->user_comments[i], "ARTIST=", sizeof("ARTIST=") - 1)) {
-			STRCPY_S(g_info.tag.artist,
-					 comment->user_comments[i] + sizeof("ARTIST=") - 1);
-		} else
-			if (!strnicmp
-				(comment->user_comments[i], "COMMENT=",
-				 sizeof("COMMENT=") - 1)) {
-			STRCPY_S(g_info.tag.comment,
-					 comment->user_comments[i] + sizeof("COMMENT=") - 1);
+		if (!strnicmp(comment->user_comments[i], "TITLE=", sizeof("TITLE=") - 1)) {
+			STRCPY_S(g_info.tag.title, comment->user_comments[i] + sizeof("TITLE=") - 1);
+		} else if (!strnicmp(comment->user_comments[i], "ALBUM=", sizeof("ALBUM=") - 1)) {
+			STRCPY_S(g_info.tag.album, comment->user_comments[i] + sizeof("ALBUM=") - 1);
+		} else if (!strnicmp(comment->user_comments[i], "ARTIST=", sizeof("ARTIST=") - 1)) {
+			STRCPY_S(g_info.tag.artist, comment->user_comments[i] + sizeof("ARTIST=") - 1);
+		} else if (!strnicmp(comment->user_comments[i], "COMMENT=", sizeof("COMMENT=") - 1)) {
+			STRCPY_S(g_info.tag.comment, comment->user_comments[i] + sizeof("COMMENT=") - 1);
 		}
 	}
 
@@ -359,8 +340,7 @@ static int ogg_load(const char *spath, const char *lpath)
 
 	g_info.filesize = buffered_reader_length(g_ogg_reader);
 
-	if (ov_open_callbacks
-		((void *) g_ogg_reader, decoder, NULL, 0, vorbis_callbacks) < 0) {
+	if (ov_open_callbacks((void *) g_ogg_reader, decoder, NULL, 0, vorbis_callbacks) < 0) {
 		vorbis_callbacks.close_func((void *) g_ogg_reader);
 		g_ogg_reader = NULL;
 		__end();
@@ -586,8 +566,7 @@ static int ogg_set_opt(const char *unused, const char *values)
 	build_args(values, &argc, &argv);
 
 	for (i = 0; i < argc; ++i) {
-		if (!strncasecmp
-			(argv[i], "ogg_buffer_size", sizeof("ogg_buffer_size") - 1)) {
+		if (!strncasecmp(argv[i], "ogg_buffer_size", sizeof("ogg_buffer_size") - 1)) {
 			const char *p = argv[i];
 
 			if ((p = strrchr(p, '=')) != NULL) {

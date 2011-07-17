@@ -42,13 +42,11 @@ static bool auto_inc_wordspace_on_small_font = false;
 static pixel *vram_disp = NULL;
 pixel *vram_draw = NULL;
 static bool vram_page = 0;
-static u8 *cfont_buffer = NULL, *book_cfont_buffer = NULL, *efont_buffer =
-	NULL, *book_efont_buffer = NULL;
+static u8 *cfont_buffer = NULL, *book_cfont_buffer = NULL, *efont_buffer = NULL, *book_efont_buffer = NULL;
 int DISP_FONTSIZE = 16, DISP_BOOK_FONTSIZE = 16, HRR = 6, WRR = 15;
 static int DISP_EFONTSIZE, DISP_CFONTSIZE, DISP_CROWSIZE, DISP_EROWSIZE,
 	fbits_last = 0, febits_last =
-	0, DISP_BOOK_EFONTSIZE, DISP_BOOK_CFONTSIZE, DISP_BOOK_EROWSIZE,
-	DISP_BOOK_CROWSIZE, fbits_book_last = 0, febits_book_last = 0;;
+	0, DISP_BOOK_EFONTSIZE, DISP_BOOK_CFONTSIZE, DISP_BOOK_EROWSIZE, DISP_BOOK_CROWSIZE, fbits_book_last = 0, febits_book_last = 0;;
 u8 disp_ewidth[0x80];
 
 bool using_ttf = false;
@@ -76,15 +74,13 @@ typedef struct _Vertex
 	u16 x, y, z;
 } Vertex;
 
-static inline void setVertex(VertexColor * vertex, u16 x, u16 y, u16 z,
-							 u32 color)
+static inline void setVertex(VertexColor * vertex, u16 x, u16 y, u16 z, u32 color)
 {
 	vertex->x = x, vertex->y = y, vertex->z = z;
 	vertex->color = color;
 }
 
-static inline void setVertexUV(Vertex * vertex, u16 x, u16 y, u16 z, u32 color,
-							   u16 u, u16 v)
+static inline void setVertexUV(Vertex * vertex, u16 x, u16 y, u16 z, u32 color, u16 u, u16 v)
 {
 	vertex->x = x, vertex->y = y, vertex->z = z;
 	vertex->color = color;
@@ -100,8 +96,7 @@ extern void disp_init(void)
 	vram_page = 0;
 	vram_disp = (pixel *) 0x04000000;
 	vram_draw = (pixel *) (0x44000000 + PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES);
-	sceDisplaySetFrameBuf(vram_disp, PSP_SCREEN_SCANLINE, PSP_DISPLAY_PIXEL_FORMAT_8888,
-						 PSP_DISPLAY_SETBUF_NEXTFRAME);
+	sceDisplaySetFrameBuf(vram_disp, PSP_SCREEN_SCANLINE, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_NEXTFRAME);
 }
 
 unsigned int __attribute__ ((aligned(16))) list[262144];
@@ -201,30 +196,26 @@ extern void disp_set_book_fontsize(int fontsize)
 		auto_inc_wordspace_on_small_font = true;
 	}
 	// if previous have auto increased wordspace on small font, restore config.wordspace to 0
-	if (using_ttf == false && fontsize >= 12
-		&& auto_inc_wordspace_on_small_font && config.wordspace == 1) {
+	if (using_ttf == false && fontsize >= 12 && auto_inc_wordspace_on_small_font && config.wordspace == 1) {
 		config.wordspace = 0;
 		auto_inc_wordspace_on_small_font = false;
 	}
 }
 
-extern bool disp_has_zipped_font(const char *zipfile, const char *efont,
-								 const char *cfont)
+extern bool disp_has_zipped_font(const char *zipfile, const char *efont, const char *cfont)
 {
 	unzFile unzf = unzOpen(zipfile);
 
 	if (unzf == NULL)
 		return false;
 
-	if (unzLocateFile(unzf, efont, 0) != UNZ_OK
-		|| unzOpenCurrentFile(unzf) != UNZ_OK) {
+	if (unzLocateFile(unzf, efont, 0) != UNZ_OK || unzOpenCurrentFile(unzf) != UNZ_OK) {
 		unzClose(unzf);
 		return false;
 	}
 	unzCloseCurrentFile(unzf);
 
-	if (unzLocateFile(unzf, cfont, 0) != UNZ_OK
-		|| unzOpenCurrentFile(unzf) != UNZ_OK) {
+	if (unzLocateFile(unzf, cfont, 0) != UNZ_OK || unzOpenCurrentFile(unzf) != UNZ_OK) {
 		unzClose(unzf);
 		return false;
 	}
@@ -324,8 +315,7 @@ extern void disp_assign_book_font(void)
 	book_cfont_buffer = cfont_buffer;
 }
 
-extern bool disp_load_zipped_font(const char *zipfile, const char *efont,
-								  const char *cfont)
+extern bool disp_load_zipped_font(const char *zipfile, const char *efont, const char *cfont)
 {
 	unzFile unzf;
 	u32 size;
@@ -337,8 +327,7 @@ extern bool disp_load_zipped_font(const char *zipfile, const char *efont,
 	if (unzf == NULL)
 		return false;
 
-	if (unzLocateFile(unzf, efont, 0) != UNZ_OK
-		|| unzOpenCurrentFile(unzf) != UNZ_OK) {
+	if (unzLocateFile(unzf, efont, 0) != UNZ_OK || unzOpenCurrentFile(unzf) != UNZ_OK) {
 		unzClose(unzf);
 		return false;
 	}
@@ -358,8 +347,7 @@ extern bool disp_load_zipped_font(const char *zipfile, const char *efont,
 	unzCloseCurrentFile(unzf);
 	book_efont_buffer = efont_buffer;
 
-	if (unzLocateFile(unzf, cfont, 0) != UNZ_OK
-		|| unzOpenCurrentFile(unzf) != UNZ_OK) {
+	if (unzLocateFile(unzf, cfont, 0) != UNZ_OK || unzOpenCurrentFile(unzf) != UNZ_OK) {
 		unzClose(unzf);
 		return false;
 	}
@@ -385,25 +373,20 @@ extern bool disp_load_zipped_font(const char *zipfile, const char *efont,
 }
 
 #ifdef ENABLE_TTF
-static p_ttf load_archieve_truetype_book_font(const char *zipfile,
-											  const char *zippath, int size,
-											  bool cjkmode)
+static p_ttf load_archieve_truetype_book_font(const char *zipfile, const char *zippath, int size, bool cjkmode)
 {
 	p_ttf ttf = NULL;
 
 	if (ttf == NULL && zipfile[0] != '\0') {
 		buffer *b = NULL;
 
-		extract_archive_file_into_buffer(&b, zipfile, zippath,
-										 fs_file_get_type(zipfile));
+		extract_archive_file_into_buffer(&b, zipfile, zippath, fs_file_get_type(zipfile));
 
 		if (b == NULL) {
 			return false;
 		}
 
-		if ((ttf =
-			 ttf_open_buffer(b->ptr, b->used, size, zippath,
-							 cjkmode)) == NULL) {
+		if ((ttf = ttf_open_buffer(b->ptr, b->used, size, zippath, cjkmode)) == NULL) {
 			buffer_free_weak(b);
 			return NULL;
 		}
@@ -443,8 +426,7 @@ extern bool disp_ttf_reload(int size)
 		book_cfont_buffer = NULL;
 	}
 
-	if (cttf != NULL && strcmp(prev_cttfarch, config.cttfarch) == 0
-		&& strcmp(prev_cttfpath, config.cttfpath) == 0) {
+	if (cttf != NULL && strcmp(prev_cttfarch, config.cttfarch) == 0 && strcmp(prev_cttfpath, config.cttfpath) == 0) {
 		ttf_set_pixel_size(cttf, size);
 	} else {
 		if (cttf != NULL) {
@@ -458,19 +440,13 @@ extern bool disp_ttf_reload(int size)
 		}
 
 		if (config.cttfarch[0] != '\0') {
-			cttf =
-				load_archieve_truetype_book_font(config.cttfarch,
-												 config.cttfpath,
-												 config.bookfontsize, true);
+			cttf = load_archieve_truetype_book_font(config.cttfarch, config.cttfpath, config.bookfontsize, true);
 		} else {
-			cttf =
-				ttf_open(config.cttfpath, config.bookfontsize,
-						 config.ttf_load_to_memory, true);
+			cttf = ttf_open(config.cttfpath, config.bookfontsize, config.ttf_load_to_memory, true);
 		}
 	}
 
-	if (ettf != NULL && strcmp(prev_ettfarch, config.ettfarch) == 0
-		&& strcmp(prev_ettfpath, config.ettfpath) == 0) {
+	if (ettf != NULL && strcmp(prev_ettfarch, config.ettfarch) == 0 && strcmp(prev_ettfpath, config.ettfpath) == 0) {
 		ttf_set_pixel_size(ettf, size);
 	} else {
 		if (ettf != NULL) {
@@ -486,27 +462,18 @@ extern bool disp_ttf_reload(int size)
 		if (!strcmp(config.ettfarch, config.cttfarch)
 			&& !strcmp(config.ettfpath, config.cttfpath)) {
 			if (cttf != NULL && cttf->fileBuffer != NULL) {
-				ettf =
-					ttf_open_buffer(cttf->fileBuffer, cttf->fileSize, size,
-									cttf->fontName, false);
+				ettf = ttf_open_buffer(cttf->fileBuffer, cttf->fileSize, size, cttf->fontName, false);
 
 				if (ettf) {
 					g_ttf_share_buffer = true;
 				}
 			} else {
-				ettf =
-					ttf_open(config.ettfpath, config.bookfontsize,
-							 config.ttf_load_to_memory, false);
+				ettf = ttf_open(config.ettfpath, config.bookfontsize, config.ttf_load_to_memory, false);
 			}
 		} else if (config.ettfarch[0] != '\0') {
-			ettf =
-				load_archieve_truetype_book_font(config.ettfarch,
-												 config.ettfpath,
-												 config.bookfontsize, false);
+			ettf = load_archieve_truetype_book_font(config.ettfarch, config.ettfpath, config.bookfontsize, false);
 		} else {
-			ettf =
-				ttf_open(config.ettfpath, config.bookfontsize,
-						 config.ttf_load_to_memory, false);
+			ettf = ttf_open(config.ettfpath, config.bookfontsize, config.ttf_load_to_memory, false);
 		}
 	}
 
@@ -518,17 +485,13 @@ extern bool disp_ttf_reload(int size)
 		STRCPY_S(config.cttfpath, config.ettfpath);
 
 		if (ettf != NULL && ettf->fileBuffer != NULL) {
-			cttf =
-				ttf_open_buffer(ettf->fileBuffer, ettf->fileSize, size,
-								ettf->fontName, true);
+			cttf = ttf_open_buffer(ettf->fileBuffer, ettf->fileSize, size, ettf->fontName, true);
 
 			if (cttf) {
 				g_ttf_share_buffer = true;
 			}
 		} else {
-			cttf =
-				ttf_open(config.cttfpath, config.bookfontsize,
-						 config.ttf_load_to_memory, true);
+			cttf = ttf_open(config.cttfpath, config.bookfontsize, config.ttf_load_to_memory, true);
 		}
 	}
 
@@ -537,17 +500,13 @@ extern bool disp_ttf_reload(int size)
 		STRCPY_S(config.ettfpath, config.cttfpath);
 
 		if (cttf != NULL && cttf->fileBuffer != NULL) {
-			ettf =
-				ttf_open_buffer(cttf->fileBuffer, cttf->fileSize, size,
-								cttf->fontName, false);
+			ettf = ttf_open_buffer(cttf->fileBuffer, cttf->fileSize, size, cttf->fontName, false);
 
 			if (ettf) {
 				g_ttf_share_buffer = true;
 			}
 		} else {
-			ettf =
-				ttf_open(config.ettfpath, config.bookfontsize,
-						 config.ttf_load_to_memory, false);
+			ettf = ttf_open(config.ettfpath, config.bookfontsize, config.ttf_load_to_memory, false);
 		}
 	}
 
@@ -565,8 +524,7 @@ extern bool disp_ttf_reload(int size)
 	if (cttfinfo != NULL) {
 		memcpy(cttfinfo, cttf, sizeof(*cttfinfo));
 		cttfinfo->config.embolden = 0;
-		cttfinfo->pixelSize = cttfinfo->config.pixelsize =
-			config.infobar_fontsize;
+		cttfinfo->pixelSize = cttfinfo->config.pixelsize = config.infobar_fontsize;
 	}
 
 	ttf_clear_cache(cttfinfo);
@@ -582,8 +540,7 @@ extern bool disp_ttf_reload(int size)
 	if (ettfinfo != NULL) {
 		memcpy(ettfinfo, ettf, sizeof(*ettfinfo));
 		ettfinfo->config.embolden = 0;
-		ettfinfo->pixelSize = ettfinfo->config.pixelsize =
-			config.infobar_fontsize;
+		ettfinfo->pixelSize = ettfinfo->config.pixelsize = config.infobar_fontsize;
 	}
 
 	ttf_clear_cache(ettfinfo);
@@ -608,7 +565,7 @@ extern bool disp_load_font(const char *efont, const char *cfont)
 	int fd;
 
 	disp_free_font();
-   	fd = sceIoOpen(efont, PSP_O_RDONLY, 0777);
+	fd = sceIoOpen(efont, PSP_O_RDONLY, 0777);
 
 	if (fd < 0)
 		return false;
@@ -648,8 +605,7 @@ extern bool disp_load_font(const char *efont, const char *cfont)
 	return true;
 }
 
-extern bool disp_load_zipped_book_font(const char *zipfile, const char *efont,
-									   const char *cfont)
+extern bool disp_load_zipped_book_font(const char *zipfile, const char *efont, const char *cfont)
 {
 	unzFile unzf;
 	unz_file_info info;
@@ -669,8 +625,7 @@ extern bool disp_load_zipped_book_font(const char *zipfile, const char *efont,
 	if (unzf == NULL)
 		return false;
 
-	if (unzLocateFile(unzf, efont, 0) != UNZ_OK
-		|| unzOpenCurrentFile(unzf) != UNZ_OK) {
+	if (unzLocateFile(unzf, efont, 0) != UNZ_OK || unzOpenCurrentFile(unzf) != UNZ_OK) {
 		unzClose(unzf);
 		return false;
 	}
@@ -693,8 +648,7 @@ extern bool disp_load_zipped_book_font(const char *zipfile, const char *efont,
 		free(book_cfont_buffer);
 		book_cfont_buffer = NULL;
 	}
-	if (unzLocateFile(unzf, cfont, 0) != UNZ_OK
-		|| unzOpenCurrentFile(unzf) != UNZ_OK) {
+	if (unzLocateFile(unzf, cfont, 0) != UNZ_OK || unzOpenCurrentFile(unzf) != UNZ_OK) {
 		unzClose(unzf);
 		return false;
 	}
@@ -721,7 +675,7 @@ extern bool disp_load_book_font(const char *efont, const char *cfont)
 {
 	int size;
 	int fd;
-	
+
 	using_ttf = false;
 #ifdef ENABLE_TTF
 	disp_ttf_close();
@@ -803,20 +757,16 @@ void *framebuffer = 0;
 extern void disp_flip(void)
 {
 	vram_page ^= 1;
-	vram_disp =
-		(pixel *) 0x04000000 + (vram_page ? (512 * PSP_SCREEN_HEIGHT) : 0);
-	vram_draw =
-		(pixel *) 0x44000000 + (vram_page ? 0 : (512 * PSP_SCREEN_HEIGHT));
+	vram_disp = (pixel *) 0x04000000 + (vram_page ? (512 * PSP_SCREEN_HEIGHT) : 0);
+	vram_draw = (pixel *) 0x44000000 + (vram_page ? 0 : (512 * PSP_SCREEN_HEIGHT));
 	disp_waitv();
-	sceDisplaySetFrameBuf(vram_disp, 512, PSP_DISPLAY_PIXEL_FORMAT_8888,
-						 PSP_DISPLAY_SETBUF_IMMEDIATE);
+	sceDisplaySetFrameBuf(vram_disp, 512, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_IMMEDIATE);
 	framebuffer = sceGuSwapBuffers();
 }
 
 extern void disp_getimage_draw(u32 x, u32 y, u32 w, u32 h, pixel * buf)
 {
-	pixel *lines = disp_get_vaddr(x, y), *linesend =
-		lines + (min(PSP_SCREEN_HEIGHT - y, h) << 9);
+	pixel *lines = disp_get_vaddr(x, y), *linesend = lines + (min(PSP_SCREEN_HEIGHT - y, h) << 9);
 	u32 rw = min(512 - x, w) * PIXEL_BYTES;
 
 	for (; lines < linesend; lines += 512) {
@@ -827,9 +777,7 @@ extern void disp_getimage_draw(u32 x, u32 y, u32 w, u32 h, pixel * buf)
 
 extern void disp_getimage(u32 x, u32 y, u32 w, u32 h, pixel * buf)
 {
-	pixel *lines =
-		(vram_disp + (x) + ((y) << 9)) + 0x40000000 / PIXEL_BYTES, *linesend =
-		lines + (min(PSP_SCREEN_HEIGHT - y, h) << 9);
+	pixel *lines = (vram_disp + (x) + ((y) << 9)) + 0x40000000 / PIXEL_BYTES, *linesend = lines + (min(PSP_SCREEN_HEIGHT - y, h) << 9);
 	u32 rw = min(512 - x, w) * PIXEL_BYTES;
 
 	for (; lines < linesend; lines += 512) {
@@ -851,9 +799,7 @@ extern void disp_getimage(u32 x, u32 y, u32 w, u32 h, pixel * buf)
  * buf: ÌùÍ¼»º´æ
  * swizzled: ÊÇ·ñÎªÎªËéÌùÍ¼
  */
-extern void disp_newputimage(int x, int y, int w, int h, int bufw, int startx,
-							 int starty, int ow, int oh, pixel * buf,
-							 bool swizzled)
+extern void disp_newputimage(int x, int y, int w, int h, int bufw, int startx, int starty, int ow, int oh, pixel * buf, bool swizzled)
 {
 	Vertex *vertices;
 
@@ -879,9 +825,7 @@ extern void disp_newputimage(int x, int y, int w, int h, int bufw, int startx,
 	vertices[1].y = y + h;
 	vertices[1].z = 0;
 	vertices[1].color = 0;
-	sceGuDrawArray(GU_SPRITES,
-				  GU_TEXTURE_16BIT | GU_COLOR_8888 | GU_VERTEX_16BIT |
-				  GU_TRANSFORM_2D, 2, 0, vertices);
+	sceGuDrawArray(GU_SPRITES, GU_TEXTURE_16BIT | GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, 0, vertices);
 	sceGuFinish();
 	sceGuSync(0, 0);
 }
@@ -897,8 +841,7 @@ extern void disp_newputimage(int x, int y, int w, int h, int bufw, int startx,
  * @param buf Í¼ÏñÊý¾Ý
  * @note TODO should use GE to copy image
  */
-extern void disp_putimage(u32 x, u32 y, u32 w, u32 h, u32 startx,
-						  u32 starty, pixel * buf)
+extern void disp_putimage(u32 x, u32 y, u32 w, u32 h, u32 startx, u32 starty, pixel * buf)
 {
 	pixel *lines, *linesend;
 	u32 rw;
@@ -923,7 +866,7 @@ extern void disp_putimage(u32 x, u32 y, u32 w, u32 h, u32 startx,
 	}
 
 	lines = disp_get_vaddr(x, y);
-   	linesend = lines + (min(PSP_SCREEN_HEIGHT - y, h - starty) << 9);
+	linesend = lines + (min(PSP_SCREEN_HEIGHT - y, h - starty) << 9);
 	buf = buf + starty * w + startx;
 	rw = min(512 - x, w - startx) * PIXEL_BYTES;
 
@@ -935,14 +878,12 @@ extern void disp_putimage(u32 x, u32 y, u32 w, u32 h, u32 startx,
 
 extern void disp_duptocache(void)
 {
-	memmove(vram_draw, ((u8 *) vram_disp) + 0x40000000,
-			512 * PSP_SCREEN_HEIGHT * PIXEL_BYTES);
+	memmove(vram_draw, ((u8 *) vram_disp) + 0x40000000, 512 * PSP_SCREEN_HEIGHT * PIXEL_BYTES);
 }
 
 extern void disp_duptocachealpha(int percent)
 {
-	pixel *vsrc = (pixel *) (((u8 *) vram_disp) + 0x40000000), *vdest =
-		vram_draw;
+	pixel *vsrc = (pixel *) (((u8 *) vram_disp) + 0x40000000), *vdest = vram_draw;
 	int i, j;
 
 	for (i = 0; i < PSP_SCREEN_HEIGHT; i++) {
@@ -964,38 +905,28 @@ extern void disp_fix_osk(void *buffer)
 {
 	if (buffer) {
 		vram_page = 0;
-		vram_disp =
-			(pixel *) 0x04000000 + (vram_page ? (512 * PSP_SCREEN_HEIGHT) : 0);
-		vram_draw =
-			(pixel *) 0x44000000 + (vram_page ? 0 : (512 * PSP_SCREEN_HEIGHT));
+		vram_disp = (pixel *) 0x04000000 + (vram_page ? (512 * PSP_SCREEN_HEIGHT) : 0);
+		vram_draw = (pixel *) 0x44000000 + (vram_page ? 0 : (512 * PSP_SCREEN_HEIGHT));
 	} else {
 		vram_page = 1;
-		vram_disp =
-			(pixel *) 0x04000000 + (vram_page ? (512 * PSP_SCREEN_HEIGHT) : 0);
-		vram_draw =
-			(pixel *) 0x44000000 + (vram_page ? 0 : (512 * PSP_SCREEN_HEIGHT));
+		vram_disp = (pixel *) 0x04000000 + (vram_page ? (512 * PSP_SCREEN_HEIGHT) : 0);
+		vram_draw = (pixel *) 0x44000000 + (vram_page ? 0 : (512 * PSP_SCREEN_HEIGHT));
 	}
-	sceDisplaySetFrameBuf(vram_disp, 512, PSP_DISPLAY_PIXEL_FORMAT_8888,
-						 PSP_DISPLAY_SETBUF_IMMEDIATE);
+	sceDisplaySetFrameBuf(vram_disp, 512, PSP_DISPLAY_PIXEL_FORMAT_8888, PSP_DISPLAY_SETBUF_IMMEDIATE);
 }
 
 extern void disp_rectduptocache(u32 x1, u32 y1, u32 x2, u32 y2)
 {
-	pixel *lines = disp_get_vaddr(x1, y1), *linesend =
-		disp_get_vaddr(x1, y2), *lined =
-		vram_disp + 0x40000000 / PIXEL_BYTES + x1 + (y1 << 9);
+	pixel *lines = disp_get_vaddr(x1, y1), *linesend = disp_get_vaddr(x1, y2), *lined = vram_disp + 0x40000000 / PIXEL_BYTES + x1 + (y1 << 9);
 	u32 w = (x2 - x1 + 1) * PIXEL_BYTES;
 
 	for (; lines <= linesend; lines += 512, lined += 512)
 		memcpy(lines, lined, w);
 }
 
-extern void disp_rectduptocachealpha(u32 x1, u32 y1, u32 x2, u32 y2,
-									 int percent)
+extern void disp_rectduptocachealpha(u32 x1, u32 y1, u32 x2, u32 y2, int percent)
 {
-	pixel *lines = disp_get_vaddr(x1, y1), *linesend =
-		disp_get_vaddr(x1, y2), *lined =
-		vram_disp + 0x40000000 / PIXEL_BYTES + x1 + (y1 << 9);
+	pixel *lines = disp_get_vaddr(x1, y1), *linesend = disp_get_vaddr(x1, y2), *lined = vram_disp + 0x40000000 / PIXEL_BYTES + x1 + (y1 << 9);
 	u32 w = x2 - x1 + 1;
 
 	for (; lines <= linesend; lines += 512, lined += 512) {
@@ -1092,20 +1023,14 @@ static inline int putnstring_hanzi(disp_draw_string_inf * inf)
 			return 0;
 		}
 
-		ccur =
-			cfont_buffer + (((u32) (*inf->str - 0x81)) * 0xBF +
-							((u32) (*(inf->str + 1) - 0x40))) *
-			DISP_CFONTSIZE + inf->top * DISP_CROWSIZE;
+		ccur = cfont_buffer + (((u32) (*inf->str - 0x81)) * 0xBF + ((u32) (*(inf->str + 1) - 0x40))) * DISP_CFONTSIZE + inf->top * DISP_CROWSIZE;
 	} else {
 		if (book_cfont_buffer == NULL) {
 			dbg_printf(d, "%s: book_cfont_buffer is NULL", __func__);
 			return 0;
 		}
 
-		ccur =
-			book_cfont_buffer + (((u32) (*inf->str - 0x81)) * 0xBF +
-								 ((u32) (*(inf->str + 1) - 0x40))) *
-			DISP_BOOK_CFONTSIZE + inf->top * DISP_BOOK_CROWSIZE;
+		ccur = book_cfont_buffer + (((u32) (*inf->str - 0x81)) * 0xBF + ((u32) (*(inf->str + 1) - 0x40))) * DISP_BOOK_CFONTSIZE + inf->top * DISP_BOOK_CROWSIZE;
 	}
 
 	if (inf->is_system)
@@ -1154,9 +1079,7 @@ static inline int putnstring_hanzi(disp_draw_string_inf * inf)
 	inf->str += 2;
 	inf->count -= 2;
 
-	delta = 
-		inf->is_system ? DISP_FONTSIZE +
-		inf->wordspace * 2 : DISP_BOOK_FONTSIZE + inf->wordspace * 2;
+	delta = inf->is_system ? DISP_FONTSIZE + inf->wordspace * 2 : DISP_BOOK_FONTSIZE + inf->wordspace * 2;
 
 	switch (inf->direction) {
 		case HORZ:
@@ -1193,18 +1116,14 @@ static inline int putnstring_ascii(disp_draw_string_inf * inf)
 			return 0;
 		}
 
-		ccur =
-			efont_buffer + ((u32) * inf->str) * DISP_EFONTSIZE +
-			inf->top * DISP_EROWSIZE;
+		ccur = efont_buffer + ((u32) * inf->str) * DISP_EFONTSIZE + inf->top * DISP_EROWSIZE;
 	} else {
 		if (book_efont_buffer == NULL) {
 			dbg_printf(d, "%s: book_efont_buffer is NULL", __func__);
 			return 0;
 		}
 
-		ccur =
-			book_efont_buffer + ((u32) * inf->str) * DISP_BOOK_EFONTSIZE +
-			inf->top * DISP_BOOK_EROWSIZE;
+		ccur = book_efont_buffer + ((u32) * inf->str) * DISP_BOOK_EFONTSIZE + inf->top * DISP_BOOK_EROWSIZE;
 	}
 
 	if (inf->is_system)
@@ -1253,9 +1172,7 @@ static inline int putnstring_ascii(disp_draw_string_inf * inf)
 	inf->str++;
 	inf->count--;
 
-	delta =
-		inf->is_system ? DISP_FONTSIZE / 2 +
-		inf->wordspace : DISP_BOOK_FONTSIZE / 2 + inf->wordspace;
+	delta = inf->is_system ? DISP_FONTSIZE / 2 + inf->wordspace : DISP_BOOK_FONTSIZE / 2 + inf->wordspace;
 
 	switch (inf->direction) {
 		case HORZ:
@@ -1276,10 +1193,7 @@ static inline int putnstring_ascii(disp_draw_string_inf * inf)
 }
 
 static inline void disp_to_draw_string_inf(disp_draw_string_inf * inf, int x,
-										   int y, pixel color, const u8 * str,
-										   int count, u32 wordspace, int top,
-										   int height, bool is_system,
-										   int direction)
+										   int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, bool is_system, int direction)
 {
 	inf->x = x;
 	inf->y = y;
@@ -1294,10 +1208,7 @@ static inline void disp_to_draw_string_inf(disp_draw_string_inf * inf, int x,
 }
 
 static inline void disp_from_draw_string_inf(disp_draw_string_inf * inf, int *x,
-											 int *y, pixel * color,
-											 const u8 ** str, int *count,
-											 u32 * wordspace, int *top,
-											 int *height, int *direction)
+											 int *y, pixel * color, const u8 ** str, int *count, u32 * wordspace, int *top, int *height, int *direction)
 {
 	if (x)
 		*x = inf->x;
@@ -1319,9 +1230,7 @@ static inline void disp_from_draw_string_inf(disp_draw_string_inf * inf, int *x,
 		*direction = inf->direction;
 }
 
-extern void disp_putnstring(int x, int y, pixel color, const u8 * str,
-							int count, u32 wordspace, int top, int height,
-							int bot)
+extern void disp_putnstring(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot)
 {
 	disp_draw_string_inf inf;
 
@@ -1348,24 +1257,20 @@ extern void disp_putnstring(int x, int y, pixel color, const u8 * str,
 				break;
 			}
 
-			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace,
-									top, height, true, HORZ);
+			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace, top, height, true, HORZ);
 			if (putnstring_hanzi(&inf) == 0) {
 				return;
 			}
-			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
-									  &wordspace, &top, &height, NULL);
+			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count, &wordspace, &top, &height, NULL);
 		} else if (*str > 0x1F) {
 			if (x > PSP_SCREEN_WIDTH - DISP_RSPAN - DISP_FONTSIZE / 2) {
 				break;
 			}
-			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace,
-									top, height, true, HORZ);
+			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace, top, height, true, HORZ);
 			if (putnstring_ascii(&inf) == 0) {
 				return;
 			}
-			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
-									  &wordspace, &top, &height, NULL);
+			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count, &wordspace, &top, &height, NULL);
 		} else {
 			int j;
 
@@ -1383,10 +1288,7 @@ extern void disp_putnstring(int x, int y, pixel color, const u8 * str,
 	}
 }
 
-extern void disp_putnstringreversal_sys(int x, int y, pixel color,
-										const u8 * str, int count,
-										u32 wordspace, int top, int height,
-										int bot)
+extern void disp_putnstringreversal_sys(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot)
 {
 	disp_draw_string_inf inf;
 
@@ -1417,24 +1319,20 @@ extern void disp_putnstringreversal_sys(int x, int y, pixel color,
 			if (x < 0) {
 				break;
 			}
-			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace,
-									top, height, true, REVERSAL);
+			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace, top, height, true, REVERSAL);
 			if (putnstring_hanzi(&inf) == 0) {
 				return;
 			}
-			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
-									  &wordspace, &top, &height, NULL);
+			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count, &wordspace, &top, &height, NULL);
 		} else if (*str > 0x1F) {
 			if (x < 0) {
 				break;
 			}
-			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace,
-									top, height, true, REVERSAL);
+			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace, top, height, true, REVERSAL);
 			if (putnstring_ascii(&inf) == 0) {
 				return;
 			}
-			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
-									  &wordspace, &top, &height, NULL);
+			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count, &wordspace, &top, &height, NULL);
 		} else {
 			if (x < 0) {
 				break;
@@ -1448,17 +1346,14 @@ extern void disp_putnstringreversal_sys(int x, int y, pixel color,
 	}
 }
 
-extern void disp_putnstringreversal(int x, int y, pixel color, const u8 * str,
-									int count, u32 wordspace, int top,
-									int height, int bot)
+extern void disp_putnstringreversal(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot)
 {
 	pixel *vaddr;
 	const u8 *ccur, *cend;
 
 #ifdef ENABLE_TTF
 	if (using_ttf) {
-		disp_putnstring_reversal_truetype(cttf, ettf, x, y, color, str,
-										  count, wordspace, top, height, bot);
+		disp_putnstring_reversal_truetype(cttf, ettf, x, y, color, str, count, wordspace, top, height, bot);
 		return;
 	}
 #endif
@@ -1497,18 +1392,14 @@ extern void disp_putnstringreversal(int x, int y, pixel color, const u8 * str,
 				return;
 
 			vaddr = disp_get_vaddr(x, y);
-			pos =
-				(((u32) (*str - 0x81)) * 0xBF +
-				 ((u32) (*(str + 1) - 0x40)));
+			pos = (((u32) (*str - 0x81)) * 0xBF + ((u32) (*(str + 1) - 0x40)));
 
 			if (book_cfont_buffer == NULL) {
 				dbg_printf(d, "%s: book_cfont_buffer is NULL", __func__);
 				return;
 			}
 
-			ccur =
-				book_cfont_buffer + pos * DISP_BOOK_CFONTSIZE +
-				top * DISP_BOOK_CROWSIZE;
+			ccur = book_cfont_buffer + pos * DISP_BOOK_CFONTSIZE + top * DISP_BOOK_CROWSIZE;
 
 			for (cend = ccur + height * DISP_BOOK_CROWSIZE; ccur < cend; ccur++) {
 				int b;
@@ -1548,12 +1439,8 @@ extern void disp_putnstringreversal(int x, int y, pixel color, const u8 * str,
 					return;
 				}
 
-				ccur =
-					book_efont_buffer +
-					((u32) * str) * DISP_BOOK_EFONTSIZE +
-					top * DISP_BOOK_EROWSIZE;
-				for (cend = ccur + height * DISP_BOOK_EROWSIZE;
-					 ccur < cend; ccur++) {
+				ccur = book_efont_buffer + ((u32) * str) * DISP_BOOK_EFONTSIZE + top * DISP_BOOK_EROWSIZE;
+				for (cend = ccur + height * DISP_BOOK_EROWSIZE; ccur < cend; ccur++) {
 					int b;
 					pixel *vpoint = vaddr;
 					int bitsleft = DISP_BOOK_FONTSIZE / 2 - 8;
@@ -1594,9 +1481,7 @@ extern void disp_putnstringreversal(int x, int y, pixel color, const u8 * str,
 	}
 }
 
-extern void disp_putnstringhorz_sys(int x, int y, pixel color, const u8 * str,
-									int count, u32 wordspace, int top,
-									int height, int bot)
+extern void disp_putnstringhorz_sys(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot)
 {
 	pixel *vaddr;
 	const u8 *ccur, *cend;
@@ -1628,9 +1513,7 @@ extern void disp_putnstringhorz_sys(int x, int y, pixel color, const u8 * str,
 			if (!check_range(x, y))
 				return;
 			vaddr = disp_get_vaddr(x, y);
-			pos =
-				(((u32) (*str - 0x81)) * 0xBF +
-				 ((u32) (*(str + 1) - 0x40)));
+			pos = (((u32) (*str - 0x81)) * 0xBF + ((u32) (*(str + 1) - 0x40)));
 
 			if (cfont_buffer == NULL) {
 				dbg_printf(d, "%s: cfont_buffer is NULL", __func__);
@@ -1677,9 +1560,7 @@ extern void disp_putnstringhorz_sys(int x, int y, pixel color, const u8 * str,
 					return;
 				}
 
-				ccur =
-					efont_buffer +
-					((u32) * str) * DISP_EFONTSIZE + top * DISP_EROWSIZE;
+				ccur = efont_buffer + ((u32) * str) * DISP_EFONTSIZE + top * DISP_EROWSIZE;
 				for (cend = ccur + height * DISP_EROWSIZE; ccur < cend; ccur++) {
 					int b;
 					pixel *vpoint = vaddr;
@@ -1718,16 +1599,13 @@ extern void disp_putnstringhorz_sys(int x, int y, pixel color, const u8 * str,
 	}
 }
 
-extern void disp_putnstringhorz(int x, int y, pixel color, const u8 * str,
-								int count, u32 wordspace, int top, int height,
-								int bot)
+extern void disp_putnstringhorz(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot)
 {
 	disp_draw_string_inf inf;
 
 #ifdef ENABLE_TTF
 	if (using_ttf) {
-		disp_putnstring_horz_truetype(cttf, ettf, x, y, color, str,
-									  count, wordspace, top, height, bot);
+		disp_putnstring_horz_truetype(cttf, ettf, x, y, color, str, count, wordspace, top, height, bot);
 		return;
 	}
 #endif
@@ -1754,24 +1632,20 @@ extern void disp_putnstringhorz(int x, int y, pixel color, const u8 * str,
 			if (x > PSP_SCREEN_WIDTH - DISP_RSPAN - DISP_BOOK_FONTSIZE) {
 				break;
 			}
-			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace,
-									top, height, false, HORZ);
+			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace, top, height, false, HORZ);
 			if (putnstring_hanzi(&inf) == 0) {
 				return;
 			}
-			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
-									  &wordspace, &top, &height, NULL);
+			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count, &wordspace, &top, &height, NULL);
 		} else if (*str > 0x1F) {
 			if (x > PSP_SCREEN_WIDTH - DISP_RSPAN - DISP_BOOK_FONTSIZE / 2) {
 				break;
 			}
-			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace,
-									top, height, false, HORZ);
+			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace, top, height, false, HORZ);
 			if (putnstring_ascii(&inf) == 0) {
 				return;
 			}
-			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
-									  &wordspace, &top, &height, NULL);
+			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count, &wordspace, &top, &height, NULL);
 		} else {
 			int j;
 
@@ -1789,10 +1663,7 @@ extern void disp_putnstringhorz(int x, int y, pixel color, const u8 * str,
 	}
 }
 
-extern void disp_putnstringlvert_sys(int x, int y, pixel color,
-									 const u8 * str, int count,
-									 u32 wordspace, int top, int height,
-									 int bot)
+extern void disp_putnstringlvert_sys(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot)
 {
 	disp_draw_string_inf inf;
 
@@ -1818,24 +1689,20 @@ extern void disp_putnstringlvert_sys(int x, int y, pixel color,
 			if (y < DISP_BOOK_FONTSIZE - 1) {
 				break;
 			}
-			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace,
-									top, height, true, LVERT);
+			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace, top, height, true, LVERT);
 			if (putnstring_hanzi(&inf) == 0) {
 				return;
 			}
-			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
-									  &wordspace, &top, &height, NULL);
+			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count, &wordspace, &top, &height, NULL);
 		} else if (*str > 0x1F) {
 			if (y < DISP_BOOK_FONTSIZE / 2 - 1) {
 				break;
 			}
-			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace,
-									top, height, true, LVERT);
+			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace, top, height, true, LVERT);
 			if (putnstring_ascii(&inf) == 0) {
 				return;
 			}
-			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
-									  &wordspace, &top, &height, NULL);
+			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count, &wordspace, &top, &height, NULL);
 		} else {
 			if (y < DISP_RSPAN + DISP_FONTSIZE - 1) {
 				break;
@@ -1849,16 +1716,13 @@ extern void disp_putnstringlvert_sys(int x, int y, pixel color,
 	}
 }
 
-extern void disp_putnstringlvert(int x, int y, pixel color, const u8 * str,
-								 int count, u32 wordspace, int top,
-								 int height, int bot)
+extern void disp_putnstringlvert(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot)
 {
 	disp_draw_string_inf inf;
 
 #ifdef ENABLE_TTF
 	if (using_ttf) {
-		disp_putnstring_lvert_truetype(cttf, ettf, x, y, color, str,
-									   count, wordspace, top, height, bot);
+		disp_putnstring_lvert_truetype(cttf, ettf, x, y, color, str, count, wordspace, top, height, bot);
 		return;
 	}
 #endif
@@ -1885,24 +1749,20 @@ extern void disp_putnstringlvert(int x, int y, pixel color, const u8 * str,
 			if (y < DISP_BOOK_FONTSIZE - 1) {
 				break;
 			}
-			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace,
-									top, height, false, LVERT);
+			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace, top, height, false, LVERT);
 			if (putnstring_hanzi(&inf) == 0) {
 				return;
 			}
-			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
-									  &wordspace, &top, &height, NULL);
+			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count, &wordspace, &top, &height, NULL);
 		} else if (*str > 0x1F) {
 			if (y < DISP_BOOK_FONTSIZE / 2 - 1) {
 				break;
 			}
-			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace,
-									top, height, false, LVERT);
+			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace, top, height, false, LVERT);
 			if (putnstring_ascii(&inf) == 0) {
 				return;
 			}
-			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
-									  &wordspace, &top, &height, NULL);
+			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count, &wordspace, &top, &height, NULL);
 		} else {
 			int j;
 
@@ -1920,10 +1780,7 @@ extern void disp_putnstringlvert(int x, int y, pixel color, const u8 * str,
 	}
 }
 
-extern void disp_putnstringrvert_sys(int x, int y, pixel color,
-									 const u8 * str, int count,
-									 u32 wordspace, int top, int height,
-									 int bot)
+extern void disp_putnstringrvert_sys(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot)
 {
 	disp_draw_string_inf inf;
 
@@ -1947,24 +1804,20 @@ extern void disp_putnstringrvert_sys(int x, int y, pixel color,
 			if (y > PSP_SCREEN_HEIGHT - DISP_RSPAN - DISP_FONTSIZE) {
 				break;
 			}
-			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace,
-									top, height, true, RVERT);
+			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace, top, height, true, RVERT);
 			if (putnstring_hanzi(&inf) == 0) {
 				return;
 			}
-			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
-									  &wordspace, &top, &height, NULL);
+			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count, &wordspace, &top, &height, NULL);
 		} else if (*str > 0x1F) {
 			if (y > PSP_SCREEN_HEIGHT - DISP_RSPAN - DISP_FONTSIZE / 2) {
 				break;
 			}
-			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace,
-									top, height, true, RVERT);
+			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace, top, height, true, RVERT);
 			if (putnstring_ascii(&inf) == 0) {
 				return;
 			}
-			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
-									  &wordspace, &top, &height, NULL);
+			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count, &wordspace, &top, &height, NULL);
 		} else {
 			if (y > PSP_SCREEN_HEIGHT - DISP_RSPAN - DISP_FONTSIZE / 2) {
 				break;
@@ -1978,16 +1831,13 @@ extern void disp_putnstringrvert_sys(int x, int y, pixel color,
 	}
 }
 
-extern void disp_putnstringrvert(int x, int y, pixel color, const u8 * str,
-								 int count, u32 wordspace, int top,
-								 int height, int bot)
+extern void disp_putnstringrvert(int x, int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot)
 {
 	disp_draw_string_inf inf;
 
 #ifdef ENABLE_TTF
 	if (using_ttf) {
-		disp_putnstring_rvert_truetype(cttf, ettf, x, y, color, str,
-									   count, wordspace, top, height, bot);
+		disp_putnstring_rvert_truetype(cttf, ettf, x, y, color, str, count, wordspace, top, height, bot);
 		return;
 	}
 #endif
@@ -2012,24 +1862,20 @@ extern void disp_putnstringrvert(int x, int y, pixel color, const u8 * str,
 			if (y > PSP_SCREEN_HEIGHT - DISP_RSPAN - DISP_BOOK_FONTSIZE) {
 				break;
 			}
-			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace,
-									top, height, false, RVERT);
+			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace, top, height, false, RVERT);
 			if (putnstring_hanzi(&inf) == 0) {
 				return;
 			}
-			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
-									  &wordspace, &top, &height, NULL);
+			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count, &wordspace, &top, &height, NULL);
 		} else if (*str > 0x1F) {
 			if (y > PSP_SCREEN_HEIGHT - DISP_RSPAN - DISP_BOOK_FONTSIZE / 2) {
 				break;
 			}
-			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace,
-									top, height, false, RVERT);
+			disp_to_draw_string_inf(&inf, x, y, color, str, count, wordspace, top, height, false, RVERT);
 			if (putnstring_ascii(&inf) == 0) {
 				return;
 			}
-			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count,
-									  &wordspace, &top, &height, NULL);
+			disp_from_draw_string_inf(&inf, &x, &y, &color, &str, &count, &wordspace, &top, &height, NULL);
 		} else {
 			int j;
 
@@ -2066,9 +1912,7 @@ extern void disp_fillrect(u32 x1, u32 y1, u32 x2, u32 y2, pixel color)
 	setVertex(&vertices[1], x2 + 1, y2 + 1, 0, color);
 
 	sceGuDisable(GU_TEXTURE_2D);
-	sceGuDrawArray(GU_SPRITES,
-				  GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, 0,
-				  vertices);
+	sceGuDrawArray(GU_SPRITES, GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, 0, vertices);
 	sceGuEnable(GU_TEXTURE_2D);
 
 	sceGuFinish();
@@ -2088,9 +1932,7 @@ extern void disp_rectangle(u32 x1, u32 y1, u32 x2, u32 y2, pixel color)
 	setVertex(&vertices[4], x1, y1, 0, color);
 
 	sceGuDisable(GU_TEXTURE_2D);
-	sceGuDrawArray(GU_LINE_STRIP,
-				  GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 5, 0,
-				  vertices);
+	sceGuDrawArray(GU_LINE_STRIP, GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 5, 0, vertices);
 	sceGuEnable(GU_TEXTURE_2D);
 
 	sceGuFinish();
@@ -2107,9 +1949,7 @@ extern void disp_line(u32 x1, u32 y1, u32 x2, u32 y2, pixel color)
 	setVertex(&vertices[1], x2, y2, 0, color);
 
 	sceGuDisable(GU_TEXTURE_2D);
-	sceGuDrawArray(GU_LINES,
-				  GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, 0,
-				  vertices);
+	sceGuDrawArray(GU_LINES, GU_COLOR_8888 | GU_VERTEX_16BIT | GU_TRANSFORM_2D, 2, 0, vertices);
 	sceGuEnable(GU_TEXTURE_2D);
 
 	sceGuFinish();

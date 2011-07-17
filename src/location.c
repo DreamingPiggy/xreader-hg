@@ -82,15 +82,13 @@ extern bool location_enum(t_location_enum_func func, void *data)
 		if (sceIoRead(fd, &l, sizeof(t_location)) != sizeof(t_location))
 			break;
 		if (slot[i])
-			func(i, l.comppath, l.shortpath, l.compname, l.name, l.isreading,
-				 data);
+			func(i, l.comppath, l.shortpath, l.compname, l.name, l.isreading, data);
 	}
 	sceIoClose(fd);
 	return true;
 }
 
-extern bool location_get(u32 index, char *comppath, char *shortpath,
-						 char *compname, char *name, bool * isreading)
+extern bool location_get(u32 index, char *comppath, char *shortpath, char *compname, char *name, bool * isreading)
 {
 	int fd;
 	t_location l;
@@ -102,9 +100,7 @@ extern bool location_get(u32 index, char *comppath, char *shortpath,
 
 	if (fd < 0)
 		return false;
-	if (sceIoLseek32
-		(fd, sizeof(t_location) * index + sizeof(bool) * 10,
-		 PSP_SEEK_SET) != sizeof(t_location) * index + sizeof(bool) * 10) {
+	if (sceIoLseek32(fd, sizeof(t_location) * index + sizeof(bool) * 10, PSP_SEEK_SET) != sizeof(t_location) * index + sizeof(bool) * 10) {
 		sceIoClose(fd);
 		return false;
 	}
@@ -121,29 +117,23 @@ extern bool location_get(u32 index, char *comppath, char *shortpath,
 	return true;
 }
 
-extern bool location_set(u32 index, char *comppath, char *shortpath,
-						 char *compname, char *name, bool isreading)
+extern bool location_set(u32 index, char *comppath, char *shortpath, char *compname, char *name, bool isreading)
 {
 	int fd;
 	u32 pos;
 	t_location t;
 
-	if ((fd = sceIoOpen(fn, PSP_O_RDWR, 0777)) < 0
-		&& (fd = sceIoOpen(fn, PSP_O_CREAT | PSP_O_RDWR, 0777)) < 0)
+	if ((fd = sceIoOpen(fn, PSP_O_RDWR, 0777)) < 0 && (fd = sceIoOpen(fn, PSP_O_CREAT | PSP_O_RDWR, 0777)) < 0)
 		return false;
 
-	pos = sceIoLseek32(fd, sizeof(t_location) * index + sizeof(bool) * 10,
-					  PSP_SEEK_SET);
+	pos = sceIoLseek32(fd, sizeof(t_location) * index + sizeof(bool) * 10, PSP_SEEK_SET);
 
 	if (pos < sizeof(t_location) * index + sizeof(bool) * 10) {
 		u8 tempdata[sizeof(t_location) * 10 + sizeof(bool) * 10 - pos];
 
 		memset(tempdata, 0, sizeof(t_location) * 10 + sizeof(bool) * 10 - pos);
-		sceIoWrite(fd, tempdata,
-				  sizeof(t_location) * 10 + sizeof(bool) * 10 - pos);
-		if (sceIoLseek32
-			(fd, sizeof(t_location) * index + sizeof(bool) * 10,
-			 PSP_SEEK_SET) < sizeof(t_location) * index + sizeof(bool) * 10) {
+		sceIoWrite(fd, tempdata, sizeof(t_location) * 10 + sizeof(bool) * 10 - pos);
+		if (sceIoLseek32(fd, sizeof(t_location) * index + sizeof(bool) * 10, PSP_SEEK_SET) < sizeof(t_location) * index + sizeof(bool) * 10) {
 			sceIoClose(fd);
 			return false;
 		}

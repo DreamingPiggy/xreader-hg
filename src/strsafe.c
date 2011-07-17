@@ -30,9 +30,7 @@
 
 extern DBG *d;
 
-size_t
-strncpy_s(char *strDest,
-		  size_t numberOfElements, const char *strSource, size_t count)
+size_t strncpy_s(char *strDest, size_t numberOfElements, const char *strSource, size_t count)
 {
 	size_t copied;
 
@@ -53,14 +51,12 @@ strncpy_s(char *strDest,
 	return strnlen(strDest, numberOfElements);
 }
 
-size_t
-strcpy_s(char *strDestination, size_t numberOfElements, const char *strSource)
+size_t strcpy_s(char *strDestination, size_t numberOfElements, const char *strSource)
 {
 	return strncpy_s(strDestination, numberOfElements, strSource, -1);
 }
 
-size_t strncat_s(char *strDest,
-				 size_t numberOfElements, const char *strSource, size_t count)
+size_t strncat_s(char *strDest, size_t numberOfElements, const char *strSource, size_t count)
 {
 	size_t rest;
 
@@ -88,8 +84,7 @@ size_t strncat_s(char *strDest,
 	return strnlen(strDest, numberOfElements);
 }
 
-size_t
-strcat_s(char *strDestination, size_t numberOfElements, const char *strSource)
+size_t strcat_s(char *strDestination, size_t numberOfElements, const char *strSource)
 {
 	return strncat_s(strDestination, numberOfElements, strSource, -1);
 }
@@ -139,8 +134,7 @@ size_t mbcslen(const unsigned char *str)
 	return s;
 }
 
-size_t mbcsncpy_s(unsigned char *dst, size_t nBytes, const unsigned char *src,
-				  size_t n)
+size_t mbcsncpy_s(unsigned char *dst, size_t nBytes, const unsigned char *src, size_t n)
 {
 	unsigned char *start = dst;
 

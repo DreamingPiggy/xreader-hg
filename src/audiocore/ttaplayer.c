@@ -87,8 +87,7 @@ static uint32_t g_tta_data_offset = 0;
  * @param frames 复制帧数
  * @param channels 声道数
  */
-static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames,
-						   int channels)
+static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames, int channels)
 {
 	int n;
 	signed short *p = (signed short *) buf;
@@ -171,16 +170,12 @@ static int tta_audiocallback(void *buf, unsigned int reqn, void *pdata)
 		avail_frame = g_buff_frame_size - g_buff_frame_start;
 
 		if (avail_frame >= snd_buf_frame_size) {
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * g_info.channels],
-						   snd_buf_frame_size, g_info.channels);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * g_info.channels], snd_buf_frame_size, g_info.channels);
 			g_buff_frame_start += snd_buf_frame_size;
 			audio_buf += snd_buf_frame_size * 2;
 			snd_buf_frame_size = 0;
 		} else {
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * g_info.channels],
-						   avail_frame, g_info.channels);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * g_info.channels], avail_frame, g_info.channels);
 			snd_buf_frame_size -= avail_frame;
 			audio_buf += avail_frame * 2;
 
@@ -289,7 +284,7 @@ static int tta_load(const char *spath, const char *lpath)
 		xAudioSetFrameSize(2048);
 	else
 		xAudioSetFrameSize(4096);
-	
+
 	if (xAudioInit() < 0) {
 		__end();
 		return -1;
@@ -447,8 +442,7 @@ static int tta_get_info(struct music_info *pinfo)
 	}
 	if (pinfo->type & MD_GET_ENCODEMSG) {
 		if (config.show_encoder_msg && g_status != ST_UNKNOWN) {
-			SPRINTF_S(pinfo->encode_msg, "%s: %.2f", _("压缩率"),
-					  ttainfo.COMPRESS);
+			SPRINTF_S(pinfo->encode_msg, "%s: %.2f", _("压缩率"), ttainfo.COMPRESS);
 		} else {
 			pinfo->encode_msg[0] = '\0';
 		}
@@ -488,14 +482,13 @@ static int tta_set_opt(const char *unused, const char *values)
 		g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE / 2;
 	else
 		g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE;
-	
+
 	dbg_printf(d, "%s: options are %s", __func__, values);
 
 	build_args(values, &argc, &argv);
 
 	for (i = 0; i < argc; ++i) {
-		if (!strncasecmp
-			(argv[i], "tta_buffer_size", sizeof("tta_buffer_size") - 1)) {
+		if (!strncasecmp(argv[i], "tta_buffer_size", sizeof("tta_buffer_size") - 1)) {
 			const char *p = argv[i];
 
 			if ((p = strrchr(p, '=')) != NULL) {

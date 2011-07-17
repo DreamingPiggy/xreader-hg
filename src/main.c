@@ -118,8 +118,8 @@ static int CallbackThread(unsigned int args, void *argp)
 static int SetupCallbacks(void)
 {
 	int thid = sceKernelCreateThread("Callback Thread", CallbackThread, 0x11,
-									0x10000,
-									0, 0);
+									 0x10000,
+									 0, 0);
 
 	if (thid >= 0) {
 		sceKernelStartThread(thid, 0, 0);
@@ -142,8 +142,7 @@ int main(int argc, char *argv[])
 	psp_fw_version = sceKernelDevkitVersion();
 
 	SetupCallbacks();
-	thid = sceKernelCreateThread("User Thread", main_thread, 45, 0x40000,
-									PSP_THREAD_ATTR_USER, NULL);
+	thid = sceKernelCreateThread("User Thread", main_thread, 45, 0x40000, PSP_THREAD_ATTR_USER, NULL);
 
 	if (thid < 0)
 		sceKernelSleepThread();
@@ -160,7 +159,7 @@ void debug_malloc(void)
 #ifdef DMALLOC
 	static unsigned mark = -1;
 
-	if(mark == -1) {
+	if (mark == -1) {
 		mark = dmalloc_mark();
 	} else {
 		dmalloc_log_changed(mark, 1, 0, 1);

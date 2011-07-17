@@ -89,8 +89,7 @@ typedef struct _ttf
  * @return 描述TTF的指针
  * - NULL 失败
  */
-extern p_ttf ttf_open(const char *filename, int size, bool load2mem,
-					  bool cjkmode);
+extern p_ttf ttf_open(const char *filename, int size, bool load2mem, bool cjkmode);
 
 /**
  * 从指定数据中打开TTF字体
@@ -103,8 +102,7 @@ extern p_ttf ttf_open(const char *filename, int size, bool load2mem,
  * @return 描述TTF的指针
  * - NULL 失败
  */
-extern p_ttf ttf_open_buffer(void *ttfBuf, size_t ttfLength, int pixelSize,
-							 const char *ttfName, bool cjkmode);
+extern p_ttf ttf_open_buffer(void *ttfBuf, size_t ttfLength, int pixelSize, const char *ttfName, bool cjkmode);
 
 /**
  * 关闭TTF字形缓存
@@ -171,9 +169,7 @@ extern void ttf_set_embolden(p_ttf ttf, bool embolden);
  *
  * @return 字符串个数计数，以字节计
  */
-extern int ttf_get_string_width_english(p_ttf cttf, p_ttf ettf,
-										const u8 * str, u32 maxpixels,
-										u32 maxbytes, u32 wordspace);
+extern int ttf_get_string_width_english(p_ttf cttf, p_ttf ettf, const u8 * str, u32 maxpixels, u32 maxbytes, u32 wordspace);
 /**
  * 得到字符串所能显示在maxpixels中的长度
  *
@@ -191,9 +187,7 @@ extern int ttf_get_string_width_english(p_ttf cttf, p_ttf ettf,
  *
  * @return 字符串个数计数，以字节计
  */
-extern int ttf_get_string_width(p_ttf cttf, p_ttf ettf, const u8 * str,
-								u32 maxpixels, u32 maxbytes,
-								u32 wordspace, u32 * pwidth);
+extern int ttf_get_string_width(p_ttf cttf, p_ttf ettf, const u8 * str, u32 maxpixels, u32 maxbytes, u32 wordspace, u32 * pwidth);
 
 /**
  * 得到字符串所能显示在maxpixels中的长度
@@ -208,8 +202,7 @@ extern int ttf_get_string_width(p_ttf cttf, p_ttf ettf, const u8 * str,
  * @param maxpixels 最大长度
  * @param wordspace 字间距（以像素点计）
  */
-extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const u8 * str,
-									 u32 maxpixels, u32 wordspace);
+extern int ttf_get_string_width_hard(p_ttf cttf, p_ttf ettf, const u8 * str, u32 maxpixels, u32 wordspace);
 
 /**
  * 得到英文字母宽度信息
@@ -236,9 +229,7 @@ extern void ttf_load_ewidth(p_ttf ttf, u8 * ewidth, int size);
  * @param bot
  */
 extern void disp_putnstring_horz_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
-										  pixel color, const u8 * str,
-										  int count, u32 wordspace, int top,
-										  int height, int bot);
+										  pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot);
 
 /**
  * 绘制水平颠倒TTF字体汉字到屏幕
@@ -256,10 +247,7 @@ extern void disp_putnstring_horz_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
  * @param bot
  */
 extern void disp_putnstring_reversal_truetype(p_ttf cttf, p_ttf ettf, int x,
-											  int y, pixel color,
-											  const u8 * str, int count,
-											  u32 wordspace, int top,
-											  int height, int bot);
+											  int y, pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot);
 
 /**
  * 绘制左向TTF字体汉字到屏幕
@@ -277,9 +265,7 @@ extern void disp_putnstring_reversal_truetype(p_ttf cttf, p_ttf ettf, int x,
  * @param bot
  */
 extern void disp_putnstring_lvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
-										   pixel color, const u8 * str,
-										   int count, u32 wordspace, int top,
-										   int height, int bot);
+										   pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot);
 
 /**
  * 绘制右向TTF字体汉字到屏幕
@@ -297,9 +283,7 @@ extern void disp_putnstring_lvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
  * @param bot
  */
 extern void disp_putnstring_rvert_truetype(p_ttf cttf, p_ttf ettf, int x, int y,
-										   pixel color, const u8 * str,
-										   int count, u32 wordspace, int top,
-										   int height, int bot);
+										   pixel color, const u8 * str, int count, u32 wordspace, int top, int height, int bot);
 
 /** TTF加锁 */
 extern void ttf_lock(void);

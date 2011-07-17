@@ -102,8 +102,7 @@ static buffered_reader_t *flacfile = NULL;
  * @param frames 复制帧数
  * @param channels 声道数
  */
-static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames,
-						   int channels)
+static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames, int channels)
 {
 	int n;
 	signed short *p = (signed short *) buf;
@@ -139,8 +138,7 @@ static int flac_seek_seconds(double seconds)
 
 	free_bitrate(&g_inst_br);
 
-	if (!FLAC__stream_decoder_seek_absolute
-		(g_decoder, g_info.samples * seconds / g_info.duration)) {
+	if (!FLAC__stream_decoder_seek_absolute(g_decoder, g_info.samples * seconds / g_info.duration)) {
 		return -1;
 	}
 
@@ -161,16 +159,12 @@ static int flac_seek_seconds(double seconds)
 	return 0;
 }
 
-static FLAC__StreamDecoderReadStatus flac_read_cb(const FLAC__StreamDecoder *
-												  decoder, FLAC__byte buffer[],
-												  size_t * bytes,
-												  void *client_data)
+static FLAC__StreamDecoderReadStatus flac_read_cb(const FLAC__StreamDecoder * decoder, FLAC__byte buffer[], size_t * bytes, void *client_data)
 {
 	buffered_reader_t *pb = (buffered_reader_t *) client_data;
 
 	if (*bytes > 0) {
-		*bytes = buffered_reader_read(pb, buffer, sizeof(FLAC__byte) *
-									  (*bytes));
+		*bytes = buffered_reader_read(pb, buffer, sizeof(FLAC__byte) * (*bytes));
 
 		if (*bytes == 0) {
 			return FLAC__STREAM_DECODER_READ_STATUS_END_OF_STREAM;
@@ -180,11 +174,7 @@ static FLAC__StreamDecoderReadStatus flac_read_cb(const FLAC__StreamDecoder *
 	return FLAC__STREAM_DECODER_READ_STATUS_CONTINUE;
 }
 
-static FLAC__StreamDecoderSeekStatus flac_seek_cb(const FLAC__StreamDecoder *
-												  decoder,
-												  FLAC__uint64
-												  absolute_byte_offset,
-												  void *client_data)
+static FLAC__StreamDecoderSeekStatus flac_seek_cb(const FLAC__StreamDecoder * decoder, FLAC__uint64 absolute_byte_offset, void *client_data)
 {
 	buffered_reader_t *pb = (buffered_reader_t *) client_data;
 
@@ -193,11 +183,7 @@ static FLAC__StreamDecoderSeekStatus flac_seek_cb(const FLAC__StreamDecoder *
 	return FLAC__STREAM_DECODER_SEEK_STATUS_OK;
 }
 
-static FLAC__StreamDecoderTellStatus flac_tell_cb(const FLAC__StreamDecoder *
-												  decoder,
-												  FLAC__uint64 *
-												  absolute_byte_offset,
-												  void *client_data)
+static FLAC__StreamDecoderTellStatus flac_tell_cb(const FLAC__StreamDecoder * decoder, FLAC__uint64 * absolute_byte_offset, void *client_data)
 {
 	buffered_reader_t *pb = (buffered_reader_t *) client_data;
 
@@ -206,11 +192,7 @@ static FLAC__StreamDecoderTellStatus flac_tell_cb(const FLAC__StreamDecoder *
 	return FLAC__STREAM_DECODER_TELL_STATUS_OK;
 }
 
-static FLAC__StreamDecoderLengthStatus flac_length_cb(const FLAC__StreamDecoder
-													  * decoder,
-													  FLAC__uint64 *
-													  stream_length,
-													  void *client_data)
+static FLAC__StreamDecoderLengthStatus flac_length_cb(const FLAC__StreamDecoder * decoder, FLAC__uint64 * stream_length, void *client_data)
 {
 	buffered_reader_t *pb = (buffered_reader_t *) client_data;
 
@@ -218,8 +200,7 @@ static FLAC__StreamDecoderLengthStatus flac_length_cb(const FLAC__StreamDecoder
 	return FLAC__STREAM_DECODER_LENGTH_STATUS_OK;
 }
 
-static FLAC__bool flac_eof_cb(const FLAC__StreamDecoder * decoder,
-							  void *client_data)
+static FLAC__bool flac_eof_cb(const FLAC__StreamDecoder * decoder, void *client_data)
 {
 	buffered_reader_t *pb = (buffered_reader_t *) client_data;
 
@@ -227,11 +208,7 @@ static FLAC__bool flac_eof_cb(const FLAC__StreamDecoder * decoder,
 }
 
 static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
-													 decoder,
-													 const FLAC__Frame * frame,
-													 const FLAC__int32 *
-													 const buffer[],
-													 void *client_data)
+													 decoder, const FLAC__Frame * frame, const FLAC__int32 * const buffer[], void *client_data)
 {
 	size_t i;
 	uint16_t *output;
@@ -239,8 +216,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
 	(void) decoder;
 
 	if (g_info.samples == 0) {
-		dbg_printf(d,
-				   "ERROR: this example only works for FLAC files that have a g_info.samples count in STREAMINFO");
+		dbg_printf(d, "ERROR: this example only works for FLAC files that have a g_info.samples count in STREAMINFO");
 		return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
 	}
 	if (g_info.channels != 2 || g_flac_bits_per_sample != 16) {
@@ -252,10 +228,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
 
 	if (frame->header.blocksize > g_buff_size) {
 		g_buff_size = frame->header.blocksize;
-		g_buff =
-			safe_realloc(g_buff,
-						 g_buff_size * frame->header.channels *
-						 sizeof(*g_buff));
+		g_buff = safe_realloc(g_buff, g_buff_size * frame->header.channels * sizeof(*g_buff));
 
 		if (g_buff == NULL)
 			return FLAC__STREAM_DECODER_WRITE_STATUS_ABORT;
@@ -278,9 +251,7 @@ static FLAC__StreamDecoderWriteStatus write_callback(const FLAC__StreamDecoder *
 	return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
 }
 
-static void metadata_callback(const FLAC__StreamDecoder * decoder,
-							  const FLAC__StreamMetadata * metadata,
-							  void *client_data)
+static void metadata_callback(const FLAC__StreamDecoder * decoder, const FLAC__StreamMetadata * metadata, void *client_data)
 {
 	(void) decoder, (void) client_data;
 
@@ -303,14 +274,11 @@ static void metadata_callback(const FLAC__StreamDecoder * decoder,
 	}
 }
 
-static void error_callback(const FLAC__StreamDecoder * decoder,
-						   FLAC__StreamDecoderErrorStatus status,
-						   void *client_data)
+static void error_callback(const FLAC__StreamDecoder * decoder, FLAC__StreamDecoderErrorStatus status, void *client_data)
 {
 	(void) decoder, (void) client_data;
 
-	dbg_printf(d, "Got error callback: %s",
-			   FLAC__StreamDecoderErrorStatusString[status]);
+	dbg_printf(d, "Got error callback: %s", FLAC__StreamDecoderErrorStatusString[status]);
 }
 
 /**
@@ -445,18 +413,14 @@ static int flac_audiocallback(void *buf, unsigned int reqn, void *pdata)
 		avail_frame = g_buff_frame_size - g_buff_frame_start;
 
 		if (avail_frame >= snd_buf_frame_size) {
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * g_info.channels],
-						   snd_buf_frame_size, g_info.channels);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * g_info.channels], snd_buf_frame_size, g_info.channels);
 			g_buff_frame_start += snd_buf_frame_size;
 			audio_buf += snd_buf_frame_size * 2;
 			snd_buf_frame_size = 0;
 		} else {
 			FLAC__StreamDecoderState state;
 
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * g_info.channels],
-						   avail_frame, g_info.channels);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * g_info.channels], avail_frame, g_info.channels);
 			snd_buf_frame_size -= avail_frame;
 			audio_buf += avail_frame * 2;
 
@@ -467,9 +431,7 @@ static int flac_audiocallback(void *buf, unsigned int reqn, void *pdata)
 
 			state = FLAC__stream_decoder_get_state(g_decoder);
 
-			if (state == FLAC__STREAM_DECODER_END_OF_STREAM
-				|| state == FLAC__STREAM_DECODER_ABORTED
-				|| state == FLAC__STREAM_DECODER_MEMORY_ALLOCATION_ERROR) {
+			if (state == FLAC__STREAM_DECODER_END_OF_STREAM || state == FLAC__STREAM_DECODER_ABORTED || state == FLAC__STREAM_DECODER_MEMORY_ALLOCATION_ERROR) {
 				__end();
 				return -1;
 			}
@@ -484,20 +446,14 @@ static int flac_audiocallback(void *buf, unsigned int reqn, void *pdata)
 
 			/* Count the bitrate */
 
-			if (!FLAC__stream_decoder_get_decode_position
-				(g_decoder, &decode_position))
+			if (!FLAC__stream_decoder_get_decode_position(g_decoder, &decode_position))
 				decode_position = 0;
 
 			if (decode_position > last_decode_position) {
 				int bitrate;
-				int bytes_per_sec =
-					g_flac_bits_per_sample / 8 * g_info.sample_freq *
-					g_info.channels;
+				int bytes_per_sec = g_flac_bits_per_sample / 8 * g_info.sample_freq * g_info.channels;
 
-				bitrate =
-					(decode_position -
-					 last_decode_position) * 8.0 / (g_buff_frame_size * 4 /
-													(float) bytes_per_sec);
+				bitrate = (decode_position - last_decode_position) * 8.0 / (g_buff_frame_size * 4 / (float) bytes_per_sec);
 				add_bitrate(&g_inst_br, bitrate, incr);
 			}
 
@@ -574,23 +530,20 @@ static int flac_load(const char *spath, const char *lpath)
 
 	if (FLAC__metadata_get_tags(spath, &ptag)) {
 		if (ptag->type == FLAC__METADATA_TYPE_VORBIS_COMMENT) {
-			const char *p =
-				(const char *) ptag->data.vorbis_comment.vendor_string.entry;
+			const char *p = (const char *) ptag->data.vorbis_comment.vendor_string.entry;
 			FLAC__uint32 i;
 
 			p = strstr(p, "reference ");
 
 			if (p == NULL)
-				p = (const char *) ptag->data.vorbis_comment.vendor_string.
-					entry;
+				p = (const char *) ptag->data.vorbis_comment.vendor_string.entry;
 			else
 				p += sizeof("reference ") - 1;
 
 			STRCPY_S(g_encode_name, (const char *) p);
 
 			for (i = 0; i < ptag->data.vorbis_comment.num_comments; ++i) {
-				const char *p =
-					(const char *) ptag->data.vorbis_comment.comments[i].entry;
+				const char *p = (const char *) ptag->data.vorbis_comment.comments[i].entry;
 				const char *q;
 
 				if (!strnicmp(p, "ALBUM=", sizeof("ALBUM=") - 1)) {
@@ -625,10 +578,7 @@ static int flac_load(const char *spath, const char *lpath)
 
 	init_status =
 		FLAC__stream_decoder_init_stream(g_decoder, flac_read_cb, flac_seek_cb,
-										 flac_tell_cb, flac_length_cb,
-										 flac_eof_cb, write_callback,
-										 metadata_callback, error_callback,
-										 flacfile);
+										 flac_tell_cb, flac_length_cb, flac_eof_cb, write_callback, metadata_callback, error_callback, flacfile);
 
 	if (init_status != FLAC__STREAM_DECODER_INIT_STATUS_OK) {
 		__end();
@@ -666,13 +616,10 @@ static int flac_load(const char *spath, const char *lpath)
 			   "[%d channel(s), %d Hz, %.2f kbps, %02d:%02d, encoder: %s, Ratio: %.3f]",
 			   g_info.channels, g_info.sample_freq, g_info.avg_bps / 1000,
 			   (int) (g_info.duration / 60), (int) g_info.duration % 60,
-			   g_encode_name,
-			   1.0 * g_info.filesize / (g_info.samples * g_info.channels *
-										(g_flac_bits_per_sample / 8))
+			   g_encode_name, 1.0 * g_info.filesize / (g_info.samples * g_info.channels * (g_flac_bits_per_sample / 8))
 		);
 
-	dbg_printf(d, "[%s - %s - %s, flac tag]", g_info.tag.artist,
-			   g_info.tag.album, g_info.tag.title);
+	dbg_printf(d, "[%s - %s - %s, flac tag]", g_info.tag.artist, g_info.tag.album, g_info.tag.title);
 
 	xAudioSetChannelCallback(0, flac_audiocallback, NULL);
 
@@ -798,10 +745,7 @@ static int flac_get_info(struct music_info *pinfo)
 	if (pinfo->type & MD_GET_ENCODEMSG) {
 		if (config.show_encoder_msg && g_status != ST_UNKNOWN) {
 			SPRINTF_S(pinfo->encode_msg, "%s %s: %.3f", g_encode_name,
-					  _("压缩率"),
-					  1.0 * g_info.filesize / (g_info.samples *
-											   g_info.channels *
-											   (g_flac_bits_per_sample / 8)));
+					  _("压缩率"), 1.0 * g_info.filesize / (g_info.samples * g_info.channels * (g_flac_bits_per_sample / 8)));
 		} else {
 			pinfo->encode_msg[0] = '\0';
 		}
@@ -847,8 +791,7 @@ static int flac_set_opt(const char *unused, const char *values)
 	build_args(values, &argc, &argv);
 
 	for (i = 0; i < argc; ++i) {
-		if (!strncasecmp
-			(argv[i], "flac_buffer_size", sizeof("flac_buffer_size") - 1)) {
+		if (!strncasecmp(argv[i], "flac_buffer_size", sizeof("flac_buffer_size") - 1)) {
 			const char *p = argv[i];
 
 			if ((p = strrchr(p, '=')) != NULL) {
@@ -868,7 +811,7 @@ static int flac_set_opt(const char *unused, const char *values)
 
 	if (config.use_vaudio)
 		g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE / 2;
-	
+
 	clean_args(argc, argv);
 
 	return 0;

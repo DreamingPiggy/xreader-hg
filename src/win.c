@@ -42,9 +42,7 @@
 
 static volatile int secticks = 0;
 
-extern t_win_menu_op win_menu_defcb(u32 key, p_win_menuitem item,
-									u32 * count, u32 max_height,
-									u32 * topindex, u32 * index)
+extern t_win_menu_op win_menu_defcb(u32 key, p_win_menuitem item, u32 * count, u32 max_height, u32 * topindex, u32 * index)
 {
 	switch (key) {
 		case PSP_CTRL_UP:
@@ -94,10 +92,8 @@ static void win_menu_delay_action(void)
 }
 
 extern u32 win_menu(u32 x, u32 y, u32 max_width, u32 max_height,
-					  p_win_menuitem item, u32 count, u32 initindex,
-					  u32 linespace, pixel bgcolor, bool redraw,
-					  t_win_menu_draw predraw, t_win_menu_draw postdraw,
-					  t_win_menu_callback cb)
+					p_win_menuitem item, u32 count, u32 initindex,
+					u32 linespace, pixel bgcolor, bool redraw, t_win_menu_draw predraw, t_win_menu_draw postdraw, t_win_menu_callback cb)
 {
 	u32 i, index = initindex, topindex, botindex, lastsel = index;
 	bool needrp = true;
@@ -111,19 +107,14 @@ extern u32 win_menu(u32 x, u32 y, u32 max_width, u32 max_height,
 		cb = win_menu_defcb;
 
 	if (redraw) {
-		saveimage =
-			(pixel *) memalign(16,
-							   PSP_SCREEN_WIDTH * PSP_SCREEN_HEIGHT *
-							   sizeof(pixel));
+		saveimage = (pixel *) memalign(16, PSP_SCREEN_WIDTH * PSP_SCREEN_HEIGHT * sizeof(pixel));
 		if (saveimage)
 			disp_getimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, saveimage);
 		disp_duptocachealpha(50);
 	}
 
 	topindex = (index >= max_height) ? (index - max_height + 1) : 0;
-	botindex =
-		(topindex + max_height >
-		 count) ? (count - 1) : (topindex + max_height - 1);
+	botindex = (topindex + max_height > count) ? (count - 1) : (topindex + max_height - 1);
 
 	sceRtcGetCurrentTick(&timer_start);
 	while (1) {
@@ -134,64 +125,34 @@ extern u32 win_menu(u32 x, u32 y, u32 max_width, u32 max_height,
 		if (predraw != NULL)
 			predraw(item, index, topindex, max_height);
 		if (needrp) {
-			disp_fillrect(x, y,
-						  x + 2 + max_width * (DISP_FONTSIZE / 2),
-						  y + 2 + DISP_FONTSIZE + (max_height -
-												   1) * (1 +
-														 DISP_FONTSIZE
-														 + linespace), bgcolor);
+			disp_fillrect(x, y, x + 2 + max_width * (DISP_FONTSIZE / 2), y + 2 + DISP_FONTSIZE + (max_height - 1) * (1 + DISP_FONTSIZE + linespace), bgcolor);
 			for (i = topindex; i <= botindex; i++)
 				if (i != index)
 					disp_putstring(x + 1,
 								   y + 1 + (i -
 											topindex) *
-								   (DISP_FONTSIZE + 1 +
-									linespace),
-								   item[i].selected ? item[i].selicolor :
-								   item[i].icolor, (const u8 *) item[i].name);
+								   (DISP_FONTSIZE + 1 + linespace), item[i].selected ? item[i].selicolor : item[i].icolor, (const u8 *) item[i].name);
 			if (max_height < count) {
-				u32 sbh =
-					2 + DISP_FONTSIZE + (max_height - 1) * (1 +
-															DISP_FONTSIZE
-															+ linespace);
-				disp_line(x - 1 +
-						  max_width * (DISP_FONTSIZE / 2), y,
-						  x - 1 +
-						  max_width * (DISP_FONTSIZE / 2),
-						  y + sbh, COLOR_WHITE);
+				u32 sbh = 2 + DISP_FONTSIZE + (max_height - 1) * (1 + DISP_FONTSIZE + linespace);
+				disp_line(x - 1 + max_width * (DISP_FONTSIZE / 2), y, x - 1 + max_width * (DISP_FONTSIZE / 2), y + sbh, COLOR_WHITE);
 				disp_fillrect(x +
 							  max_width * (DISP_FONTSIZE / 2),
-							  y + sbh * topindex / count,
-							  x + 2 +
-							  max_width * (DISP_FONTSIZE / 2),
-							  y + sbh * (botindex + 1) / count, COLOR_WHITE);
+							  y + sbh * topindex / count, x + 2 + max_width * (DISP_FONTSIZE / 2), y + sbh * (botindex + 1) / count, COLOR_WHITE);
 			}
 			needrp = false;
 		} else {
-			disp_rectduptocache(x, y,
-								x + 2 +
-								max_width * (DISP_FONTSIZE / 2),
-								y + 2 + DISP_FONTSIZE +
-								(max_height - 1) * (DISP_FONTSIZE +
-													1 + linespace));
-			if (item[lastsel].selrcolor != bgcolor
-				|| item[lastsel].selbcolor != bgcolor)
+			disp_rectduptocache(x, y, x + 2 + max_width * (DISP_FONTSIZE / 2), y + 2 + DISP_FONTSIZE + (max_height - 1) * (DISP_FONTSIZE + 1 + linespace));
+			if (item[lastsel].selrcolor != bgcolor || item[lastsel].selbcolor != bgcolor)
 				disp_fillrect(x,
 							  y + (lastsel -
 								   topindex) * (DISP_FONTSIZE +
-												1 + linespace),
-							  x + 1 +
-							  DISP_FONTSIZE / 2 *
-							  item[lastsel].width,
-							  y + DISP_FONTSIZE + 1 + (lastsel - topindex)
+												1 + linespace), x + 1 + DISP_FONTSIZE / 2 * item[lastsel].width, y + DISP_FONTSIZE + 1 + (lastsel - topindex)
 							  * (DISP_FONTSIZE + 1 + linespace), bgcolor);
 			disp_putstring(x + 1,
 						   y + 1 + (lastsel -
 									topindex) * (DISP_FONTSIZE + 1 +
 												 linespace),
-						   item[lastsel].selected ? item[lastsel].
-						   selicolor : item[lastsel].icolor,
-						   (const u8 *) item[lastsel].name);
+						   item[lastsel].selected ? item[lastsel].selicolor : item[lastsel].icolor, (const u8 *) item[lastsel].name);
 		}
 		if (item[index].selrcolor != bgcolor)
 			disp_rectangle(x,
@@ -199,26 +160,18 @@ extern u32 win_menu(u32 x, u32 y, u32 max_width, u32 max_height,
 													 1 + linespace),
 						   x + 1 +
 						   DISP_FONTSIZE / 2 * item[index].width,
-						   y + DISP_FONTSIZE + 1 + (index -
-													topindex) *
-						   (DISP_FONTSIZE + 1 + linespace),
-						   item[index].selrcolor);
+						   y + DISP_FONTSIZE + 1 + (index - topindex) * (DISP_FONTSIZE + 1 + linespace), item[index].selrcolor);
 		if (item[index].selbcolor != bgcolor)
 			disp_fillrect(x + 1,
 						  y + 1 + (index -
 								   topindex) * (DISP_FONTSIZE + 1 +
 												linespace),
 						  x + DISP_FONTSIZE / 2 * item[index].width,
-						  y + DISP_FONTSIZE + (index -
-											   topindex) *
-						  (DISP_FONTSIZE + 1 + linespace),
-						  item[index].selbcolor);
+						  y + DISP_FONTSIZE + (index - topindex) * (DISP_FONTSIZE + 1 + linespace), item[index].selbcolor);
 		disp_putstring(x + 1,
 					   y + 1 + (index - topindex) * (DISP_FONTSIZE + 1 +
 													 linespace),
-					   item[index].selected ? item[index].
-					   selicolor : item[index].icolor,
-					   (const u8 *) item[index].name);
+					   item[index].selected ? item[index].selicolor : item[index].icolor, (const u8 *) item[index].name);
 		if (postdraw != NULL)
 			postdraw(item, index, topindex, max_height);
 		disp_flip();
@@ -247,9 +200,7 @@ extern u32 win_menu(u32 x, u32 y, u32 max_width, u32 max_height,
 		if (key != 0) {
 			secticks = 0;
 		}
-		while ((op =
-				cb(key, item, &count, max_height, &topindex,
-				   &index)) == win_menu_op_continue) {
+		while ((op = cb(key, item, &count, max_height, &topindex, &index)) == win_menu_op_continue) {
 			while ((key = ctrl_read()) == 0) {
 				sceRtcGetCurrentTick(&timer_end);
 				if (pspDiffTime(&timer_end, &timer_start) >= 1.0) {
@@ -268,21 +219,17 @@ extern u32 win_menu(u32 x, u32 y, u32 max_width, u32 max_height,
 		switch (op) {
 			case win_menu_op_ok:
 				if (saveimage) {
-					disp_putimage(0, 0, PSP_SCREEN_WIDTH,
-								  PSP_SCREEN_HEIGHT, 0, 0, saveimage);
+					disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0, saveimage);
 					disp_flip();
-					disp_putimage(0, 0, PSP_SCREEN_WIDTH,
-								  PSP_SCREEN_HEIGHT, 0, 0, saveimage);
+					disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0, saveimage);
 					free(saveimage);
 				}
 				return index;
 			case win_menu_op_cancel:
 				if (saveimage) {
-					disp_putimage(0, 0, PSP_SCREEN_WIDTH,
-								  PSP_SCREEN_HEIGHT, 0, 0, saveimage);
+					disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0, saveimage);
 					disp_flip();
-					disp_putimage(0, 0, PSP_SCREEN_WIDTH,
-								  PSP_SCREEN_HEIGHT, 0, 0, saveimage);
+					disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0, saveimage);
 					free(saveimage);
 				}
 				return INVALID;
@@ -304,15 +251,12 @@ extern u32 win_menu(u32 x, u32 y, u32 max_width, u32 max_height,
 	return INVALID;
 }
 
-extern bool win_msgbox(const char *prompt, const char *yesstr,
-					   const char *nostr, pixel fontcolor, pixel bordercolor,
-					   pixel bgcolor)
+extern bool win_msgbox(const char *prompt, const char *yesstr, const char *nostr, pixel fontcolor, pixel bordercolor, pixel bgcolor)
 {
 	u32 width = strlen(prompt) * DISP_FONTSIZE / 4;
 	u32 yeswidth = strlen(yesstr) * (DISP_FONTSIZE / 2);
 	pixel *saveimage = (pixel *) memalign(16,
-										  PSP_SCREEN_WIDTH *
-										  PSP_SCREEN_HEIGHT * sizeof(pixel));
+										  PSP_SCREEN_WIDTH * PSP_SCREEN_HEIGHT * sizeof(pixel));
 	bool result;
 
 	if (saveimage)
@@ -328,26 +272,21 @@ extern bool win_msgbox(const char *prompt, const char *yesstr,
 	disp_flip();
 	disp_duptocache();
 	disp_rectduptocachealpha(219 - width, 99, 260 + width, 173, 50);
-	result =
-		(ctrl_waitmask(PSP_CTRL_CIRCLE | PSP_CTRL_CROSS) == PSP_CTRL_CIRCLE);
+	result = (ctrl_waitmask(PSP_CTRL_CIRCLE | PSP_CTRL_CROSS) == PSP_CTRL_CIRCLE);
 	if (saveimage) {
-		disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0,
-					  saveimage);
+		disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0, saveimage);
 		disp_flip();
-		disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0,
-					  saveimage);
+		disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0, saveimage);
 		free(saveimage);
 	}
 	return result;
 }
 
-extern void win_msg(const char *prompt, pixel fontcolor, pixel bordercolor,
-					pixel bgcolor)
+extern void win_msg(const char *prompt, pixel fontcolor, pixel bordercolor, pixel bgcolor)
 {
 	u32 width = strlen(prompt) * DISP_FONTSIZE / 4;
 	pixel *saveimage = (pixel *) memalign(16,
-										  PSP_SCREEN_WIDTH *
-										  PSP_SCREEN_HEIGHT * sizeof(pixel));
+										  PSP_SCREEN_WIDTH * PSP_SCREEN_HEIGHT * sizeof(pixel));
 	if (saveimage)
 		disp_getimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, saveimage);
 	disp_duptocachealpha(50);
@@ -359,17 +298,14 @@ extern void win_msg(const char *prompt, pixel fontcolor, pixel bordercolor,
 	disp_rectduptocachealpha(219 - width, 118, 260 + width, 154, 50);
 	ctrl_waitany();
 	if (saveimage) {
-		disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0,
-					  saveimage);
+		disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0, saveimage);
 		disp_flip();
-		disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0,
-					  saveimage);
+		disp_putimage(0, 0, PSP_SCREEN_WIDTH, PSP_SCREEN_HEIGHT, 0, 0, saveimage);
 		free(saveimage);
 	}
 }
 
-extern p_win_menuitem win_realloc_items(p_win_menuitem item, int orgsize,
-										int newsize)
+extern p_win_menuitem win_realloc_items(p_win_menuitem item, int orgsize, int newsize)
 {
 	int i;
 	p_win_menuitem p;
@@ -427,8 +363,7 @@ extern void win_item_destroy(p_win_menuitem * item, u32 * size)
 	*item = NULL;
 }
 
-extern p_win_menuitem win_copy_item(p_win_menuitem dst,
-									const p_win_menuitem src)
+extern p_win_menuitem win_copy_item(p_win_menuitem dst, const p_win_menuitem src)
 {
 	size_t i;
 
@@ -493,9 +428,9 @@ p_win_menu win_menu_new(void)
 {
 	p_win_menu menu;
 
-	menu = (p_win_menu)malloc(sizeof(*menu));
+	menu = (p_win_menu) malloc(sizeof(*menu));
 
-	if(menu == NULL) {
+	if (menu == NULL) {
 		return NULL;
 	}
 
@@ -507,16 +442,16 @@ p_win_menu win_menu_new(void)
 
 int win_menu_add(p_win_menu menu, p_win_menuitem item)
 {
-	if(menu == NULL || item == NULL) {
+	if (menu == NULL || item == NULL) {
 		return -1;
 	}
 
-	if(menu->size >= menu->cap) {
+	if (menu->size >= menu->cap) {
 		p_win_menuitem newmenu;
 
 		newmenu = realloc(menu->root, (MENU_REALLOC_INCR + menu->cap) * sizeof(menu->root[0]));
 
-		if(newmenu == NULL) {
+		if (newmenu == NULL) {
 			return -1;
 		}
 
@@ -534,7 +469,7 @@ int win_menu_add_copy(p_win_menu menu, p_win_menuitem item)
 {
 	t_win_menuitem newitem;
 
-	if(menu == NULL || item == NULL) {
+	if (menu == NULL || item == NULL) {
 		return -1;
 	}
 
@@ -554,7 +489,7 @@ void win_menu_destroy(p_win_menu menu)
 {
 	int i;
 
-	for(i=0; i<menu->size; ++i) {
+	for (i = 0; i < menu->size; ++i) {
 		win_menuitem_destory(&menu->root[i]);
 	}
 
@@ -566,7 +501,7 @@ void debug_item(p_win_menuitem p, int size)
 {
 	int i;
 
-	for(i=0; i<size; ++i) {
+	for (i = 0; i < size; ++i) {
 		printf("compname: %s\n", p[i].compname->ptr);
 		printf("shortname: %s\n", p[i].shortname->ptr);
 	}

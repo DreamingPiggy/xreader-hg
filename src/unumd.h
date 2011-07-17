@@ -68,8 +68,7 @@ extern int umd_readdata(char **pf, buffer ** buf);
 extern int umd_getchapter(char **pf, p_umd_chapter * pchapter);
 extern int parse_umd_chapters(const char *umdfile, p_umd_chapter * pchapter);
 extern int locate_umd_img(const char *umdfile, size_t file_offset, FILE ** fp);
-extern int read_umd_chapter_content(const char *umdfile, u_int index,
-									p_umd_chapter pchapter
+extern int read_umd_chapter_content(const char *umdfile, u_int index, p_umd_chapter pchapter
 									/*,size_t file_offset,size_t length */ ,
 									buffer ** pbuf);
 #endif

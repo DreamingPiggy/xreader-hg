@@ -153,8 +153,7 @@ static int aa3_seek_seconds(double seconds)
 	pos = aa3_data_start;
 	pos += frame_index * aa3_data_align;
 
-	dbg_printf(d, "%s: jump to frame %u pos 0x%08x", __func__, frame_index,
-			   pos);
+	dbg_printf(d, "%s: jump to frame %u pos 0x%08x", __func__, frame_index, pos);
 
 	if (data.use_buffer) {
 		ret = buffered_reader_seek(data.r, pos);
@@ -182,8 +181,7 @@ static int aa3_seek_seconds(double seconds)
  * @param frames 复制帧数
  * @param channels 声道数
  */
-static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames,
-						   int channels)
+static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames, int channels)
 {
 	int n;
 	signed short *p = (signed short *) buf;
@@ -251,9 +249,7 @@ static int aa3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 		avail_frame = g_buff_frame_size - g_buff_frame_start;
 
 		if (avail_frame >= snd_buf_frame_size) {
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * 2],
-						   snd_buf_frame_size, 2);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], snd_buf_frame_size, 2);
 			g_buff_frame_start += snd_buf_frame_size;
 			audio_buf += snd_buf_frame_size * 2;
 			snd_buf_frame_size = 0;
@@ -263,8 +259,7 @@ static int aa3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			int res;
 			uint16_t *output;
 
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * 2], avail_frame, 2);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], avail_frame, 2);
 			snd_buf_frame_size -= avail_frame;
 			audio_buf += avail_frame * 2;
 			memset(aa3_mix_buffer, 0, 2048 * 2 * 2);
@@ -272,22 +267,18 @@ static int aa3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			if (aa3_type == TYPE_ATRAC3) {
 				memset(aa3_data_buffer, 0, 0x180);
 				if (data.use_buffer) {
-					if (buffered_reader_read
-						(data.r, aa3_data_buffer,
-						 aa3_data_align) != aa3_data_align) {
+					if (buffered_reader_read(data.r, aa3_data_buffer, aa3_data_align) != aa3_data_align) {
 						__end();
 						return -1;
 					}
 				} else {
-					if (sceIoRead(data.fd, aa3_data_buffer, aa3_data_align) !=
-						aa3_data_align) {
+					if (sceIoRead(data.fd, aa3_data_buffer, aa3_data_align) != aa3_data_align) {
 						__end();
 						return -1;
 					}
 				}
 				if (aa3_channel_mode) {
-					memcpy(aa3_data_buffer + aa3_data_align, aa3_data_buffer,
-						   aa3_data_align);
+					memcpy(aa3_data_buffer + aa3_data_align, aa3_data_buffer, aa3_data_align);
 				}
 				decode_type = 0x1001;
 			} else {
@@ -297,9 +288,7 @@ static int aa3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 				aa3_data_buffer[2] = atrac3_plus_flag[0];
 				aa3_data_buffer[3] = atrac3_plus_flag[1];
 				if (data.use_buffer) {
-					if (buffered_reader_read
-						(data.r, aa3_data_buffer + 8,
-						 aa3_data_align) != aa3_data_align) {
+					if (buffered_reader_read(data.r, aa3_data_buffer + 8, aa3_data_align) != aa3_data_align) {
 						__end();
 						return -1;
 					}
@@ -359,8 +348,7 @@ static int aa3_load(const char *spath, const char *lpath)
 		uint8_t ea3_header[0x5C];
 		uint32_t ea3_info;
 
-		if (aa3_header_buffer[0] == 'e' && aa3_header_buffer[1] == 'a'
-			&& aa3_header_buffer[2] == '3') {
+		if (aa3_header_buffer[0] == 'e' && aa3_header_buffer[1] == 'a' && aa3_header_buffer[2] == '3') {
 			u32 id3v2_size, temp_value;
 			u8 id3v2_buffer[6];
 
@@ -390,8 +378,7 @@ static int aa3_load(const char *spath, const char *lpath)
 			continue;
 		}
 
-		if (aa3_header_buffer[0] != 0x45 || aa3_header_buffer[1] != 0x41
-			|| aa3_header_buffer[2] != 0x33 || aa3_header_buffer[3] != 0x01) {
+		if (aa3_header_buffer[0] != 0x45 || aa3_header_buffer[1] != 0x41 || aa3_header_buffer[2] != 0x33 || aa3_header_buffer[3] != 0x01) {
 			goto failed;
 		}
 
@@ -402,9 +389,7 @@ static int aa3_load(const char *spath, const char *lpath)
 		atrac3_plus_flag[0] = ea3_header[0x1E];
 		atrac3_plus_flag[1] = ea3_header[0x1F];
 
-		aa3_type =
-			(ea3_header[0x1C] ==
-			 0x00) ? 0x270 : ((ea3_header[0x1C] == 0x01) ? 0xFFFE : 0x0);
+		aa3_type = (ea3_header[0x1C] == 0x00) ? 0x270 : ((ea3_header[0x1C] == 0x01) ? 0xFFFE : 0x0);
 
 		if (aa3_type != 0x270 && aa3_type != 0xFFFE) {
 			goto failed;
@@ -451,8 +436,7 @@ static int aa3_load(const char *spath, const char *lpath)
 	sceIoLseek(data.fd, aa3_data_start, PSP_SEEK_SET);
 
 	if (aa3_data_size % aa3_data_align != 0) {
-		dbg_printf(d, "%s: aa3_data_size %d aa3_data_align %d not align",
-				   __func__, aa3_data_size, aa3_data_align);
+		dbg_printf(d, "%s: aa3_data_size %d aa3_data_align %d not align", __func__, aa3_data_size, aa3_data_align);
 		goto failed;
 	}
 
@@ -514,8 +498,7 @@ static int aa3_load(const char *spath, const char *lpath)
 
 		aa3_codec_buffer[5] = 0x1;
 		aa3_codec_buffer[10] = atrac3_plus_flag[1];
-		aa3_codec_buffer[10] =
-			(aa3_codec_buffer[10] << 8) | atrac3_plus_flag[0];
+		aa3_codec_buffer[10] = (aa3_codec_buffer[10] << 8) | atrac3_plus_flag[0];
 		aa3_codec_buffer[12] = 0x1;
 		aa3_codec_buffer[14] = 0x1;
 
@@ -538,9 +521,7 @@ static int aa3_load(const char *spath, const char *lpath)
 	g_info.avg_bps = 0;
 
 	if (g_info.sample_freq != 0 && aa3_data_align != 0) {
-		g_info.duration =
-			(double) aa3_data_size *aa3_sample_per_frame / aa3_data_align /
-			g_info.sample_freq;
+		g_info.duration = (double) aa3_data_size *aa3_sample_per_frame / aa3_data_align / g_info.sample_freq;
 		if (g_info.duration != 0) {
 			g_info.avg_bps = (double) aa3_data_size *8 / g_info.duration;
 		}
@@ -732,8 +713,7 @@ static int aa3_set_opt(const char *unused, const char *values)
 	build_args(values, &argc, &argv);
 
 	for (i = 0; i < argc; ++i) {
-		if (!strncasecmp
-			(argv[i], "aa3_buffer_size", sizeof("aa3_buffer_size") - 1)) {
+		if (!strncasecmp(argv[i], "aa3_buffer_size", sizeof("aa3_buffer_size") - 1)) {
 			const char *p = argv[i];
 
 			if ((p = strrchr(p, '=')) != NULL) {

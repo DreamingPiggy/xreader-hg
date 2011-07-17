@@ -34,8 +34,7 @@
 #include "dmalloc.h"
 #endif
 
-__inline bool lyric_add(p_lyric l, u32 sec, u32 fra, const char *line,
-						u32 size)
+__inline bool lyric_add(p_lyric l, u32 sec, u32 fra, const char *line, u32 size)
 {
 	int i;
 	mad_timer_t t;
@@ -57,8 +56,7 @@ __inline bool lyric_add(p_lyric l, u32 sec, u32 fra, const char *line,
 		if (mad_timer_compare(l->lines[i].t, t) > 0)
 			break;
 	if (i < l->count)
-		memmove(&l->lines[i + 1], &l->lines[i],
-				sizeof(t_lyricline) * (l->count - i));
+		memmove(&l->lines[i + 1], &l->lines[i], sizeof(t_lyricline) * (l->count - i));
 	l->lines[i].t = t;
 	l->lines[i].line = line;
 	l->lines[i].size = size;
@@ -152,7 +150,7 @@ static void parse_lyric(p_lyric l)
 							} else {
 								isec[tc] = (u32) sec;
 								iex[tc] = (u32) ((sec - isec[tc])
-												   * MAD_TIMER_RESOLUTION);
+												 * MAD_TIMER_RESOLUTION);
 								++tc;
 							}
 						}
@@ -270,16 +268,14 @@ extern void lyric_update_pos(p_lyric l, void *tm)
 		l->idx--;
 		l->changed = true;
 	}
-	while (l->idx < l->count - 1
-		   && mad_timer_compare(l->lines[l->idx + 1].t, t) < 0) {
+	while (l->idx < l->count - 1 && mad_timer_compare(l->lines[l->idx + 1].t, t) < 0) {
 		l->idx++;
 		l->changed = true;
 	}
 	sceKernelSignalSema(l->sema, 1);
 }
 
-extern bool lyric_get_cur_lines(p_lyric l, int extralines, const char **lines,
-								u32 * sizes)
+extern bool lyric_get_cur_lines(p_lyric l, int extralines, const char **lines, u32 * sizes)
 {
 	int i, j = 0;
 
@@ -328,8 +324,7 @@ void lyric_decode(const char *lrcsrc, char *lrcdst, u32 * size)
 				int ilen = strnlen((const char *) lrcsrc, *size);
 				int i = 0;
 
-				i = charsets_bg5hk2cjk((const u8 *) lrcsrc, ilen,
-									   (u8 *) lrcdst, *size);
+				i = charsets_bg5hk2cjk((const u8 *) lrcsrc, ilen, (u8 *) lrcdst, *size);
 				lrcdst[i] = 0;
 			}
 			break;
@@ -337,8 +332,7 @@ void lyric_decode(const char *lrcsrc, char *lrcdst, u32 * size)
 			{
 				u8 *targ = NULL;
 
-				charsets_sjis_conv((const u8 *) lrcsrc,
-								   (u8 **) & targ, (u32 *) size);
+				charsets_sjis_conv((const u8 *) lrcsrc, (u8 **) & targ, (u32 *) size);
 				strncpy(lrcdst, (const char *) targ, *size);
 				free(targ);
 			}

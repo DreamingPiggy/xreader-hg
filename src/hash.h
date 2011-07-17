@@ -60,8 +60,7 @@ extern void hash_die(struct hash_control *);
    is considered to be an error if the entry already exists in the
    hash table.  */
 
-extern const char *hash_insert(struct hash_control *,
-							   const char *key, PTR value);
+extern const char *hash_insert(struct hash_control *, const char *key, PTR value);
 
 /* Insert or replace an entry in a hash table.  This returns NULL on
    success.  On error, it returns a printable string indicating the
@@ -88,13 +87,11 @@ extern PTR hash_delete(struct hash_control *, const char *key);
 /* Traverse a hash table.  Call the function on every entry in the
    hash table.  */
 
-extern void hash_traverse(struct hash_control *,
-						  void (*pfn) (const char *key, PTR value));
+extern void hash_traverse(struct hash_control *, void (*pfn) (const char *key, PTR value));
 
 /* Print hash table statistics on the specified file.  NAME is the
    name of the hash table, used for printing a header.  */
 
-extern void hash_print_statistics(FILE *, const char *name,
-								  struct hash_control *);
+extern void hash_print_statistics(FILE *, const char *name, struct hash_control *);
 
 #endif							/* HASH_H */

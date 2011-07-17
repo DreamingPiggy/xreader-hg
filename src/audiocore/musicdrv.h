@@ -136,8 +136,7 @@ extern "C"
 
 	int get_inst_bitrate(struct instant_bitrate *inst);
 	float get_bitrate_second(struct instant_bitrate *inst);
-	void add_bitrate(struct instant_bitrate *inst, int frame_bits,
-					 double duration);
+	void add_bitrate(struct instant_bitrate *inst, int frame_bits, double duration);
 	void free_bitrate(struct instant_bitrate *inst);
 
 	extern struct instant_bitrate g_inst_br;

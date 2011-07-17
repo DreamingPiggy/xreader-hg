@@ -108,7 +108,7 @@ static void cache_clear(void)
 {
 	cache_lock();
 
-	while(ccacher.head->next != NULL) {
+	while (ccacher.head->next != NULL) {
 		cache_delete_first();
 	}
 
@@ -138,7 +138,7 @@ int cache_delete_first(void)
 
 	p = ccacher.head->next;
 
-	if(p == NULL) {
+	if (p == NULL) {
 		cache_unlock();
 
 		return -1;
@@ -157,10 +157,10 @@ int cache_delete_first(void)
 	ccacher.head->next = p->next;
 	free(p);
 
-	if(ccacher.tail == p) {
+	if (ccacher.tail == p) {
 		ccacher.tail = ccacher.head;
 	}
-	
+
 	ccacher.caches_size--;
 
 	sceKernelSetEventFlag(cache_del_event, CACHE_EVENT_DELETED);
@@ -201,15 +201,14 @@ static int cache_add_by_selidx(u32 selidx, int where)
 	}
 
 	if (cache_get(archname, filename) != NULL) {
-		dbg_printf(d, "SERVER: %s: Image %s duplicate load, FIXME", __func__,
-				   filename);
+		dbg_printf(d, "SERVER: %s: Image %s duplicate load, FIXME", __func__, filename);
 
 		return -1;
 	}
 
 	cache_lock();
 
-	img = (cache_image_t*) malloc(sizeof(*img));
+	img = (cache_image_t *) malloc(sizeof(*img));
 	memset(img, 0, sizeof(*img));
 	img->archname = archname;
 	img->filename = filename;
@@ -225,8 +224,7 @@ static int cache_add_by_selidx(u32 selidx, int where)
 		ccacher.caches_size++;
 		cacher_cleared = false;
 	} else {
-		dbg_printf(d, "SERVER: cannot add cache any more: size %u cap %u",
-				   ccacher.caches_size, ccacher.caches_cap);
+		dbg_printf(d, "SERVER: cannot add cache any more: size %u cap %u", ccacher.caches_size, ccacher.caches_cap);
 		cache_unlock();
 
 		return -1;
@@ -252,13 +250,10 @@ void dbg_dump_cache(void)
 	}
 
 	dbg_printf(d, "CLIENT: Dumping cache[%u] %u/%ukb, %u finished",
-			   ccacher.caches_size, (unsigned) ccacher.memory_usage / 1024,
-			   (unsigned) get_free_mem() / 1024, (unsigned) c);
+			   ccacher.caches_size, (unsigned) ccacher.memory_usage / 1024, (unsigned) get_free_mem() / 1024, (unsigned) c);
 
-	for (p = ccacher.head->next, c=0; p != NULL; p = p->next) {
-		dbg_printf(d, "%d: %u st %u res %d mem %lukb", ++c,
-				   (unsigned) p->selidx, p->status, p->result,
-				   p->width * p->height * sizeof(pixel) / 1024L);
+	for (p = ccacher.head->next, c = 0; p != NULL; p = p->next) {
+		dbg_printf(d, "%d: %u st %u res %d mem %lukb", ++c, (unsigned) p->selidx, p->status, p->result, p->width * p->height * sizeof(pixel) / 1024L);
 	}
 
 	cache_unlock();
@@ -328,13 +323,9 @@ int start_cache_next_image(void)
 
 		STRCPY_S(fullpath, tmp.archname);
 		STRCAT_S(fullpath, tmp.filename);
-		tmp.result =
-			image_open_archive(fullpath, tmp.archname, ft, &tmp.width,
-							   &tmp.height, &tmp.data, &tmp.bgc, tmp.where);
+		tmp.result = image_open_archive(fullpath, tmp.archname, ft, &tmp.width, &tmp.height, &tmp.data, &tmp.bgc, tmp.where);
 	} else {
-		tmp.result =
-			image_open_archive(tmp.filename, tmp.archname, ft, &tmp.width,
-							   &tmp.height, &tmp.data, &tmp.bgc, tmp.where);
+		tmp.result = image_open_archive(tmp.filename, tmp.archname, ft, &tmp.width, &tmp.height, &tmp.data, &tmp.bgc, tmp.where);
 	}
 
 	if (tmp.result == 0 && tmp.data != NULL && config.imgbrightness != 100) {
@@ -472,8 +463,7 @@ static int start_cache(u32 selidx)
 		SceUInt timeout = 10000;
 
 		// wait until user notify cache delete
-		re = sceKernelWaitEventFlag(cache_del_event, CACHE_EVENT_DELETED,
-								   PSP_EVENT_WAITAND, NULL, &timeout);
+		re = sceKernelWaitEventFlag(cache_del_event, CACHE_EVENT_DELETED, PSP_EVENT_WAITAND, NULL, &timeout);
 
 		if (re == SCE_KERNEL_ERROR_WAIT_TIMEOUT) {
 			return 0;
@@ -492,9 +482,7 @@ static int start_cache(u32 selidx)
 	}
 
 	re = min(ccacher.caches_cap, count_img()) - ccacher.caches_size;
-	dbg_printf(d, "SERVER: start pos %u selidx %u caches_size %u re %u",
-			   (unsigned) pos, (unsigned) selidx,
-			   (unsigned) ccacher.caches_size, (unsigned) re);
+	dbg_printf(d, "SERVER: start pos %u selidx %u caches_size %u re %u", (unsigned) pos, (unsigned) selidx, (unsigned) ccacher.caches_size, (unsigned) re);
 
 	if (re == 0) {
 		cache_unlock();
@@ -610,7 +598,7 @@ void cache_reload_all(void)
 
 	cache_lock();
 
-	for(p=ccacher.head->next; p != NULL; p = p->next) {
+	for (p = ccacher.head->next; p != NULL; p = p->next) {
 		if (p->status == CACHE_OK) {
 			free_cache_image(p);
 			ccacher.memory_usage -= p->width * p->height * sizeof(pixel);

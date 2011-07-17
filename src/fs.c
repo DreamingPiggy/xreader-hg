@@ -159,13 +159,9 @@ p_win_menu g_menu = NULL;
 void filename_to_itemname(p_win_menuitem item, const char *filename)
 {
 	if ((item->width = strlen(filename)) > MAX_ITEM_NAME_LEN) {
-		mbcsncpy_s(((unsigned char *) item->name),
-				   MAX_ITEM_NAME_LEN - 2,
-				   ((const unsigned char *) filename), -1);
+		mbcsncpy_s(((unsigned char *) item->name), MAX_ITEM_NAME_LEN - 2, ((const unsigned char *) filename), -1);
 		if (strlen(item->name) < MAX_ITEM_NAME_LEN - 3) {
-			mbcsncpy_s(((unsigned char *) item->name),
-					   MAX_ITEM_NAME_LEN,
-					   ((const unsigned char *) filename), -1);
+			mbcsncpy_s(((unsigned char *) item->name), MAX_ITEM_NAME_LEN, ((const unsigned char *) filename), -1);
 			STRCAT_S(item->name, "..");
 		} else
 			STRCAT_S(item->name, "...");
@@ -175,9 +171,9 @@ void filename_to_itemname(p_win_menuitem item, const char *filename)
 	}
 }
 
-static p_win_menu menu_renew(p_win_menu *menu)
+static p_win_menu menu_renew(p_win_menu * menu)
 {
-	if(*menu != NULL) {
+	if (*menu != NULL) {
 		win_menu_destroy(*menu);
 		*menu = NULL;
 	}
@@ -187,14 +183,13 @@ static p_win_menu menu_renew(p_win_menu *menu)
 	return *menu;
 }
 
-extern u32 fs_list_device(const char *dir, const char *sdir, u32 icolor,
-							u32 selicolor, u32 selrcolor, u32 selbcolor)
+extern u32 fs_list_device(const char *dir, const char *sdir, u32 icolor, u32 selicolor, u32 selrcolor, u32 selbcolor)
 {
 	t_win_menuitem item;
 
 	strcpy_s((char *) sdir, 256, dir);
 
-	if(menu_renew(&g_menu) == NULL) {
+	if (menu_renew(&g_menu) == NULL) {
 		return 0;
 	}
 
@@ -244,7 +239,7 @@ static int add_parent_to_menu(p_win_menu menu, u32 icolor, u32 selicolor, u32 se
 {
 	t_win_menuitem item;
 
-	if(menu == NULL) {
+	if (menu == NULL) {
 		return -1;
 	}
 
@@ -264,16 +259,14 @@ static int add_parent_to_menu(p_win_menu menu, u32 icolor, u32 selicolor, u32 se
 	return 0;
 }
 
-extern u32 fs_flashdir_to_menu(const char *dir, const char *sdir, u32 icolor,
-								 u32 selicolor, u32 selrcolor,
-								 u32 selbcolor)
+extern u32 fs_flashdir_to_menu(const char *dir, const char *sdir, u32 icolor, u32 selicolor, u32 selrcolor, u32 selbcolor)
 {
 	int fid;
 	SceIoDirent info;
 	int fd;
 	t_win_menuitem item;
 
-	if(menu_renew(&g_menu) == NULL) {
+	if (menu_renew(&g_menu) == NULL) {
 		return 0;
 	}
 
@@ -309,15 +302,11 @@ extern u32 fs_flashdir_to_menu(const char *dir, const char *sdir, u32 icolor,
 			item.name[0] = '<';
 
 			if ((item.width = strlen(info.d_name) + 2) > MAX_ITEM_NAME_LEN) {
-				mbcsncpy_s((unsigned char *) &item.name[1],
-						   MAX_ITEM_NAME_LEN - 4,
-						   (const unsigned char *) info.d_name, -1);
+				mbcsncpy_s((unsigned char *) &item.name[1], MAX_ITEM_NAME_LEN - 4, (const unsigned char *) info.d_name, -1);
 				STRCAT_S(item.name, "...>");
 				item.width = MAX_ITEM_NAME_LEN;
 			} else {
-				mbcsncpy_s((unsigned char *) &item.name[1],
-						   MAX_ITEM_NAME_LEN - 1,
-						   (const unsigned char *) info.d_name, -1);
+				mbcsncpy_s((unsigned char *) &item.name[1], MAX_ITEM_NAME_LEN - 1, (const unsigned char *) info.d_name, -1);
 				STRCAT_S(item.name, ">");
 			}
 		} else {
@@ -334,20 +323,10 @@ extern u32 fs_flashdir_to_menu(const char *dir, const char *sdir, u32 icolor,
 		item.selrcolor = selrcolor;
 		item.selbcolor = selbcolor;
 		item.selected = false;
-		item.data2[0] =
-			((info.d_stat.st_ctime.year - 1980) << 9) +
-			(info.d_stat.st_ctime.month << 5) + info.d_stat.st_ctime.day;
-		item.data2[1] =
-			(info.d_stat.st_ctime.hour << 11) +
-			(info.d_stat.st_ctime.minute << 5) +
-			info.d_stat.st_ctime.second / 2;
-		item.data2[2] =
-			((info.d_stat.st_mtime.year - 1980) << 9) +
-			(info.d_stat.st_mtime.month << 5) + info.d_stat.st_mtime.day;
-		item.data2[3] =
-			(info.d_stat.st_mtime.hour << 11) +
-			(info.d_stat.st_mtime.minute << 5) +
-			info.d_stat.st_mtime.second / 2;
+		item.data2[0] = ((info.d_stat.st_ctime.year - 1980) << 9) + (info.d_stat.st_ctime.month << 5) + info.d_stat.st_ctime.day;
+		item.data2[1] = (info.d_stat.st_ctime.hour << 11) + (info.d_stat.st_ctime.minute << 5) + info.d_stat.st_ctime.second / 2;
+		item.data2[2] = ((info.d_stat.st_mtime.year - 1980) << 9) + (info.d_stat.st_mtime.month << 5) + info.d_stat.st_mtime.day;
+		item.data2[3] = (info.d_stat.st_mtime.hour << 11) + (info.d_stat.st_mtime.minute << 5) + info.d_stat.st_mtime.second / 2;
 		item.data3 = info.d_stat.st_size;
 
 		win_menu_add(g_menu, &item);
@@ -360,9 +339,7 @@ extern u32 fs_flashdir_to_menu(const char *dir, const char *sdir, u32 icolor,
 }
 
 // New style fat system custom reading
-extern u32 fs_dir_to_menu(const char *dir, char *sdir,
-							u32 icolor, u32 selicolor, u32 selrcolor,
-							u32 selbcolor, bool showhidden, bool showunknown)
+extern u32 fs_dir_to_menu(const char *dir, char *sdir, u32 icolor, u32 selicolor, u32 selrcolor, u32 selbcolor, bool showhidden, bool showunknown)
 {
 	int fid;
 	p_fat_info info;
@@ -370,7 +347,7 @@ extern u32 fs_dir_to_menu(const char *dir, char *sdir,
 	u32 i;
 	t_win_menuitem item;
 
-	if(menu_renew(&g_menu) == NULL) {
+	if (menu_renew(&g_menu) == NULL) {
 		return 0;
 	}
 
@@ -386,7 +363,7 @@ extern u32 fs_dir_to_menu(const char *dir, char *sdir,
 
 	for (i = 0; i < count; i++) {
 		win_menuitem_new(&item);
-		
+
 		if (!showhidden && (info[i].attr & FAT_FILEATTR_HIDDEN) > 0) {
 			win_menuitem_free(&item);
 			continue;
@@ -397,22 +374,14 @@ extern u32 fs_dir_to_menu(const char *dir, char *sdir,
 			buffer_copy_string(item.shortname, info[i].filename);
 			buffer_copy_string(item.compname, info[i].longname);
 			item.name[0] = '<';
-			if ((item.width =
-				 strlen(info[i].longname) + 2) > MAX_ITEM_NAME_LEN) {
-				strncpy_s(&item.name[1],
-						  NELEMS(item.name) - 1,
-						  info[i].longname, MAX_ITEM_NAME_LEN - 5);
-				item.name[MAX_ITEM_NAME_LEN - 4] =
-					item.name[MAX_ITEM_NAME_LEN -
-										 3] =
-					item.name[MAX_ITEM_NAME_LEN - 2] = '.';
+			if ((item.width = strlen(info[i].longname) + 2) > MAX_ITEM_NAME_LEN) {
+				strncpy_s(&item.name[1], NELEMS(item.name) - 1, info[i].longname, MAX_ITEM_NAME_LEN - 5);
+				item.name[MAX_ITEM_NAME_LEN - 4] = item.name[MAX_ITEM_NAME_LEN - 3] = item.name[MAX_ITEM_NAME_LEN - 2] = '.';
 				item.name[MAX_ITEM_NAME_LEN - 1] = '>';
 				item.name[MAX_ITEM_NAME_LEN] = 0;
 				item.width = MAX_ITEM_NAME_LEN;
 			} else {
-				strncpy_s(&item.name[1],
-						  NELEMS(item.name) - 1,
-						  info[i].longname, MAX_ITEM_NAME_LEN);
+				strncpy_s(&item.name[1], NELEMS(item.name) - 1, info[i].longname, MAX_ITEM_NAME_LEN);
 				item.name[item.width - 1] = '>';
 				item.name[item.width] = 0;
 			}
@@ -455,15 +424,13 @@ extern u32 fs_dir_to_menu(const char *dir, char *sdir,
 	return g_menu->size;
 }
 
-extern u32 fs_zip_to_menu(const char *zipfile,
-							u32 icolor, u32 selicolor, u32 selrcolor,
-							u32 selbcolor)
+extern u32 fs_zip_to_menu(const char *zipfile, u32 icolor, u32 selicolor, u32 selrcolor, u32 selbcolor)
 {
 	int fid;
 	unzFile unzf;
 	t_win_menuitem item;
 
-	if(menu_renew(&g_menu) == NULL) {
+	if (menu_renew(&g_menu) == NULL) {
 		return 0;
 	}
 
@@ -498,12 +465,11 @@ extern u32 fs_zip_to_menu(const char *zipfile,
 
 		ft = fs_file_get_type(fname);
 
-		if (ft == fs_filetype_chm || ft == fs_filetype_zip
-			|| ft == fs_filetype_rar)
+		if (ft == fs_filetype_chm || ft == fs_filetype_zip || ft == fs_filetype_rar)
 			continue;
 
 		win_menuitem_new(&item);
-		
+
 		item.data = (void *) ft;
 		buffer_copy_string(item.compname, fname);
 
@@ -525,9 +491,7 @@ extern u32 fs_zip_to_menu(const char *zipfile,
 	return g_menu->size;
 }
 
-extern u32 fs_rar_to_menu(const char *rarfile,
-							u32 icolor, u32 selicolor, u32 selrcolor,
-							u32 selbcolor)
+extern u32 fs_rar_to_menu(const char *rarfile, u32 icolor, u32 selicolor, u32 selrcolor, u32 selbcolor)
 {
 	int fid;
 	struct RAROpenArchiveData arcdata;
@@ -537,7 +501,7 @@ extern u32 fs_rar_to_menu(const char *rarfile,
 	t_fs_filetype ft;
 	t_win_menuitem item;
 
-	if(menu_renew(&g_menu) == NULL) {
+	if (menu_renew(&g_menu) == NULL) {
 		return 0;
 	}
 
@@ -574,8 +538,7 @@ extern u32 fs_rar_to_menu(const char *rarfile,
 
 		ft = fs_file_get_type(header.FileName);
 
-		if (ft == fs_filetype_chm || ft == fs_filetype_zip
-			|| ft == fs_filetype_rar)
+		if (ft == fs_filetype_chm || ft == fs_filetype_zip || ft == fs_filetype_rar)
 			continue;
 
 		win_menuitem_new(&item);
@@ -587,14 +550,11 @@ extern u32 fs_rar_to_menu(const char *rarfile,
 
 			memset(str, 0, 1024);
 			uni = (u8 *) header.FileNameW;
-			charsets_utf32_conv(uni, sizeof(header.FileNameW), (u8 *) str,
-								sizeof(str));
-			buffer_copy_string_len(item.compname, header.FileName,
-								   256);
+			charsets_utf32_conv(uni, sizeof(header.FileNameW), (u8 *) str, sizeof(str));
+			buffer_copy_string_len(item.compname, header.FileName, 256);
 			filename_to_itemname(&item, str);
 		} else {
-			buffer_copy_string_len(item.compname,
-								   header.FileName, 256);
+			buffer_copy_string_len(item.compname, header.FileName, 256);
 			filename_to_itemname(&item, header.FileName);
 		}
 
@@ -617,7 +577,7 @@ extern u32 fs_rar_to_menu(const char *rarfile,
 
 u32 fs_empty_dir(u32 icolor, u32 selicolor, u32 selrcolor, u32 selbcolor)
 {
-	if(menu_renew(&g_menu) == NULL) {
+	if (menu_renew(&g_menu) == NULL) {
 		return 0;
 	}
 
@@ -648,8 +608,7 @@ static int chmEnum(struct chmFile *h, struct chmUnitInfo *ui, void *context)
 
 	ft = fs_file_get_type(ui->path);
 
-	if (ft == fs_filetype_chm || ft == fs_filetype_zip || ft == fs_filetype_rar
-		|| ft == fs_filetype_umd || ft == fs_filetype_pdb)
+	if (ft == fs_filetype_chm || ft == fs_filetype_zip || ft == fs_filetype_rar || ft == fs_filetype_umd || ft == fs_filetype_pdb)
 		return CHM_ENUMERATOR_CONTINUE;
 
 	win_menuitem_new(&item);
@@ -662,8 +621,7 @@ static int chmEnum(struct chmFile *h, struct chmUnitInfo *ui, void *context)
 		strncpy_s(fname, NELEMS(fname), ui->path, 256);
 	}
 
-	charsets_utf8_conv((unsigned char *) fname, sizeof(fname),
-					   (unsigned char *) fname, sizeof(fname));
+	charsets_utf8_conv((unsigned char *) fname, sizeof(fname), (unsigned char *) fname, sizeof(fname));
 
 	item.data = (void *) ft;
 	filename_to_itemname(&item, fname);
@@ -678,15 +636,13 @@ static int chmEnum(struct chmFile *h, struct chmUnitInfo *ui, void *context)
 	return CHM_ENUMERATOR_CONTINUE;
 }
 
-extern u32 fs_chm_to_menu(const char *chmfile,
-							u32 icolor, u32 selicolor, u32 selrcolor,
-							u32 selbcolor)
+extern u32 fs_chm_to_menu(const char *chmfile, u32 icolor, u32 selicolor, u32 selrcolor, u32 selbcolor)
 {
 	int fid;
 	struct chmFile *chm;
 	t_fs_chm_enum cenum;
 
-	if(menu_renew(&g_menu) == NULL) {
+	if (menu_renew(&g_menu) == NULL) {
 		return 0;
 	}
 
@@ -704,24 +660,21 @@ extern u32 fs_chm_to_menu(const char *chmfile,
 	cenum.selicolor = selicolor;
 	cenum.selrcolor = selrcolor;
 	cenum.selbcolor = selbcolor;
-	chm_enumerate(chm, CHM_ENUMERATE_NORMAL | CHM_ENUMERATE_FILES, chmEnum,
-				  (void *) &cenum);
+	chm_enumerate(chm, CHM_ENUMERATE_NORMAL | CHM_ENUMERATE_FILES, chmEnum, (void *) &cenum);
 	chm_close(chm);
 	freq_leave(fid);
 
 	return g_menu->size;
 }
 
-extern u32 fs_umd_to_menu(const char *umdfile,
-							u32 icolor, u32 selicolor, u32 selrcolor,
-							u32 selbcolor)
+extern u32 fs_umd_to_menu(const char *umdfile, u32 icolor, u32 selicolor, u32 selrcolor, u32 selbcolor)
 {
 	buffer *pbuf = NULL;
 	u32 cur_count = 1;
 	int fid;
 	t_win_menuitem item;
 
-	if(menu_renew(&g_menu) == NULL) {
+	if (menu_renew(&g_menu) == NULL) {
 		return 0;
 	}
 
@@ -735,9 +688,7 @@ extern u32 fs_umd_to_menu(const char *umdfile,
 		struct t_chapter *p;
 		char pos[20] = { 0 };
 
-		if (!p_umdchapter
-			|| (p_umdchapter->umdfile->ptr
-				&& strcmp(p_umdchapter->umdfile->ptr, umdfile))) {
+		if (!p_umdchapter || (p_umdchapter->umdfile->ptr && strcmp(p_umdchapter->umdfile->ptr, umdfile))) {
 			if (p_umdchapter)
 				umd_chapter_reset(p_umdchapter);
 			p_umdchapter = umd_chapter_init();
@@ -757,14 +708,11 @@ extern u32 fs_umd_to_menu(const char *umdfile,
 
 			for (i = 1; i < cur_count; i++) {
 				stlen = p[i - 1].name->used - 1;
-				stlen =
-					charsets_ucs_conv((const u8 *) p[i - 1].name->ptr, stlen,
-									  (u8 *) pbuf->ptr, pbuf->size);
+				stlen = charsets_ucs_conv((const u8 *) p[i - 1].name->ptr, stlen, (u8 *) pbuf->ptr, pbuf->size);
 				SPRINTF_S(pos, "%d", p[i - 1].length);
 				win_menuitem_new(&item);
 				buffer_copy_string_len(item.shortname, pos, 20);
-				buffer_copy_string_len(item.compname, pbuf->ptr,
-									   (stlen > 256) ? 256 : stlen);
+				buffer_copy_string_len(item.compname, pbuf->ptr, (stlen > 256) ? 256 : stlen);
 				filename_to_itemname(&item, item.compname->ptr);
 				if (1 != p_umdchapter->umd_type) {
 					if (0 == p_umdchapter->umd_mode)
@@ -781,9 +729,7 @@ extern u32 fs_umd_to_menu(const char *umdfile,
 				item.data2[3] = (p[i - 1].chunk_offset >> 16) & 0xFFFF;
 				item.data3 = p[i - 1].length;
 #if 0
-				printf("%d pos:%d,%d,%d-%d,%d\n", i, p[i - 1].chunk_pos,
-					   item.data2[0], item.data2[1], item.data2[2],
-					   item.data2[3]);
+				printf("%d pos:%d,%d,%d-%d,%d\n", i, p[i - 1].chunk_pos, item.data2[0], item.data2[1], item.data2[2], item.data2[3]);
 #endif
 				item.selected = false;
 				item.icolor = icolor;
@@ -794,9 +740,7 @@ extern u32 fs_umd_to_menu(const char *umdfile,
 				win_menu_add(g_menu, &item);
 			}
 #if 0
-			printf("%s umd file:%s type:%d,mode:%d,chapter count:%ld\n",
-				   __func__, umdfile, p_umdchapter->umd_type,
-				   p_umdchapter->umd_mode, cur_count);
+			printf("%s umd file:%s type:%d,mode:%d,chapter count:%ld\n", __func__, umdfile, p_umdchapter->umd_type, p_umdchapter->umd_mode, cur_count);
 #endif
 		}
 	} while (false);
@@ -847,16 +791,13 @@ extern t_fs_filetype fs_file_get_type(const char *filename)
 #ifdef ENABLE_IMAGE
 extern bool fs_is_image(t_fs_filetype ft)
 {
-	return ft == fs_filetype_jpg || ft == fs_filetype_gif
-		|| ft == fs_filetype_png || ft == fs_filetype_tga
-		|| ft == fs_filetype_bmp;
+	return ft == fs_filetype_jpg || ft == fs_filetype_gif || ft == fs_filetype_png || ft == fs_filetype_tga || ft == fs_filetype_bmp;
 }
 #endif
 
 extern bool fs_is_txtbook(t_fs_filetype ft)
 {
-	return ft == fs_filetype_txt || ft == fs_filetype_html
-		|| ft == fs_filetype_gz;
+	return ft == fs_filetype_txt || ft == fs_filetype_html || ft == fs_filetype_gz;
 }
 
 #ifdef ENABLE_MUSIC

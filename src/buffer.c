@@ -473,8 +473,7 @@ int buffer_is_equal_string(buffer * a, const char *s, size_t b_len)
  * most parts are equal and doing a case conversion needs time
  *
  */
-int buffer_caseless_compare(const char *a, size_t a_len, const char *b,
-							size_t b_len)
+int buffer_caseless_compare(const char *a, size_t a_len, const char *b, size_t b_len)
 {
 	size_t ndx = 0, max_ndx;
 	size_t *al, *bl;
@@ -549,8 +548,7 @@ int buffer_is_equal_right_len(buffer * b1, buffer * b2, size_t len)
 	if (b1->used - 1 < len || b1->used - 1 < len)
 		return 0;
 
-	if (0 == strncmp(b1->ptr + b1->used - 1 - len,
-					 b2->ptr + b2->used - 1 - len, len)) {
+	if (0 == strncmp(b1->ptr + b1->used - 1 - len, b2->ptr + b2->used - 1 - len, len)) {
 		return 1;
 	}
 

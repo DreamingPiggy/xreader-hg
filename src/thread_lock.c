@@ -77,12 +77,12 @@ int xr_unlock(struct psp_mutex_t *s)
 	return 0;
 }
 
-struct psp_mutex_t* xr_lock_init(struct psp_mutex_t *s)
+struct psp_mutex_t *xr_lock_init(struct psp_mutex_t *s)
 {
 	if (s == NULL) {
 		return s;
 	}
-	
+
 	s->l = 0;
 	s->c = 0;
 	s->thread_id = CURRENT_THREAD;
@@ -95,7 +95,7 @@ void xr_lock_destroy(struct psp_mutex_t *s)
 	if (s == NULL) {
 		return;
 	}
-	
+
 	s->l = 0;
 	s->c = 0;
 	s->thread_id = 0;

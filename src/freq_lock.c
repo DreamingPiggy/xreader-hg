@@ -178,8 +178,7 @@ static int update_freq(void)
 
 //  dbg_printf(d, "%s: should set cpu/bus to %d/%d", __func__, cpu, bus);
 
-	if (scePowerGetCpuClockFrequency() != cpu
-		|| scePowerGetBusClockFrequency() != bus) {
+	if (scePowerGetCpuClockFrequency() != cpu || scePowerGetBusClockFrequency() != bus) {
 		power_set_clock(cpu, bus);
 		{
 //          dbg_printf(d, "%s: cpu: %d, bus: %d", __func__, scePowerGetCpuClockFrequency(), scePowerGetBusClockFrequency());
@@ -231,8 +230,7 @@ int freq_leave(int freq_id)
 	for (idx = 0; idx < freqs_cnt; ++idx) {
 		if (freqs[idx].id == freq_id) {
 //          dbg_printf(d, "%s: removing freqs: %d/%d", __func__, freqs[idx].cpu, freqs[idx].bus);
-			memmove(&freqs[idx], &freqs[idx + 1],
-					sizeof(freqs[0]) * (freqs_cnt - idx - 1));
+			memmove(&freqs[idx], &freqs[idx + 1], sizeof(freqs[0]) * (freqs_cnt - idx - 1));
 			freqs = safe_realloc(freqs, sizeof(freqs[0]) * (freqs_cnt - 1));
 			freqs_cnt--;
 			break;

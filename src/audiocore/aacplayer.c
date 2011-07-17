@@ -139,8 +139,7 @@ static int __end(void)
  * @param frames 复制帧数
  * @param channels 声道数
  */
-static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames,
-						   int channels)
+static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames, int channels)
 {
 	int n;
 	signed short *p = (signed short *) buf;
@@ -193,9 +192,7 @@ static int aac_audiocallback(void *buf, unsigned int reqn, void *pdata)
 		avail_frame = g_buff_frame_size - g_buff_frame_start;
 
 		if (avail_frame >= snd_buf_frame_size) {
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * 2],
-						   snd_buf_frame_size, 2);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], snd_buf_frame_size, 2);
 			g_buff_frame_start += snd_buf_frame_size;
 			audio_buf += snd_buf_frame_size * 2;
 			snd_buf_frame_size = 0;
@@ -208,8 +205,7 @@ static int aac_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			int res;
 			uint16_t *output;
 
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * 2], avail_frame, 2);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], avail_frame, 2);
 			snd_buf_frame_size -= avail_frame;
 			audio_buf += avail_frame * 2;
 
@@ -240,15 +236,13 @@ static int aac_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			aac_data_buffer = (u8 *) memalign(64, frame_size);
 
 			if (data.use_buffer) {
-				if (buffered_reader_read(data.r, aac_data_buffer, frame_size) !=
-					frame_size) {
+				if (buffered_reader_read(data.r, aac_data_buffer, frame_size) != frame_size) {
 					free(aac_data_buffer);
 					__end();
 					return -1;
 				}
 			} else {
-				if (sceIoRead(data.fd, aac_data_buffer, frame_size) !=
-					frame_size) {
+				if (sceIoRead(data.fd, aac_data_buffer, frame_size) != frame_size) {
 					free(aac_data_buffer);
 					__end();
 					return -1;
@@ -333,17 +327,14 @@ static int aac_load(const char *spath, const char *lpath)
 		int size = 0;
 
 		fseek(aacfp, 0, SEEK_SET);
-		size =
-			(aac_buffer[6] << 21) | (aac_buffer[7] << 14) | (aac_buffer[8] << 7)
+		size = (aac_buffer[6] << 21) | (aac_buffer[7] << 14) | (aac_buffer[8] << 7)
 			| aac_buffer[9];
 		size += 10;
 		fread(aac_buffer, 1, size, aacfp);
 		buffervalid = fread(aac_buffer, 1, AAC_BUFFER_SIZE, aacfp);
 	}
 
-	bufferconsumed = NeAACDecInit(decoder,
-								  aac_buffer,
-								  buffervalid, &tempsamplerate, &tempchannels);
+	bufferconsumed = NeAACDecInit(decoder, aac_buffer, buffervalid, &tempsamplerate, &tempchannels);
 	g_info.channels = tempchannels;
 	g_info.sample_freq = tempsamplerate;
 
@@ -589,8 +580,7 @@ static int aac_set_opt(const char *unused, const char *values)
 	build_args(values, &argc, &argv);
 
 	for (i = 0; i < argc; ++i) {
-		if (!strncasecmp
-			(argv[i], "aac_buffer_size", sizeof("aac_buffer_size") - 1)) {
+		if (!strncasecmp(argv[i], "aac_buffer_size", sizeof("aac_buffer_size") - 1)) {
 			const char *p = argv[i];
 
 			if ((p = strrchr(p, '=')) != NULL) {

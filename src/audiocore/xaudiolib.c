@@ -63,8 +63,7 @@ int xAudioReleaseAudio(void)
 	if (g_use_vaudio) {
 		int ret;
 
-		while ((ret = sceVaudioChRelease()) == 0x80260002)
-			;
+		while ((ret = sceVaudioChRelease()) == 0x80260002);
 
 		return ret;
 	} else {
@@ -105,8 +104,7 @@ void xAudioChannelThreadCallback(int channel, void *buf, unsigned int reqn)
 	callback = AudioStatus[channel].callback;
 }
 
-void xAudioSetChannelCallback(int channel, xAudioCallback_t callback,
-							  void *pdata)
+void xAudioSetChannelCallback(int channel, xAudioCallback_t callback, void *pdata)
 {
 	volatile psp_audio_channelinfo *pci;
 
@@ -119,8 +117,7 @@ void xAudioSetChannelCallback(int channel, xAudioCallback_t callback,
 	pci->callback = callback;
 }
 
-int xAudioOutBlocking(unsigned int channel, unsigned int vol1,
-					  unsigned int vol2, void *buf)
+int xAudioOutBlocking(unsigned int channel, unsigned int vol1, unsigned int vol2, void *buf)
 {
 	if (!audio_ready)
 		return -1;
@@ -240,9 +237,7 @@ int xAudioInit()
 	strcpy(str, "audiot0");
 	for (i = 0; i < PSP_NUM_AUDIO_CHANNELS; i++) {
 		str[6] = '0' + i;
-		AudioStatus[i].threadhandle =
-			sceKernelCreateThread(str, (void *) &AudioChannelThread, 0x12,
-								 THREAD_STACK_SIZE, PSP_THREAD_ATTR_USER, NULL);
+		AudioStatus[i].threadhandle = sceKernelCreateThread(str, (void *) &AudioChannelThread, 0x12, THREAD_STACK_SIZE, PSP_THREAD_ATTR_USER, NULL);
 		if (AudioStatus[i].threadhandle < 0) {
 			AudioStatus[i].threadhandle = -1;
 			failed = 1;
@@ -363,4 +358,3 @@ void xAudioSetAlcMode(unsigned char mode)
 	if (g_use_vaudio)
 		sceVaudioSetAlcMode(mode);
 }
-

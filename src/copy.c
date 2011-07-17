@@ -34,8 +34,7 @@
 #include "dmalloc.h"
 #endif
 
-extern bool copy_file(const char *src, const char *dest, t_copy_cb cb,
-					  t_copy_overwritecb ocb, void *data)
+extern bool copy_file(const char *src, const char *dest, t_copy_cb cb, t_copy_overwritecb ocb, void *data)
 {
 	u8 *buf = malloc(1024 * 1024);
 	int fd1, fd2;
@@ -86,8 +85,7 @@ extern bool copy_file(const char *src, const char *dest, t_copy_cb cb,
 	return true;
 }
 
-extern u32 copy_dir(const char *src, const char *dest, t_copy_cb cb,
-					  t_copy_overwritecb ocb, void *data)
+extern u32 copy_dir(const char *src, const char *dest, t_copy_cb cb, t_copy_overwritecb ocb, void *data)
 {
 	int dl = sceIoDopen(src);
 	u32 result = 0;
@@ -122,8 +120,7 @@ extern u32 copy_dir(const char *src, const char *dest, t_copy_cb cb,
 	return result;
 }
 
-extern bool move_file(const char *src, const char *dest, t_copy_cb cb,
-					  t_copy_overwritecb ocb, void *data)
+extern bool move_file(const char *src, const char *dest, t_copy_cb cb, t_copy_overwritecb ocb, void *data)
 {
 	bool result = copy_file(src, dest, cb, ocb, data);
 
@@ -132,8 +129,7 @@ extern bool move_file(const char *src, const char *dest, t_copy_cb cb,
 	return result;
 }
 
-extern u32 move_dir(const char *src, const char *dest, t_copy_cb cb,
-					  t_copy_overwritecb ocb, void *data)
+extern u32 move_dir(const char *src, const char *dest, t_copy_cb cb, t_copy_overwritecb ocb, void *data)
 {
 	u32 result = copy_dir(src, dest, cb, ocb, data);
 
@@ -167,9 +163,7 @@ static t_fs_filetype get_archive_type(const char *path)
 	return fs_filetype_unknown;
 }
 
-extern bool extract_archive_file(const char *archname, const char *archpath,
-								 const char *dest, t_copy_cb cb,
-								 t_copy_overwritecb ocb, void *data)
+extern bool extract_archive_file(const char *archname, const char *archpath, const char *dest, t_copy_cb cb, t_copy_overwritecb ocb, void *data)
 {
 	t_fs_filetype ft;
 	SceUID fd;
@@ -199,8 +193,7 @@ extern bool extract_archive_file(const char *archname, const char *archpath,
 		}
 	}
 
-	dbg_printf(d, "extract_archive_file: %s %s %s, ft = %d", archname,
-			   archpath, dest, ft);
+	dbg_printf(d, "extract_archive_file: %s %s %s, ft = %d", archname, archpath, dest, ft);
 
 	fd = sceIoOpen(dest, PSP_O_CREAT | PSP_O_RDWR, 0777);
 
@@ -212,8 +205,7 @@ extern bool extract_archive_file(const char *archname, const char *archpath,
 	if (archdata == NULL || archdata->ptr == NULL)
 		goto exit;
 
-	buffer_cache =
-		archdata->used >= 1024 * 1024 ? 1024 * 1024 : archdata->used;
+	buffer_cache = archdata->used >= 1024 * 1024 ? 1024 * 1024 : archdata->used;
 
 	ptr = archdata->ptr;
 
@@ -223,9 +215,7 @@ extern bool extract_archive_file(const char *archname, const char *archpath,
 		if (bytes < 0) {
 			goto exit;
 		}
-		buffer_cache =
-			archdata->used - bytes >=
-			1024 * 1024 ? 1024 * 1024 : archdata->used - bytes;
+		buffer_cache = archdata->used - bytes >= 1024 * 1024 ? 1024 * 1024 : archdata->used - bytes;
 		ptr += bytes;
 	}
 

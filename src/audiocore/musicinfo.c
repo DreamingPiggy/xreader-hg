@@ -60,8 +60,7 @@ typedef struct
 
 buffer *tag_lyric = NULL;
 
-static void id3v1_get_string(char *str, int str_size,
-							 const uint8_t * buf, int buf_size)
+static void id3v1_get_string(char *str, int str_size, const uint8_t * buf, int buf_size)
 {
 	int i, c;
 	char *q;
@@ -80,18 +79,15 @@ static void id3v1_get_string(char *str, int str_size,
 	*q = '\0';
 }
 
-static int id3v1_parse_tag(MusicInfoInternalTag * tag, SceUID fd,
-						   const uint8_t * buf)
+static int id3v1_parse_tag(MusicInfoInternalTag * tag, SceUID fd, const uint8_t * buf)
 {
 	if (!(buf[0] == 'T' && buf[1] == 'A' && buf[2] == 'G'))
 		return -1;
 
 	id3v1_get_string(tag->id3v1.title, sizeof(tag->id3v1.title), buf + 3, 30);
-	id3v1_get_string(tag->id3v1.artist, sizeof(tag->id3v1.artist), buf + 33,
-					 30);
+	id3v1_get_string(tag->id3v1.artist, sizeof(tag->id3v1.artist), buf + 33, 30);
 	id3v1_get_string(tag->id3v1.album, sizeof(tag->id3v1.album), buf + 63, 30);
-	id3v1_get_string(tag->id3v1.comment, sizeof(tag->id3v1.comment), buf + 97,
-					 30);
+	id3v1_get_string(tag->id3v1.comment, sizeof(tag->id3v1.comment), buf + 97, 30);
 
 	tag->type |= ID3V1;
 	tag->id3v1.encode = config.mp3encode;
@@ -99,8 +95,7 @@ static int id3v1_parse_tag(MusicInfoInternalTag * tag, SceUID fd,
 	return 0;
 }
 
-static int read_id3v1(MusicInfoInternalTag * tag, const MusicInfo * music_info,
-					  SceUID fd)
+static int read_id3v1(MusicInfoInternalTag * tag, const MusicInfo * music_info, SceUID fd)
 {
 	int ret;
 
@@ -138,8 +133,7 @@ static int big2little_endian(uint8_t * p, size_t n)
 	return 0;
 }
 
-static void id3v2_read_ttag(SceUID fd, int taglen, char *dst, int dstlen,
-							MusicTagInfo * info)
+static void id3v2_read_ttag(SceUID fd, int taglen, char *dst, int dstlen, MusicTagInfo * info)
 {
 	int len;
 	uint8_t b;
@@ -301,14 +295,10 @@ static int id3v2_match(const uint8_t * buf)
 			 buf[2] == '3') || (buf[0] == 'e' &&
 								buf[1] == 'a' &&
 								buf[2] == '3')) &&
-		buf[3] != 0xff &&
-		buf[4] != 0xff &&
-		(buf[6] & 0x80) == 0 &&
-		(buf[7] & 0x80) == 0 && (buf[8] & 0x80) == 0 && (buf[9] & 0x80) == 0;
+		buf[3] != 0xff && buf[4] != 0xff && (buf[6] & 0x80) == 0 && (buf[7] & 0x80) == 0 && (buf[8] & 0x80) == 0 && (buf[9] & 0x80) == 0;
 }
 
-static void id3v2_parse(MusicInfoInternalTag * tag_info, SceUID fd,
-						int len, uint8_t version, uint8_t flags)
+static void id3v2_parse(MusicInfoInternalTag * tag_info, SceUID fd, int len, uint8_t version, uint8_t flags)
 {
 	int isv34, tlen;
 	uint32_t tag;
@@ -370,22 +360,18 @@ static void id3v2_parse(MusicInfoInternalTag * tag_info, SceUID fd,
 		switch (tag) {
 			case MKBETAG('T', 'I', 'T', '2'):
 			case MKBETAG(0, 'T', 'T', '2'):
-				id3v2_read_ttag(fd, tlen, info->title,
-								sizeof(info->title), info);
+				id3v2_read_ttag(fd, tlen, info->title, sizeof(info->title), info);
 				break;
 			case MKBETAG('T', 'P', 'E', '1'):
 			case MKBETAG(0, 'T', 'P', '1'):
-				id3v2_read_ttag(fd, tlen, info->artist,
-								sizeof(info->artist), info);
+				id3v2_read_ttag(fd, tlen, info->artist, sizeof(info->artist), info);
 				break;
 			case MKBETAG('T', 'A', 'L', 'B'):
 			case MKBETAG(0, 'T', 'A', 'L'):
-				id3v2_read_ttag(fd, tlen, info->album,
-								sizeof(info->album), info);
+				id3v2_read_ttag(fd, tlen, info->album, sizeof(info->album), info);
 				break;
 			case MKBETAG('C', 'O', 'M', 'M'):
-				id3v2_read_ttag(fd, tlen, info->comment,
-								sizeof(info->comment), info);
+				id3v2_read_ttag(fd, tlen, info->comment, sizeof(info->comment), info);
 				break;
 			case MKBETAG('T', 'X', 'X', 'X'):
 				{
@@ -404,8 +390,7 @@ static void id3v2_parse(MusicInfoInternalTag * tag_info, SceUID fd,
 					// Acount for text encoding u8
 					tlen--;
 
-					while (sceIoRead(fd, &ch, 1) == 1 &&
-						   p - desc < sizeof(desc) && ch != '\0') {
+					while (sceIoRead(fd, &ch, 1) == 1 && p - desc < sizeof(desc) && ch != '\0') {
 						*p++ = ch;
 						tlen--;
 					}
@@ -450,8 +435,7 @@ static void id3v2_parse(MusicInfoInternalTag * tag_info, SceUID fd,
 	sceIoLseek(fd, len, PSP_SEEK_CUR);
 }
 
-static int read_id3v2_tag(MusicInfoInternalTag * tag,
-						  const MusicInfo * music_info, SceUID fd)
+static int read_id3v2_tag(MusicInfoInternalTag * tag, const MusicInfo * music_info, SceUID fd)
 {
 	uint8_t buf[ID3v2_HEADER_SIZE];
 	int len;
@@ -462,8 +446,7 @@ static int read_id3v2_tag(MusicInfoInternalTag * tag,
 
 	if (id3v2_match(buf)) {
 		/* parse ID3v2 header */
-		len = ((buf[6] & 0x7f) << 21) |
-			((buf[7] & 0x7f) << 14) | ((buf[8] & 0x7f) << 7) | (buf[9] & 0x7f);
+		len = ((buf[6] & 0x7f) << 21) | ((buf[7] & 0x7f) << 14) | ((buf[8] & 0x7f) << 7) | (buf[9] & 0x7f);
 		id3v2_parse(tag, fd, len, buf[3], buf[5]);
 	} else {
 		sceIoLseek(fd, 0, SEEK_SET);

@@ -31,7 +31,7 @@ typedef struct
 	buffer *compname;
 	buffer *shortname;
 	char name[128];				// item name
-	u32 width;				// display width in bytes (for align/span)
+	u32 width;					// display width in bytes (for align/span)
 	pixel icolor;				// font color
 	pixel selicolor;			// selected font color
 	pixel selrcolor;			// selected rectangle line color
@@ -42,11 +42,13 @@ typedef struct
 	u32 data3;
 } t_win_menuitem, *p_win_menuitem;
 
-enum {
+enum
+{
 	MENU_REALLOC_INCR = 64,
 };
 
-typedef struct _t_win_menu {
+typedef struct _t_win_menu
+{
 	p_win_menuitem root;
 	u32 size;
 	u32 cap;
@@ -70,38 +72,26 @@ typedef enum
 	win_menu_op_cancel,
 	win_menu_op_force_redraw
 } t_win_menu_op;
-typedef t_win_menu_op(*t_win_menu_callback) (u32 key, p_win_menuitem item,
-											 u32 * count, u32 page_count,
-											 u32 * topindex, u32 * index);
-typedef void (*t_win_menu_draw) (p_win_menuitem item, u32 index,
-								 u32 topindex, u32 max_height);
+typedef t_win_menu_op(*t_win_menu_callback) (u32 key, p_win_menuitem item, u32 * count, u32 page_count, u32 * topindex, u32 * index);
+typedef void (*t_win_menu_draw) (p_win_menuitem item, u32 index, u32 topindex, u32 max_height);
 
 // Default callback for menu
-extern t_win_menu_op win_menu_defcb(u32 key, p_win_menuitem item,
-									u32 * count, u32 page_count,
-									u32 * topindex, u32 * index);
+extern t_win_menu_op win_menu_defcb(u32 key, p_win_menuitem item, u32 * count, u32 page_count, u32 * topindex, u32 * index);
 
 // Menu show & wait for input with callback supported
 extern u32 win_menu(u32 x, u32 y, u32 max_width, u32 max_height,
-					  p_win_menuitem item, u32 count, u32 initindex,
-					  u32 linespace, pixel bgcolor, bool redraw,
-					  t_win_menu_draw predraw, t_win_menu_draw postdraw,
-					  t_win_menu_callback cb);
+					p_win_menuitem item, u32 count, u32 initindex,
+					u32 linespace, pixel bgcolor, bool redraw, t_win_menu_draw predraw, t_win_menu_draw postdraw, t_win_menu_callback cb);
 
 // Messagebox with yes/no
-extern bool win_msgbox(const char *prompt, const char *yesstr,
-					   const char *nostr, pixel fontcolor, pixel bordercolor,
-					   pixel bgcolor);
+extern bool win_msgbox(const char *prompt, const char *yesstr, const char *nostr, pixel fontcolor, pixel bordercolor, pixel bgcolor);
 
 // Message with any key pressed to close
-extern void win_msg(const char *prompt, pixel fontcolor, pixel bordercolor,
-					pixel bgcolor);
+extern void win_msg(const char *prompt, pixel fontcolor, pixel bordercolor, pixel bgcolor);
 
 extern void win_item_destroy(p_win_menuitem * item, u32 * size);
-extern p_win_menuitem win_realloc_items(p_win_menuitem item, int orgsize,
-										int newsize);
-extern p_win_menuitem win_copy_item(p_win_menuitem dst,
-									const p_win_menuitem src);
+extern p_win_menuitem win_realloc_items(p_win_menuitem item, int orgsize, int newsize);
+extern p_win_menuitem win_copy_item(p_win_menuitem dst, const p_win_menuitem src);
 
 extern int win_get_max_length(const p_win_menuitem pItem, int size);
 extern int win_get_max_pixel_width(const p_win_menuitem pItem, int size);

@@ -102,7 +102,7 @@ extern "C"
 	int generic_suspend(void);
 	void generic_set_playback(bool playing);
 	int generic_get_info(struct music_info *info);
-	int generic_set_status(int status);	
+	int generic_set_status(int status);
 
 #ifdef __cplusplus
 }

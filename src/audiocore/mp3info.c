@@ -167,8 +167,7 @@ static int ff_mpegaudio_decode_header(MPADecodeContext * s, uint32_t header)
 	return 0;
 }
 
-static int mp3_parse_vbr_tags(mp3_reader_data * data, struct MP3Info *info,
-							  uint32_t off)
+static int mp3_parse_vbr_tags(mp3_reader_data * data, struct MP3Info *info, uint32_t off)
 {
 	const uint32_t xing_offtbl[2][2] = { {32, 17}, {17, 9} };
 	uint32_t b, frames;
@@ -196,8 +195,7 @@ static int mp3_parse_vbr_tags(mp3_reader_data * data, struct MP3Info *info,
 	info->channels = ctx.nb_channels;
 	info->sample_freq = ctx.sample_rate;
 
-	sceIoLseek(data->fd, xing_offtbl[ctx.lsf == 1][ctx.nb_channels == 1],
-			  PSP_SEEK_CUR);
+	sceIoLseek(data->fd, xing_offtbl[ctx.lsf == 1][ctx.nb_channels == 1], PSP_SEEK_CUR);
 
 	if (sceIoRead(data->fd, &b, sizeof(b)) != sizeof(b)) {
 		return -1;
@@ -232,8 +230,7 @@ static int mp3_parse_vbr_tags(mp3_reader_data * data, struct MP3Info *info,
 			info->lame_vbr_quality = (100 - b) / 10;
 		}
 
-		if (sceIoRead(data->fd, info->lame_str, sizeof(info->lame_str)) !=
-			sizeof(info->lame_str)) {
+		if (sceIoRead(data->fd, info->lame_str, sizeof(info->lame_str)) != sizeof(info->lame_str)) {
 			return -1;
 		}
 
@@ -308,11 +305,7 @@ static int id3v2_match(const uint8_t * buf)
 {
 	return buf[0] == 'I' &&
 		buf[1] == 'D' &&
-		buf[2] == '3' &&
-		buf[3] != 0xff &&
-		buf[4] != 0xff &&
-		(buf[6] & 0x80) == 0 &&
-		(buf[7] & 0x80) == 0 && (buf[8] & 0x80) == 0 && (buf[9] & 0x80) == 0;
+		buf[2] == '3' && buf[3] != 0xff && buf[4] != 0xff && (buf[6] & 0x80) == 0 && (buf[7] & 0x80) == 0 && (buf[8] & 0x80) == 0 && (buf[9] & 0x80) == 0;
 }
 
 static int _bitrate[9][16] = {
@@ -336,13 +329,11 @@ static int _sample_freq[3][4] = {
 
 static int check_bc_combination(int bitrate, uint8_t channel_mode)
 {
-	if (bitrate == 64 || bitrate == 96 || bitrate == 112 || bitrate == 128
-		|| bitrate == 160 || bitrate == 192)
+	if (bitrate == 64 || bitrate == 96 || bitrate == 112 || bitrate == 128 || bitrate == 160 || bitrate == 192)
 		return 0;
 
 	if (channel_mode == 0 || channel_mode == 1 || channel_mode == 2) {
-		if (bitrate == 224 || bitrate == 256 || bitrate == 320
-			|| bitrate == 384)
+		if (bitrate == 224 || bitrate == 256 || bitrate == 320 || bitrate == 384)
 			return 0;
 	}
 
@@ -354,9 +345,7 @@ static int check_bc_combination(int bitrate, uint8_t channel_mode)
 	return -1;
 }
 
-static bool check_next_frame_header(mp3_reader_data * data, uint8_t * buf,
-									uint32_t bufpos, uint32_t bufsize,
-									uint32_t this_frame, uint32_t next_frame)
+static bool check_next_frame_header(mp3_reader_data * data, uint8_t * buf, uint32_t bufpos, uint32_t bufsize, uint32_t this_frame, uint32_t next_frame)
 {
 	uint32_t orig;
 	bool result = false;
@@ -393,9 +382,7 @@ static bool check_next_frame_header(mp3_reader_data * data, uint8_t * buf,
 	return result;
 }
 
-static inline int parse_frame(uint8_t * buf, size_t bufpos, size_t bufsize,
-							  int *lv, int *br, struct MP3Info *info,
-							  mp3_reader_data * data, offset_t start)
+static inline int parse_frame(uint8_t * buf, size_t bufpos, size_t bufsize, int *lv, int *br, struct MP3Info *info, mp3_reader_data * data, offset_t start)
 {
 	uint8_t *h = buf + bufpos;
 	uint8_t mp3_version, mp3_level;
@@ -406,8 +393,7 @@ static inline int parse_frame(uint8_t * buf, size_t bufpos, size_t bufsize,
 	uint32_t framelenbyte;
 	int bitrate;
 	int freq;
-	uint16_t mp3_samples_per_frames[9] =
-		{ 384, 1152, 1152, 384, 1152, 576, 384, 1152, 576 };
+	uint16_t mp3_samples_per_frames[9] = { 384, 1152, 1152, 384, 1152, 576, 384, 1152, 576 };
 	uint16_t spf;
 
 	if (h[0] != 0xff)
@@ -471,8 +457,7 @@ static inline int parse_frame(uint8_t * buf, size_t bufpos, size_t bufsize,
 	else
 		framelenbyte = (spf / 8 * 1000) * bitrate / freq + pad;
 
-	if (!check_next_frame_header
-		(data, buf, bufpos, bufsize, start, start + framelenbyte)) {
+	if (!check_next_frame_header(data, buf, bufpos, bufsize, start, start + framelenbyte)) {
 		return -1;
 	}
 
@@ -496,7 +481,7 @@ static inline int parse_frame(uint8_t * buf, size_t bufpos, size_t bufsize,
 int skip_id3v2_tag(mp3_reader_data * data)
 {
 	int len;
-	uint8_t buf[ID3v2_HEADER_SIZE] __attribute__((aligned(64)));
+	uint8_t buf[ID3v2_HEADER_SIZE] __attribute__ ((aligned(64)));
 
 	if (data->fd < 0)
 		return -1;
@@ -510,8 +495,7 @@ int skip_id3v2_tag(mp3_reader_data * data)
 
 		memset(&info, 0, sizeof(info));
 		/* skip ID3v2 header */
-		len = ((buf[6] & 0x7f) << 21) |
-			((buf[7] & 0x7f) << 14) | ((buf[8] & 0x7f) << 7) | (buf[9] & 0x7f);
+		len = ((buf[6] & 0x7f) << 21) | ((buf[7] & 0x7f) << 14) | ((buf[8] & 0x7f) << 7) | (buf[9] & 0x7f);
 		sceIoLseek(data->fd, len, PSP_SEEK_CUR);
 	} else {
 		sceIoLseek(data->fd, 0, PSP_SEEK_SET);
@@ -545,9 +529,7 @@ int search_valid_frame_me(mp3_reader_data * data, int *brate)
 	start = 0;
 	while ((end = sceIoRead(data->fd, &buf[4], sizeof(buf) - 4)) > 0) {
 		while (start < end) {
-			size =
-				parse_frame(buf, start, end, &level, brate, info, data,
-							dcount * (sizeof(buf) - 4) + off + start);
+			size = parse_frame(buf, start, end, &level, brate, info, data, dcount * (sizeof(buf) - 4) + off + start);
 
 			if (size > 0) {
 				goto found;
@@ -609,9 +591,7 @@ int read_mp3_info_brute(struct MP3Info *info, mp3_reader_data * data)
 		while (off < end) {
 			int brate = 0;
 
-			if ((size =
-				 parse_frame(buf, off, end, &level, &brate, info, data,
-							 dcount * 65536 + off)) > 0) {
+			if ((size = parse_frame(buf, off, end, &level, &brate, info, data, dcount * 65536 + off)) > 0) {
 				br += brate;
 				if (first_frame == (uint32_t) - 1)
 					first_frame = dcount * 65536 + off;
@@ -620,9 +600,7 @@ int read_mp3_info_brute(struct MP3Info *info, mp3_reader_data * data)
 					if (info->frames == 0)
 						info->frameoff = malloc(sizeof(u32) * 1024);
 					else
-						info->frameoff =
-							safe_realloc(info->frameoff,
-										 sizeof(u32) * (info->frames + 1024));
+						info->frameoff = safe_realloc(info->frameoff, sizeof(u32) * (info->frames + 1024));
 					if (info->frameoff == NULL)
 						info->frames = -1;
 					else
@@ -660,8 +638,7 @@ int read_mp3_info(struct MP3Info *info, mp3_reader_data * data)
 	off = sceIoLseek(data->fd, 0, PSP_SEEK_CUR);
 
 	if (mp3_parse_vbr_tags(data, info, off) < 0) {
-		dbg_printf(d, "%s: No Xing header found, use brute force search method",
-				   __func__);
+		dbg_printf(d, "%s: No Xing header found, use brute force search method", __func__);
 		return read_mp3_info_brute(info, data);
 	}
 

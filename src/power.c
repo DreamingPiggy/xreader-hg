@@ -52,8 +52,7 @@ extern void power_get_clock(u32 * cpu, u32 * bus)
 	*bus = scePowerGetBusClockFrequency();
 }
 
-extern void power_get_battery(int *percent, int *lifetime, int *tempe,
-							  int *volt)
+extern void power_get_battery(int *percent, int *lifetime, int *tempe, int *volt)
 {
 	int t;
 

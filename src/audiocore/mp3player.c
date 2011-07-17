@@ -78,7 +78,7 @@ static uint16_t *g_buff = NULL;
 /**
  * MP3音乐解码缓冲
  */
-static uint8_t g_input_buff[BUFF_SIZE + MAD_BUFFER_GUARD] __attribute__((aligned(64)));
+static uint8_t g_input_buff[BUFF_SIZE + MAD_BUFFER_GUARD] __attribute__ ((aligned(64)));
 
 /**
  * MP3音乐播放缓冲大小，以帧数计
@@ -122,8 +122,7 @@ static bool mp3_getEDRAM = false;
  * @param frames 复制帧数
  * @param channels 声道数
  */
-static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames,
-						   int channels)
+static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames, int channels)
 {
 	int n;
 	signed short *p = (signed short *) buf;
@@ -152,10 +151,8 @@ static int mp3_seek_seconds_offset_brute(double npt)
 		pos = 0;
 	}
 
-	dbg_printf(d, "%s: jumping to %d frame, offset %08x", __func__, pos,
-			   (int) mp3info.frameoff[pos]);
-	dbg_printf(d, "%s: frame range (0~%u)", __func__,
-			   (unsigned) g_info.samples);
+	dbg_printf(d, "%s: jumping to %d frame, offset %08x", __func__, pos, (int) mp3info.frameoff[pos]);
+	dbg_printf(d, "%s: frame range (0~%u)", __func__, (unsigned) g_info.samples);
 
 	if (pos >= g_info.samples) {
 		__end();
@@ -209,8 +206,7 @@ static int seek_valid_frame(void)
 			}
 
 			if (mp3_data.use_buffer)
-				bufsize =
-					buffered_reader_read(mp3_data.r, read_start, read_size);
+				bufsize = buffered_reader_read(mp3_data.r, read_start, read_size);
 			else
 				bufsize = sceIoRead(mp3_data.fd, read_start, read_size);
 
@@ -390,40 +386,32 @@ static int memp3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 		avail_frame = g_buff_frame_size - g_buff_frame_start;
 
 		if (avail_frame >= snd_buf_frame_size) {
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * 2],
-						   snd_buf_frame_size, 2);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], snd_buf_frame_size, 2);
 			g_buff_frame_start += snd_buf_frame_size;
 			audio_buf += snd_buf_frame_size * 2;
 			snd_buf_frame_size = 0;
 		} else {
 			int frame_size, ret, brate = 0;
 
-			send_to_sndbuf(audio_buf,
-						   &g_buff[g_buff_frame_start * 2], avail_frame, 2);
+			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], avail_frame, 2);
 			snd_buf_frame_size -= avail_frame;
 			audio_buf += avail_frame * 2;
 
 			do {
 				if (mp3_data.use_buffer) {
-					if ((frame_size =
-						 search_valid_frame_me_buffered(&mp3_data,
-														&brate)) < 0) {
+					if ((frame_size = search_valid_frame_me_buffered(&mp3_data, &brate)) < 0) {
 						__end();
 						return -1;
 					}
 				} else {
-					if ((frame_size =
-						 search_valid_frame_me(&mp3_data, &brate)) < 0) {
+					if ((frame_size = search_valid_frame_me(&mp3_data, &brate)) < 0) {
 						__end();
 						return -1;
 					}
 				}
 
 				if (mp3_data.use_buffer)
-					ret =
-						buffered_reader_read(mp3_data.r, memp3_input_buf,
-											 frame_size);
+					ret = buffered_reader_read(mp3_data.r, memp3_input_buf, frame_size);
 				else
 					ret = sceIoRead(mp3_data.fd, memp3_input_buf, frame_size);
 
@@ -624,8 +612,7 @@ static int mp3_load(const char *spath, const char *lpath)
 			   g_info.channels, g_info.sample_freq,
 			   g_info.avg_bps / 1000,
 			   (int) (g_info.duration / 60), (int) g_info.duration % 60,
-			   mp3info.frameoff != NULL ? ", frame table, " : ", ",
-			   g_info.samples, mp3info.have_crc ? ", crc passed" : "");
+			   mp3info.frameoff != NULL ? ", frame table, " : ", ", g_info.samples, mp3info.have_crc ? ", crc passed" : "");
 
 #ifdef _DEBUG
 	if (mp3info.lame_encoded) {
@@ -703,23 +690,19 @@ static int mp3_set_opt(const char *unused, const char *values)
 	build_args(values, &argc, &argv);
 
 	for (i = 0; i < argc; ++i) {
-		if (!strncasecmp
-			(argv[i], "mp3_brute_mode", sizeof("mp3_brute_mode") - 1)) {
+		if (!strncasecmp(argv[i], "mp3_brute_mode", sizeof("mp3_brute_mode") - 1)) {
 			if (opt_is_on(argv[i])) {
 				use_brute_method = true;
 			} else {
 				use_brute_method = false;
 			}
-		} else if (!strncasecmp
-				   (argv[i], "mp3_check_crc", sizeof("mp3_check_crc") - 1)) {
+		} else if (!strncasecmp(argv[i], "mp3_check_crc", sizeof("mp3_check_crc") - 1)) {
 			if (opt_is_on(argv[i])) {
 				check_crc = true;
 			} else {
 				check_crc = false;
 			}
-		} else if (!strncasecmp
-				   (argv[i], "mp3_buffer_size",
-					sizeof("mp3_buffer_size") - 1)) {
+		} else if (!strncasecmp(argv[i], "mp3_buffer_size", sizeof("mp3_buffer_size") - 1)) {
 			const char *p = argv[i];
 
 			if ((p = strrchr(p, '=')) != NULL) {
@@ -767,19 +750,16 @@ static int mp3_get_info(struct music_info *info)
 					STRCPY_S(lame_method, "CBR");
 					break;
 				case VBR:
-					SPRINTF_S(lame_method, "VBR V%1d",
-							  mp3info.lame_vbr_quality);
+					SPRINTF_S(lame_method, "VBR V%1d", mp3info.lame_vbr_quality);
 					break;
 				default:
 					break;
 			}
 
 			if (mp3info.lame_str[strlen(mp3info.lame_str) - 1] == ' ')
-				SPRINTF_S(info->encode_msg,
-						  "%s%s", mp3info.lame_str, lame_method);
+				SPRINTF_S(info->encode_msg, "%s%s", mp3info.lame_str, lame_method);
 			else
-				SPRINTF_S(info->encode_msg,
-						  "%s %s", mp3info.lame_str, lame_method);
+				SPRINTF_S(info->encode_msg, "%s %s", mp3info.lame_str, lame_method);
 		} else {
 			info->encode_msg[0] = '\0';
 		}

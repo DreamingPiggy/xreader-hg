@@ -33,40 +33,31 @@
 #include "dmalloc.h"
 #endif
 
-static pixel *bg_start =
-	(pixel *) (0x44000000 +
-			   PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES * 2);
+static pixel *bg_start = (pixel *) (0x44000000 + PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES * 2);
 static u32 imgwidth, imgheight;
 
 static void bg_set_color(pixel * bg_addr, u32 bgcolor)
 {
 	pixel *bg_buf, *bg_end;
 
-	for (bg_buf = bg_addr, bg_end = bg_addr + 0x22000; bg_buf < bg_end;
-		 bg_buf++)
+	for (bg_buf = bg_addr, bg_end = bg_addr + 0x22000; bg_buf < bg_end; bg_buf++)
 		*bg_buf = bgcolor;
 }
 
 /// mix image and bgcolor to bg buffer
-static void bg_set_image_grayscale(pixel * img_buf, u32 top, u32 left,
-								   u32 width, u32 height,
-								   u32 bgcolor, u32 grayscale)
+static void bg_set_image_grayscale(pixel * img_buf, u32 top, u32 left, u32 width, u32 height, u32 bgcolor, u32 grayscale)
 {
 	pixel *bg_buf, *bg_end, *bg_line, *bg_lineend;
 	u32 r = RGB_R(bgcolor), g = RGB_G(bgcolor), b = RGB_B(bgcolor);
 
-	for (bg_buf = bg_start + top * PSP_SCREEN_SCANLINE + left, bg_end =
-		 bg_buf + height * PSP_SCREEN_SCANLINE; bg_buf < bg_end;
-		 bg_buf += PSP_SCREEN_SCANLINE)
-		for (bg_line = bg_buf, bg_lineend = bg_buf + width;
-			 bg_line < bg_lineend; bg_line++) {
+	for (bg_buf = bg_start + top * PSP_SCREEN_SCANLINE + left, bg_end = bg_buf + height * PSP_SCREEN_SCANLINE; bg_buf < bg_end; bg_buf += PSP_SCREEN_SCANLINE)
+		for (bg_line = bg_buf, bg_lineend = bg_buf + width; bg_line < bg_lineend; bg_line++) {
 			*bg_line = disp_grayscale(*img_buf, r, g, b, grayscale);
 			img_buf++;
 		}
 }
 
-extern void bg_load(const char *filename, const char *archname, pixel bgcolor,
-					t_fs_filetype ft, u32 grayscale, int where)
+extern void bg_load(const char *filename, const char *archname, pixel bgcolor, t_fs_filetype ft, u32 grayscale, int where)
 {
 	pixel *imgdata, *imgshow = NULL, *img_buf;
 	u32 width, height, w2, h2, left, top;
@@ -74,12 +65,9 @@ extern void bg_load(const char *filename, const char *archname, pixel bgcolor,
 	int result;
 
 	if (archname == NULL || archname[0] == '\0' || where == scene_in_dir)
-		result =
-			image_open_normal(filename, ft, &width, &height, &imgdata, &bgc);
+		result = image_open_normal(filename, ft, &width, &height, &imgdata, &bgc);
 	else
-		result =
-			image_open_archive(filename, archname, ft, &width, &height,
-							   &imgdata, &bgc, where);
+		result = image_open_archive(filename, archname, ft, &width, &height, &imgdata, &bgc, where);
 
 	if (result != 0) {
 		// if load bg image fail, continue to set bgcolor
@@ -138,8 +126,7 @@ extern void bg_load(const char *filename, const char *archname, pixel bgcolor,
 extern bool bg_display(void)
 {
 	if (config.have_bg) {
-		memcpy(vram_draw, bg_start,
-			   PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES);
+		memcpy(vram_draw, bg_start, PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES);
 		return true;
 	}
 	return false;
@@ -161,8 +148,7 @@ extern void bg_cache(void)
 	_cache = malloc(PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES);
 	if (_cache == NULL)
 		return;
-	memcpy(_cache, bg_start,
-		   PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES);
+	memcpy(_cache, bg_start, PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES);
 }
 
 extern void bg_restore(void)
@@ -171,8 +157,7 @@ extern void bg_restore(void)
 		return;
 	if (_cache == NULL)
 		return;
-	memcpy(bg_start, _cache,
-		   PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES);
+	memcpy(bg_start, _cache, PSP_SCREEN_SCANLINE * PSP_SCREEN_HEIGHT * PIXEL_BYTES);
 	free(_cache);
 	_cache = NULL;
 }
