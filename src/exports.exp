@@ -10,4 +10,13 @@ PSP_EXPORT_START(dlmalloc, 0, 0x0001)
 PSP_EXPORT_FUNC(debug_malloc)
 PSP_EXPORT_END
 
+PSP_EXPORT_START(xrAudioCore, 0, 0x0001)
+PSP_EXPORT_FUNC(register_musicdrv)
+PSP_EXPORT_FUNC(unregister_musicdrv)
+PSP_EXPORT_FUNC(malloc)
+PSP_EXPORT_FUNC(free)
+PSP_EXPORT_FUNC(realloc)
+PSP_EXPORT_FUNC(calloc)
+PSP_EXPORT_END
+
 PSP_END_EXPORTS

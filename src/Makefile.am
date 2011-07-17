@@ -19,11 +19,11 @@ AM_CPPFLAGS += -I $(srcdir)/include/mac
 endif
 
 if OPTIMIZE
-AM_CFLAGS = -Os -G0 -Wall
-AM_CXXFLAGS = -Os -G0 -Wall -fno-exceptions -fno-rtti
+AM_CFLAGS = -Os -G0 -Wall -fno-builtin 
+AM_CXXFLAGS = -Os -G0 -Wall -fno-builtin -fno-exceptions -fno-rtti
 else
-AM_CFLAGS = -O0 -G0 -g -Wall
-AM_CXXFLAGS = -O0 -G0 -g -Wall -fno-exceptions -fno-rtti
+AM_CFLAGS = -O0 -G0 -g -Wall -fno-builtin 
+AM_CXXFLAGS = -O0 -G0 -g -Wall -fno-builtin -fno-exceptions -fno-rtti
 endif
 
 AM_CFLAGS += -Werror -Wdeclaration-after-statement

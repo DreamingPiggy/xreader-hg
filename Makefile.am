@@ -1,7 +1,8 @@
 ACLOCAL_AMFLAGS = -I aclocal
 ACLOCAL_FILES = aclocal/version.m4 aclocal/pspdev.m4 aclocal/ac_doxygen.m4
 
-SUBDIRS = xrPrx xr_rdriver cooleyesBridge src 
+SUBDIRS = xrPrx xr_rdriver cooleyesBridge src \
+		  audioplugin/dummy
 
 include aminclude.am
 
