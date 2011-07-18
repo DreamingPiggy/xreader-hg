@@ -58,10 +58,48 @@ static enum
 static struct psp_mutex_t fat_l;
 static bool fat_inited = false;
 
+extern bool xrprx_loaded;
+
+static inline SceUID _xrIoOpen(const char *file, int flags, SceMode mode)
+{
+	if(xrprx_loaded) {
+		return xrIoOpen(file, flags, mode);
+	}
+
+	return sceIoOpen(file, flags, mode);
+}
+
+static inline SceOff _xrIoLseek(SceUID fd, SceOff offset, int whence)
+{
+	if(xrprx_loaded) {
+		return xrIoLseek(fd, offset, whence);
+	}
+
+	return sceIoLseek(fd, offset, whence);
+}
+
+static inline int _xrIoRead(SceUID fd, void *data, SceSize size)
+{
+	if(xrprx_loaded) {
+		return xrIoRead(fd, data, size);
+	}
+
+	return sceIoRead(fd, data, size);
+}
+
+static inline int _xrIoClose(SceUID fd)
+{
+	if(xrprx_loaded) {
+		return xrIoClose(fd);
+	}
+
+	return sceIoClose(fd);
+}
+
 static void msstor_close(void)
 {
 	if (fatfd >= 0) {
-		xrIoClose(fatfd);
+		_xrIoClose(fatfd);
 		fatfd = -1;
 	}
 }
@@ -84,9 +122,9 @@ static SceUID msstor_reopen(void)
 	msstor_close();
 
 	if (is_on_ef0()) {
-		fatfd = xrIoOpen("eflash0a0f0:", PSP_O_RDONLY, 0777);
+		fatfd = _xrIoOpen("eflash0a0f0:", PSP_O_RDONLY, 0777);
 	} else {
-		fatfd = xrIoOpen("msstor:", PSP_O_RDONLY, 0777);
+		fatfd = _xrIoOpen("msstor:", PSP_O_RDONLY, 0777);
 	}
 
 	return fatfd;
@@ -129,15 +167,15 @@ static bool fat_init(void)
 		fat_unlock();
 		return false;
 	}
-	if (xrIoRead(fatfd, &mbr, sizeof(mbr)) != sizeof(mbr)) {
+	if (_xrIoRead(fatfd, &mbr, sizeof(mbr)) != sizeof(mbr)) {
 		msstor_close();
 		fat_unlock();
 		return false;
 	}
 	dbr_pos = mbr.dpt[0].start_sec * 0x200;
-	if (xrIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos || xrIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
+	if (_xrIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos || _xrIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
 		dbr_pos = 0;
-		if (xrIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos || xrIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
+		if (_xrIoLseek(fatfd, dbr_pos, PSP_SEEK_SET) != dbr_pos || _xrIoRead(fatfd, &dbr, sizeof(dbr)) < sizeof(dbr)) {
 			msstor_close();
 			fat_unlock();
 			return false;
@@ -263,13 +301,13 @@ static bool fat_load_table(void)
 
 	fat_table_size = ((fat_type == fat32) ? dbr.ufat.fat32.sec_per_fat : dbr.sec_per_fat) * dbr.bytes_per_sec;
 
-	if (xrIoLseek
+	if (_xrIoLseek
 		(fatfd, dbr_pos + dbr.reserved_sec * dbr.bytes_per_sec,
 		 PSP_SEEK_SET) != dbr_pos + dbr.reserved_sec * dbr.bytes_per_sec || (fat_table = malloc(fat_table_size)) == NULL) {
 		msstor_close();
 		return false;
 	}
-	if ((xrIoRead(fatfd, fat_table, fat_table_size) != fat_table_size)
+	if ((_xrIoRead(fatfd, fat_table, fat_table_size) != fat_table_size)
 		|| (fat_type == fat12 && !convert_table_fat12())
 		|| (fat_type == fat16 && !convert_table_fat16())) {
 		msstor_close();
@@ -331,7 +369,7 @@ static bool fat_dir_list(u32 clus, u32 * count, p_fat_entry * entrys)
 		*count = dbr.root_entry;
 		if ((*entrys = malloc(*count * sizeof(**entrys))) == NULL)
 			return false;
-		if (xrIoLseek(fatfd, root_pos, PSP_SEEK_SET) != root_pos || xrIoRead(fatfd, *entrys, *count * sizeof(t_fat_entry)) != *count * sizeof(t_fat_entry)) {
+		if (_xrIoLseek(fatfd, root_pos, PSP_SEEK_SET) != root_pos || _xrIoRead(fatfd, *entrys, *count * sizeof(t_fat_entry)) != *count * sizeof(t_fat_entry)) {
 			free(*entrys);
 			return false;
 		}
@@ -360,7 +398,7 @@ static bool fat_dir_list(u32 clus, u32 * count, p_fat_entry * entrys)
 		do {
 			u64 epos = data_pos + 1ull * (c2 - 2) * bytes_per_clus;
 
-			if (xrIoLseek(fatfd, epos, PSP_SEEK_SET) != epos || xrIoRead(fatfd, &(*entrys)[ep], bytes_per_clus) != bytes_per_clus) {
+			if (_xrIoLseek(fatfd, epos, PSP_SEEK_SET) != epos || _xrIoRead(fatfd, &(*entrys)[ep], bytes_per_clus) != bytes_per_clus) {
 				free(*entrys);
 				return false;
 			}
