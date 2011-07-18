@@ -94,7 +94,7 @@ char musiclst_path[PATH_MAX];
 bool repaintbg = true;
 #endif
 bool imgreading = false, locreading = false;
-bool prx_loaded = false;
+bool xrprx_loaded = false;
 int locaval[10];
 t_fonts fonts[5], bookfonts[21];
 static int fontcount = 0, fontindex = 0, bookfontcount = 0, bookfontindex = 0, ttfsize = 0;
@@ -4898,7 +4898,7 @@ extern void scene_init(void)
 			ret = initExceptionHandler(path);
 
 			if (ret == 0) {
-				prx_loaded = true;
+				xrprx_loaded = true;
 			} else {
 				dbg_printf(d, "xrPrx.prx load failed, return value %08X", (unsigned int) ret);
 			}
