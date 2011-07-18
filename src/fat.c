@@ -335,28 +335,12 @@ static void fat_free_table(void)
 
 static u8 fat_calc_chksum(p_fat_entry info)
 {
+	u32 i;
 	u8 *n = (u8 *) & info->norm.filename[0];
 	u8 chksum = 0;
 
-	// Fix upset warning in psp-gcc 4.3.3
-#if 0
-	u32 i;
-
 	for (i = 0; i < 11; i++)
 		chksum = ((chksum & 1) ? 0x80 : 0) + (chksum >> 1) + n[i];
-#endif
-
-	chksum = ((chksum & 1) ? 0x80 : 0) + (chksum >> 1) + n[0];
-	chksum = ((chksum & 1) ? 0x80 : 0) + (chksum >> 1) + n[1];
-	chksum = ((chksum & 1) ? 0x80 : 0) + (chksum >> 1) + n[2];
-	chksum = ((chksum & 1) ? 0x80 : 0) + (chksum >> 1) + n[3];
-	chksum = ((chksum & 1) ? 0x80 : 0) + (chksum >> 1) + n[4];
-	chksum = ((chksum & 1) ? 0x80 : 0) + (chksum >> 1) + n[5];
-	chksum = ((chksum & 1) ? 0x80 : 0) + (chksum >> 1) + n[6];
-	chksum = ((chksum & 1) ? 0x80 : 0) + (chksum >> 1) + n[7];
-	chksum = ((chksum & 1) ? 0x80 : 0) + (chksum >> 1) + n[8];
-	chksum = ((chksum & 1) ? 0x80 : 0) + (chksum >> 1) + n[9];
-	chksum = ((chksum & 1) ? 0x80 : 0) + (chksum >> 1) + n[10];
 
 	return chksum;
 }
