@@ -23,7 +23,6 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
-#include <mad.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -67,18 +66,10 @@ static mp3_reader_data mp3_data;
 
 static int __end(void);
 
-static struct mad_stream stream;
-static struct mad_frame frame;
-
 /**
  * MP3音乐播放缓冲
  */
 static uint16_t *g_buff = NULL;
-
-/**
- * MP3音乐解码缓冲
- */
-static uint8_t g_input_buff[BUFF_SIZE + MAD_BUFFER_GUARD] __attribute__ ((aligned(64)));
 
 /**
  * MP3音乐播放缓冲大小，以帧数计
@@ -101,16 +92,18 @@ static struct MP3Info mp3info;
 static bool use_brute_method = false;
 
 /**
- * 检查CRC
- */
-static bool check_crc = false;
-
-/**
  * Media Engine buffer缓存
  */
 static unsigned long mp3_codec_buffer[65] __attribute__ ((aligned(64)));
 
 static bool mp3_getEDRAM = false;
+
+static uint8_t memp3_input_buf[2889] __attribute__ ((aligned(64)));
+static uint8_t memp3_decoded_buf[2048 * 4] __attribute__ ((aligned(64)));
+static u32 this_frame, buf_end;
+static bool need_data;
+
+int memp3_decode(void *data, u32 data_len, void *pcm_data);
 
 /**
  * 复制数据到声音缓冲区
@@ -173,6 +166,68 @@ static int mp3_seek_seconds_offset_brute(double npt)
 }
 
 /**
+  * Seek until found one valid mp3 frame, and then decode it into memp3_decoded_buf
+  */
+static int seek_and_decode(int *brate, u32 * first_found_frame)
+{
+	int ret, frame_size;
+	u32 pos;
+
+	do {
+		if (mp3_data.use_buffer)
+			pos = buffered_reader_position(mp3_data.r);
+		else
+			pos = sceIoLseek(mp3_data.fd, 0, PSP_SEEK_CUR);
+
+		if (mp3_data.use_buffer) {
+			frame_size = search_valid_frame_me_buffered(&mp3_data, brate);
+		} else {
+			frame_size = search_valid_frame_me(&mp3_data, brate);
+		}
+
+		if (frame_size < 0) {
+			return -1;
+		}
+
+		if (frame_size > sizeof(memp3_input_buf)) {
+			ret = -1;
+			goto retry;
+		}
+
+		if (mp3_data.use_buffer)
+			ret = buffered_reader_read(mp3_data.r, memp3_input_buf, frame_size);
+		else
+			ret = sceIoRead(mp3_data.fd, memp3_input_buf, frame_size);
+
+		if (ret <= 0) {
+			return -1;
+		}
+
+		ret = memp3_decode(memp3_input_buf, ret, memp3_decoded_buf);
+
+	  retry:
+		if (ret < 0) {
+			pos++;
+
+			if (mp3_data.use_buffer)
+				buffered_reader_seek(mp3_data.r, pos);
+			else
+				sceIoLseek(mp3_data.fd, pos, PSP_SEEK_SET);
+
+//          dbg_printf(d, "%s: jump to 0x%08X", __func__, (unsigned)pos);
+		}
+	} while (ret < 0);
+
+//  dbg_printf(d, "%s: found first OK frame at 0x%08X", __func__, (unsigned)pos);
+
+	if (first_found_frame != NULL) {
+		*first_found_frame = pos;
+	}
+
+	return 0;
+}
+
+/**
  * 搜索下一个有效MP3 frame
  *
  * @return
@@ -181,74 +236,24 @@ static int mp3_seek_seconds_offset_brute(double npt)
  */
 static int seek_valid_frame(void)
 {
-	int cnt = 0;
-	int ret;
+	int ret, brate;
+	u32 pos;
 
-	mad_stream_init(&stream);
-	mad_frame_init(&frame);
+	memset(memp3_input_buf, 0, sizeof(memp3_input_buf));
+	memset(memp3_decoded_buf, 0, sizeof(memp3_decoded_buf));
 
-	do {
-		cnt++;
-		if (stream.buffer == NULL || stream.error == MAD_ERROR_BUFLEN) {
-			size_t read_size, remaining = 0;
-			uint8_t *read_start;
-			int bufsize;
+	ret = seek_and_decode(&brate, &pos);
 
-			if (stream.next_frame != NULL) {
-				remaining = stream.bufend - stream.next_frame;
-				memmove(g_input_buff, stream.next_frame, remaining);
-				read_start = g_input_buff + remaining;
-				read_size = BUFF_SIZE - remaining;
-			} else {
-				read_size = BUFF_SIZE;
-				read_start = g_input_buff;
-				remaining = 0;
-			}
+	if (ret < 0) {
+		return ret;
+	}
 
-			if (mp3_data.use_buffer)
-				bufsize = buffered_reader_read(mp3_data.r, read_start, read_size);
-			else
-				bufsize = sceIoRead(mp3_data.fd, read_start, read_size);
+	dbg_printf(d, "%s: found first OK frame at 0x%08X", __func__, (unsigned) pos);
 
-			if (bufsize <= 0) {
-				mad_stream_finish(&stream);
-				mad_frame_finish(&frame);
-
-				return -1;
-			}
-
-			if (bufsize < read_size) {
-				uint8_t *guard = read_start + read_size;
-
-				memset(guard, 0, MAD_BUFFER_GUARD);
-				read_size += MAD_BUFFER_GUARD;
-			}
-
-			mad_stream_buffer(&stream, g_input_buff, read_size + remaining);
-			stream.error = 0;
-		}
-
-		if ((ret = mad_header_decode(&frame.header, &stream)) == -1) {
-			/*
-			 * MAD_ERROR_BUFLEN should be ignored
-			 *
-			 * We haven't reached the EOF as long as sceIoRead returned positive.
-			 */
-			if (!MAD_RECOVERABLE(stream.error) && stream.error != MAD_ERROR_BUFLEN) {
-				mad_stream_finish(&stream);
-				mad_frame_finish(&frame);
-
-				return -1;
-			}
-		} else {
-			ret = 0;
-			stream.error = 0;
-		}
-	} while (!(ret == 0 && stream.sync == 1));
-	dbg_printf(d, "%s: tried %d times", __func__, cnt);
-
-	mad_stream_finish(&stream);
-	mad_frame_finish(&frame);
+	if (mp3_data.use_buffer)
+		buffered_reader_seek(mp3_data.r, pos);
+	else
+		sceIoLseek(mp3_data.fd, pos, PSP_SEEK_SET);
 
 	return 0;
 }
@@ -346,11 +351,6 @@ int memp3_decode(void *data, u32 data_len, void *pcm_data)
 	return sceAudiocodecDecode(mp3_codec_buffer, 0x1002);
 }
 
-static uint8_t memp3_input_buf[2889] __attribute__ ((aligned(64)));
-static uint8_t memp3_decoded_buf[2048 * 4] __attribute__ ((aligned(64)));
-static u32 this_frame, buf_end;
-static bool need_data;
-
 /**
  * MP3音乐播放回调函数，ME版本
  * 负责将解码数据填充声音缓存区
@@ -391,40 +391,20 @@ static int memp3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			audio_buf += snd_buf_frame_size * 2;
 			snd_buf_frame_size = 0;
 		} else {
-			int frame_size, ret, brate = 0;
+			int brate = 0, ret;
 
 			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], avail_frame, 2);
 			snd_buf_frame_size -= avail_frame;
 			audio_buf += avail_frame * 2;
 
-			do {
-				if (mp3_data.use_buffer) {
-					if ((frame_size = search_valid_frame_me_buffered(&mp3_data, &brate)) < 0) {
-						__end();
-						return -1;
-					}
-				} else {
-					if ((frame_size = search_valid_frame_me(&mp3_data, &brate)) < 0) {
-						__end();
-						return -1;
-					}
-				}
+			ret = seek_and_decode(&brate, NULL);
 
-				if (mp3_data.use_buffer)
-					ret = buffered_reader_read(mp3_data.r, memp3_input_buf, frame_size);
-				else
-					ret = sceIoRead(mp3_data.fd, memp3_input_buf, frame_size);
-
-				if (ret < 0) {
-					__end();
-					return -1;
-				}
-
-				ret = memp3_decode(memp3_input_buf, ret, memp3_decoded_buf);
-			} while (ret < 0);
+			if (ret < 0) {
+				__end();
+				return -1;
+			}
 
 			output = &g_buff[0];
-
 			memcpy(output, memp3_decoded_buf, mp3info.spf * 4);
 			g_buff_frame_size = mp3info.spf;
 			g_buff_frame_start = 0;
@@ -450,7 +430,6 @@ static int __init(void)
 	generic_set_status(ST_UNKNOWN);
 
 	memset(&g_inst_br, 0, sizeof(g_inst_br));
-	memset(g_input_buff, 0, sizeof(g_input_buff));
 	g_buff_frame_size = g_buff_frame_start = 0;
 	g_seek_seconds = 0;
 
@@ -570,9 +549,6 @@ static int mp3_load(const char *spath, const char *lpath)
 		return -1;
 	}
 
-	mp3info.check_crc = check_crc;
-	mp3info.have_crc = false;
-
 	if (use_brute_method) {
 		if (read_mp3_info_brute(&mp3info, &mp3_data) < 0) {
 			__end();
@@ -608,11 +584,10 @@ static int mp3_load(const char *spath, const char *lpath)
 		buffered_reader_seek(mp3_data.r, cur);
 	}
 
-	dbg_printf(d, "[%d channel(s), %d Hz, %.2f kbps, %02d:%02d%sframes %d%s]",
+	dbg_printf(d, "[%d channel(s), %d Hz, %.2f kbps, %02d:%02d%sframes %d]",
 			   g_info.channels, g_info.sample_freq,
 			   g_info.avg_bps / 1000,
-			   (int) (g_info.duration / 60), (int) g_info.duration % 60,
-			   mp3info.frameoff != NULL ? ", frame table, " : ", ", g_info.samples, mp3info.have_crc ? ", crc passed" : "");
+			   (int) (g_info.duration / 60), (int) g_info.duration % 60, mp3info.frameoff != NULL ? ", frame table, " : ", ", g_info.samples);
 
 #ifdef _DEBUG
 	if (mp3info.lame_encoded) {
@@ -674,7 +649,6 @@ static int mp3_load(const char *spath, const char *lpath)
 
 static void init_default_option(void)
 {
-	check_crc = false;
 	g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE;
 }
 
@@ -695,12 +669,6 @@ static int mp3_set_opt(const char *unused, const char *values)
 				use_brute_method = true;
 			} else {
 				use_brute_method = false;
-			}
-		} else if (!strncasecmp(argv[i], "mp3_check_crc", sizeof("mp3_check_crc") - 1)) {
-			if (opt_is_on(argv[i])) {
-				check_crc = true;
-			} else {
-				check_crc = false;
 			}
 		} else if (!strncasecmp(argv[i], "mp3_buffer_size", sizeof("mp3_buffer_size") - 1)) {
 			const char *p = argv[i];
@@ -787,8 +755,6 @@ static int mp3_end(void)
 	xAudioEnd();
 
 	generic_set_status(ST_STOPPED);
-
-	mad_stream_finish(&stream);
 
 	if (mp3_getEDRAM)
 		sceAudiocodecReleaseEDRAM(mp3_codec_buffer);
