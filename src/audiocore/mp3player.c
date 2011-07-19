@@ -335,6 +335,8 @@ static int handle_seek(void)
 		mp3_seek_seconds(g_play_time - g_seek_seconds);
 	}
 
+	g_buff_frame_size = g_buff_frame_start = 0;
+
 	return 0;
 }
 
@@ -369,12 +371,11 @@ static int memp3_audiocallback(void *buf, unsigned int snd_buf_frame_size, void 
 	UNUSED(pdata);
 
 	if (g_status != ST_PLAYING) {
-		if (handle_seek() == -1) {
+		if (handle_seek() < 0) {
 			__end();
 			return -1;
 		}
 
-		g_buff_frame_size = g_buff_frame_start = 0;
 		xAudioClearSndBuf(buf, snd_buf_frame_size);
 		return 0;
 	}
@@ -386,6 +387,8 @@ static int memp3_audiocallback(void *buf, unsigned int snd_buf_frame_size, void 
 		g_buff_frame_start += copy_frame;
 		audio_buf += copy_frame * 2;
 		snd_buf_frame_size -= copy_frame;
+		incr = (double) (copy_frame) / g_info.sample_freq;
+		g_play_time += incr;
 
 		if(g_buff_frame_start == g_buff_frame_size) {
 			int brate = 0, ret;
@@ -401,8 +404,6 @@ static int memp3_audiocallback(void *buf, unsigned int snd_buf_frame_size, void 
 			memcpy(output, memp3_decoded_buf, mp3info.spf * 4);
 			g_buff_frame_size = mp3info.spf;
 			incr = (double) mp3info.spf / mp3info.sample_freq;
-			g_play_time += incr;
-
 			add_bitrate(&g_inst_br, brate * 1000, incr);
 			g_buff_frame_start = 0;
 		}
