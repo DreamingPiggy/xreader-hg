@@ -748,10 +748,16 @@ void scene_ioptions_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 ma
 	char number[20];
 	char infomsg[80];
 
+#ifdef ENABLE_NLS
 	if (strcmp(simple_textdomain(NULL), "zh_CN") == 0 || strcmp(simple_textdomain(NULL), "zh_TW") == 0)
 		default_predraw(&g_predraw, _("看图选项"), max_height, &left, &right, &upper, &bottom, 4 * DISP_FONTSIZE + 4);
 	else
 		default_predraw(&g_predraw, _("看图选项"), max_height, &left, &right, &upper, &bottom, 6 * DISP_FONTSIZE + 4);
+#else
+	default_predraw(&g_predraw, _("看图选项"), max_height, &left, &right, &upper, &bottom, 4 * DISP_FONTSIZE + 4);
+#endif
+	
+
 
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
 				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
@@ -1127,10 +1133,15 @@ void scene_color_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_h
 		pad = 6 * (12 - config.fontsize);
 	}
 
+#ifdef ENABLE_NLS
 	if (strcmp(simple_textdomain(NULL), "zh_CN") == 0 || strcmp(simple_textdomain(NULL), "zh_TW") == 0)
 		npad = 35;
 	else
 		npad = 0;
+#else
+	npad = 35;
+#endif
+	
 
 	default_predraw(&g_predraw, _("颜色选项"), max_height, &left, &right, &upper, &bottom, pad + npad);
 
@@ -2253,6 +2264,7 @@ int langid = 0;
 
 static void set_language(void)
 {
+#ifdef ENABLE_NLS
 	char msgpath[PATH_MAX];
 
 	SPRINTF_S(msgpath, "%smsg", scene_appdir());
@@ -2263,6 +2275,7 @@ static void set_language(void)
 		simple_bindtextdomain("zh_CN", msgpath);
 		simple_textdomain("zh_CN");
 	}
+#endif
 }
 
 extern void get_language(void)
@@ -3526,6 +3539,7 @@ static void scene_fileops_menu_draw(int selcount, p_win_menuitem item, u32 selid
 
 	disp_duptocachealpha(50);
 
+#ifdef ENABLE_NLS
 	if (strcmp(simple_textdomain(NULL), "zh_CN") == 0 || strcmp(simple_textdomain(NULL), "zh_TW") == 0) {
 		left = 240 - DISP_FONTSIZE * 3 - 1;
 		right = 240 + DISP_FONTSIZE * 3 + 1;
@@ -3533,6 +3547,10 @@ static void scene_fileops_menu_draw(int selcount, p_win_menuitem item, u32 selid
 		left = 240 - DISP_FONTSIZE * 3 - 1;
 		right = 240 + DISP_FONTSIZE * 12 + 1;
 	}
+#else
+	left = 240 - DISP_FONTSIZE * 3 - 1;
+	right = 240 + DISP_FONTSIZE * 3 + 1;
+#endif
 
 	disp_rectangle(left, 136 - DISP_FONTSIZE * 3 - 1, right, 136 + DISP_FONTSIZE * 5, COLOR_WHITE);
 	disp_fillrect(left + 1, 136 - DISP_FONTSIZE * 3, right - 1, 136 + DISP_FONTSIZE * 5 - 1, config.msgbcolor);
