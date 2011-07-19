@@ -50,7 +50,6 @@
 #include "aa3player.h"
 #include "dbg.h"
 #include "config.h"
-#include "mad.h"
 #include "scene.h"
 #include "ctrl.h"
 #include "fs.h"
@@ -1107,10 +1106,10 @@ p_lyric music_get_lyric(void)
 
 	info.type = MD_GET_CURTIME;
 	if (music_get_info(&info) == 0) {
-		mad_timer_t timer;
+		xr_timer_t timer;
 
 		timer.seconds = (int) info.cur_time;
-		timer.fraction = (unsigned long) ((info.cur_time - (long) info.cur_time) * MAD_TIMER_RESOLUTION);
+		timer.fraction = (unsigned long) ((info.cur_time - (long) info.cur_time) * XR_TIMER_RESOLUTION);
 		lyric_update_pos(&lyric, &timer);
 	}
 

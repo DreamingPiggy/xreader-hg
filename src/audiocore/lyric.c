@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "common/utils.h"
-#include <mad.h>
 #include "conf.h"
 #include "charsets.h"
 #include "lyric.h"
@@ -34,10 +33,33 @@
 #include "dmalloc.h"
 #endif
 
+/*
+ * NAME:        timer->compare()
+ * DESCRIPTION: indicate relative order of two timers
+ */
+int xr_timer_compare(xr_timer_t timer1, xr_timer_t timer2)
+{
+	signed long diff;
+
+	diff = timer1.seconds - timer2.seconds;
+	if (diff < 0)
+		return -1;
+	else if (diff > 0)
+		return +1;
+
+	diff = timer1.fraction - timer2.fraction;
+	if (diff < 0)
+		return -1;
+	else if (diff > 0)
+		return +1;
+
+	return 0;
+}
+
 __inline bool lyric_add(p_lyric l, u32 sec, u32 fra, const char *line, u32 size)
 {
 	int i;
-	mad_timer_t t;
+	xr_timer_t t;
 
 	if (l->count == 0) {
 		l->lines = malloc(sizeof(*l->lines) * 64);
@@ -53,7 +75,7 @@ __inline bool lyric_add(p_lyric l, u32 sec, u32 fra, const char *line, u32 size)
 	t.fraction = fra;
 
 	for (i = 0; i < l->count; i++)
-		if (mad_timer_compare(l->lines[i].t, t) > 0)
+		if (xr_timer_compare(l->lines[i].t, t) > 0)
 			break;
 	if (i < l->count)
 		memmove(&l->lines[i + 1], &l->lines[i], sizeof(t_lyricline) * (l->count - i));
@@ -149,8 +171,7 @@ static void parse_lyric(p_lyric l)
 								tc = 0;
 							} else {
 								isec[tc] = (u32) sec;
-								iex[tc] = (u32) ((sec - isec[tc])
-												 * MAD_TIMER_RESOLUTION);
+								iex[tc] = (u32) ((sec - isec[tc]) * XR_TIMER_RESOLUTION);
 								++tc;
 							}
 						}
@@ -257,18 +278,18 @@ extern void lyric_close(p_lyric l)
 
 extern void lyric_update_pos(p_lyric l, void *tm)
 {
-	mad_timer_t t;
+	xr_timer_t t;
 
 	if (l == NULL || !l->succ)
 		return;
 	sceKernelWaitSema(l->sema, 1, NULL);
-	t = *(mad_timer_t *) tm;
+	t = *(xr_timer_t *) tm;
 
-	while (l->idx >= 0 && mad_timer_compare(l->lines[l->idx].t, t) > 0) {
+	while (l->idx >= 0 && xr_timer_compare(l->lines[l->idx].t, t) > 0) {
 		l->idx--;
 		l->changed = true;
 	}
-	while (l->idx < l->count - 1 && mad_timer_compare(l->lines[l->idx + 1].t, t) < 0) {
+	while (l->idx < l->count - 1 && xr_timer_compare(l->lines[l->idx + 1].t, t) < 0) {
 		l->idx++;
 		l->changed = true;
 	}

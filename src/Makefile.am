@@ -266,7 +266,6 @@ LIBS += $(libdir)/libmpcdec.a
 endif
 
 if MP3
-LIBS += $(libdir)/libmad.a
 endif
 
 if OGG

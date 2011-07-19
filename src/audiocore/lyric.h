@@ -21,12 +21,19 @@
 #ifndef _LYRIC_H_
 #define _LYRIC_H_
 
-#include <mad.h>
 #include "common/datatype.h"
+
+#define XR_TIMER_RESOLUTION	352800000UL
+
+typedef struct
+{
+	signed long seconds;		/* whole seconds */
+	unsigned long fraction;		/* 1/XR_TIMER_RESOLUTION seconds */
+} xr_timer_t;
 
 typedef struct _lyricline
 {
-	mad_timer_t t;
+	xr_timer_t t;
 	const char *line;
 	u32 size;
 } t_lyricline, *p_lyricline;
