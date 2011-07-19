@@ -361,10 +361,9 @@ int memp3_decode(void *data, u32 data_len, void *pcm_data)
  * @param reqn 缓冲区帧大小
  * @param pdata 用户数据，无用
  */
-static int memp3_audiocallback(void *buf, unsigned int reqn, void *pdata)
+static int memp3_audiocallback(void *buf, unsigned int snd_buf_frame_size, void *pdata)
 {
-	int avail_frame;
-	int snd_buf_frame_size = (int) reqn;
+	int avail_frame, copy_frame;
 	signed short *audio_buf = buf;
 	double incr;
 	uint16_t *output;
@@ -382,20 +381,16 @@ static int memp3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 		return 0;
 	}
 
-	while (snd_buf_frame_size > 0) {
+	while (snd_buf_frame_size != 0) {
 		avail_frame = g_buff_frame_size - g_buff_frame_start;
+		copy_frame = min(avail_frame, snd_buf_frame_size);
+		send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], copy_frame, 2);
+		g_buff_frame_start += copy_frame;
+		audio_buf += copy_frame * 2;
+		snd_buf_frame_size -= copy_frame;
 
-		if (avail_frame >= snd_buf_frame_size) {
-			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], snd_buf_frame_size, 2);
-			g_buff_frame_start += snd_buf_frame_size;
-			audio_buf += snd_buf_frame_size * 2;
-			snd_buf_frame_size = 0;
-		} else {
+		if(g_buff_frame_start == g_buff_frame_size) {
 			int brate = 0, ret;
-
-			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], avail_frame, 2);
-			snd_buf_frame_size -= avail_frame;
-			audio_buf += avail_frame * 2;
 
 			ret = seek_and_decode(&brate, NULL);
 
@@ -407,11 +402,11 @@ static int memp3_audiocallback(void *buf, unsigned int reqn, void *pdata)
 			output = &g_buff[0];
 			memcpy(output, memp3_decoded_buf, mp3info.spf * 4);
 			g_buff_frame_size = mp3info.spf;
-			g_buff_frame_start = 0;
 			incr = (double) mp3info.spf / mp3info.sample_freq;
 			g_play_time += incr;
 
 			add_bitrate(&g_inst_br, brate * 1000, incr);
+			g_buff_frame_start = 0;
 		}
 	}
 
