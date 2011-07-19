@@ -217,13 +217,14 @@ extern u32 ctrl_waitany(void)
 	return key;
 }
 
-extern u32 ctrl_waitkey(u32 keymask)
+extern u32 ctrl_waitkey(u32 key_wait)
 {
 	u32 key;
 
-	while ((key = ctrl_read()) != key) {
+	while ((key = ctrl_read()) != key_wait) {
 		sceKernelDelayThread(50000);
 	}
+
 	return key;
 }
 
