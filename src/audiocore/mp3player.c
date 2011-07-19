@@ -100,8 +100,6 @@ static bool mp3_getEDRAM = false;
 
 static uint8_t memp3_input_buf[2889] __attribute__ ((aligned(64)));
 static uint8_t memp3_decoded_buf[2048 * 4] __attribute__ ((aligned(64)));
-static u32 this_frame, buf_end;
-static bool need_data;
 
 int memp3_decode(void *data, u32 data_len, void *pcm_data);
 
@@ -470,8 +468,6 @@ static int me_init()
 
 	memset(memp3_input_buf, 0, sizeof(memp3_input_buf));
 	memset(memp3_decoded_buf, 0, sizeof(memp3_decoded_buf));
-	this_frame = buf_end = 0;
-	need_data = true;
 
 	return 0;
 }
