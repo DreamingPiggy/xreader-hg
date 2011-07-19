@@ -387,11 +387,12 @@ static void scene_draw_mp3bar_music_staff(void)
 			  _("  SELECT 编辑列表   ←快速后退   →快速前进"), conf_get_encodename(config.lyricencode), conf_get_encodename(config.mp3encode));
 	disp_putnstring(6 + DISP_FONTSIZE, 263 - DISP_FONTSIZE * 4, COLOR_WHITE,
 					(const u8 *) infostr, (468 - DISP_FONTSIZE * 2) * 2 / DISP_FONTSIZE, 0, 0, DISP_FONTSIZE, 0);
+
 	if (config.use_vaudio) {
 		SPRINTF_S(infostr, "%s [%s] [%s]",
 				  _("○播放/暂停 ×循环 □停止 △曲名编码  L上一首  R下一首"), get_sfx_mode_str(config.sfx_mode), (config.alc_mode ? "ALC" : "OFF"));
 	} else {
-		STRCPY_S(infostr, ("○播放/暂停 ×循环 □停止 △曲名编码  L上一首  R下一首"));
+		STRCPY_S(infostr, _("○播放/暂停 ×循环 □停止 △曲名编码  L上一首  R下一首"));
 	}
 
 	disp_putstring(6 + DISP_FONTSIZE, 264 - DISP_FONTSIZE * 3, COLOR_WHITE, (const u8 *) infostr);
