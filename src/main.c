@@ -119,7 +119,7 @@ static int SetupCallbacks(void)
 {
 	int thid = sceKernelCreateThread("Callback Thread", CallbackThread, 0x11,
 									 0x10000,
-									 0, 0);
+									 PSP_THREAD_ATTR_VFPU, 0);
 
 	if (thid >= 0) {
 		sceKernelStartThread(thid, 0, 0);
@@ -142,7 +142,7 @@ int main(int argc, char *argv[])
 	psp_fw_version = sceKernelDevkitVersion();
 
 	SetupCallbacks();
-	thid = sceKernelCreateThread("User Thread", main_thread, 45, 0x40000, PSP_THREAD_ATTR_USER, NULL);
+	thid = sceKernelCreateThread("User Thread", main_thread, 45, 0x40000, PSP_THREAD_ATTR_VFPU, NULL);
 
 	if (thid < 0)
 		sceKernelSleepThread();
