@@ -1,0 +1,3 @@
+To compile:
+
+make -f makefile.psp psp-lib clean psp-lib
