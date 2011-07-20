@@ -175,6 +175,13 @@ static int seek_and_decode(int *brate, u32 * first_found_frame)
 		else
 			pos = sceIoLseek(mp3_data.fd, 0, PSP_SEEK_CUR);
 
+		if(pos == 0) {
+			if (mp3_data.use_buffer)
+				skip_id3v2_tag_buffered(&mp3_data);
+			else
+				skip_id3v2_tag(&mp3_data);
+		}
+
 		if (mp3_data.use_buffer) {
 			frame_size = search_valid_frame_me_buffered(&mp3_data, brate);
 		} else {
