@@ -1,66 +1,65 @@
-#!/bin/sh
+#!/bin/bash
 # @configure_input@
 
-AUTHOR=hrimfaxi
-EMAIL=outmatch@gmail.com
-DIRS="msg fonts"
-BUILDDIR=@abs_top_builddir@/src
-SRCDIR=@abs_top_srcdir@/src
-DESTDIR=/media/disk/PSP/GAME/xReader
-DESTDRIVE=/media/disk
+function copy {
+	echo "    $(basename $1)"
+	cp -u "$1" "$DESTDIR/"
+}
+
+DIRS=(msg fonts)
+BUILDDIR="@abs_top_builddir@/src"
+SRCDIR="@abs_top_srcdir@/src"
+DESTDRIVE="${1:-/media/disk}"
+DESTDIR="$DESTDRIVE/PSP/GAME/xReader"
 DEBUG=y
 
-echo "xReader transfer script"
-echo "Author: $AUTHOR($EMAIL)"
+echo "Checking if PSP plugged in"
 
-echo "Check the PSP is plugged in"
-
-while [ ! -e $DESTDRIVE ]
-do
+while [ ! -e "$DESTDRIVE" ]; do
 	sleep 1
 done
 
-echo "OK, now we create dirs"
+echo "Creating directories"
 
-for dir in $DIRS
-do
+for dir in ${DIRS[@]}; do
 	echo "    Create dir: $DESTDIR/$dir"
 	mkdir -p "$DESTDIR/$dir"
 done
 
-echo "OK, now we copy files"
-
 echo "    Copy files"
-echo "        EBOOT.PBP"
-cp -u "$BUILDDIR/EBOOT.PBP" "$DESTDIR/"
+
+copy_list=( "$BUILDDIR/EBOOT.PBP" \
+		"$BUILDDIR/../xrPrx/xrPrx.prx" \
+		"$BUILDDIR/../cooleyesBridge/cooleyesBridge.prx" \
+		"$BUILDDIR/../xr_rdriver/xr_rdriver.prx" \
+		"$SRCDIR/../fonts/fonts.zip" \
+		"$SRCDIR/../Readme.txt" \
+		"$SRCDIR/../Changelog.txt" \
+		"$SRCDIR/../resource/bg.png" \
+		)
+
+copy_msg_list=(
+		"$SRCDIR/../msg/zh_CN.so" \
+		"$SRCDIR/../msg/zh_TW.so" \
+		"$SRCDIR/../msg/en_US.so" \
+		)
+
 if [ x"$DEBUG" = xy ]; then
-	echo "        xReader.prx"
-	cp -u "$BUILDDIR/xReader.prx" "$DESTDIR/"
+	copy "$BUILDDIR/xReader.prx"
 fi
-echo "        xrPrx.prx"
-cp -u "$BUILDDIR/../xrPrx/xrPrx.prx" "$DESTDIR/"
-echo "        cooleyesBridge.prx"
-cp -u "$BUILDDIR/../cooleyesBridge/cooleyesBridge.prx" "$DESTDIR/"
-#echo "        xr_rdriver.prx"
-#cp -u "$BUILDDIR/../xr_rdriver/xr_rdriver.prx" "$DESTDIR/"
-echo "        fonts.zip"
-cp -u "$SRCDIR/../fonts/fonts.zip" "$DESTDIR/"
-echo "        Readme.txt"
-cp -u "$SRCDIR/../Readme.txt" "$DESTDIR/"
-echo "        Changelog.txt"
-cp -u "$SRCDIR/../Changelog.txt" "$DESTDIR/"
-echo "        bg.png"
-cp -u "$SRCDIR/../resource/bg.png" "$DESTDIR/"
-echo "        msg/zh_CN.so"
-cp -u "$SRCDIR/../msg/zh_CN.so" "$DESTDIR/msg"
-echo "        msg/zh_TW.so"
-cp -u "$SRCDIR/../msg/zh_TW.so" "$DESTDIR/msg"
-echo "        msg/en_US.so"
-cp -u "$SRCDIR/../msg/en_US.so" "$DESTDIR/msg"
+
+for file in ${copy_list[@]}; do
+	copy "$file" "$DESTDIR/"
+done
+
+for file in ${copy_msg_list[@]}; do
+	copy "$file" "$DESTDIR/msg/"
+done
 
 touch "$DESTDIR"
 sync
-sudo umount $DESTDRIVE
+sudo umount "$DESTDRIVE"
+
 while test ! $? -eq 0; do
-	sudo umount $DESTDRIVE
+	sudo umount "$DESTDRIVE"
 done
