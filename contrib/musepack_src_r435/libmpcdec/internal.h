@@ -65,7 +65,7 @@ struct mpc_demux_t {
 	mpc_streaminfo si;
 
 	// buffer
-	mpc_uint8_t buffer[DEMUX_BUFFER_SIZE + MAX_FRAME_SIZE];
+	mpc_uint8_t buffer[DEMUX_BUFFER_SIZE + MAX_FRAME_SIZE] __attribute__((aligned(64)));
 	mpc_size_t bytes_total;
 	mpc_bits_reader bits_reader;
 	mpc_int32_t block_bits; /// bits remaining in current audio block
