@@ -51,14 +51,6 @@
 
 #ifdef ENABLE_MP3
 
-#define MP3_FRAME_SIZE 2889
-
-#define LB_CONV(x)	\
-    (((x) & 0xff)<<24) |  \
-    (((x>>8) & 0xff)<<16) |  \
-    (((x>>16) & 0xff)<< 8) |  \
-    (((x>>24) & 0xff)    )
-
 #define UNUSED(x) ((void)(x))
 #define BUFF_SIZE	8*1152
 
@@ -69,17 +61,17 @@ static int __end(void);
 /**
  * MP3音乐播放缓冲
  */
-static uint16_t *g_buff = NULL;
+static u16 *g_buff = NULL;
 
 /**
- * MP3音乐播放缓冲大小，以帧数计
+ * MP3音乐播放缓冲大小，以样本数计
  */
-static unsigned g_buff_frame_size;
+static unsigned g_buff_sample_size;
 
 /**
- * MP3音乐播放缓冲当前位置，以帧数计
+ * MP3音乐播放缓冲当前位置，以样本数计
  */
-static int g_buff_frame_start;
+static int g_buff_sample_start;
 
 /**
  * MP3文件信息
@@ -110,26 +102,32 @@ int memp3_decode(void *data, u32 data_len, void *pcm_data);
  *
  * @param buf 声音缓冲区指针
  * @param srcbuf 解码数据缓冲区指针
- * @param frames 复制帧数
+ * @param samples 复制样本数
  * @param channels 声道数
+ * 
+ * @return 复制结束地址
  */
-static void send_to_sndbuf(void *buf, uint16_t * srcbuf, int frames, int channels)
+static u16 *copy_to_sndbuf(u16 *buf, u16 *srcbuf, int samples, int channels)
 {
 	int n;
-	signed short *p = (signed short *) buf;
-
-	if (frames <= 0)
-		return;
+	u16 *p;
 
 	if (channels == 2) {
-		memcpy(buf, srcbuf, frames * channels * sizeof(*srcbuf));
+		memcpy(buf, srcbuf, samples * channels * sizeof(*srcbuf));
+		p = buf + samples * channels;
 	} else {
-		for (n = 0; n < frames * channels; n++) {
-			*p++ = srcbuf[n];
-			*p++ = srcbuf[n];
+		n = samples * channels;
+
+		while(n-- > 0) {
+			*buf++ = *srcbuf;
+			*buf++ = *srcbuf;
+			srcbuf++;
 		}
+
+		p = buf;
 	}
 
+	return p;
 }
 
 static int mp3_seek_seconds_offset_brute(double npt)
@@ -335,7 +333,7 @@ static int handle_seek(void)
 		mp3_seek_seconds(g_play_time - g_seek_seconds);
 	}
 
-	g_buff_frame_size = g_buff_frame_start = 0;
+	g_buff_sample_size = g_buff_sample_start = 0;
 
 	return 0;
 }
@@ -361,12 +359,12 @@ int memp3_decode(void *data, u32 data_len, void *pcm_data)
  * @param reqn 缓冲区帧大小
  * @param pdata 用户数据，无用
  */
-static int memp3_audiocallback(void *buf, unsigned int snd_buf_frame_size, void *pdata)
+static int memp3_audiocallback(void *buf, unsigned int snd_buf_sample_size, void *pdata)
 {
 	int avail_frame, copy_frame;
-	signed short *audio_buf = buf;
+	u16 *audio_buf = buf;
 	double incr;
-	uint16_t *output;
+	u16 *output;
 
 	UNUSED(pdata);
 
@@ -376,21 +374,20 @@ static int memp3_audiocallback(void *buf, unsigned int snd_buf_frame_size, void 
 			return -1;
 		}
 
-		xAudioClearSndBuf(buf, snd_buf_frame_size);
+		xAudioClearSndBuf(buf, snd_buf_sample_size);
 		return 0;
 	}
 
-	while (snd_buf_frame_size != 0) {
-		avail_frame = g_buff_frame_size - g_buff_frame_start;
-		copy_frame = min(avail_frame, snd_buf_frame_size);
-		send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * 2], copy_frame, 2);
-		g_buff_frame_start += copy_frame;
-		audio_buf += copy_frame * 2;
-		snd_buf_frame_size -= copy_frame;
+	while (snd_buf_sample_size != 0) {
+		avail_frame = g_buff_sample_size - g_buff_sample_start;
+		copy_frame = min(avail_frame, snd_buf_sample_size);
+		audio_buf = copy_to_sndbuf(audio_buf, &g_buff[g_buff_sample_start * g_info.channels], copy_frame, g_info.channels);
+		g_buff_sample_start += copy_frame;
+		snd_buf_sample_size -= copy_frame;
 		incr = (double) (copy_frame) / g_info.sample_freq;
 		g_play_time += incr;
 
-		if(g_buff_frame_start == g_buff_frame_size) {
+		if(g_buff_sample_start == g_buff_sample_size) {
 			int brate = 0, ret;
 
 			ret = seek_and_decode(&brate, NULL);
@@ -402,10 +399,10 @@ static int memp3_audiocallback(void *buf, unsigned int snd_buf_frame_size, void 
 
 			output = &g_buff[0];
 			memcpy(output, memp3_decoded_buf, mp3info.spf * 4);
-			g_buff_frame_size = mp3info.spf;
+			g_buff_sample_size = mp3info.spf;
 			incr = (double) mp3info.spf / mp3info.sample_freq;
 			add_bitrate(&g_inst_br, brate * 1000, incr);
-			g_buff_frame_start = 0;
+			g_buff_sample_start = 0;
 		}
 	}
 
@@ -424,7 +421,7 @@ static int __init(void)
 	generic_set_status(ST_UNKNOWN);
 
 	memset(&g_inst_br, 0, sizeof(g_inst_br));
-	g_buff_frame_size = g_buff_frame_start = 0;
+	g_buff_sample_size = g_buff_sample_start = 0;
 	g_seek_seconds = 0;
 
 	g_play_time = 0.;
@@ -553,7 +550,8 @@ static int mp3_load(const char *spath, const char *lpath)
 		}
 	}
 
-	g_info.channels = mp3info.channels;
+	/* MediaEngine always decodes mp3 data into stereo */
+	g_info.channels = 2;
 	g_info.sample_freq = mp3info.sample_freq;
 	g_info.avg_bps = mp3info.average_bitrate;
 	g_info.samples = mp3info.frames;
