@@ -185,6 +185,10 @@ static p_win_menu menu_renew(p_win_menu * menu)
 
 extern u32 fs_list_device(const char *dir, const char *sdir, u32 icolor, u32 selicolor, u32 selrcolor, u32 selbcolor)
 {
+	enum {
+		PSP_GO = 4,
+	};
+	
 	t_win_menuitem item;
 
 	strcpy_s((char *) sdir, 256, dir);
@@ -231,6 +235,23 @@ extern u32 fs_list_device(const char *dir, const char *sdir, u32 icolor, u32 sel
 		item.selbcolor = selbcolor;
 		win_menu_add(g_menu, &item);
 	}
+
+#ifdef _DEBUG
+	if(psp_model == PSP_GO) {
+		win_menuitem_new(&item);
+		STRCPY_S(item.name, "<Internal Memory>");
+		buffer_copy_string(item.compname, "ef0:");
+		buffer_copy_string(item.shortname, "ef0:");
+		item.data = (void *) fs_filetype_dir;
+		item.width = sizeof("<Internal Memory>")-1;
+		item.selected = false;
+		item.icolor = icolor;
+		item.selicolor = selicolor;
+		item.selrcolor = selrcolor;
+		item.selbcolor = selbcolor;
+		win_menu_add(g_menu, &item);
+	}
+#endif
 
 	return g_menu->size;
 }
