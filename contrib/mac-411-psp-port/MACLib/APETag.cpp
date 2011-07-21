@@ -488,6 +488,21 @@ int CAPETag::CreateID3Tag(ID3_TAG * pID3Tag)
     return ERROR_SUCCESS;
 }
 
+static int ReadInt(const char *pBuffer)
+{
+	size_t i;
+	int res;
+
+	pBuffer += 3;
+	res = 0;
+
+	for(i=0; i<4; ++i) {
+		res = (*pBuffer--) | (res << 8);
+	}
+
+	return res;
+}
+
 int CAPETag::LoadField(const char * pBuffer, int nMaximumBytes, int * pBytes)
 {
     // set bytes to 0
@@ -497,9 +512,9 @@ int CAPETag::LoadField(const char * pBuffer, int nMaximumBytes, int * pBytes)
     if (nMaximumBytes < 8)
         return -1;
     int nLocation = 0;
-    int nFieldValueSize = *((int *) &pBuffer[nLocation]);
+    int nFieldValueSize = ReadInt(&pBuffer[nLocation]);
     nLocation += 4;
-    int nFieldFlags = *((int *) &pBuffer[nLocation]);
+    int nFieldFlags = ReadInt(&pBuffer[nLocation]);
     nLocation += 4;
     
     // safety check (so we can't get buffer overflow attacked)
