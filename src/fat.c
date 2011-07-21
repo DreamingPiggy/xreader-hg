@@ -108,13 +108,24 @@ static int is_on_ef0(void)
 {
 	int apitype;
 
-	apitype = xrKernelInitApitype();
+	(void)apitype;
 
-	if (apitype == 0x152 && psp_model == PSP_GO) {
-		return 1;
+	if(psp_model != PSP_GO) {
+		return 0;
 	}
 
-	return 0;
+#ifdef _DEBUG
+	return 1;
+#else
+
+	apitype = xrKernelInitApitype();
+
+	if (apitype != 0x152) {
+		return 0;
+	}
+
+	return 1;
+#endif
 }
 
 static SceUID msstor_reopen(void)
