@@ -31,6 +31,7 @@
 #include "CharacterHelper.h"
 #include "APEDecompress.h"
 #include "APEInfo.h"
+#include "CharacterHelper.h"
 #include "strsafe.h"
 #include "common/utils.h"
 #include "genericplayer.h"
@@ -355,7 +356,7 @@ static int ape_load(const char *spath, const char *lpath)
 		return -1;
 	}
 
-	CSmartPtr < str_utf16 > path(GetUTF16FromANSI(spath));
+	CSmartPtr < str_utf16 > path(CAPECharacterHelper::GetUTF16FromANSI(spath));
 	int err;
 	CAPEInfo ape_info(&err, path);
 
