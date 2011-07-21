@@ -13,6 +13,10 @@
 #ifndef JPEGLIB_H
 #define JPEGLIB_H
 
+/* Add by xreader to support archieve file extraction*/
+typedef unsigned (*jpeg_fread)(void *buf, unsigned r, unsigned n, void *stream);
+extern jpeg_fread jp_fread;
+
 /*
  * First we include the configuration files that record how this
  * installation of the JPEG library is set up.  jconfig.h can be
@@ -908,7 +912,7 @@ EXTERN(void) jpeg_destroy_decompress JPP((j_decompress_ptr cinfo));
 /* Standard data source and destination managers: stdio streams. */
 /* Caller is responsible for opening the file before and closing after. */
 EXTERN(void) jpeg_stdio_dest JPP((j_compress_ptr cinfo, FILE * outfile));
-EXTERN(void) jpeg_stdio_src JPP((j_decompress_ptr cinfo, FILE * infile));
+EXTERN(void) jpeg_stdio_src JPP((j_decompress_ptr cinfo, FILE * infile, jpeg_fread jfread));
 
 /* Default parameter setup for compression */
 EXTERN(void) jpeg_set_defaults JPP((j_compress_ptr cinfo));

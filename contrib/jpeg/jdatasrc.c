@@ -19,6 +19,7 @@
 #include "jpeglib.h"
 #include "jerror.h"
 
+jpeg_fread jp_fread;
 
 /* Expanded data source object for stdio input */
 
@@ -179,7 +180,7 @@ term_source (j_decompress_ptr cinfo)
  */
 
 GLOBAL(void)
-jpeg_stdio_src (j_decompress_ptr cinfo, FILE * infile)
+jpeg_stdio_src JPP((j_decompress_ptr cinfo, FILE * infile, jpeg_fread jfread))
 {
   my_src_ptr src;
 
@@ -209,4 +210,5 @@ jpeg_stdio_src (j_decompress_ptr cinfo, FILE * infile)
   src->infile = infile;
   src->pub.bytes_in_buffer = 0; /* forces fill_input_buffer on first read */
   src->pub.next_input_byte = NULL; /* until buffer loaded */
+  jp_fread = jfread;
 }
