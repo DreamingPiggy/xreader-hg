@@ -368,10 +368,9 @@ int memp3_decode(void *data, u32 data_len, void *pcm_data)
  */
 static int memp3_audiocallback(void *buf, unsigned int snd_buf_sample_size, void *pdata)
 {
-	int avail_frame, copy_frame;
+	int avail_sample, copy_sample;
 	u16 *audio_buf = buf;
 	double incr;
-	u16 *output;
 
 	UNUSED(pdata);
 
@@ -386,12 +385,12 @@ static int memp3_audiocallback(void *buf, unsigned int snd_buf_sample_size, void
 	}
 
 	while (snd_buf_sample_size != 0) {
-		avail_frame = g_buff_sample_size - g_buff_sample_start;
-		copy_frame = min(avail_frame, snd_buf_sample_size);
-		audio_buf = copy_to_sndbuf(audio_buf, &g_buff[g_buff_sample_start * g_info.channels], copy_frame, g_info.channels);
-		g_buff_sample_start += copy_frame;
-		snd_buf_sample_size -= copy_frame;
-		incr = (double) (copy_frame) / g_info.sample_freq;
+		avail_sample = g_buff_sample_size - g_buff_sample_start;
+		copy_sample = min(avail_sample, snd_buf_sample_size);
+		audio_buf = copy_to_sndbuf(audio_buf, &g_buff[g_buff_sample_start * g_info.channels], copy_sample, g_info.channels);
+		g_buff_sample_start += copy_sample;
+		snd_buf_sample_size -= copy_sample;
+		incr = (double) (copy_sample) / g_info.sample_freq;
 		g_play_time += incr;
 
 		if(g_buff_sample_start == g_buff_sample_size) {
@@ -404,10 +403,9 @@ static int memp3_audiocallback(void *buf, unsigned int snd_buf_sample_size, void
 				return -1;
 			}
 
-			output = &g_buff[0];
-			memcpy(output, memp3_decoded_buf, mp3info.spf * 4);
 			g_buff_sample_size = mp3info.spf;
-			incr = (double) mp3info.spf / mp3info.sample_freq;
+			memcpy(&g_buff[0], memp3_decoded_buf, g_buff_sample_size * g_info.channels * sizeof(u16));
+			incr = (double) g_buff_sample_size / mp3info.sample_freq;
 			add_bitrate(&g_inst_br, brate * 1000, incr);
 			g_buff_sample_start = 0;
 		}
