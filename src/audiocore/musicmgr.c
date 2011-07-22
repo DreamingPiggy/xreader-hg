@@ -60,6 +60,7 @@
 #include "thread_lock.h"
 #include "freq_lock.h"
 #include "systemctrl.h"
+#include "musiclist.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -73,7 +74,6 @@ struct music_list
 	bool first_time;
 } g_list;
 
-static struct music_file *g_music_files = NULL;
 static int g_thread_actived = 0;
 static int g_thread_exited = 0;
 
@@ -85,14 +85,6 @@ static bool g_music_hprm_enable = false;
 static struct psp_mutex_t music_l;
 
 static int music_play(int i);
-
-struct shuffle_data
-{
-	unsigned index;
-	unsigned size;
-	int *table;
-	bool first_time;
-} g_shuffle;
 
 #define STACK_SIZE 64
 
@@ -146,90 +138,22 @@ static inline void swap(int *a, int *b)
 	*b = t;
 }
 
-static int *build_array(unsigned size)
-{
-	int *p;
-	unsigned i;
-
-	p = malloc(sizeof(*p) * size);
-
-	if (p == NULL)
-		return p;
-
-	for (i = 0; i < size; ++i)
-		p[i] = i;
-
-	return p;
-}
-
-static int shuffle(int *array, unsigned size)
-{
-	unsigned i;
-
-	for (i = 0; i < size; ++i) {
-		swap(&array[i], &array[rand() % size]);
-	}
-
-	return 0;
-}
-
-static int free_shuffle_data(void)
-{
-	if (g_shuffle.table != NULL) {
-		free(g_shuffle.table);
-		g_shuffle.table = NULL;
-	}
-
-	return 0;
-}
-
-static int rebuild_shuffle_data(void)
-{
-	if (g_list.cycle_mode != conf_cycle_random)
-		return 0;
-
-	g_shuffle.index = 0;
-	g_shuffle.size = music_maxindex();
-
-	dbg_printf(d, "%s: rebuild shuffle data", __func__);
-
-	if (g_shuffle.table != NULL) {
-		free(g_shuffle.table);
-		g_shuffle.table = NULL;
-	}
-
-	g_shuffle.table = build_array(music_maxindex());
-	shuffle(g_shuffle.table, g_shuffle.size);
-
-	if (g_shuffle.first_time) {
-		unsigned i;
-
-		for (i = 0; i < g_shuffle.size; ++i) {
-			if (g_shuffle.table[i] == 0) {
-				swap(&g_shuffle.table[i], &g_shuffle.table[0]);
-				break;
-			}
-		}
-
-		g_shuffle.index = 1;
-		g_shuffle.first_time = false;
-	}
-
-	return 0;
-}
-
 static int shuffle_next(void)
 {
 	if (g_list.cycle_mode == conf_cycle_random) {
-		stack_push(&played, g_list.curr_pos);
+		MusicListEntry *entry;
 
-		if (g_shuffle.index == g_shuffle.size || g_shuffle.size != music_maxindex()
-			) {
-			rebuild_shuffle_data();
+		stack_push(&played, g_list.curr_pos);
+		entry = musiclist_get_next_shuffle(&g_music_list);
+
+		if (entry == NULL) {
+			musiclist_begin_shuffle(&g_music_list);
+			entry = musiclist_get_next_shuffle(&g_music_list);
 		}
 
-		dbg_printf(d, "%s: g_shuffle index %d, pos %d", __func__, g_shuffle.index, g_shuffle.table[g_shuffle.index]);
-		g_list.curr_pos = g_shuffle.table[g_shuffle.index++];
+		if (entry != NULL) {
+			g_list.curr_pos = musiclist_get_idx(&g_music_list, entry);
+		}
 	}
 
 	return 0;
@@ -246,11 +170,6 @@ static int shuffle_prev(void)
 	pos = stack_pop(&played);
 	g_list.curr_pos = pos;
 
-	if (g_shuffle.index)
-		g_shuffle.index--;
-	else
-		g_shuffle.index = g_shuffle.size - 1;
-
 	return 0;
 }
 
@@ -264,48 +183,9 @@ static void music_unlock(void)
 	xr_unlock(&music_l);
 }
 
-static struct music_file *new_music_file(const char *spath, const char *lpath)
-{
-	struct music_file *p = calloc(1, sizeof(*p));
-
-	if (p == NULL)
-		return p;
-
-	p->shortpath = buffer_init();
-
-	if (p->shortpath == NULL) {
-		free(p);
-		return NULL;
-	}
-
-	p->longpath = buffer_init();
-
-	if (p->longpath == NULL) {
-		buffer_free(p->shortpath);
-		free(p);
-		return NULL;
-	}
-
-	buffer_copy_string(p->shortpath, spath);
-	buffer_copy_string(p->longpath, lpath);
-
-	p->next = NULL;
-
-	return p;
-}
-
-static void free_music_file(struct music_file *p)
-{
-	buffer_free(p->shortpath);
-	buffer_free(p->longpath);
-	free(p);
-}
-
 int music_add(const char *spath, const char *lpath)
 {
-	struct music_file *n;
-	struct music_file **tmp;
-	int count;
+	int pos;
 
 	if (spath == NULL || lpath == NULL)
 		return -EINVAL;
@@ -313,70 +193,31 @@ int music_add(const char *spath, const char *lpath)
 	if (!fs_is_music(spath, lpath))
 		return -EINVAL;
 
-	tmp = &g_music_files;
-	count = 0;
+	pos = music_find(spath, lpath);
 
-	while (*tmp) {
-		if (!strcmp((*tmp)->shortpath->ptr, spath) && !strcmp((*tmp)->longpath->ptr, lpath)) {
-			return -EBUSY;
-		}
-		tmp = &(*tmp)->next;
-		count++;
+	if(pos >= 0) {
+		return -1;
 	}
 
-	n = new_music_file(spath, lpath);
-	if (n != NULL)
-		*tmp = n;
-	else
-		return -ENOMEM;
-	music_lock();
-	rebuild_shuffle_data();
-	music_unlock();
-	return count;
+	return musiclist_add(&g_music_list, spath, lpath);
 }
 
 int music_find(const char *spath, const char *lpath)
 {
-	struct music_file *tmp;
-	int count;
+	MusicListEntry *e;
 
-	if (spath == NULL || lpath == NULL)
-		return -EINVAL;
+	e = musiclist_search_by_path(&g_music_list, spath, lpath);
 
-	count = 0;
-	for (tmp = g_music_files; tmp; tmp = tmp->next) {
-		if (!strcmp(tmp->shortpath->ptr, spath)
-			&& !strcmp(tmp->longpath->ptr, lpath)) {
-			return count;
-		}
-		count++;
+	if (e == NULL) {
+		return -1;
 	}
 
-	return -1;
+	return musiclist_get_idx(&g_music_list, e);
 }
 
 int music_maxindex(void)
 {
-	struct music_file *tmp;
-	int count;
-
-	count = 0;
-	for (tmp = g_music_files; tmp; tmp = tmp->next)
-		count++;
-
-	return count;
-}
-
-struct music_file *music_get(int i)
-{
-	struct music_file *tmp;
-
-	if (i < 0)
-		return NULL;
-	for (tmp = g_music_files; tmp && i > 0; tmp = tmp->next)
-		i--;
-
-	return tmp;
+	return musiclist_count(&g_music_list);
 }
 
 int music_stop(void)
@@ -519,7 +360,6 @@ static int music_list_refresh(void)
 	}
 
 	g_list.first_time = true;
-	g_shuffle.first_time = true;
 	music_unlock();
 
 	return 0;
@@ -527,88 +367,29 @@ static int music_list_refresh(void)
 
 int music_del(int i)
 {
-	int n;
-	struct music_file **tmp;
-	struct music_file *p;
-
-	tmp = &g_music_files;
-	n = i;
-	while (*tmp && n > 0) {
-		n--;
-		tmp = &(*tmp)->next;
-	}
-
-	p = (*tmp);
-	*tmp = p->next;
-	free_music_file(p);
 	music_lock();
-	rebuild_shuffle_data();
-	n = music_maxindex();
-
-	if (n == 0) {
-		music_list_refresh();
-	}
-
+	musiclist_remove(&g_music_list, musiclist_get(&g_music_list, i));
 	music_unlock();
-	return n;
+
+	return 0;
 }
 
 int music_moveup(int i)
 {
-	struct music_file **tmp;
-	struct music_file *a, *b, *c;
-	int n;
-
-	if (i < 1 || i >= music_maxindex())
-		return -EINVAL;
-
-	tmp = &g_music_files;
-	n = i - 1;
-
-	while (*tmp && n > 0) {
-		n--;
-		tmp = &(*tmp)->next;
-	}
-
-	a = *tmp;
-	b = a->next;
-	c = b->next;
-	b->next = a;
-	a->next = c;
-	*tmp = b;
 	music_lock();
-	rebuild_shuffle_data();
+	musiclist_moveup(&g_music_list, i);
 	music_unlock();
-	return i - 1;
+
+	return 0;
 }
 
 int music_movedown(int i)
 {
-	struct music_file **tmp;
-	struct music_file *a, *b, *c;
-	int n;
-
-	if (i < 0 || i >= music_maxindex() - 1)
-		return -EINVAL;
-
-	tmp = &g_music_files;
-	n = i;
-
-	while (*tmp && n > 0) {
-		n--;
-		tmp = &(*tmp)->next;
-	}
-
-	b = (*tmp);
-	a = b->next;
-	c = a->next;
-	a->next = b;
-	b->next = c;
-	*tmp = a;
 	music_lock();
-	rebuild_shuffle_data();
+	musiclist_movedown(&g_music_list, i);
 	music_unlock();
-	return i + 1;
+
+	return 0;
 }
 
 static int get_next_music(void)
@@ -673,7 +454,6 @@ int music_list_stop(void)
 
 	g_list.is_list_playing = false;
 	g_list.first_time = true;
-	g_shuffle.first_time = true;
 	music_unlock();
 	return ret;
 }
@@ -901,9 +681,9 @@ int music_init(void)
 	aa3_init();
 #endif
 
+	musiclist_init(&g_music_list);
 	memset(&g_list, 0, sizeof(g_list));
 	g_list.first_time = true;
-	g_shuffle.first_time = true;
 	stack_init(&played);
 	g_music_thread = sceKernelCreateThread("Music Thread", music_thread, 0x12, 0x10000, 0, NULL);
 
@@ -936,7 +716,6 @@ int music_free(void)
 	g_list.is_list_playing = 0;
 	g_thread_actived = 0;
 	music_unlock();
-	free_shuffle_data();
 
 	if (sceKernelWaitThreadEnd(g_music_thread, &to) != 0) {
 		sceKernelTerminateDeleteThread(g_music_thread);
@@ -986,15 +765,11 @@ int music_prev(void)
 			{
 				if (shuffle_prev() != 0) {
 					ret = music_stop();
-
-					if (ret < 0) {
-						music_unlock();
-						return ret;
-					}
-
 					g_list.is_list_playing = false;
-					goto end;
+					music_unlock();
+					return ret;
 				}
+
 				break;
 			}
 			break;
@@ -1003,7 +778,6 @@ int music_prev(void)
 	if (!g_list.is_list_playing)
 		g_list.is_list_playing = true;
 
-  end:
 	if (g_list.is_list_playing)
 		ret = music_play(g_list.curr_pos);
 
@@ -1132,13 +906,13 @@ int music_list_save(const char *path)
 
 	fid = freq_enter_hotzone();
 	for (i = 0; i < music_maxindex(); i++) {
-		struct music_file *file;
+		MusicListEntry *file;
 
-		file = music_get(i);
+		file = musiclist_get(&g_music_list, i);
 		if (file == NULL)
 			continue;
-		fprintf(fp, "%s\n", file->shortpath->ptr);
-		fprintf(fp, "%s\n", file->longpath->ptr);
+		fprintf(fp, "%s\n", file->spath);
+		fprintf(fp, "%s\n", file->lpath);
 	}
 	fclose(fp);
 	freq_leave(fid);
@@ -1159,19 +933,8 @@ static bool music_is_file_exist(const char *filename)
 
 int music_list_clear(void)
 {
-	struct music_file *l, *t;
-
 	music_lock();
-
-	for (l = g_music_files; l != NULL; l = t) {
-		buffer_free(l->shortpath);
-		buffer_free(l->longpath);
-		t = l->next;
-		free(l);
-	}
-
-	g_music_files = NULL;
-
+	musiclist_clear(&g_music_list);
 	music_unlock();
 
 	return 0;
@@ -1257,7 +1020,7 @@ int music_get_info(struct music_info *info)
 
 int music_load(int i)
 {
-	struct music_file *file = music_get(i);
+	MusicListEntry *file = musiclist_get(&g_music_list, i);
 	int ret;
 	char lyricname[PATH_MAX];
 	char lyricshortname[PATH_MAX];
@@ -1267,13 +1030,13 @@ int music_load(int i)
 	ret = music_stop();
 	if (ret < 0)
 		return ret;
-	ret = music_setupdriver(file->shortpath->ptr, file->longpath->ptr);
+	ret = music_setupdriver(file->spath, file->lpath);
 	if (ret < 0)
 		return ret;
 	ret = music_load_config();
 	if (ret < 0)
 		return ret;
-	ret = musicdrv_load(file->shortpath->ptr, file->longpath->ptr);
+	ret = musicdrv_load(file->spath, file->lpath);
 	if (ret < 0)
 		return ret;
 #ifdef ENABLE_LYRIC
@@ -1286,7 +1049,7 @@ int music_load(int i)
 	} else {
 		int lsize;
 
-		strncpy_s(lyricname, NELEMS(lyricname), file->longpath->ptr, PATH_MAX);
+		strncpy_s(lyricname, NELEMS(lyricname), file->lpath, PATH_MAX);
 		lsize = strlen(lyricname);
 
 		lyricname[lsize - 3] = 'l';
@@ -1348,7 +1111,7 @@ int music_suspend(void)
 
 int music_resume(void)
 {
-	struct music_file *fl = music_get(g_list.curr_pos);
+	MusicListEntry *fl = musiclist_get(&g_music_list, g_list.curr_pos);
 	int ret;
 
 	dbg_printf(d, "%s", __func__);
@@ -1360,7 +1123,7 @@ int music_resume(void)
 		return -1;
 	}
 
-	ret = musicdrv_resume(fl->shortpath->ptr, fl->longpath->ptr);
+	ret = musicdrv_resume(fl->spath, fl->lpath);
 
 	if (ret < 0) {
 		dbg_printf(d, "%s %d: Resume failed!", __func__, __LINE__);
