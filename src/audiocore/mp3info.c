@@ -296,7 +296,7 @@ int search_valid_frame_me(mp3_reader_data * data, int *brate)
 	start = 0;
 	while ((end = buffered_reader_read(data->r, &buf[4], sizeof(buf) - 4)) > 0) {
 		while (start < end) {
-			size = parse_frame(buf + start, start, 1024 + 4 - start, &level, brate, info, data, dcount * (sizeof(buf) - 4) + off + start);
+			size = parse_frame(buf, start, end, &level, brate, info, data, dcount * (sizeof(buf) - 4) + off + start);
 
 			if (size > 0) {
 				goto found;
