@@ -468,7 +468,6 @@ static int me_init()
 	}
 
 	memset(memp3_input_buf, 0, sizeof(memp3_input_buf));
-	memset(g_buff, 0, BUFF_SIZE);
 
 	return 0;
 }
@@ -634,6 +633,7 @@ static int mp3_load(const char *spath, const char *lpath)
 		return -1;
 	}
 
+	memset(g_buff, 0, BUFF_SIZE);
 	xAudioSetChannelCallback(0, memp3_audiocallback, NULL);
 	generic_set_status(ST_LOADED);
 
