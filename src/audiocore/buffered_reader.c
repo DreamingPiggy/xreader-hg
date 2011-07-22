@@ -141,9 +141,9 @@ buffered_reader_t *buffered_reader_open(const char *path, int32_t buffer_size, i
 
 int32_t buffered_reader_length(buffered_reader_t * reader)
 {
-	if(!reader->cache_enabled) {
+	if (!reader->cache_enabled) {
 		int32_t pos, end;
-	   
+
 		pos = sceIoLseek32(reader->handle, 0, PSP_SEEK_CUR);
 		end = sceIoLseek32(reader->handle, 0, PSP_SEEK_END);
 		sceIoLseek32(reader->handle, pos, PSP_SEEK_SET);
@@ -219,6 +219,10 @@ static int32_t buffered_reader_reset_buffer(buffered_reader_t * reader, const in
 int32_t buffered_reader_seek(buffered_reader_t * reader, const int32_t position)
 {
 	int32_t seek = 0;
+
+	if (!reader->cache_enabled) {
+		return sceIoLseek32(reader->handle, position, PSP_SEEK_SET);
+	}
 
 	if (position >= reader->position_0 && position < reader->position_2) {
 		reader->current_position = position;
@@ -361,6 +365,10 @@ int buffered_reader_set_seek_mode(buffered_reader_t * reader, int new_mode)
 {
 	int old_seek_mode = reader->seek_mode;
 
+	if (!reader->cache_enabled) {
+		return 0;
+	}
+
 	reader->seek_mode = new_mode;
 
 	if (old_seek_mode != new_mode) {
@@ -372,7 +380,7 @@ int buffered_reader_set_seek_mode(buffered_reader_t * reader, int new_mode)
 
 int32_t buffered_reader_read(buffered_reader_t * reader, void *buffer, uint32_t size)
 {
-	if(!reader->cache_enabled) {
+	if (!reader->cache_enabled) {
 		return sceIoRead(reader->handle, buffer, size);
 	}
 
@@ -405,9 +413,9 @@ int32_t buffered_reader_read(buffered_reader_t * reader, void *buffer, uint32_t 
 
 int32_t buffered_reader_position(buffered_reader_t * reader)
 {
-	if(!reader->cache_enabled) {
+	if (!reader->cache_enabled) {
 		return sceIoLseek32(reader->handle, 0, PSP_SEEK_CUR);
-	}	
+	}
 
 	return reader->current_position;
 }
@@ -418,9 +426,12 @@ int32_t buffered_reader_enable_cache(buffered_reader_t * reader, int32_t enabled
 
 	prev = reader->cache_enabled;
 
-	if(!prev && enabled) {
+	if (!prev && enabled) {
 		buffered_reader_reset_buffer(reader, buffered_reader_position(reader));
-	} else if(prev && !enabled){
+	} else if (prev && !enabled) {
+		long long result;
+
+		sceIoWaitAsync(reader->handle, &result);
 		sceIoLseek32(reader->handle, buffered_reader_position(reader), PSP_SEEK_SET);
 	}
 
