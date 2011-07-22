@@ -39,8 +39,6 @@
 typedef struct mp3_reader_data_t
 {
 	buffered_reader_t *r;
-	int fd;
-	bool use_buffer;
 	long size;
 } mp3_reader_data;
 
@@ -73,12 +71,6 @@ int read_mp3_info_brute(struct MP3Info *info, mp3_reader_data * data);
 int free_mp3_info(struct MP3Info *info);
 int search_valid_frame_me(mp3_reader_data * data, int *brate);
 int read_id3v2_tag(int fd, struct MP3Info *info);
-int read_mp3_info_buffered(struct MP3Info *info, mp3_reader_data * data);
-int read_mp3_info_brute_buffered(struct MP3Info *info, mp3_reader_data * data);
-int free_mp3_info_buffered(struct MP3Info *info);
-int search_valid_frame_me_buffered(mp3_reader_data * data, int *brate);
-int read_id3v2_tag_buffered(buffered_reader_t * reader, struct MP3Info *info);
 int skip_id3v2_tag(mp3_reader_data * data);
-int skip_id3v2_tag_buffered(mp3_reader_data * data);
 
 #endif

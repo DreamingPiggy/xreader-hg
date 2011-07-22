@@ -142,7 +142,6 @@ xReader_elf_SOURCES += \
 	audiocore/buffered_reader.h \
 	audiocore/mp3info.h \
 	audiocore/mp3info.c \
-	audiocore/mp3info_buffered.c \
 	audiocore/musicinfo.c \
 	audiocore/musicinfo.h \
 	audiocore/mediaengine.c \

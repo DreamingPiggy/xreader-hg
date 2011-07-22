@@ -39,11 +39,13 @@ extern "C"
 
 	int32_t buffered_reader_position(buffered_reader_t * reader);
 
-	uint32_t buffered_reader_read(buffered_reader_t * reader, void *buffer, uint32_t size);
+	int32_t buffered_reader_read(buffered_reader_t * reader, void *buffer, uint32_t size);
 
 	void buffered_reader_close(buffered_reader_t * reader);
 
 	SceUID buffered_reader_get_handle(buffered_reader_t * reader);
+
+	int32_t buffered_reader_enable_cache(buffered_reader_t * reader, int32_t enabled);
 
 #ifdef __cplusplus
 }
