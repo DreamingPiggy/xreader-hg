@@ -91,7 +91,6 @@ static unsigned long mp3_codec_buffer[65] __attribute__ ((aligned(64)));
 static bool mp3_getEDRAM = false;
 
 static uint8_t memp3_input_buf[2889] __attribute__ ((aligned(64)));
-static uint8_t memp3_decoded_buf[2048 * 4] __attribute__ ((aligned(64)));
 
 int memp3_decode(void *data, u32 data_len, void *pcm_data);
 
@@ -162,7 +161,7 @@ static int mp3_seek_seconds_offset_brute(double npt)
 }
 
 /**
-  * Seek until found one valid mp3 frame, and then decode it into memp3_decoded_buf
+  * Seek until found one valid mp3 frame, and then decode it into g_buff
   */
 static int seek_and_decode(int *brate, u32 * first_found_frame)
 {
@@ -206,7 +205,7 @@ static int seek_and_decode(int *brate, u32 * first_found_frame)
 			return -1;
 		}
 
-		ret = memp3_decode(memp3_input_buf, ret, memp3_decoded_buf);
+		ret = memp3_decode(memp3_input_buf, ret, g_buff);
 
 	  retry:
 		if (ret < 0) {
@@ -243,7 +242,7 @@ static int seek_valid_frame(void)
 	u32 pos;
 
 	memset(memp3_input_buf, 0, sizeof(memp3_input_buf));
-	memset(memp3_decoded_buf, 0, sizeof(memp3_decoded_buf));
+	memset(g_buff, 0, BUFF_SIZE);
 
 	ret = seek_and_decode(&brate, &pos);
 
@@ -404,7 +403,6 @@ static int memp3_audiocallback(void *buf, unsigned int snd_buf_sample_size, void
 			}
 
 			g_buff_sample_size = mp3info.spf;
-			memcpy(&g_buff[0], memp3_decoded_buf, g_buff_sample_size * g_info.channels * sizeof(u16));
 			incr = (double) g_buff_sample_size / mp3info.sample_freq;
 			add_bitrate(&g_inst_br, brate * 1000, incr);
 			g_buff_sample_start = 0;
@@ -470,7 +468,7 @@ static int me_init()
 	}
 
 	memset(memp3_input_buf, 0, sizeof(memp3_input_buf));
-	memset(memp3_decoded_buf, 0, sizeof(memp3_decoded_buf));
+	memset(g_buff, 0, BUFF_SIZE);
 
 	return 0;
 }
@@ -629,7 +627,7 @@ static int mp3_load(const char *spath, const char *lpath)
 		return -1;
 	}
 
-	g_buff = xAudioAlloc(0, BUFF_SIZE);
+	g_buff = xAudioAlloc(64, BUFF_SIZE);
 
 	if (g_buff == NULL) {
 		__end();
