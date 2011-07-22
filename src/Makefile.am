@@ -153,6 +153,8 @@ xReader_elf_SOURCES += \
 	audiocore/apetaglib/APETag.h \
 	audiocore/musiclist.c \
 	audiocore/musiclist.h \
+	audiocore/stack.h \
+	audiocore/stack.c \
 	clock.c
 
 if MP3

@@ -61,6 +61,7 @@
 #include "freq_lock.h"
 #include "systemctrl.h"
 #include "musiclist.h"
+#include "stack.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -86,48 +87,7 @@ static struct psp_mutex_t music_l;
 
 static int music_play(int i);
 
-#define STACK_SIZE 64
-
-struct stack
-{
-	unsigned size;
-	int a[STACK_SIZE];
-} played;
-
-static int stack_init(struct stack *p)
-{
-	p->size = 0;
-	memset(p->a, 0, sizeof(p->a));
-	return 0;
-}
-
-static int stack_push(struct stack *p, int q)
-{
-	if (p->size < STACK_SIZE) {
-		p->a[p->size++] = q;
-	} else {
-		memmove(&p->a[0], &p->a[1], (p->size - 1) * sizeof(p->a[0]));
-		p->a[p->size - 1] = q;
-	}
-
-	return 0;
-}
-
-static int stack_size(struct stack *p)
-{
-	return p->size;
-}
-
-static int stack_pop(struct stack *p)
-{
-	if (p->size >= 1) {
-		return p->a[--p->size];
-	} else {
-		return -1;
-	}
-
-	return 0;
-}
+static Stack g_played;
 
 static inline void swap(int *a, int *b)
 {
@@ -140,20 +100,22 @@ static inline void swap(int *a, int *b)
 
 static int shuffle_next(void)
 {
-	if (g_list.cycle_mode == conf_cycle_random) {
-		MusicListEntry *entry;
+	MusicListEntry *entry;
 
-		stack_push(&played, g_list.curr_pos);
+	if (g_list.cycle_mode != conf_cycle_random) {
+		return 0;
+	}
+
+	stack_push(&g_played, g_list.curr_pos);
+	entry = musiclist_get_next_shuffle(&g_music_list);
+
+	if (entry == NULL) {
+		musiclist_begin_shuffle(&g_music_list);
 		entry = musiclist_get_next_shuffle(&g_music_list);
+	}
 
-		if (entry == NULL) {
-			musiclist_begin_shuffle(&g_music_list);
-			entry = musiclist_get_next_shuffle(&g_music_list);
-		}
-
-		if (entry != NULL) {
-			g_list.curr_pos = musiclist_get_idx(&g_music_list, entry);
-		}
+	if (entry != NULL) {
+		g_list.curr_pos = musiclist_get_idx(&g_music_list, entry);
 	}
 
 	return 0;
@@ -163,11 +125,10 @@ static int shuffle_prev(void)
 {
 	int pos;
 
-	if (stack_size(&played) == 0) {
+	if (stack_pop(&g_played, &pos) < 0) {
 		return -1;
 	}
 
-	pos = stack_pop(&played);
 	g_list.curr_pos = pos;
 
 	return 0;
@@ -195,7 +156,7 @@ int music_add(const char *spath, const char *lpath)
 
 	pos = music_find(spath, lpath);
 
-	if(pos >= 0) {
+	if (pos >= 0) {
 		return -1;
 	}
 
@@ -684,7 +645,7 @@ int music_init(void)
 	musiclist_init(&g_music_list);
 	memset(&g_list, 0, sizeof(g_list));
 	g_list.first_time = true;
-	stack_init(&played);
+	stack_init(&g_played);
 	g_music_thread = sceKernelCreateThread("Music Thread", music_thread, 0x12, 0x10000, 0, NULL);
 
 	if (g_music_thread < 0) {
@@ -994,9 +955,17 @@ int music_list_load(const char *path)
 
 int music_set_cycle_mode(int mode)
 {
+	int prev;
+
 	music_lock();
+	prev = g_list.cycle_mode;
+
 	if (mode >= 0 && mode <= conf_cycle_random)
 		g_list.cycle_mode = mode;
+
+	if (prev != g_list.cycle_mode && (g_list.cycle_mode == conf_cycle_random || prev == conf_cycle_random)) {
+		stack_clear(&g_played);
+	}
 
 	music_unlock();
 	return g_list.cycle_mode;
