@@ -61,6 +61,7 @@
 #include "dbg.h"
 #include "image_queue.h"
 #include "audiocore/xaudiolib.h"
+#include "audiocore/musiclist.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -133,11 +134,12 @@ t_win_menu_op scene_mp3_list_menucb(u32 key, p_win_menuitem item, u32 * count, u
 		case PSP_CTRL_START:
 #ifdef ENABLE_MUSIC
 			{
-				struct music_file *p;
+				MusicListEntry *p;
 
-				if ((p = music_get(*index)) != NULL) {
-					music_directplay(p->shortpath->ptr, p->longpath->ptr);
+				if ((p = musiclist_get(&g_music_list, *index)) != NULL) {
+					music_directplay(p->spath, p->lpath);
 				}
+
 				return win_menu_op_continue;
 			}
 #endif
@@ -178,11 +180,11 @@ void scene_mp3_list_postdraw(p_win_menuitem item, u32 index, u32 topindex, u32 m
 	const char *fname;
 
 #ifdef ENABLE_MUSIC
-	struct music_file *fl = music_get(index);
+	MusicListEntry *fl = musiclist_get(&g_music_list, index);
 
 	if (fl == NULL)
 		return;
-	fname = fl->longpath->ptr;
+	fname = fl->lpath;
 #else
 	fname = _("“Ù¿÷“—πÿ±’");
 #endif
@@ -235,18 +237,19 @@ void scene_mp3_list(void)
 #endif
 
 	for (i = 0; i < music_maxindex(); i++) {
-		struct music_file *fl = music_get(i);
+		MusicListEntry *fl = musiclist_get(&g_music_list, i);
 		char *rname;
 
 		if (fl == NULL)
 			continue;
 
-		rname = strrchr(fl->longpath->ptr, '/');
+		rname = strrchr(fl->lpath, '/');
 
 		if (rname == NULL)
-			rname = (char *) music_get(i);
+			rname = fl->lpath;
 		else
 			rname++;
+
 		if (strlen(rname) <= g_predraw.max_item_len - 2)
 			STRCPY_S(item[i].name, rname);
 		else {
@@ -460,13 +463,13 @@ static void scene_draw_mp3bar_music_staff(void)
 			SPRINTF_S(tag, "%s", info.title);
 		else {
 			int i = music_get_current_pos();
-			struct music_file *fl = music_get(i);
+			MusicListEntry *fl = musiclist_get(&g_music_list, i);
 
 			if (fl) {
-				const char *p = strrchr(fl->longpath->ptr, '/');
+				const char *p = strrchr(fl->lpath, '/');
 
 				if (p == NULL || *(p + 1) == '\0') {
-					SPRINTF_S(tag, "%s", fl->longpath->ptr);
+					SPRINTF_S(tag, "%s", fl->lpath);
 				} else {
 					SPRINTF_S(tag, "%s", p + 1);
 				}

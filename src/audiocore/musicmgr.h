@@ -24,19 +24,10 @@
 
 struct _buffer;
 
-struct music_file
-{
-	struct _buffer *shortpath;
-	struct _buffer *longpath;
-
-	struct music_file *next;
-};
-
 int music_add(const char *spath, const char *lpath);
 int music_add_dir(const char *spath, const char *lpath);
 int music_find(const char *spath, const char *lpath);
 int music_directplay(const char *spath, const char *lpath);
-struct music_file *music_get(int i);
 int music_maxindex(void);
 int music_del(int i);
 int music_moveup(int i);
