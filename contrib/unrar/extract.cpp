@@ -4,14 +4,13 @@ CmdExtract::CmdExtract()
 {
   TotalFileCount=0;
   *Password=0;
-  Unp=new Unpack(&DataIO);
-  Unp->Init(NULL);
+  Unp.reset(new Unpack(&DataIO));
+  Unp->Init();
 }
 
 
 CmdExtract::~CmdExtract()
 {
-  delete Unp;
   memset(Password,0,sizeof(Password));
 }
 

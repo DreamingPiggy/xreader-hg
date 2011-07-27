@@ -1,6 +1,9 @@
 #ifndef _RAR_EXTRACT_
 #define _RAR_EXTRACT_
 
+#include "boost/scoped_ptr.hpp"
+using boost::scoped_ptr;
+
 enum EXTRACT_ARC_CODE {EXTRACT_ARC_NEXT,EXTRACT_ARC_REPEAT};
 
 class CmdExtract
@@ -10,7 +13,7 @@ class CmdExtract
     RarTime StartTime; // time when extraction started
 
     ComprDataIO DataIO;
-    Unpack *Unp;
+    scoped_ptr<Unpack> Unp;
     unsigned long TotalFileCount;
 
     unsigned long FileCount;

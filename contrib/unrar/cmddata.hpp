@@ -1,6 +1,9 @@
 #ifndef _RAR_CMDDATA_
 #define _RAR_CMDDATA_
 
+#include "boost/scoped_ptr.hpp"
+using boost::scoped_ptr;
+
 #define DefaultStoreList "7z;ace;arj;bz2;cab;gz;jpeg;jpg;lha;lzh;mp3;rar;taz;tgz;z;zip"
 
 class CommandData:public RAROptions
@@ -47,11 +50,11 @@ class CommandData:public RAROptions
     char ArcName[NM];
     wchar ArcNameW[NM];
 
-    StringList *FileArgs;
-    StringList *ExclArgs;
-    StringList *InclArgs;
-    StringList *ArcNames;
-    StringList *StoreArgs;
+    scoped_ptr<StringList> FileArgs;
+    scoped_ptr<StringList> ExclArgs;
+    scoped_ptr<StringList> InclArgs;
+    scoped_ptr<StringList> ArcNames;
+    scoped_ptr<StringList> StoreArgs;
 };
 
 #endif
