@@ -1,4 +1,6 @@
 #include "rar.hpp"
+#include <new>
+#include <iostream>
 #include "dll.hpp"
 
 static int RarErrorToDll(int ErrCode);
@@ -91,6 +93,12 @@ HANDLE PASCAL RAROpenArchiveEx(struct RAROpenArchiveDataEx *r)
     r->OpenResult=RarErrorToDll(ErrCode);
     return(NULL);
   }
+  catch (const std::exception &e)
+  {
+    std::cerr << e.what() << std::endl;
+    r->OpenResult=ERAR_NO_MEMORY;
+    return NULL;
+  }
 }
 
 
@@ -148,6 +156,12 @@ int PASCAL RARReadHeader(HANDLE hArcData,struct RARHeaderData *D)
   {
     return(RarErrorToDll(ErrCode));
   }
+  catch (const std::exception &e)
+  {
+    std::cerr << e.what() << std::endl;
+    return ERAR_NO_MEMORY;
+  }
+
   return(0);
 }
 
@@ -216,6 +230,11 @@ int PASCAL RARReadHeaderEx(HANDLE hArcData,struct RARHeaderDataEx *D)
   catch (int ErrCode)
   {
     return(RarErrorToDll(ErrCode));
+  }
+  catch (const std::exception &e)
+  {
+    std::cerr << e.what() << std::endl;
+    return ERAR_NO_MEMORY;
   }
   return(0);
 }
@@ -305,6 +324,12 @@ int PASCAL ProcessFile(HANDLE hArcData,int Operation,char *DestPath,char *DestNa
   {
     return(RarErrorToDll(ErrCode));
   }
+  catch (const std::exception &e)
+  {
+    std::cerr << e.what() << std::endl;
+    return ERAR_NO_MEMORY;
+  }
+
   return(Data->Cmd.DllError);
 }
 
