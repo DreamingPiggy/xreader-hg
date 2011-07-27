@@ -4,20 +4,17 @@
 
 RarVM::RarVM()
 {
-  Mem=NULL;
 }
 
 
 RarVM::~RarVM()
 {
-  delete[] Mem;
 }
 
 
 void RarVM::Init()
 {
-  if (Mem==NULL)
-    Mem=new byte[VM_MEMSIZE+4];
+  Mem.reset(new byte[VM_MEMSIZE+4]);
 }
 
 /*********************************************************************
@@ -26,7 +23,7 @@ void RarVM::Init()
  so we need to convert them to native format when reading or writing.
  VM registers have endianness of host machine.
 **********************************************************************/
-#define IS_VM_MEM(a) (((byte*)a)>=Mem && ((byte*)a)<Mem+VM_MEMSIZE)
+#define IS_VM_MEM(a) (((byte*)a)>=Mem.get() && ((byte*)a)<Mem.get()+VM_MEMSIZE)
 
 inline uint RarVM::GetValue(bool ByteMode,uint *Addr)
 {
@@ -118,7 +115,7 @@ void RarVM::SetLowEndianValue(uint *Addr,uint Value)
 inline uint* RarVM::GetOperand(VM_PreparedOperand *CmdOp)
 {
   if (CmdOp->Type==VM_OPREGMEM)
-    return((uint *)&Mem[(*CmdOp->Addr+CmdOp->Base)&VM_MEMMASK]);
+    return((uint *)&Mem.get()[(*CmdOp->Addr+CmdOp->Base)&VM_MEMMASK]);
   else
     return(CmdOp->Addr);
 }
@@ -129,10 +126,10 @@ void RarVM::Execute(VM_PreparedProgram *Prg)
   memcpy(R,Prg->InitR,sizeof(Prg->InitR));
   size_t GlobalSize=Min(Prg->GlobalData.Size(),VM_GLOBALMEMSIZE);
   if (GlobalSize)
-    memcpy(Mem+VM_GLOBALMEMADDR,&Prg->GlobalData[0],GlobalSize);
+    memcpy(Mem.get()+VM_GLOBALMEMADDR,&Prg->GlobalData[0],GlobalSize);
   size_t StaticSize=Min(Prg->StaticData.Size(),VM_GLOBALMEMSIZE-GlobalSize);
   if (StaticSize)
-    memcpy(Mem+VM_GLOBALMEMADDR+GlobalSize,&Prg->StaticData[0],StaticSize);
+    memcpy(Mem.get()+VM_GLOBALMEMADDR+GlobalSize,&Prg->StaticData[0],StaticSize);
 
   R[7]=VM_MEMSIZE;
   Flags=0;
@@ -147,7 +144,7 @@ void RarVM::Execute(VM_PreparedProgram *Prg)
   uint NewBlockSize=GET_VALUE(false,&Mem[VM_GLOBALMEMADDR+0x1c])&VM_MEMMASK;
   if (NewBlockPos+NewBlockSize>=VM_MEMSIZE)
     NewBlockPos=NewBlockSize=0;
-  Prg->FilteredData=Mem+NewBlockPos;
+  Prg->FilteredData=Mem.get()+NewBlockPos;
   Prg->FilteredDataSize=NewBlockSize;
 
   Prg->GlobalData.Reset();
@@ -540,7 +537,7 @@ bool RarVM::ExecuteCode(VM_PreparedCommand *PreparedCode,uint CodeSize)
 void RarVM::Prepare(byte *Code,uint CodeSize,VM_PreparedProgram *Prg)
 {
   InitBitInput();
-  memcpy(InBuf,Code,Min(CodeSize,BitInput::MAX_SIZE));
+  memcpy(InBuf.get(),Code,Min(CodeSize,BitInput::MAX_SIZE));
 
   // Calculate the single byte XOR checksum to check validity of VM code.
   byte XorSum=0;
@@ -767,8 +764,8 @@ uint RarVM::ReadData(BitInput &Inp)
 
 void RarVM::SetMemory(uint Pos,byte *Data,uint DataSize)
 {
-  if (Pos<VM_MEMSIZE && Data!=Mem+Pos)
-    memmove(Mem+Pos,Data,Min(DataSize,VM_MEMSIZE-Pos));
+  if (Pos<VM_MEMSIZE && Data!=Mem.get()+Pos)
+    memmove(Mem.get()+Pos,Data,Min(DataSize,VM_MEMSIZE-Pos));
 }
 
 
@@ -873,7 +870,7 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
     case VMSF_E8:
     case VMSF_E8E9:
       {
-        byte *Data=Mem;
+        byte *Data=Mem.get();
         int DataSize=R[4];
         uint FileOffset=R[6];
 
@@ -919,7 +916,7 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
       break;
     case VMSF_ITANIUM:
       {
-        byte *Data=Mem;
+        byte *Data=Mem.get();
         int DataSize=R[4];
         uint FileOffset=R[6];
 
@@ -976,7 +973,7 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
     case VMSF_RGB:
       {
         int DataSize=R[4],Width=R[0]-3,PosR=R[1];
-        byte *SrcData=Mem,*DestData=SrcData+DataSize;
+        byte *SrcData=Mem.get(),*DestData=SrcData+DataSize;
         const int Channels=3;
         SET_VALUE(false,&Mem[VM_GLOBALMEMADDR+0x20],DataSize);
         if ((uint)DataSize>=VM_GLOBALMEMADDR/2 || PosR<0)
@@ -1022,7 +1019,7 @@ void RarVM::ExecuteStandardFilter(VM_StandardFilters FilterType)
     case VMSF_AUDIO:
       {
         int DataSize=R[4],Channels=R[0];
-        byte *SrcData=Mem,*DestData=SrcData+DataSize;
+        byte *SrcData=Mem.get(),*DestData=SrcData+DataSize;
         SET_VALUE(false,&Mem[VM_GLOBALMEMADDR+0x20],DataSize);
         if ((uint)DataSize>=VM_GLOBALMEMADDR/2)
           break;

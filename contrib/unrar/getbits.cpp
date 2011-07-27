@@ -7,17 +7,16 @@ BitInput::BitInput()
   // read only 1 byte from the last position of buffer and avoid a crash
   // from access to next 2 bytes, which contents we do not need.
   size_t BufSize=MAX_SIZE+2;
-  InBuf=new byte[BufSize];
+  InBuf.reset(new byte[BufSize]);
 
   // Ensure that we get predictable results when accessing bytes in area
   // not filled with read data.
-  memset(InBuf,0,BufSize);
+  memset(InBuf.get(),0,BufSize);
 }
 
 
 BitInput::~BitInput()
 {
-  delete[] InBuf;
 }
 
 

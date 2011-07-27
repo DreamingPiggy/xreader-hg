@@ -12,7 +12,6 @@ ScanTree::ScanTree(StringList *FileMasks,RECURSE_MODE Recurse,bool GetLinks,SCAN
   SetAllMaskDepth=0;
   *CurMask=0;
   *CurMaskW=0;
-  memset(FindStack,0,sizeof(FindStack));
   Depth=0;
   Errors=0;
   *ErrArcName=0;
@@ -22,9 +21,6 @@ ScanTree::ScanTree(StringList *FileMasks,RECURSE_MODE Recurse,bool GetLinks,SCAN
 
 ScanTree::~ScanTree()
 {
-  for (int I=Depth;I>=0;I--)
-    if (FindStack[I]!=NULL)
-      delete FindStack[I];
 }
 
 
@@ -152,7 +148,7 @@ SCAN_CODE ScanTree::FindProc(FindData *FD)
     if (SearchAll || Wildcards)
     {
       // Create the new FindFile object for wildcard based search.
-      FindStack[Depth]=new FindFile;
+      FindStack[Depth].reset(new FindFile);
       char SearchMask[NM];
       strcpy(SearchMask,CurMask);
       if (SearchAll)
@@ -250,8 +246,7 @@ SCAN_CODE ScanTree::FindProc(FindData *FD)
     *DirNameW=0;
 
     // Going to at least one directory level higher.
-    delete FindStack[Depth];
-    FindStack[Depth--]=NULL;
+    FindStack[Depth--].reset();
     while (Depth>=0 && FindStack[Depth]==NULL)
       Depth--;
     if (Depth < 0)

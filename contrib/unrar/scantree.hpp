@@ -1,6 +1,9 @@
 #ifndef _RAR_SCANTREE_
 #define _RAR_SCANTREE_
 
+#include "boost/scoped_ptr.hpp"
+using boost::scoped_ptr;
+
 enum SCAN_DIRS 
 { 
   SCAN_SKIPDIRS,     // Skip directories, but recurse for files if recursion mode is enabled.
@@ -21,7 +24,7 @@ class ScanTree
     bool GetNextMask();
     SCAN_CODE FindProc(FindData *FD);
 
-    FindFile *FindStack[MAXSCANDEPTH];
+    scoped_ptr<FindFile> FindStack[MAXSCANDEPTH];
     int Depth;
 
     int SetAllMaskDepth;

@@ -1,6 +1,9 @@
 #ifndef _RAR_UNPACK_
 #define _RAR_UNPACK_
 
+#include "boost/scoped_array.hpp"
+using boost::scoped_array;
+
 enum BLOCK_TYPES {BLOCK_LZ,BLOCK_PPM};
 
 // Maximum allowed number of compressed bits processed in quick mode.
@@ -145,9 +148,7 @@ class Unpack:private BitInput
 
     int UnpBlockType;
 
-    byte *Window;
-    bool ExternalWindow;
-
+    scoped_array<byte> Window;
 
     int64 DestUnpSize;
 
@@ -198,7 +199,7 @@ class Unpack:private BitInput
   public:
     Unpack(ComprDataIO *DataIO);
     ~Unpack();
-    void Init(byte *Window=NULL);
+    void Init(void);
     void DoUnpack(int Method,bool Solid);
     bool IsFileExtracted() {return(FileExtracted);}
     void SetDestSize(int64 DestSize) {DestUnpSize=DestSize;FileExtracted=false;}

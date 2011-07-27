@@ -2,7 +2,6 @@
 
 CommandData::CommandData()
 {
-  FileArgs=ExclArgs=InclArgs=StoreArgs=ArcNames=NULL;
   Init();
 }
 
@@ -24,22 +23,16 @@ void CommandData::Init()
   FileLists=false;
   NoMoreSwitches=false;
 
-  FileArgs=new StringList;
-  ExclArgs=new StringList;
-  InclArgs=new StringList;
-  StoreArgs=new StringList;
-  ArcNames=new StringList;
+  FileArgs.reset(new StringList);
+  ExclArgs.reset(new StringList);
+  InclArgs.reset(new StringList);
+  StoreArgs.reset(new StringList);
+  ArcNames.reset(new StringList);
 }
 
 
 void CommandData::Close()
 {
-  delete FileArgs;
-  delete ExclArgs;
-  delete InclArgs;
-  delete StoreArgs;
-  delete ArcNames;
-  FileArgs=ExclArgs=InclArgs=StoreArgs=ArcNames=NULL;
   NextVolSizes.Reset();
 }
 
@@ -123,7 +116,7 @@ void CommandData::ParseArg(char *Arg,wchar *ArgW)
 #endif
 
               wchar *WideArgName=(ArgW!=NULL && *ArgW!=0 ? ArgW+1:NULL);
-              ReadTextFile(Arg+1,WideArgName,FileArgs,false,true,Charset,true,true,true);
+              ReadTextFile(Arg+1,WideArgName,FileArgs.get(),false,true,Charset,true,true,true);
 
             }
             else
@@ -485,7 +478,7 @@ void CommandData::ProcessSwitch(char *Switch,wchar *SwitchW)
     case 'X':
       if (Switch[1]!=0)
       {
-        StringList *Args=etoupper(Switch[0])=='N' ? InclArgs:ExclArgs;
+        StringList *Args=etoupper(Switch[0])=='N' ? InclArgs.get():ExclArgs.get();
         if (Switch[1]=='@' && !IsWildcard(Switch))
         {
           RAR_CHARSET Charset=FilelistCharset;
@@ -1028,11 +1021,11 @@ void CommandData::OutHelp()
 // the include list created with -n switch.
 bool CommandData::ExclCheck(char *CheckName,bool Dir,bool CheckFullPath,bool CheckInclList)
 {
-  if (ExclCheckArgs(ExclArgs,Dir,CheckName,CheckFullPath,MATCH_WILDSUBPATH))
+  if (ExclCheckArgs(ExclArgs.get(),Dir,CheckName,CheckFullPath,MATCH_WILDSUBPATH))
     return(true);
   if (!CheckInclList || InclArgs->ItemsCount()==0)
     return(false);
-  if (ExclCheckArgs(InclArgs,Dir,CheckName,false,MATCH_WILDSUBPATH))
+  if (ExclCheckArgs(InclArgs.get(),Dir,CheckName,false,MATCH_WILDSUBPATH))
     return(false);
   return(true);
 }

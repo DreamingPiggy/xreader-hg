@@ -7,7 +7,7 @@
 
 # PSP Configure
 CXX=psp-g++
-CXXFLAGS=-O2 -G0 -I $(shell psp-config -p)/include -I $(shell psp-config -p)/../include
+CXXFLAGS=-O2 -G0 -I $(shell psp-config -p)/include -I $(shell psp-config -p)/../include -I $(BOOST_HOME)
 DEFINES=-DLITTLE_ENDIAN
 STRIP=psp-strip
 DESTDIR=./usr

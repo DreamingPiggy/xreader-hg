@@ -1,6 +1,9 @@
 #ifndef _RAR_VM_
 #define _RAR_VM_
 
+#include "boost/scoped_array.hpp"
+using boost::scoped_array;
+
 #define VM_STANDARDFILTERS
 
 #ifndef SFX_MODULE
@@ -96,7 +99,7 @@ class RarVM:private BitInput
     void FilterItanium_SetBits(byte *Data,uint BitField,int BitPos,int BitCount);
 #endif
 
-    byte *Mem;
+    scoped_array<byte> Mem;
     uint R[8];
     uint Flags;
   public:

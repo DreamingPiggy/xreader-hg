@@ -127,11 +127,11 @@ void Unpack::OldUnpWriteBuf()
   if (UnpPtr<WrPtr)
   {
     UnpIO->UnpWrite(&Window[WrPtr],-(int)WrPtr & MAXWINMASK);
-    UnpIO->UnpWrite(Window,UnpPtr);
+    UnpIO->UnpWrite(Window.get(),UnpPtr);
     UnpAllBuf=true;
   }
   else
-    UnpIO->UnpWrite(&Window[WrPtr],UnpPtr-WrPtr);
+    UnpIO->UnpWrite(&Window.get()[WrPtr],UnpPtr-WrPtr);
   WrPtr=UnpPtr;
 }
 

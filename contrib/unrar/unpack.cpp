@@ -11,8 +11,6 @@
 Unpack::Unpack(ComprDataIO *DataIO)
 {
   UnpIO=DataIO;
-  Window=NULL;
-  ExternalWindow=false;
   Suspended=false;
   UnpAllBuf=false;
   UnpSomeRead=false;
@@ -21,31 +19,17 @@ Unpack::Unpack(ComprDataIO *DataIO)
 
 Unpack::~Unpack()
 {
-  if (Window!=NULL && !ExternalWindow)
-    delete[] Window;
   InitFilters();
 }
 
 
-void Unpack::Init(byte *Window)
+void Unpack::Init(void)
 {
-  if (Window==NULL)
-  {
-    Unpack::Window=new byte[MAXWINSIZE];
+  Window.reset(new byte[MAXWINSIZE]);
 
-    // Clean the window to generate the same output when unpacking corrupt
-    // RAR files, which may access to unused areas of sliding dictionary.
-    memset(Unpack::Window,0,MAXWINSIZE);
-#ifndef ALLOW_EXCEPTIONS
-    if (Unpack::Window==NULL)
-      ErrHandler.MemoryError();
-#endif
-  }
-  else
-  {
-    Unpack::Window=Window;
-    ExternalWindow=true;
-  }
+  // Clean the window to generate the same output when unpacking corrupt
+  // RAR files, which may access to unused areas of sliding dictionary.
+  memset(Window.get(),0,MAXWINSIZE);
   UnpInitData(false);
 
 #ifndef SFX_MODULE
@@ -101,8 +85,8 @@ _forceinline void Unpack::CopyString(uint Length,uint Distance)
     // If we are not close to end of window, we do not need to waste time
     // to "& MAXWINMASK" pointer protection.
 
-    byte *Src=Window+SrcPtr;
-    byte *Dest=Window+UnpPtr;
+    byte *Src=Window.get()+SrcPtr;
+    byte *Dest=Window.get()+UnpPtr;
     UnpPtr+=Length;
 
     while (Length>=8)
@@ -528,7 +512,7 @@ bool Unpack::ReadVMCodePPM()
 bool Unpack::AddVMCode(unsigned int FirstByte,byte *Code,int CodeSize)
 {
   VMCodeInp.InitBitInput();
-  memcpy(VMCodeInp.InBuf,Code,Min(BitInput::MAX_SIZE,CodeSize));
+  memcpy(VMCodeInp.InBuf.get(),Code,Min(BitInput::MAX_SIZE,CodeSize));
   VM.Init();
 
   uint FiltPos;
@@ -706,13 +690,13 @@ bool Unpack::UnpReadBuf()
     // If we already processed more than half of buffer, let's move
     // remaining data into beginning to free more space for new data.
     if (DataSize>0)
-      memmove(InBuf,InBuf+InAddr,DataSize);
+      memmove(InBuf.get(),InBuf.get()+InAddr,DataSize);
     InAddr=0;
     ReadTop=DataSize;
   }
   else
     DataSize=ReadTop;
-  int ReadCode=UnpIO->UnpRead(InBuf+DataSize,(BitInput::MAX_SIZE-DataSize)&~0xf);
+  int ReadCode=UnpIO->UnpRead(InBuf.get()+DataSize,(BitInput::MAX_SIZE-DataSize)&~0xf);
   if (ReadCode>0)
     ReadTop+=ReadCode;
   ReadBorder=ReadTop-30;
@@ -754,12 +738,12 @@ void Unpack::UnpWriteBuf()
       {
         unsigned int BlockEnd=(BlockStart+BlockLength)&MAXWINMASK;
         if (BlockStart<BlockEnd || BlockEnd==0)
-          VM.SetMemory(0,Window+BlockStart,BlockLength);
+          VM.SetMemory(0,Window.get()+BlockStart,BlockLength);
         else
         {
           unsigned int FirstPartLength=MAXWINSIZE-BlockStart;
-          VM.SetMemory(0,Window+BlockStart,FirstPartLength);
-          VM.SetMemory(FirstPartLength,Window,BlockEnd);
+          VM.SetMemory(0,Window.get()+BlockStart,FirstPartLength);
+          VM.SetMemory(FirstPartLength,Window.get(),BlockEnd);
         }
 
         VM_PreparedProgram *ParentPrg=&Filters[flt->ParentFilter]->Prg;
@@ -871,12 +855,12 @@ void Unpack::UnpWriteArea(unsigned int StartPtr,unsigned int EndPtr)
     UnpSomeRead=true;
   if (EndPtr<StartPtr)
   {
-    UnpWriteData(&Window[StartPtr],-(int)StartPtr & MAXWINMASK);
-    UnpWriteData(Window,EndPtr);
+    UnpWriteData(&Window.get()[StartPtr],-(int)StartPtr & MAXWINMASK);
+    UnpWriteData(Window.get(),EndPtr);
     UnpAllBuf=true;
   }
   else
-    UnpWriteData(&Window[StartPtr],EndPtr-StartPtr);
+    UnpWriteData(&Window.get()[StartPtr],EndPtr-StartPtr);
 }
 
 

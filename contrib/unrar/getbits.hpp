@@ -1,6 +1,9 @@
 #ifndef _RAR_GETBITS_
 #define _RAR_GETBITS_
 
+#include "boost/scoped_array.hpp"
+using boost::scoped_array;
+
 class BitInput
 {
   public:
@@ -12,7 +15,7 @@ class BitInput
     BitInput();
     ~BitInput();
 
-    byte *InBuf; // Dynamically allocated input buffer.
+    scoped_array<byte> InBuf; // Dynamically allocated input buffer.
 
     void InitBitInput()
     {
