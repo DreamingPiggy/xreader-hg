@@ -36,6 +36,7 @@
 #include "kubridge.h"
 #include "passwdmgr.h"
 #include "audiocore/buffered_reader.h"
+#include "xrPrx.h"
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
@@ -140,6 +141,8 @@ static char *get_system_language(void)
 
 static void conf_default(p_conf conf)
 {
+	int brightness = 100;
+
 	memset(conf, 0, sizeof(t_conf));
 	STRCPY_S(conf->path, "ms0:/");
 	STRCPY_S(conf->shortpath, "ms0:/");
@@ -308,6 +311,9 @@ static void conf_default(p_conf conf)
 			  BUFFERED_READER_BUFFER_SIZE, BUFFERED_READER_BUFFER_SIZE, BUFFERED_READER_BUFFER_SIZE, BUFFERED_READER_BUFFER_SIZE, BUFFERED_READER_BUFFER_SIZE);
 	conf->magnetic_scrolling = true;
 	conf->max_cache_img = 10;
+
+	xrDisplayGetBrightness(&brightness, 0);
+	conf->max_brightness = brightness;
 }
 
 static char *hexToString(char *str, int size, unsigned int hex)

@@ -31,6 +31,9 @@ extern "C"
 	SceOff xrIoLseek(SceUID fd, SceOff offset, int whence);
 	int xrIoRead(SceUID fd, void *data, SceSize size);
 	int xrIoClose(SceUID fd);
+	void xrDisplaySetBrightness(int brightness, int unk1);
+	void xrDisplayGetBrightness(int *brightness, int *unk1);
+	int xrDisplaySetMaxBrightness(int newlevel);
 
 #ifdef __cplusplus
 }

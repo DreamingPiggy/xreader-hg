@@ -2353,6 +2353,16 @@ t_win_menu_op scene_moptions_menucb(u32 key, p_win_menuitem item, u32 * count, u
 				case 13:
 					config.save_password = !config.save_password;
 					break;
+				case 14:
+					if (config.max_brightness > 24) {
+						config.max_brightness--;
+
+						if (xrprx_loaded) {
+							xrDisplaySetMaxBrightness(config.max_brightness);
+							xrDisplaySetBrightness(config.max_brightness, 0);
+						}
+					}
+					break;
 			}
 			return win_menu_op_redraw;
 		case PSP_CTRL_RIGHT:
@@ -2408,6 +2418,15 @@ t_win_menu_op scene_moptions_menucb(u32 key, p_win_menuitem item, u32 * count, u
 					break;
 				case 13:
 					config.save_password = !config.save_password;
+					break;
+				case 14:
+					if (config.max_brightness < 100) {
+						config.max_brightness++;
+						if (xrprx_loaded) {
+							xrDisplaySetMaxBrightness(config.max_brightness);
+							xrDisplaySetBrightness(config.max_brightness, 0);
+						}
+					}
 					break;
 			}
 			return win_menu_op_redraw;
@@ -2499,11 +2518,14 @@ void scene_moptions_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 ma
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
 				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) (config.save_password ? _("是") : _("否")));
 	lines++;
+	SPRINTF_S(infomsg, "%d", config.max_brightness);
+	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE, upper + 2 + (lines + 1 + g_predraw.linespace) * (1 + DISP_FONTSIZE), COLOR_WHITE, (const u8 *) infomsg);
+	lines++;
 }
 
 u32 scene_moptions(u32 * selidx)
 {
-	t_win_menuitem item[14];
+	t_win_menuitem item[15];
 	u32 i;
 	win_menu_predraw_data prev;
 	u32 index;
@@ -2526,6 +2548,8 @@ u32 scene_moptions(u32 * selidx)
 	STRCPY_S(item[11].name, _("启动程序类型"));
 	STRCPY_S(item[12].name, _("        语言"));
 	STRCPY_S(item[13].name, _("保存档案密码"));
+	STRCPY_S(item[14].name, _("    最大亮度"));
+
 	memcpy(&prev, &g_predraw, sizeof(win_menu_predraw_data));
 	g_predraw.max_item_len = win_get_max_length(item, NELEMS(item));
 
@@ -2557,6 +2581,7 @@ u32 scene_moptions(u32 * selidx)
 	if (strcmp(orglanguage, config.language) != 0) {
 		set_language();
 	}
+
 #ifdef ENABLE_USB
 	if (config.isreading == false) {
 		if (config.enableusb)
