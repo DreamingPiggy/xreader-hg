@@ -756,8 +756,6 @@ void scene_ioptions_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 ma
 #else
 	default_predraw(&g_predraw, _("看图选项"), max_height, &left, &right, &upper, &bottom, 4 * DISP_FONTSIZE + 4);
 #endif
-	
-
 
 	disp_putstring(g_predraw.x + 2 + DISP_FONTSIZE,
 				   upper + 2 + (lines + 1 + g_predraw.linespace) * (1 +
@@ -1132,7 +1130,6 @@ void scene_color_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_h
 	if (config.fontsize <= 10) {
 		pad = 6 * (12 - config.fontsize);
 	}
-
 #ifdef ENABLE_NLS
 	if (strcmp(simple_textdomain(NULL), "zh_CN") == 0 || strcmp(simple_textdomain(NULL), "zh_TW") == 0)
 		npad = 35;
@@ -1141,7 +1138,6 @@ void scene_color_predraw(p_win_menuitem item, u32 index, u32 topindex, u32 max_h
 #else
 	npad = 35;
 #endif
-	
 
 	default_predraw(&g_predraw, _("颜色选项"), max_height, &left, &right, &upper, &bottom, pad + npad);
 
@@ -2975,6 +2971,11 @@ int detect_config_change(const p_conf prev, const p_conf curr)
 		music_list_play();
 	}
 #endif
+
+	if (prev->max_brightness != curr->max_brightness) {
+		xrDisplaySetMaxBrightness(curr->max_brightness);
+		xrDisplaySetBrightness(curr->max_brightness, 0);
+	}
 
 	return 0;
 }
