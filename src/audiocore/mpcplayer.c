@@ -54,12 +54,12 @@ static MPC_SAMPLE_FORMAT *g_buff = NULL;
 /**
  * Musepack音乐播放缓冲大小，以帧数计
  */
-static unsigned g_buff_frame_size;
+static unsigned g_buff_sample_size;
 
 /**
  * Musepack音乐播放缓冲当前位置，以帧数计
  */
-static int g_buff_frame_start;
+static int g_buff_sample_start;
 
 #ifdef MPC_FIXED_POINT
 static int shift_signed(MPC_SAMPLE_FORMAT val, int shift)
@@ -79,21 +79,23 @@ static int shift_signed(MPC_SAMPLE_FORMAT val, int shift)
  *
  * @param buf 声音缓冲区指针
  * @param srcbuf 解码数据缓冲区指针
- * @param frames 复制帧数
+ * @param samples 复制样本数
  * @param channels 声道数
+ * 
+ * @return 复制结束地址
  */
-static void send_to_sndbuf(void *buf, MPC_SAMPLE_FORMAT * srcbuf, int frames, int channels)
+static u16 *copy_to_sndbuf(u16 *buf, MPC_SAMPLE_FORMAT * srcbuf, int frames, int channels)
 {
 	unsigned n;
 	unsigned bps = 16;
-	signed short *p = buf;
+	u16 *p = buf;
 	int clip_min = -1 << (bps - 1), clip_max = (1 << (bps - 1)) - 1;
 #ifndef MPC_FIXED_POINT
 	int float_scale = 1 << (bps - 1);
 #endif
 
 	if (frames <= 0)
-		return;
+		return buf;
 
 	for (n = 0; n < frames * channels; n++) {
 		int val;
@@ -108,12 +110,41 @@ static void send_to_sndbuf(void *buf, MPC_SAMPLE_FORMAT * srcbuf, int frames, in
 		else if (val > clip_max)
 			val = clip_max;
 		if (channels == 2)
-			*p++ = (signed short) val;
+			*p++ = val;
 		else if (channels == 1) {
-			*p++ = (signed short) val;
-			*p++ = (signed short) val;
+			*p++ = val;
+			*p++ = val;
 		}
 	}
+
+	return p;
+}
+
+static int handle_seek(void)
+{
+	g_play_time += g_seek_seconds;
+
+	if(g_play_time < 0.0) {
+		g_play_time = 0.0;
+	}
+
+	if(g_info.duration < g_play_time) {
+		return -1;
+	}
+
+	if (g_status == ST_FFORWARD) {
+		generic_set_status(ST_PLAYING);
+		generic_set_playback(true);
+	} else if (g_status == ST_FBACKWARD) {
+		generic_set_status(ST_PLAYING);
+		generic_set_playback(true);
+	}
+
+	free_bitrate(&g_inst_br);
+	mpc_demux_seek_second(demux, g_play_time);
+	g_buff_sample_size = g_buff_sample_start = 0;
+
+	return 0;
 }
 
 /**
@@ -126,61 +157,37 @@ static void send_to_sndbuf(void *buf, MPC_SAMPLE_FORMAT * srcbuf, int frames, in
  * @param reqn 缓冲区帧大小
  * @param pdata 用户数据，无用
  */
-static int mpc_audiocallback(void *buf, unsigned int reqn, void *pdata)
+static int mpc_audiocallback(void *buf, unsigned int snd_buf_sample_size, void *pdata)
 {
-	int avail_frame;
-	int snd_buf_frame_size = (int) reqn;
+	int avail_sample, copy_sample;
 	int ret;
 	double incr;
-	signed short *audio_buf = buf;
+	u16 *audio_buf = buf;
 
 	UNUSED(pdata);
 
 	if (g_status != ST_PLAYING) {
-		if (g_status == ST_FFORWARD) {
-			g_play_time += g_seek_seconds;
-			if (g_play_time >= g_info.duration) {
-				__end();
-				return -1;
-			}
-			generic_lock();
-			generic_set_status(ST_PLAYING);
-			generic_set_playback(true);
-			generic_unlock();
-			free_bitrate(&g_inst_br);
-			mpc_demux_seek_second(demux, g_play_time);
-			g_buff_frame_size = g_buff_frame_start = 0;
-		} else if (g_status == ST_FBACKWARD) {
-			g_play_time -= g_seek_seconds;
-			if (g_play_time < 0.) {
-				g_play_time = 0.;
-			}
-			generic_lock();
-			generic_set_status(ST_PLAYING);
-			generic_set_playback(true);
-			generic_unlock();
-			free_bitrate(&g_inst_br);
-			mpc_demux_seek_second(demux, g_play_time);
-			g_buff_frame_size = g_buff_frame_start = 0;
+		if (handle_seek() < 0) {
+			__end();
+			return -1;
 		}
-		xAudioClearSndBuf(buf, snd_buf_frame_size);
+
+		xAudioClearSndBuf(buf, snd_buf_sample_size);
 		return 0;
 	}
 
-	while (snd_buf_frame_size > 0) {
-		avail_frame = g_buff_frame_size - g_buff_frame_start;
+	while (snd_buf_sample_size != 0) {
+		avail_sample = g_buff_sample_size - g_buff_sample_start;
+		copy_sample = min(avail_sample, snd_buf_sample_size);
+		audio_buf = copy_to_sndbuf(audio_buf, &g_buff[g_buff_sample_start * g_info.channels], copy_sample, g_info.channels);
+		g_buff_sample_start += copy_sample;
+		snd_buf_sample_size -= copy_sample;
+		incr = (double) (copy_sample) / g_info.sample_freq;
+		g_play_time += incr;
 
-		if (avail_frame >= snd_buf_frame_size) {
-			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * g_info.channels], snd_buf_frame_size, g_info.channels);
-			g_buff_frame_start += snd_buf_frame_size;
-			audio_buf += snd_buf_frame_size * 2;
-			snd_buf_frame_size = 0;
-		} else {
+		if(g_buff_sample_start == g_buff_sample_size) {
 			mpc_frame_info frame;
 
-			send_to_sndbuf(audio_buf, &g_buff[g_buff_frame_start * g_info.channels], avail_frame, g_info.channels);
-			snd_buf_frame_size -= avail_frame;
-			audio_buf += avail_frame * 2;
 			frame.buffer = (MPC_SAMPLE_FORMAT *) g_buff;
 			ret = mpc_demux_decode(demux, &frame);
 
@@ -189,11 +196,10 @@ static int mpc_audiocallback(void *buf, unsigned int reqn, void *pdata)
 				return -1;
 			}
 
-			g_buff_frame_size = frame.samples;
-			g_buff_frame_start = 0;
+			g_buff_sample_size = frame.samples;
+			g_buff_sample_start = 0;
 
-			incr = (double) (MPC_DECODER_BUFFER_LENGTH / 2) / g_info.sample_freq;
-			g_play_time += incr;
+			incr = (double) g_buff_sample_size / g_info.sample_freq;
 			add_bitrate(&g_inst_br, frame.bits * g_info.sample_freq / MPC_FRAME_LENGTH, incr);
 		}
 	}
@@ -212,7 +218,7 @@ static int __init(void)
 
 	generic_set_status(ST_UNKNOWN);
 
-	g_buff_frame_size = g_buff_frame_start = 0;
+	g_buff_sample_size = g_buff_sample_start = 0;
 	g_seek_seconds = 0;
 
 	g_play_time = 0.;
@@ -261,11 +267,21 @@ static mpc_status mpc_reader_init_buffered_reader(mpc_reader * p_reader, const c
 {
 	mpc_reader tmp_reader;
 	buffered_reader_t *reader;
+	int bufsize;
 
-	reader = buffered_reader_open(spath, g_io_buffer_size, 1);
+	bufsize = g_io_buffer_size;
+
+	if (config.use_vaudio)
+		bufsize = bufsize / 2;
+
+	reader = buffered_reader_open(spath, max(bufsize, 8192), 1);
 
 	if (reader == NULL)
 		return MPC_STATUS_FILE;
+
+	if(g_io_buffer_size == 0) {
+		buffered_reader_enable_cache(reader, 0);
+	}
 
 	memset(&tmp_reader, 0, sizeof(tmp_reader));
 
@@ -524,10 +540,7 @@ static int mpc_set_opt(const char *unused, const char *values)
 	int argc, i;
 	char **argv;
 
-	if (config.use_vaudio)
-		g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE / 2;
-	else
-		g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE;
+	g_io_buffer_size = BUFFERED_READER_BUFFER_SIZE;
 
 	dbg_printf(d, "%s: options are %s", __func__, values);
 
@@ -541,11 +554,8 @@ static int mpc_set_opt(const char *unused, const char *values)
 				p++;
 				g_io_buffer_size = atoi(p);
 
-				if (config.use_vaudio)
-					g_io_buffer_size = g_io_buffer_size / 2;
-
 				if (g_io_buffer_size < 8192) {
-					g_io_buffer_size = 8192;
+					g_io_buffer_size = 0;
 				}
 			}
 		}

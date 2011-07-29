@@ -282,8 +282,6 @@ static int mp3_seek_seconds(double npt)
 {
 	int ret;
 
-	free_bitrate(&g_inst_br);
-
 	if (mp3info.frameoff && g_info.samples > 0) {
 		ret = mp3_seek_seconds_offset_brute(npt);
 	} else {
@@ -312,6 +310,7 @@ static int handle_seek(void)
 		mp3_seek_seconds(g_play_time - g_seek_seconds);
 	}
 
+	free_bitrate(&g_inst_br);
 	g_buff_sample_size = g_buff_sample_start = 0;
 
 	return 0;
