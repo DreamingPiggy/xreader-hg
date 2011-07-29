@@ -15,6 +15,9 @@ PSP_EXPORT_FUNC(xrIoOpen)
 PSP_EXPORT_FUNC(xrIoLseek)
 PSP_EXPORT_FUNC(xrIoRead)
 PSP_EXPORT_FUNC(xrIoClose)
+PSP_EXPORT_FUNC(xrDisplaySetMaxBrightness)
+PSP_EXPORT_FUNC(xrDisplaySetBrightness)
+PSP_EXPORT_FUNC(xrDisplayGetBrightness)
 PSP_EXPORT_END
 
 PSP_END_EXPORTS

@@ -239,6 +239,7 @@ extern "C"
 		int sfx_mode;
 		int alc_mode;
 		bool use_vaudio;
+		int max_brightness;
 	} __attribute__ ((packed)) t_conf, *p_conf;
 
 /* txt key:
