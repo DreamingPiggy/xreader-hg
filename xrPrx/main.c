@@ -171,8 +171,8 @@ void xrDisplaySetBrightness(int brightness, int unk1)
 
 	k1 = pspSdkSetK1(0);
 	brightness = MIN(max_brightness, brightness);
-	sceDisplaySetBrightness(brightness, unk1);
 	_sceDisplaySetBacklightSel(get_backlight_level(brightness), unk1);
+	sceDisplaySetBrightness(brightness, unk1);
 	pspSdkSetK1(k1);
 }
 
@@ -195,7 +195,7 @@ int _sceDisplaySetBacklightSel(int backlight_level, int mode)
 	backlight_level = MIN(backlight_level, get_backlight_level(max_brightness));
 	sceDisplayGetBacklightSel(&cur_backlight_level, &unk);
 
-	if(backlight_level == cur_backlight_level) {
+	if (backlight_level == cur_backlight_level) {
 		return 0;
 	}
 
