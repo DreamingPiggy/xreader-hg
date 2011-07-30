@@ -122,7 +122,11 @@ static u16 *copy_to_sndbuf(u16 *buf, MPC_SAMPLE_FORMAT * srcbuf, int frames, int
 
 static int handle_seek(void)
 {
-	g_play_time += g_seek_seconds;
+	if (g_status == ST_FFORWARD) {
+		g_play_time += g_seek_seconds;
+	} else if (g_status == ST_FBACKWARD) {
+		g_play_time -= g_seek_seconds;
+	}
 
 	if(g_play_time < 0.0) {
 		g_play_time = 0.0;
