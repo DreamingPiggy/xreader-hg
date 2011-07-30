@@ -1075,6 +1075,8 @@ extern bool ini_conf_load(const char *inifilename, p_conf conf)
 		conf->max_cache_img = 10;
 	}
 
+	conf->max_brightness = iniparser_getint(dict, "Global:max_brightness", conf->max_brightness);
+
 	dictionary_del(dict);
 
 	return true;
@@ -1266,6 +1268,8 @@ extern bool ini_conf_save(p_conf conf)
 	iniparser_setstring(dict, "Music:alc_mode", intToString(buf, sizeof(buf), conf->alc_mode));
 
 	iniparser_setstring(dict, "Music:use_vaudio", booleanToString(buf, sizeof(buf), conf->use_vaudio));
+
+	iniparser_setstring(dict, "Global:max_brightness", intToString(buf, sizeof(buf), conf->max_brightness));
 
 	iniparser_dump_ini(dict, fp);
 

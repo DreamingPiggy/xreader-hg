@@ -4847,6 +4847,29 @@ extern void scene_init(void)
 	STRCAT_S(musiclst_path, "music.lst");
 #endif
 
+	{
+		if (psp_fw_version >= 0x03070100 && psp_fw_version != 0x05000310) {
+			char path[PATH_MAX];
+			int ret;
+
+			sceRtcGetCurrentTick(&dbglasttick);
+			SPRINTF_S(path, "%sxrPrx.prx", scene_appdir());
+			ret = initExceptionHandler(path);
+
+			if (ret == 0) {
+				xrprx_loaded = true;
+			} else {
+				dbg_printf(d, "xrPrx.prx load failed, return value %08X", (unsigned int) ret);
+			}
+
+			ret = load_rdriver();
+			dbg_printf(d, "load_rdriver returns 0x%08x", ret);
+
+			sceRtcGetCurrentTick(&dbgnow);
+			dbg_printf(d, "initExceptionHandler(): %.2fs", pspDiffTime(&dbgnow, &dbglasttick));
+		}
+	}
+
 	if (key == PSP_CTRL_RTRIGGER) {
 #ifdef ENABLE_MUSIC
 		utils_del_file(musiclst_path);
@@ -4858,6 +4881,11 @@ extern void scene_init(void)
 		conf_load(&config);
 		sceRtcGetCurrentTick(&dbgnow);
 		dbg_printf(d, "conf_load() etc: %.2fs", pspDiffTime(&dbgnow, &dbglasttick));
+	}
+
+	if (xrprx_loaded) {
+		xrDisplaySetMaxBrightness(config.max_brightness);
+		xrDisplaySetBrightness(config.max_brightness, 0);
 	}
 
 #ifdef ENABLE_BG
@@ -4931,29 +4959,6 @@ extern void scene_init(void)
 	ctrl_enablehprm(config.hprmctrl);
 #endif
 	init_gu();
-
-	{
-		if (psp_fw_version >= 0x03070100 && psp_fw_version != 0x05000310) {
-			char path[PATH_MAX];
-			int ret;
-
-			sceRtcGetCurrentTick(&dbglasttick);
-			SPRINTF_S(path, "%sxrPrx.prx", scene_appdir());
-			ret = initExceptionHandler(path);
-
-			if (ret == 0) {
-				xrprx_loaded = true;
-			} else {
-				dbg_printf(d, "xrPrx.prx load failed, return value %08X", (unsigned int) ret);
-			}
-
-			ret = load_rdriver();
-			dbg_printf(d, "load_rdriver returns 0x%08x", ret);
-
-			sceRtcGetCurrentTick(&dbgnow);
-			dbg_printf(d, "initExceptionHandler(): %.2fs", pspDiffTime(&dbgnow, &dbglasttick));
-		}
-	}
 
 	STRCPY_S(bmfile, scene_appdir());
 	STRCAT_S(bmfile, "bookmark.conf");

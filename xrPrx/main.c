@@ -35,6 +35,8 @@
 
 typedef unsigned short bool;
 
+extern int _sceDisplaySetBacklightSel(int backlight_level, int mode);
+
 PSP_MODULE_INFO("xrPrx", 0x1007, 1, 1);
 PSP_MAIN_THREAD_ATTR(0);
 
@@ -170,7 +172,7 @@ void xrDisplaySetBrightness(int brightness, int unk1)
 	k1 = pspSdkSetK1(0);
 	brightness = MIN(max_brightness, brightness);
 	sceDisplaySetBrightness(brightness, unk1);
-	sceImposeSetParam(PSP_IMPOSE_BACKLIGHT_BRIGHTNESS, get_backlight_level(brightness));
+	_sceDisplaySetBacklightSel(brightness, unk1);
 	pspSdkSetK1(k1);
 }
 
