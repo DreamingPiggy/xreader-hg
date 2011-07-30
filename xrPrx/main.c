@@ -172,7 +172,7 @@ void xrDisplaySetBrightness(int brightness, int unk1)
 	k1 = pspSdkSetK1(0);
 	brightness = MIN(max_brightness, brightness);
 	sceDisplaySetBrightness(brightness, unk1);
-	_sceDisplaySetBacklightSel(brightness, unk1);
+	_sceDisplaySetBacklightSel(get_backlight_level(brightness), unk1);
 	pspSdkSetK1(k1);
 }
 
@@ -186,10 +186,20 @@ void xrDisplayGetBrightness(int *brightness, int *unk1)
 }
 
 static int (*sceDisplaySetBacklightSel) (int brightness, int mode) = NULL;
+static int (*sceDisplayGetBacklightSel) (int *brightness, int *mode) = NULL;
 
 int _sceDisplaySetBacklightSel(int backlight_level, int mode)
 {
-	return (*sceDisplaySetBacklightSel) (MIN(backlight_level, get_backlight_level(max_brightness)), mode);
+	int cur_backlight_level, unk;
+
+	backlight_level = MIN(backlight_level, get_backlight_level(max_brightness));
+	sceDisplayGetBacklightSel(&cur_backlight_level, &unk);
+
+	if(backlight_level == cur_backlight_level) {
+		return 0;
+	}
+
+	return (*sceDisplaySetBacklightSel) (backlight_level, mode);
 }
 
 static struct PspModuleImport *_libsFindImport(SceUID uid, const char *library)
@@ -253,6 +263,12 @@ void patch_brightness(void)
 	sceDisplaySetBacklightSel = (void *) sctrlHENFindFunction("sceDisplay_Service", "sceDisplay_driver", 0xE55F0D50);
 
 	if (sceDisplaySetBacklightSel == NULL) {
+		return;
+	}
+
+	sceDisplayGetBacklightSel = (void *) sctrlHENFindFunction("sceDisplay_Service", "sceDisplay_driver", 0x96CFAC38);
+
+	if (sceDisplayGetBacklightSel == NULL) {
 		return;
 	}
 
